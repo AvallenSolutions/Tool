@@ -144,6 +144,28 @@ export const suppliers = pgTable("suppliers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Uploaded documents table
+export const uploadedDocuments = pgTable("uploaded_documents", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id),
+  fileName: varchar("file_name").notNull(),
+  originalName: varchar("original_name").notNull(),
+  mimeType: varchar("mime_type").notNull(),
+  fileSize: integer("file_size"),
+  documentType: varchar("document_type"), // utility_bill, waste_report, energy_certificate, etc.
+  
+  // OCR extracted data
+  extractedData: jsonb("extracted_data"),
+  processingStatus: varchar("processing_status").default("pending"), // pending, processing, completed, failed
+  processingError: text("processing_error"),
+  confidence: decimal("confidence", { precision: 3, scale: 2 }),
+  
+  // Metadata
+  uploadedBy: varchar("uploaded_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Reports table
 export const reports = pgTable("reports", {
   id: serial("id").primaryKey(),
@@ -238,6 +260,17 @@ export const reportRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
+export const uploadedDocumentRelations = relations(uploadedDocuments, ({ one }) => ({
+  company: one(companies, {
+    fields: [uploadedDocuments.companyId],
+    references: [companies.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [uploadedDocuments.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   id: true,
@@ -271,6 +304,12 @@ export const insertReportSchema = createInsertSchema(reports).omit({
   updatedAt: true,
 });
 
+export const insertUploadedDocumentSchema = createInsertSchema(uploadedDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -282,5 +321,7 @@ export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
+export type UploadedDocument = typeof uploadedDocuments.$inferSelect;
+export type InsertUploadedDocument = z.infer<typeof insertUploadedDocumentSchema>;
 export type CompanyData = typeof companyData.$inferSelect;
 export type ProductInput = typeof productInputs.$inferSelect;

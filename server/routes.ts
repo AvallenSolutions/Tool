@@ -1,10 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
-import { storage } from "./storage";
+import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema } from "@shared/schema";
 import { nanoid } from "nanoid";
+import multer from "multer";
+import { extractUtilityData, analyzeDocument } from "./anthropic";
+import path from "path";
+import fs from "fs";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -12,6 +16,34 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2024-06-20",
+});
+
+// Configure multer for file uploads
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: fileStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Please upload images or PDF files.'));
+    }
+  }
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -22,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = await dbStorage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -34,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/company', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       res.json(company);
     } catch (error) {
       console.error("Error fetching company:", error);
@@ -50,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ownerId: userId,
       });
       
-      const company = await storage.createCompany(validatedData);
+      const company = await dbStorage.createCompany(validatedData);
       res.json(company);
     } catch (error) {
       console.error("Error creating company:", error);
@@ -63,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
       
-      const company = await storage.updateCompany(parseInt(id), updates);
+      const company = await dbStorage.updateCompany(parseInt(id), updates);
       res.json(company);
     } catch (error) {
       console.error("Error updating company:", error);
@@ -75,13 +107,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/products', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
       
-      const products = await storage.getProductsByCompany(company.id);
+      const products = await dbStorage.getProductsByCompany(company.id);
       res.json(products);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -92,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/products', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
@@ -103,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyId: company.id,
       });
       
-      const product = await storage.createProduct(validatedData);
+      const product = await dbStorage.createProduct(validatedData);
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);
@@ -115,13 +147,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/suppliers', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
       
-      const suppliers = await storage.getSuppliersByCompany(company.id);
+      const suppliers = await dbStorage.getSuppliersByCompany(company.id);
       res.json(suppliers);
     } catch (error) {
       console.error("Error fetching suppliers:", error);
@@ -132,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/suppliers', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
@@ -149,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'invited',
       });
       
-      const supplier = await storage.createSupplier(validatedData);
+      const supplier = await dbStorage.createSupplier(validatedData);
       
       // TODO: Send email invitation with portal link
       // const portalLink = `${process.env.FRONTEND_URL}/supplier-portal/${portalToken}`;
@@ -165,13 +197,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
       
-      const reports = await storage.getReportsByCompany(company.id);
+      const reports = await dbStorage.getReportsByCompany(company.id);
       res.json(reports);
     } catch (error) {
       console.error("Error fetching reports:", error);
@@ -182,13 +214,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
       
-      const report = await storage.createReport({
+      const report = await dbStorage.createReport({
         companyId: company.id,
         reportType: 'custom',
         reportingPeriodStart: company.currentReportingPeriodStart,
@@ -210,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/supplier-portal/:token', async (req, res) => {
     try {
       const { token } = req.params;
-      const supplier = await storage.getSupplierByToken(token);
+      const supplier = await dbStorage.getSupplierByToken(token);
       
       if (!supplier) {
         return res.status(404).json({ message: "Invalid or expired token" });
@@ -238,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/supplier-portal/:token/submit', async (req, res) => {
     try {
       const { token } = req.params;
-      const supplier = await storage.getSupplierByToken(token);
+      const supplier = await dbStorage.getSupplierByToken(token);
       
       if (!supplier) {
         return res.status(404).json({ message: "Invalid or expired token" });
@@ -248,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(410).json({ message: "Token has expired" });
       }
       
-      const updatedSupplier = await storage.updateSupplier(supplier.id, {
+      const updatedSupplier = await dbStorage.updateSupplier(supplier.id, {
         submittedData: req.body,
         submittedAt: new Date(),
         status: 'completed',
@@ -265,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/get-or-create-subscription', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      let user = await storage.getUser(userId);
+      let user = await dbStorage.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -293,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: `${user.firstName} ${user.lastName}`.trim(),
       });
 
-      user = await storage.updateUserStripeInfo(user.id, customer.id, '');
+      user = await dbStorage.updateUserStripeInfo(user.id, customer.id, '');
 
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
@@ -305,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expand: ['latest_invoice.payment_intent'],
       });
 
-      await storage.updateUserStripeInfo(user.id, customer.id, subscription.id);
+      await dbStorage.updateUserStripeInfo(user.id, customer.id, subscription.id);
   
       res.json({
         subscriptionId: subscription.id,
@@ -321,14 +353,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/dashboard/metrics', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ message: "Company not found" });
       }
       
-      const companyData = await storage.getCompanyData(company.id);
-      const reports = await storage.getReportsByCompany(company.id);
+      const companyData = await dbStorage.getCompanyData(company.id);
+      const reports = await dbStorage.getReportsByCompany(company.id);
       
       // Calculate aggregated metrics
       const latestReport = reports[0];
@@ -348,6 +380,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document upload routes
+  app.get('/api/documents', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      const documents = await dbStorage.getDocumentsByCompany(company.id);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  app.post('/api/documents/upload', isAuthenticated, upload.single('document'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Create document record
+      const document = await dbStorage.createDocument({
+        companyId: company.id,
+        fileName: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        fileSize: req.file.size,
+        uploadedBy: userId,
+        processingStatus: 'processing',
+      });
+
+      // Process document asynchronously
+      processDocumentAsync(document.id, req.file.path);
+
+      res.json({ 
+        message: "Document uploaded successfully",
+        documentId: document.id,
+        status: "processing"
+      });
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
+  app.get('/api/documents/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const document = await dbStorage.getDocumentById(parseInt(id));
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      res.json(document);
+    } catch (error) {
+      console.error("Error fetching document:", error);
+      res.status(500).json({ message: "Failed to fetch document" });
+    }
+  });
+
+  app.post('/api/documents/:id/apply-data', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      const document = await dbStorage.getDocumentById(parseInt(id));
+      
+      if (!document || document.companyId !== company.id) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      if (!document.extractedData) {
+        return res.status(400).json({ message: "No extracted data available" });
+      }
+
+      // Apply extracted data to company data
+      const extractedData = document.extractedData as any;
+      const companyDataUpdate: any = {};
+
+      if (extractedData.electricityConsumption) {
+        companyDataUpdate.electricityConsumption = extractedData.electricityConsumption;
+      }
+      if (extractedData.gasConsumption) {
+        companyDataUpdate.gasConsumption = extractedData.gasConsumption;
+      }
+      if (extractedData.waterConsumption) {
+        companyDataUpdate.waterConsumption = extractedData.waterConsumption;
+      }
+      if (extractedData.wasteGenerated) {
+        companyDataUpdate.wasteGenerated = extractedData.wasteGenerated;
+      }
+
+      if (Object.keys(companyDataUpdate).length > 0) {
+        await dbStorage.updateCompanyData(company.id, companyDataUpdate);
+      }
+
+      res.json({ message: "Data applied successfully" });
+    } catch (error) {
+      console.error("Error applying document data:", error);
+      res.status(500).json({ message: "Failed to apply document data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Async function to process document OCR
+async function processDocumentAsync(documentId: number, filePath: string) {
+  try {
+    // Read file and convert to base64
+    const fileBuffer = fs.readFileSync(filePath);
+    const base64Image = fileBuffer.toString('base64');
+
+    // Analyze document first
+    const analysis = await analyzeDocument(base64Image);
+    
+    // Extract utility data
+    const extractedData = await extractUtilityData(base64Image);
+
+    // Update document with extracted data
+    await dbStorage.updateDocument(documentId, {
+      extractedData: extractedData,
+      confidence: extractedData.confidence,
+      documentType: analysis.documentType,
+      processingStatus: 'completed'
+    });
+
+    // Clean up uploaded file
+    fs.unlinkSync(filePath);
+  } catch (error) {
+    console.error("Error processing document:", error);
+    await dbStorage.updateDocument(documentId, {
+      processingStatus: 'failed',
+      processingError: error.message
+    });
+  }
 }

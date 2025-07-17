@@ -6,6 +6,7 @@ import {
   reports,
   companyData,
   productInputs,
+  uploadedDocuments,
   type User,
   type UpsertUser,
   type Company,
@@ -16,6 +17,8 @@ import {
   type InsertSupplier,
   type Report,
   type InsertReport,
+  type UploadedDocument,
+  type InsertUploadedDocument,
   type CompanyData,
   type ProductInput,
 } from "@shared/schema";
@@ -52,6 +55,12 @@ export interface IStorage {
   // Company data operations
   getCompanyData(companyId: number): Promise<CompanyData[]>;
   updateCompanyData(companyId: number, data: Partial<CompanyData>): Promise<CompanyData>;
+  
+  // Document upload operations
+  getDocumentsByCompany(companyId: number): Promise<UploadedDocument[]>;
+  createDocument(document: InsertUploadedDocument): Promise<UploadedDocument>;
+  updateDocument(id: number, updates: Partial<InsertUploadedDocument>): Promise<UploadedDocument>;
+  getDocumentById(id: number): Promise<UploadedDocument | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -230,6 +239,40 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newData;
     }
+  }
+
+  // Document upload operations
+  async getDocumentsByCompany(companyId: number): Promise<UploadedDocument[]> {
+    return await db
+      .select()
+      .from(uploadedDocuments)
+      .where(eq(uploadedDocuments.companyId, companyId))
+      .orderBy(desc(uploadedDocuments.createdAt));
+  }
+
+  async createDocument(document: InsertUploadedDocument): Promise<UploadedDocument> {
+    const [newDocument] = await db
+      .insert(uploadedDocuments)
+      .values(document)
+      .returning();
+    return newDocument;
+  }
+
+  async updateDocument(id: number, updates: Partial<InsertUploadedDocument>): Promise<UploadedDocument> {
+    const [document] = await db
+      .update(uploadedDocuments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(uploadedDocuments.id, id))
+      .returning();
+    return document;
+  }
+
+  async getDocumentById(id: number): Promise<UploadedDocument | undefined> {
+    const [document] = await db
+      .select()
+      .from(uploadedDocuments)
+      .where(eq(uploadedDocuments.id, id));
+    return document;
   }
 }
 

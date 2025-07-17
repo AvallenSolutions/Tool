@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User, Building, CreditCard, Settings as SettingsIcon } from "lucide-react";
+import { User, Building, CreditCard, Settings as SettingsIcon, FileText } from "lucide-react";
+import DocumentUpload from "@/components/documents/document-upload";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -56,9 +57,10 @@ export default function Settings() {
         <Header title="Settings" subtitle="Manage your account and company settings" />
         <main className="flex-1 p-6 overflow-y-auto">
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="company">Company</TabsTrigger>
+              <TabsTrigger value="data">Data Management</TabsTrigger>
               <TabsTrigger value="billing">Billing</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
@@ -205,6 +207,63 @@ export default function Settings() {
                   </Button>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="data">
+              <div className="space-y-6">
+                <Card className="border-light-gray">
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-slate-gray">
+                      <FileText className="w-5 h-5 mr-2" />
+                      Document Upload & OCR
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <DocumentUpload
+                      title="Upload Environmental Documents"
+                      description="Upload utility bills, energy certificates, or waste reports to automatically extract environmental data using OCR technology"
+                      onDataExtracted={(data) => {
+                        toast({
+                          title: "Data Extracted",
+                          description: "Environmental data has been successfully extracted from your document",
+                        });
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-light-gray">
+                  <CardHeader>
+                    <CardTitle className="text-slate-gray">Manual Data Entry</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-gray-600">
+                      Prefer to enter data manually? You can also input your environmental data directly.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="electricity">Electricity Consumption (kWh)</Label>
+                        <Input id="electricity" type="number" placeholder="Enter electricity usage" />
+                      </div>
+                      <div>
+                        <Label htmlFor="gas">Gas Consumption (m³)</Label>
+                        <Input id="gas" type="number" placeholder="Enter gas usage" />
+                      </div>
+                      <div>
+                        <Label htmlFor="water">Water Consumption (m³)</Label>
+                        <Input id="water" type="number" placeholder="Enter water usage" />
+                      </div>
+                      <div>
+                        <Label htmlFor="waste">Waste Generated (kg)</Label>
+                        <Input id="waste" type="number" placeholder="Enter waste amount" />
+                      </div>
+                    </div>
+                    <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
+                      Save Manual Data
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="billing">
