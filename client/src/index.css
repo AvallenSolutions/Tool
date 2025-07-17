@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&display=swap');
+
+:root {
+  --background: hsl(210, 20%, 98%);
+  --foreground: hsl(210, 12%, 16%);
+  --muted: hsl(210, 20%, 96%);
+  --muted-foreground: hsl(210, 6%, 47%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 12%, 16%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 12%, 16%);
+  --border: hsl(210, 11%, 90%);
+  --input: hsl(210, 11%, 90%);
+  --primary: hsl(143, 69%, 38%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 11%, 33%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(40, 85%, 39%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(143, 69%, 38%);
+  --radius: 0.5rem;
+  
+  /* Custom Avallen colors */
+  --avallen-green: hsl(143, 69%, 38%);
+  --avallen-green-light: hsl(143, 69%, 45%);
+  --avallen-green-dark: hsl(143, 69%, 32%);
+  --slate-gray: hsl(210, 11%, 33%);
+  --muted-gold: hsl(40, 85%, 39%);
+  --success-green: hsl(158, 84%, 37%);
+  --error-red: hsl(0, 84%, 60%);
+  --lightest-gray: hsl(210, 20%, 98%);
+  --light-gray: hsl(210, 11%, 90%);
+  --border-gray: hsl(210, 11%, 82%);
+}
+
+.dark {
+  --background: hsl(210, 20%, 6%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(210, 20%, 12%);
+  --muted-foreground: hsl(210, 6%, 64%);
+  --popover: hsl(210, 20%, 6%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(210, 20%, 6%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(210, 11%, 15%);
+  --input: hsl(210, 11%, 15%);
+  --primary: hsl(143, 69%, 38%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 11%, 15%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(40, 85%, 39%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 62%, 30%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(143, 69%, 38%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Roboto Slab', serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .text-avallen-green {
+    color: var(--avallen-green);
+  }
+  
+  .bg-avallen-green {
+    background-color: var(--avallen-green);
+  }
+  
+  .border-avallen-green {
+    border-color: var(--avallen-green);
+  }
+  
+  .hover\:bg-avallen-green-light:hover {
+    background-color: var(--avallen-green-light);
+  }
+  
+  .text-slate-gray {
+    color: var(--slate-gray);
+  }
+  
+  .bg-slate-gray {
+    background-color: var(--slate-gray);
+  }
+  
+  .text-muted-gold {
+    color: var(--muted-gold);
+  }
+  
+  .bg-muted-gold {
+    background-color: var(--muted-gold);
+  }
+  
+  .text-success-green {
+    color: var(--success-green);
+  }
+  
+  .bg-success-green {
+    background-color: var(--success-green);
+  }
+  
+  .text-error-red {
+    color: var(--error-red);
+  }
+  
+  .bg-error-red {
+    background-color: var(--error-red);
+  }
+  
+  .bg-lightest-gray {
+    background-color: var(--lightest-gray);
+  }
+  
+  .border-light-gray {
+    border-color: var(--light-gray);
+  }
+  
+  .border-border-gray {
+    border-color: var(--border-gray);
+  }
+}
