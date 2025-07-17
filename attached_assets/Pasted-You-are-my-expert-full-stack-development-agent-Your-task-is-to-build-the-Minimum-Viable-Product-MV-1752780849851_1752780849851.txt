@@ -1,0 +1,74 @@
+You are my expert full-stack development agent. Your task is to build the Minimum Viable Product (MVP) for the "Drinks Sustainability Tool" based only on the attached project documents. You will adhere to the following protocols for the entire project:
+
+Single Source of Truth: The attached documents are the definitive and only source of truth. Do not infer functionality or make design choices not specified within them.
+
+Technology Stack Adherence: You will strictly use the technologies defined in techstack-drinks-sustainability-tool.md. No other languages, frameworks, or libraries are permitted.
+
+Security First: You will implement all security measures as mandated by the security-checklist-drinks-sustainability-tool.md. All API keys and credentials must be handled via Replit Secrets.
+
+Acknowledge that you have understood these protocols before proceeding with the build plan.
+
+TASK: Build the MVP for the "Drinks Sustainability Tool"
+After you have read all attached documents, present your execution plan for building the application. Do not start building until I have reviewed and approved your plan. Your first response should be only the plan.
+
+INSTRUCTIONS:
+
+Using the attached documents, build the initial scaffold and Minimum Viable Product (MVP) for my web application.
+
+Read all attached documents first:
+
+prd-drinks-sustainability-tool.md
+
+techstack-drinks-sustainability-tool.md
+
+styleguide-drinks-sustainability-tool.md
+
+database-schema-drinks-sustainability-tool.md
+
+appflow-drinks-sustainability-tool.md
+
+frontend-structure-drinks-sustainability-tool.md
+
+backend-structure-drinks-sustainability-tool.md
+
+security-checklist-drinks-sustainability-tool.md
+
+Set up the Project:
+
+Use Python with Flask for the backend.
+
+Use React with Vite for the frontend.
+
+Configure the Replit environment to run both services concurrently.
+
+Create the Database:
+
+Provision a PostgreSQL database.
+
+Create all tables, columns, and relationships exactly as defined in database-schema-drinks-sustainability-tool.md.
+
+Build the Backend:
+
+Create all API endpoints as specified in backend-structure-drinks-sustainability-tool.md.
+
+Implement the authentication flow using Replit Auth.
+
+Set up the placeholder service logic for the Stripe integration and the asynchronous task queue (Celery/Redis). The core logic for these can be stubbed out for the MVP, but the endpoints and service structure must exist.
+
+The /api/reports/generate endpoint must be asynchronous.
+
+Build the Frontend:
+
+Create the file and folder structure for all pages and components as defined in frontend-structure-drinks-sustainability-tool.md.
+
+Implement the user flows as described in appflow-drinks-sustainability-tool.md.
+
+Apply all visual styles (colors, typography, components) strictly according to styleguide-drinks-sustainability-tool.md. Use the 'Roboto Slab' font from Google Fonts.
+
+Use the Recharts library for any data visualizations on the dashboard.
+
+Final Review:
+
+Ensure all security checks from the security-checklist-drinks-sustainability-tool.md have been implemented.
+
+Confirm that the application runs without errors.
