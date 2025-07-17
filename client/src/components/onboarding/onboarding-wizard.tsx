@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { X, Building, Calendar, Zap, Package, Users } from "lucide-react";
+import { X, Building, Calendar, Zap, Package, Users, FileText } from "lucide-react";
 import ProgressBar from "./progress-bar";
+import DocumentUpload from "@/components/documents/document-upload";
 
 interface OnboardingWizardProps {
   onComplete: (companyId: number) => void;
@@ -45,6 +46,8 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     supplierName: '',
     supplierEmail: '',
     supplierType: '',
+    // Document upload tracking
+    documentsUploaded: false,
   });
 
   const createCompanyMutation = useMutation({
@@ -65,7 +68,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     },
   });
 
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -111,10 +114,12 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       case 2:
         return formData.reportingPeriodStart && formData.reportingPeriodEnd;
       case 3:
-        return formData.electricityConsumption && formData.waterConsumption;
+        return true; // Document upload is optional
       case 4:
-        return formData.productName && formData.productType && formData.productionModel;
+        return formData.electricityConsumption && formData.waterConsumption;
       case 5:
+        return formData.productName && formData.productType && formData.productionModel;
+      case 6:
         return formData.supplierName && formData.supplierEmail;
       default:
         return true;
@@ -247,6 +252,34 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
+              <FileText className="w-12 h-12 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-gray mb-2">Upload Documents</h3>
+              <p className="text-gray-600">Upload utility bills and environmental documents for automatic data extraction</p>
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <p className="text-blue-800 text-sm">
+                💡 Upload your utility bills, energy certificates, and waste reports. Our AI will automatically extract key data to save you time in the next step.
+              </p>
+            </div>
+            
+            <DocumentUpload 
+              onUploadSuccess={() => handleInputChange('documentsUploaded', 'true')}
+              showApplyButton={false}
+            />
+            
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Don't have documents ready? You can skip this step and enter data manually in the next step.
+              </p>
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
               <Zap className="w-12 h-12 text-avallen-green mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-gray mb-2">Operational Footprint</h3>
               <p className="text-gray-600">Your direct operations (Scope 1 & 2)</p>
@@ -306,7 +339,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
@@ -381,7 +414,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">

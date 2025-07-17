@@ -23,6 +23,8 @@ export interface UploadedDocument {
 
 interface DocumentUploadProps {
   onDataExtracted?: (data: any) => void;
+  onUploadSuccess?: () => void;
+  showApplyButton?: boolean;
   acceptedFileTypes?: string[];
   maxFileSize?: number;
   title?: string;
@@ -31,6 +33,8 @@ interface DocumentUploadProps {
 
 export default function DocumentUpload({
   onDataExtracted,
+  onUploadSuccess,
+  showApplyButton = true,
   acceptedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
   maxFileSize = 10 * 1024 * 1024, // 10MB
   title = "Upload Utility Documents",
@@ -93,6 +97,7 @@ export default function DocumentUpload({
         
         if (document.processingStatus === 'completed') {
           clearInterval(interval);
+          onUploadSuccess?.();
           toast({
             title: "Processing Complete",
             description: `Data extracted with ${Math.round((document.confidence || 0) * 100)}% confidence`,
@@ -238,13 +243,15 @@ export default function DocumentUpload({
                     {file.processingStatus === 'completed' && (
                       <>
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        <Button
-                          size="sm"
-                          onClick={() => applyDataMutation.mutate(file.id)}
-                          disabled={applyDataMutation.isPending}
-                        >
-                          Apply Data
-                        </Button>
+                        {showApplyButton && (
+                          <Button
+                            size="sm"
+                            onClick={() => applyDataMutation.mutate(file.id)}
+                            disabled={applyDataMutation.isPending}
+                          >
+                            Apply Data
+                          </Button>
+                        )}
                       </>
                     )}
                     {file.processingStatus === 'failed' && (
