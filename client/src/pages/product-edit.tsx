@@ -495,33 +495,7 @@ export default function ProductEdit() {
                   </CardContent>
                 </Card>
 
-                {/* Form Actions */}
-                <div className="flex justify-end space-x-4">
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => navigate(`/app/products/${id}`)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    disabled={updateProductMutation.isPending}
-                    className="bg-avallen-green hover:bg-green-600 text-white"
-                  >
-                    {updateProductMutation.isPending ? (
-                      <>
-                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
-                </div>
+
               </form>
             </Form>
           </div>
