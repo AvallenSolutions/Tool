@@ -96,8 +96,25 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
     
     return () => {
       document.body.classList.remove('tour-active');
+      // Remove any existing highlights
+      document.querySelectorAll('.tour-highlight').forEach(el => {
+        el.classList.remove('tour-highlight');
+      });
     };
   }, []);
+
+  useEffect(() => {
+    // Remove previous highlights
+    document.querySelectorAll('.tour-highlight').forEach(el => {
+      el.classList.remove('tour-highlight');
+    });
+    
+    // Add highlight to current target
+    const targetElement = document.getElementById(currentTourStep.target);
+    if (targetElement) {
+      targetElement.classList.add('tour-highlight');
+    }
+  }, [currentStep, currentTourStep.target]);
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -129,22 +146,13 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
 
   return (
     <>
-      {/* Tour overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40 tour-overlay" />
+      {/* Tour overlay - dark background */}
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-40 tour-overlay" />
       
-      {/* Tour spotlight */}
-      <div 
-        className="fixed z-50 tour-spotlight"
-        style={{
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
-          pointerEvents: 'none'
-        }}
-      />
-
       {/* Tour card */}
       <div className="fixed z-50 tour-card">
-        <Card className="w-96 border-avallen-green shadow-xl">
-          <CardHeader className="pb-3">
+        <Card className="w-96 bg-white border-2 border-avallen-green shadow-2xl">
+          <CardHeader className="pb-3 bg-lightest-gray">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-avallen-green" />
@@ -161,13 +169,13 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <Badge variant="outline" className="w-fit">
+            <Badge variant="outline" className="w-fit border-avallen-green text-avallen-green">
               Step {currentStep + 1} of {tourSteps.length}
             </Badge>
           </CardHeader>
           
-          <CardContent className="pb-6">
-            <p className="text-gray-600 mb-6 leading-relaxed">
+          <CardContent className="pb-6 bg-white">
+            <p className="text-slate-gray mb-6 leading-relaxed font-medium">
               {currentTourStep.content}
             </p>
             
@@ -176,7 +184,7 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentStep === 0}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 border-light-gray"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
