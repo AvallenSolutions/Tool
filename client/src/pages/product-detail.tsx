@@ -114,7 +114,11 @@ export default function ProductDetail() {
               </Button>
               
               <div className="flex items-center gap-3">
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate(`/app/products/${id}/edit`)}
+                  className="flex items-center gap-2"
+                >
                   <Edit3 className="w-4 h-4" />
                   Edit Product
                 </Button>
