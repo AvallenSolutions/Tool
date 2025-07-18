@@ -11,11 +11,12 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### January 18, 2025
-- **Navigation Fix**: Fixed product creation redirect from `/products` to `/app/products` to match correct route structure
-- **Bottle Weight Field**: Added mandatory bottle weight input field to guided product creation packaging section
-- **Form Validation**: Enhanced packaging step validation to require bottle weight alongside material selection
-- **Database Issues**: Resolved schema compatibility issues and fixed React form validation warnings
-- **Server Stability**: Fixed database connection and image processing errors that were causing application crashes
+- **System Consolidation**: Successfully completed major system overhaul consolidating dual product types (simplified vs enhanced) into single unified enhanced form
+- **Onboarding Streamlining**: Reduced onboarding from 5 steps to 4 steps by removing product data collection, focusing purely on company setup
+- **Database Schema Enhancement**: Expanded database schema with all enhanced fields as proper columns instead of JSONB storage
+- **Products Section Cleanup**: Renamed "Product Catalog" to "Products", removed multiple viewing/editing options, streamlined to single view and edit action per product
+- **Navigation Simplification**: Consolidated product creation workflow to use enhanced form as primary and only method
+- **UI Improvements**: Fixed duplicate buttons, clarified action tooltips, and improved user experience flow
 
 ## System Architecture
 

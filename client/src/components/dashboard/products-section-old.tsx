@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Plus, Package, Edit2, Trash2, Star, Factory, ExternalLink, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -44,6 +46,74 @@ export default function ProductsSection() {
     retry: false,
   });
 
+  const createProductMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/products", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({
+        title: "Product Added",
+        description: "Product has been successfully added to your catalog.",
+      });
+      setIsAddDialogOpen(false);
+      resetForm();
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to add product. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/products/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({
+        title: "Product Updated",
+        description: "Product has been successfully updated.",
+      });
+      setEditingProduct(null);
+      resetForm();
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to update product. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteProductMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/products/${id}`);
@@ -75,8 +145,54 @@ export default function ProductsSection() {
     },
   });
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      sku: '',
+      type: '',
+      size: '',
+      description: '',
+      productionModel: '',
+      annualProductionVolume: '',
+      productionUnit: 'bottles',
+      status: 'active',
+      isMainProduct: false,
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const productData = {
+      ...formData,
+      annualProductionVolume: formData.annualProductionVolume ? parseFloat(formData.annualProductionVolume) : null,
+    };
+
+    if (editingProduct) {
+      updateProductMutation.mutate({ id: editingProduct.id, data: productData });
+    } else {
+      createProductMutation.mutate(productData);
+    }
+  };
+
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      sku: product.sku,
+      type: product.type,
+      size: product.size,
+      description: product.description || '',
+      productionModel: product.productionModel || '',
+      annualProductionVolume: product.annualProductionVolume?.toString() || '',
+      productionUnit: product.productionUnit || 'bottles',
+      status: product.status,
+      isMainProduct: product.isMainProduct,
+    });
+  };
+
   const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+    if (confirm("Are you sure you want to delete this product?")) {
       deleteProductMutation.mutate(id);
     }
   };
@@ -132,10 +248,10 @@ export default function ProductsSection() {
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-gray mb-2">No Products Yet</h3>
             <p className="text-gray-500 mb-4">
-              Add your first product to start tracking its environmental impact.
+              Add your first product to start tracking individual footprints
             </p>
             <Button
-              onClick={() => navigate('/app/products/create/enhanced')}
+              onClick={() => setIsAddDialogOpen(true)}
               className="bg-avallen-green hover:bg-avallen-green-light text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -214,7 +330,7 @@ export default function ProductsSection() {
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-500">
-                          SKU: {product.sku} • {product.volume} • {product.type}
+                          SKU: {product.sku} • {product.size} • {product.type}
                         </p>
                         {product.annualProductionVolume && (
                           <p className="text-xs text-gray-400">
