@@ -43,7 +43,7 @@ const guidedSteps = [
     title: 'Packaging Materials',
     content: 'Now let\'s capture the packaging details. This includes bottle, labels, and closures.',
     showForm: true,
-    fields: ['bottleMaterial', 'bottleRecycledContent', 'labelMaterial', 'labelWeight', 'closureMaterial', 'closureWeight']
+    fields: ['bottleMaterial', 'bottleWeight', 'bottleRecycledContent', 'labelMaterial', 'labelWeight', 'closureMaterial', 'closureWeight']
   },
   {
     id: 'production-details',
@@ -71,6 +71,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
     packShotUrl: '',
     ingredients: [{ name: '', amount: 0, unit: 'ml' }],
     bottleMaterial: '',
+    bottleWeight: 0,
     bottleRecycledContent: 0,
     labelMaterial: '',
     labelWeight: 0,
@@ -101,7 +102,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
       handleComplete();
       // Navigate to products page after successful creation
       setTimeout(() => {
-        window.location.href = "/products";
+        window.location.href = "/app/products";
       }, 1000);
     },
     onError: (error) => {
@@ -185,6 +186,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
       packShotUrl: formData.packShotUrl,
       ingredients: formData.ingredients,
       bottleMaterial: formData.bottleMaterial,
+      bottleWeight: formData.bottleWeight || null,
       bottleRecycledContent: formData.bottleRecycledContent || null,
       labelMaterial: formData.labelMaterial,
       labelWeight: formData.labelWeight || null,
@@ -212,7 +214,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
       case 2:
         return formData.ingredients.length > 0 && formData.ingredients.every(ing => ing.name && ing.amount > 0);
       case 3:
-        return formData.bottleMaterial && formData.labelMaterial && formData.labelWeight;
+        return formData.bottleMaterial && formData.bottleWeight && formData.labelMaterial && formData.labelWeight;
       case 4:
         return formData.productionModel;
       default:
@@ -472,6 +474,20 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                   </div>
                 )}
 
+                {currentGuidedStep.fields?.includes('bottleWeight') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="bottleWeight">Bottle Weight (grams) *</Label>
+                    <Input
+                      id="bottleWeight"
+                      type="number"
+                      step="0.1"
+                      value={formData.bottleWeight || ''}
+                      onChange={(e) => handleInputChange('bottleWeight', e.target.value)}
+                      placeholder="e.g., 400"
+                    />
+                  </div>
+                )}
+
                 {currentGuidedStep.fields?.includes('bottleRecycledContent') && (
                   <div className="space-y-2">
                     <Label htmlFor="bottleRecycledContent">% Recycled Content in Bottle</Label>
@@ -620,7 +636,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                         )}
                         
                         <div className="grid grid-cols-2 gap-2">
-                          <div><strong>Bottle:</strong> {formData.bottleMaterial}</div>
+                          <div><strong>Bottle:</strong> {formData.bottleMaterial} ({formData.bottleWeight}g)</div>
                           <div><strong>Recycled Content:</strong> {formData.bottleRecycledContent}%</div>
                           <div><strong>Label:</strong> {formData.labelMaterial} ({formData.labelWeight}g)</div>
                           <div><strong>Closure:</strong> {formData.hasBuiltInClosure ? 'Built-in' : `${formData.closureMaterial} (${formData.closureWeight}g)`}</div>
