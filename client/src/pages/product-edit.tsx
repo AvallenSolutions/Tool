@@ -190,7 +190,8 @@ export default function ProductEdit() {
               <Button 
                 onClick={form.handleSubmit(onSubmit)}
                 disabled={updateProductMutation.isPending}
-                className="bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2"
+                className="btn-always-visible bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2"
+                style={{ backgroundColor: 'hsl(148, 57%, 23%)', color: 'white' }}
               >
                 {updateProductMutation.isPending ? (
                   <>

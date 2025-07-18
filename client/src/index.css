@@ -75,6 +75,13 @@ body {
   font-family: 'Roboto Slab', serif;
 }
 
+/* Ensure buttons are always visible */
+.btn-always-visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+
 /* Custom Tour Styles */
 .tour-active {
   overflow: hidden;

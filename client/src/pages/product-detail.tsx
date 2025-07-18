@@ -117,7 +117,7 @@ export default function ProductDetail() {
                 <Button 
                   variant="outline" 
                   onClick={() => navigate(`/app/products/${id}/edit`)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 btn-always-visible border border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
                 >
                   <Edit3 className="w-4 h-4" />
                   Edit Product
@@ -125,7 +125,8 @@ export default function ProductDetail() {
                 <Button 
                   onClick={handleCreateLCA}
                   disabled={createLCAMutation.isPending}
-                  className="bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2"
+                  className="btn-always-visible bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2"
+                  style={{ backgroundColor: 'hsl(148, 57%, 23%)', color: 'white' }}
                 >
                   {createLCAMutation.isPending ? (
                     <>
