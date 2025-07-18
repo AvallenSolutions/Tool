@@ -53,6 +53,10 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     },
     onSuccess: (company) => {
       queryClient.invalidateQueries({ queryKey: ["/api/company"] });
+      toast({
+        title: "Setup Complete!",
+        description: "Welcome to your sustainability dashboard.",
+      });
       onComplete(company.id);
     },
     onError: () => {
@@ -112,7 +116,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       case 3:
         return true; // Document upload is optional
       case 4:
-        return formData.electricityConsumption && formData.waterConsumption;
+        return true; // Utilities are optional, can be skipped
       case 5:
         return formData.productName && formData.productType && formData.productionModel;
       default:
@@ -184,12 +188,35 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="country">Country</Label>
-                <Input
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => handleInputChange('country', e.target.value)}
-                  placeholder="e.g., United Kingdom"
-                />
+                <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                    <SelectItem value="United States">United States</SelectItem>
+                    <SelectItem value="Canada">Canada</SelectItem>
+                    <SelectItem value="Australia">Australia</SelectItem>
+                    <SelectItem value="Germany">Germany</SelectItem>
+                    <SelectItem value="France">France</SelectItem>
+                    <SelectItem value="Italy">Italy</SelectItem>
+                    <SelectItem value="Spain">Spain</SelectItem>
+                    <SelectItem value="Netherlands">Netherlands</SelectItem>
+                    <SelectItem value="Belgium">Belgium</SelectItem>
+                    <SelectItem value="Switzerland">Switzerland</SelectItem>
+                    <SelectItem value="Austria">Austria</SelectItem>
+                    <SelectItem value="Denmark">Denmark</SelectItem>
+                    <SelectItem value="Sweden">Sweden</SelectItem>
+                    <SelectItem value="Norway">Norway</SelectItem>
+                    <SelectItem value="Finland">Finland</SelectItem>
+                    <SelectItem value="Ireland">Ireland</SelectItem>
+                    <SelectItem value="New Zealand">New Zealand</SelectItem>
+                    <SelectItem value="Japan">Japan</SelectItem>
+                    <SelectItem value="South Korea">South Korea</SelectItem>
+                    <SelectItem value="Singapore">Singapore</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="website">Website</Label>
@@ -276,7 +303,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             <div className="text-center mb-6">
               <Zap className="w-12 h-12 text-avallen-green mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-gray mb-2">Operational Footprint</h3>
-              <p className="text-gray-600">Your direct operations (Scope 1 & 2)</p>
+              <p className="text-gray-600">Your direct operations (Scope 1 & 2). You can skip this step and add utilities later if needed.</p>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -447,7 +474,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             </Button>
             
             <div className="flex space-x-2">
-              {currentStep === 3 && (
+              {(currentStep === 3 || currentStep === 4) && (
                 <Button
                   variant="outline"
                   onClick={handleNext}

@@ -16,35 +16,13 @@ export default function Onboarding() {
   const [, navigate] = useLocation();
   const [showWizard, setShowWizard] = useState(false);
 
-  const completeOnboardingMutation = useMutation({
-    mutationFn: async (companyId: number) => {
-      await apiRequest("PATCH", `/api/company/${companyId}`, {
-        onboardingComplete: true,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/company"] });
-      toast({
-        title: "Onboarding Complete!",
-        description: "Welcome to your sustainability dashboard.",
-      });
-      navigate("/app/dashboard");
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to complete onboarding",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleGetStarted = () => {
     setShowWizard(true);
   };
 
   const handleOnboardingComplete = (companyId: number) => {
-    completeOnboardingMutation.mutate(companyId);
+    // Navigate directly to dashboard since the wizard already handles completion
+    navigate("/app/dashboard");
   };
 
   if (showWizard) {

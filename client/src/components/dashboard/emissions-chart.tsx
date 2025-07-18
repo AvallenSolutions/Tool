@@ -67,6 +67,14 @@ export default function EmissionsChart() {
   };
 
   const CustomLegend = ({ payload }: any) => {
+    if (!payload || payload.length === 0) {
+      return (
+        <div className="text-center text-gray-500 mt-4">
+          No emissions data available
+        </div>
+      );
+    }
+    
     return (
       <div className="mt-4 space-y-2">
         {payload.map((entry: any, index: number) => (
@@ -79,7 +87,7 @@ export default function EmissionsChart() {
               <span className="text-sm text-slate-gray">{entry.value}</span>
             </div>
             <span className="text-sm font-medium text-slate-gray">
-              {entry.payload.value.toFixed(1)}t ({entry.payload.percentage}%)
+              {entry.payload?.value?.toFixed(1) || 0}t ({entry.payload?.percentage || 0}%)
             </span>
           </div>
         ))}
@@ -123,7 +131,7 @@ export default function EmissionsChart() {
             <div className="text-sm text-gray-500">tonnes CO2e</div>
           </div>
         </div>
-        <CustomLegend payload={data} />
+        <CustomLegend payload={data?.length ? data : []} />
       </CardContent>
     </Card>
   );
