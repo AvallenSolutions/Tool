@@ -126,35 +126,57 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
       setTimeout(() => {
         const rect = targetElement.getBoundingClientRect();
         const cardWidth = 400;
-        const cardHeight = 300;
+        const cardHeight = 350;
+        const padding = 20;
         
         let newPosition = { top: '50%', left: 'auto', right: '2rem', bottom: 'auto' };
         
-        // If target is on the right side, position card on the left
-        if (rect.right > window.innerWidth / 2) {
-          newPosition = { 
-            top: Math.max(20, rect.top - 50) + 'px', 
-            left: '2rem', 
-            right: 'auto', 
-            bottom: 'auto' 
+        // Calculate available space
+        const spaceRight = window.innerWidth - rect.right;
+        const spaceLeft = rect.left;
+        const spaceTop = rect.top;
+        const spaceBottom = window.innerHeight - rect.bottom;
+        
+        // Position based on available space
+        if (spaceRight >= cardWidth + padding) {
+          // Position to the right
+          newPosition = {
+            top: Math.max(padding, Math.min(rect.top, window.innerHeight - cardHeight - padding)) + 'px',
+            left: (rect.right + padding) + 'px',
+            right: 'auto',
+            bottom: 'auto'
           };
-        }
-        // If target is on the left side, position card on the right
-        else if (rect.left < window.innerWidth / 2) {
-          newPosition = { 
-            top: Math.max(20, rect.top - 50) + 'px', 
-            left: 'auto', 
-            right: '2rem', 
-            bottom: 'auto' 
+        } else if (spaceLeft >= cardWidth + padding) {
+          // Position to the left
+          newPosition = {
+            top: Math.max(padding, Math.min(rect.top, window.innerHeight - cardHeight - padding)) + 'px',
+            left: Math.max(padding, rect.left - cardWidth - padding) + 'px',
+            right: 'auto',
+            bottom: 'auto'
           };
-        }
-        // If target is at the bottom, position card at the top
-        else if (rect.bottom > window.innerHeight * 0.7) {
-          newPosition = { 
-            top: '2rem', 
-            left: 'auto', 
-            right: '2rem', 
-            bottom: 'auto' 
+        } else if (spaceTop >= cardHeight + padding) {
+          // Position above
+          newPosition = {
+            top: Math.max(padding, rect.top - cardHeight - padding) + 'px',
+            left: '50%',
+            right: 'auto',
+            bottom: 'auto'
+          };
+        } else if (spaceBottom >= cardHeight + padding) {
+          // Position below
+          newPosition = {
+            top: (rect.bottom + padding) + 'px',
+            left: '50%',
+            right: 'auto',
+            bottom: 'auto'
+          };
+        } else {
+          // Default to top-right corner if no good space
+          newPosition = {
+            top: padding + 'px',
+            left: 'auto',
+            right: padding + 'px',
+            bottom: 'auto'
           };
         }
         
@@ -204,9 +226,10 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
           left: cardPosition.left,
           right: cardPosition.right,
           bottom: cardPosition.bottom,
-          transform: cardPosition.top === '50%' ? 'translateY(-50%)' : 'none',
+          transform: cardPosition.left === '50%' ? 'translateX(-50%)' : 'none',
           animation: 'slideIn 0.3s ease',
-          minWidth: '400px'
+          minWidth: '400px',
+          maxWidth: '400px'
         }}
       >
         <Card className="w-full bg-white border-2 border-avallen-green shadow-2xl">
@@ -258,7 +281,8 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
                 </Button>
                 <Button
                   onClick={handleNext}
-                  className="bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2 px-6 py-2 font-medium"
+                  className="bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2 px-6 py-2 font-medium opacity-100 visible"
+                  style={{ backgroundColor: 'hsl(var(--avallen-green))', color: 'white' }}
                 >
                   {currentStep === tourSteps.length - 1 ? 'Finish' : 'Next'}
                   <ChevronRight className="w-4 h-4" />
