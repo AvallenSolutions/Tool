@@ -95,7 +95,7 @@ export default function Settings() {
                       <Input
                         id="firstName"
                         value={user?.firstName || ''}
-                        disabled
+                        readOnly
                         className="bg-gray-50"
                       />
                     </div>
@@ -104,7 +104,7 @@ export default function Settings() {
                       <Input
                         id="lastName"
                         value={user?.lastName || ''}
-                        disabled
+                        readOnly
                         className="bg-gray-50"
                       />
                     </div>
@@ -116,7 +116,7 @@ export default function Settings() {
                       id="email"
                       type="email"
                       value={user?.email || ''}
-                      disabled
+                      readOnly
                       className="bg-gray-50"
                     />
                   </div>
@@ -143,6 +143,8 @@ export default function Settings() {
                       id="companyName"
                       value={company?.name || ''}
                       placeholder="Enter company name"
+                      readOnly
+                      className="bg-gray-50"
                     />
                   </div>
 
@@ -153,6 +155,8 @@ export default function Settings() {
                         id="industry"
                         value={company?.industry || ''}
                         placeholder="e.g., Alcoholic Beverages"
+                        readOnly
+                        className="bg-gray-50"
                       />
                     </div>
                     <div>
@@ -161,6 +165,8 @@ export default function Settings() {
                         id="size"
                         value={company?.size || ''}
                         placeholder="e.g., Small, Medium, Large"
+                        readOnly
+                        className="bg-gray-50"
                       />
                     </div>
                   </div>
@@ -171,6 +177,8 @@ export default function Settings() {
                       id="website"
                       value={company?.website || ''}
                       placeholder="https://example.com"
+                      readOnly
+                      className="bg-gray-50"
                     />
                   </div>
 
@@ -180,6 +188,8 @@ export default function Settings() {
                       id="address"
                       value={company?.address || ''}
                       placeholder="Enter company address"
+                      readOnly
+                      className="bg-gray-50"
                     />
                   </div>
 
@@ -190,6 +200,8 @@ export default function Settings() {
                         id="country"
                         value={company?.country || ''}
                         placeholder="Enter country"
+                        readOnly
+                        className="bg-gray-50"
                       />
                     </div>
                     <div>
