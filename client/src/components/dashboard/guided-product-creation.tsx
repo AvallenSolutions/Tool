@@ -343,7 +343,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                           const file = e.target.files?.[0];
                           if (file) {
                             // Optimize image size before storing
-                            const img = new Image();
+                            const img = document.createElement('img');
                             img.onload = () => {
                               const canvas = document.createElement('canvas');
                               const ctx = canvas.getContext('2d');
