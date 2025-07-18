@@ -348,7 +348,6 @@ export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
-  companyId: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -357,6 +356,7 @@ export const insertProductSchema = createInsertSchema(products).omit({
   labelWeight: z.union([z.string(), z.number()]).optional().nullable(),
   closureWeight: z.union([z.string(), z.number()]).optional().nullable(),
   packShotUrl: z.string().optional().nullable(),
+  companyId: z.number().optional(),
 });
 export type InsertProductType = z.infer<typeof insertProductSchema>;
 export type Company = typeof companies.$inferSelect;
