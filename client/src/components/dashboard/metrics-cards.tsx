@@ -32,7 +32,7 @@ export default function MetricsCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <Card className="border-light-gray">
+      <Card className="border-light-gray" id="metrics-co2e">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold text-slate-gray">Total CO2e</CardTitle>
@@ -54,7 +54,7 @@ export default function MetricsCards() {
         </CardContent>
       </Card>
 
-      <Card className="border-light-gray">
+      <Card className="border-light-gray" id="metrics-water">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold text-slate-gray">Water Usage</CardTitle>
@@ -76,7 +76,7 @@ export default function MetricsCards() {
         </CardContent>
       </Card>
 
-      <Card className="border-light-gray">
+      <Card className="border-light-gray" id="metrics-waste">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-semibold text-slate-gray">Waste Generated</CardTitle>

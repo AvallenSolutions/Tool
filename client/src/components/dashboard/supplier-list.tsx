@@ -18,7 +18,7 @@ export default function SupplierList() {
       <Card className="border-light-gray">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-slate-gray">
-            Supplier Data Status
+            Supplier Database
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -81,7 +81,7 @@ export default function SupplierList() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-slate-gray">
-            Supplier Data Status
+            Supplier Database
           </CardTitle>
           <Button
             variant="ghost"

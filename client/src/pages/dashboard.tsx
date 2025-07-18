@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -11,11 +11,15 @@ import EmissionsChart from "@/components/dashboard/emissions-chart";
 import ReportStatus from "@/components/dashboard/report-status";
 import SupplierList from "@/components/dashboard/supplier-list";
 import ProductsSection from "@/components/dashboard/products-section";
+import DashboardTour from "@/components/dashboard/dashboard-tour";
+import GuidedProductCreation from "@/components/dashboard/guided-product-creation";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [, navigate] = useLocation();
+  const [showTour, setShowTour] = useState(false);
+  const [showProductGuide, setShowProductGuide] = useState(false);
 
   // Fetch company data for reporting period
   const { data: company } = useQuery({
@@ -23,6 +27,20 @@ export default function Dashboard() {
     retry: false,
     enabled: isAuthenticated,
   });
+
+  // Check if user should see the tour (first time visiting dashboard)
+  useEffect(() => {
+    if (company && !localStorage.getItem('dashboard-tour-completed')) {
+      setShowTour(true);
+    }
+  }, [company]);
+
+  // Development helper - reset tour state
+  const resetTour = () => {
+    localStorage.removeItem('dashboard-tour-completed');
+    localStorage.removeItem('product-guide-completed');
+    window.location.reload();
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -56,25 +74,80 @@ export default function Dashboard() {
     return "Reporting Period: Not set";
   };
 
+  const handleTourComplete = () => {
+    localStorage.setItem('dashboard-tour-completed', 'true');
+    setShowTour(false);
+    setShowProductGuide(true);
+  };
+
+  const handleTourSkip = () => {
+    localStorage.setItem('dashboard-tour-completed', 'true');
+    setShowTour(false);
+  };
+
+  const handleProductGuideComplete = () => {
+    localStorage.setItem('product-guide-completed', 'true');
+    setShowProductGuide(false);
+  };
+
+  const handleProductGuideSkip = () => {
+    localStorage.setItem('product-guide-completed', 'true');
+    setShowProductGuide(false);
+  };
+
   return (
     <div className="flex h-screen bg-lightest-gray">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title="Dashboard" subtitle={getReportingPeriod()} />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <MetricsCards />
+        
+        {/* Development helper - remove in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="p-2 bg-yellow-100 text-yellow-800 text-sm">
+            <button onClick={resetTour} className="underline">
+              Reset Tour (Dev Only)
+            </button>
+          </div>
+        )}
+        <main className="flex-1 p-6 overflow-y-auto" id="dashboard-main">
+          <div id="metrics-cards">
+            <MetricsCards />
+          </div>
           
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-            <EmissionsChart />
-            <ReportStatus />
+            <div id="emissions-chart">
+              <EmissionsChart />
+            </div>
+            <div id="reports-section">
+              <ReportStatus />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-            <ProductsSection />
-            <SupplierList />
+            <div id="products-section">
+              <ProductsSection />
+            </div>
+            <div id="suppliers-section">
+              <SupplierList />
+            </div>
           </div>
         </main>
       </div>
+
+      {/* Tour components */}
+      {showTour && (
+        <DashboardTour
+          onComplete={handleTourComplete}
+          onSkip={handleTourSkip}
+        />
+      )}
+      
+      {showProductGuide && (
+        <GuidedProductCreation
+          onComplete={handleProductGuideComplete}
+          onSkip={handleProductGuideSkip}
+        />
+      )}
     </div>
   );
 }

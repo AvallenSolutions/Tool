@@ -5,133 +5,164 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: hsl(210, 20%, 98%);
-  --foreground: hsl(210, 12%, 16%);
-  --muted: hsl(210, 20%, 96%);
-  --muted-foreground: hsl(210, 6%, 47%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(210, 12%, 16%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(210, 12%, 16%);
-  --border: hsl(210, 11%, 90%);
-  --input: hsl(210, 11%, 90%);
-  --primary: hsl(143, 69%, 38%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(210, 11%, 33%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(40, 85%, 39%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(143, 69%, 38%);
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
   
-  /* Custom Avallen colors */
-  --avallen-green: hsl(143, 69%, 38%);
-  --avallen-green-light: hsl(143, 69%, 45%);
-  --avallen-green-dark: hsl(143, 69%, 32%);
-  --slate-gray: hsl(210, 11%, 33%);
-  --muted-gold: hsl(40, 85%, 39%);
-  --success-green: hsl(158, 84%, 37%);
-  --error-red: hsl(0, 84%, 60%);
-  --lightest-gray: hsl(210, 20%, 98%);
-  --light-gray: hsl(210, 11%, 90%);
-  --border-gray: hsl(210, 11%, 82%);
+  /* Custom Avallen Colors */
+  --avallen-green: 148 57% 23%;
+  --avallen-green-light: 148 57% 35%;
+  --avallen-green-dark: 148 57% 15%;
+  --slate-gray: 215 16% 47%;
+  --light-gray: 214 31% 91%;
+  --lightest-gray: 210 40% 96%;
+  --muted-gold: 45 29% 51%;
+  --success-green: 142 76% 36%;
+  --error-red: 0 84% 60%;
 }
 
 .dark {
-  --background: hsl(210, 20%, 6%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(210, 20%, 12%);
-  --muted-foreground: hsl(210, 6%, 64%);
-  --popover: hsl(210, 20%, 6%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(210, 20%, 6%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(210, 11%, 15%);
-  --input: hsl(210, 11%, 15%);
-  --primary: hsl(143, 69%, 38%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(210, 11%, 15%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(40, 85%, 39%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 62%, 30%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(143, 69%, 38%);
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+* {
+  border-color: hsl(var(--border));
+}
 
-  body {
-    @apply bg-background text-foreground;
-    font-family: 'Roboto Slab', serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: 'Roboto Slab', serif;
+}
+
+/* Custom Tour Styles */
+.tour-active {
+  overflow: hidden;
+}
+
+.tour-overlay {
+  pointer-events: auto;
+}
+
+.tour-spotlight {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.tour-card {
+  top: 50%;
+  right: 2rem;
+  transform: translateY(-50%);
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%) translateY(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(-50%);
   }
 }
 
-@layer utilities {
-  .text-avallen-green {
-    color: var(--avallen-green);
+@media (max-width: 768px) {
+  .tour-card {
+    top: auto;
+    bottom: 2rem;
+    right: 1rem;
+    left: 1rem;
+    transform: none;
   }
-  
-  .bg-avallen-green {
-    background-color: var(--avallen-green);
-  }
-  
-  .border-avallen-green {
-    border-color: var(--avallen-green);
-  }
-  
-  .hover\:bg-avallen-green-light:hover {
-    background-color: var(--avallen-green-light);
-  }
-  
-  .text-slate-gray {
-    color: var(--slate-gray);
-  }
-  
-  .bg-slate-gray {
-    background-color: var(--slate-gray);
-  }
-  
-  .text-muted-gold {
-    color: var(--muted-gold);
-  }
-  
-  .bg-muted-gold {
-    background-color: var(--muted-gold);
-  }
-  
-  .text-success-green {
-    color: var(--success-green);
-  }
-  
-  .bg-success-green {
-    background-color: var(--success-green);
-  }
-  
-  .text-error-red {
-    color: var(--error-red);
-  }
-  
-  .bg-error-red {
-    background-color: var(--error-red);
-  }
-  
-  .bg-lightest-gray {
-    background-color: var(--lightest-gray);
-  }
-  
-  .border-light-gray {
-    border-color: var(--light-gray);
-  }
-  
-  .border-border-gray {
-    border-color: var(--border-gray);
+}
+
+/* Custom button variant for tour */
+.tour-btn-primary {
+  background-color: hsl(var(--avallen-green));
+  color: white;
+}
+
+.tour-btn-primary:hover {
+  background-color: hsl(var(--avallen-green-light));
+}
+
+/* Loading spinner */
+.loading-spinner {
+  @apply animate-spin w-4 h-4 border-2 border-gray-300 rounded-full;
+  border-top-color: hsl(var(--avallen-green));
+}
+
+/* Form validation styles */
+.form-error {
+  color: hsl(var(--error-red));
+  font-size: 0.875rem;
+}
+
+/* Badge variants */
+.badge-success {
+  background-color: hsl(var(--success-green) / 0.2);
+  color: hsl(var(--success-green));
+}
+
+.badge-pending {
+  background-color: hsl(var(--muted-gold) / 0.2);
+  color: hsl(var(--muted-gold));
+}
+
+.badge-error {
+  background-color: hsl(var(--error-red) / 0.2);
+  color: hsl(var(--error-red));
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-lg;
+}
+
+/* Responsive design helpers */
+@media (max-width: 640px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
   }
 }

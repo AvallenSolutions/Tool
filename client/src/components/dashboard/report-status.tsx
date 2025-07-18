@@ -56,7 +56,7 @@ export default function ReportStatus() {
       <Card className="border-light-gray">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-slate-gray">
-            Report Status
+            Reports
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -123,7 +123,7 @@ export default function ReportStatus() {
     <Card className="border-light-gray">
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-slate-gray">
-          Report Status
+          Reports
         </CardTitle>
       </CardHeader>
       <CardContent>

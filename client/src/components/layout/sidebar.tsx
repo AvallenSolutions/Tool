@@ -21,7 +21,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <nav className="w-64 bg-white border-r border-light-gray flex flex-col">
+    <nav className="w-64 bg-white border-r border-light-gray flex flex-col" id="sidebar-nav">
       {/* Logo */}
       <div className="p-6 border-b border-light-gray">
         <div className="flex items-center space-x-3">
