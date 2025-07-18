@@ -27,7 +27,9 @@ import {
   AlertCircle,
   Info,
   Save,
-  CheckCircle
+  CheckCircle,
+  Upload,
+  Camera
 } from 'lucide-react';
 
 // Enhanced validation schema for comprehensive LCA data
@@ -38,6 +40,7 @@ const enhancedProductSchema = z.object({
   type: z.enum(['spirit', 'wine', 'beer', 'non-alcoholic', 'cider', 'liqueur', 'other']),
   volume: z.string().min(1, "Volume is required"),
   description: z.string().optional(),
+  productImage: z.string().optional(), // Product photo URL
   
   // Production Information
   productionModel: z.enum(['own', 'contract', 'hybrid']),
@@ -180,6 +183,7 @@ export default function EnhancedProductForm({
 }: EnhancedProductFormProps) {
   const [activeTab, setActiveTab] = useState('basic');
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const { toast } = useToast();
   
   const form = useForm<EnhancedProductForm>({
@@ -288,9 +292,14 @@ export default function EnhancedProductForm({
       });
       setValidationErrors(errors);
       
+      // Show detailed validation errors
+      const errorList = Object.entries(errors).map(([field, messages]) => 
+        `${field}: ${messages.join(', ')}`
+      ).join('\n');
+      
       toast({
-        title: "Validation Issues",
-        description: `Found ${Object.keys(errors).length} validation issues. Please review and fix them.`,
+        title: "Validation Issues Found",
+        description: `Found ${Object.keys(errors).length} validation issues. Check the highlighted fields and correct the errors.`,
         variant: "destructive",
       });
       return false;
@@ -338,6 +347,62 @@ export default function EnhancedProductForm({
               
               {/* Basic Information Tab */}
               <TabsContent value="basic" className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="w-4 h-4 text-blue-600" />
+                    <h4 className="font-medium text-blue-900">Basic Information</h4>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Provide essential product details including name, SKU, type, and production information. This forms the foundation for your LCA analysis and helps identify your product in the system.
+                  </p>
+                </div>
+                
+                {/* Product Photo Upload */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Product Photo</h4>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    {uploadedImage ? (
+                      <div className="space-y-2">
+                        <img 
+                          src={uploadedImage} 
+                          alt="Product" 
+                          className="w-32 h-32 object-cover mx-auto rounded-lg"
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setUploadedImage(null)}
+                        >
+                          Remove Photo
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Camera className="w-12 h-12 text-gray-400 mx-auto" />
+                        <p className="text-sm text-gray-600">
+                          Upload a photo of your product to help with identification
+                        </p>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="flex items-center gap-2"
+                          onClick={() => {
+                            // For now, simulate file upload
+                            toast({
+                              title: "Photo Upload",
+                              description: "Photo upload functionality coming soon",
+                            });
+                          }}
+                        >
+                          <Upload className="w-4 h-4" />
+                          Upload Photo
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Product Name *</Label>
@@ -443,6 +508,16 @@ export default function EnhancedProductForm({
               
               {/* Ingredients Tab */}
               <TabsContent value="ingredients" className="space-y-4">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Leaf className="w-4 h-4 text-green-600" />
+                    <h4 className="font-medium text-green-900">Ingredients & Recipe Information</h4>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    List all ingredients used in your product with accurate quantities, origins, and transport information. This data is crucial for calculating the carbon footprint of your raw materials and supply chain.
+                  </p>
+                </div>
+                
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Ingredients & Recipe</h3>
                   <Button
@@ -563,6 +638,16 @@ export default function EnhancedProductForm({
               
               {/* Packaging Tab */}
               <TabsContent value="packaging" className="space-y-6">
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="w-4 h-4 text-purple-600" />
+                    <h4 className="font-medium text-purple-900">Packaging Details</h4>
+                  </div>
+                  <p className="text-sm text-purple-700">
+                    Provide detailed information about all packaging materials including bottles, labels, closures, and secondary packaging. Include material types, weights, and recycled content for accurate lifecycle assessment.
+                  </p>
+                </div>
+                
                 <div className="space-y-6">
                   {/* Primary Container */}
                   <Card className="p-4">
@@ -723,6 +808,16 @@ export default function EnhancedProductForm({
               
               {/* Production Tab */}
               <TabsContent value="production" className="space-y-6">
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Factory className="w-4 h-4 text-orange-600" />
+                    <h4 className="font-medium text-orange-900">Production Process Details</h4>
+                  </div>
+                  <p className="text-sm text-orange-700">
+                    Document energy consumption, water usage, and waste generation during production. Include renewable energy percentage and waste management practices to calculate the environmental impact of your manufacturing process.
+                  </p>
+                </div>
+                
                 <div className="space-y-6">
                   {/* Energy Consumption */}
                   <Card className="p-4">
@@ -859,6 +954,16 @@ export default function EnhancedProductForm({
               
               {/* Distribution Tab */}
               <TabsContent value="distribution" className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Truck className="w-4 h-4 text-blue-600" />
+                    <h4 className="font-medium text-blue-900">Transportation & Distribution</h4>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Specify transportation methods, distances, and distribution network details. This information helps calculate the carbon footprint of moving your product from production to consumers.
+                  </p>
+                </div>
+                
                 <Card className="p-4">
                   <h3 className="font-semibold mb-4">Transportation & Distribution</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -924,6 +1029,16 @@ export default function EnhancedProductForm({
               
               {/* End of Life Tab */}
               <TabsContent value="endoflife" className="space-y-6">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Recycle className="w-4 h-4 text-green-600" />
+                    <h4 className="font-medium text-green-900">End of Life Management</h4>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    Define how your product and packaging are disposed of or recycled at the end of their lifecycle. Include recycling rates, disposal methods, and consumer education programs to complete the LCA analysis.
+                  </p>
+                </div>
+                
                 <Card className="p-4">
                   <h3 className="font-semibold mb-4">End of Life Management</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -987,6 +1102,24 @@ export default function EnhancedProductForm({
             </Tabs>
             
             <Separator />
+            
+            {/* Validation Error Summary */}
+            {Object.keys(validationErrors).length > 0 && (
+              <Card className="p-4 border-red-200 bg-red-50">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <h4 className="font-medium text-red-900">Validation Errors</h4>
+                </div>
+                <div className="space-y-1">
+                  {Object.entries(validationErrors).map(([field, messages]) => (
+                    <div key={field} className="text-sm">
+                      <span className="font-medium text-red-800">{field}:</span>
+                      <span className="text-red-700 ml-1">{messages.join(', ')}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

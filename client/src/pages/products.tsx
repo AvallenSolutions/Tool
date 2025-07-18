@@ -56,7 +56,7 @@ export default function Products() {
               <div className="flex items-center gap-3">
                 <Button 
                   onClick={() => navigate('/app/products/create/enhanced')}
-                  className="bg-avallen-green hover:bg-avallen-green-light text-white font-medium px-6 py-2"
+                  className="bg-avallen-green hover:bg-avallen-green-light text-white font-medium px-6 py-2 shadow-md border-2 border-avallen-green-dark"
                 >
                   <Package className="w-4 h-4 mr-2" />
                   Try Enhanced Form

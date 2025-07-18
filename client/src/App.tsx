@@ -36,6 +36,7 @@ function Router() {
           <Route path="/app/dashboard" component={Dashboard} />
           <Route path="/app/products" component={Products} />
           <Route path="/app/products/create/enhanced" component={CreateEnhancedProduct} />
+          <Route path="/app/products/:id/enhanced" component={CreateEnhancedProduct} />
           <Route path="/app/products/:id/edit" component={ProductEdit} />
           <Route path="/app/products/:id" component={ProductDetail} />
           <Route path="/app/reports" component={Reports} />

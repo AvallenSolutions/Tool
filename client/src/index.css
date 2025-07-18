@@ -92,6 +92,28 @@ body {
   border: 1px solid hsl(var(--border)) !important;
 }
 
+/* Toast styling - green background with white text */
+[data-radix-toast-root] {
+  background: hsl(var(--avallen-green)) !important;
+  border: 1px solid hsl(var(--avallen-green-light)) !important;
+  color: white !important;
+}
+
+[data-radix-toast-title] {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+[data-radix-toast-description] {
+  color: white !important;
+  opacity: 0.9 !important;
+}
+
+[data-radix-toast-close] {
+  color: white !important;
+  opacity: 0.8 !important;
+}
+
 /* Ensure buttons are always visible */
 .btn-always-visible {
   opacity: 1 !important;

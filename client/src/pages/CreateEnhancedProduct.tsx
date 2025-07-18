@@ -1,36 +1,51 @@
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useLocation, useRoute } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import EnhancedProductForm from '@/components/products/EnhancedProductForm';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function CreateEnhancedProduct() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, params] = useRoute('/app/products/:id/enhanced');
+  const isEditMode = !!params?.id;
+
+  // Fetch existing product data if editing
+  const { data: existingProduct, isLoading: isLoadingProduct } = useQuery({
+    queryKey: ['/api/products', params?.id],
+    queryFn: async () => {
+      if (!params?.id) return null;
+      const response = await apiRequest("GET", `/api/products/${params.id}`);
+      return response.json();
+    },
+    enabled: isEditMode,
+  });
 
   const createProductMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/products", data);
+      const method = isEditMode ? "PUT" : "POST";
+      const url = isEditMode ? `/api/products/${params.id}` : "/api/products";
+      const response = await apiRequest(method, url, data);
       return response.json();
     },
     onSuccess: (product) => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
-        title: "Enhanced Product Created!",
-        description: `${product.name} has been created with comprehensive LCA data for accurate environmental impact calculations.`,
+        title: isEditMode ? "Product Updated!" : "Enhanced Product Created!",
+        description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive LCA data for accurate environmental impact calculations.`,
       });
       navigate('/app/products');
     },
     onError: (error) => {
-      console.error("Error creating product:", error);
+      console.error("Error saving product:", error);
       toast({
         title: "Error",
-        description: "Failed to create product. Please try again.",
+        description: `Failed to ${isEditMode ? 'update' : 'create'} product. Please try again.`,
         variant: "destructive",
       });
     },
@@ -81,6 +96,18 @@ export default function CreateEnhancedProduct() {
     navigate('/app/products');
   };
 
+  // Show loading state while fetching existing product
+  if (isEditMode && isLoadingProduct) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-avallen-green" />
+          <span className="ml-2 text-gray-600">Loading product data...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="flex items-center gap-4 mb-6">
@@ -93,17 +120,20 @@ export default function CreateEnhancedProduct() {
           Back to Products
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-slate-gray">Enhanced Product Creation</h1>
+          <h1 className="text-3xl font-bold text-slate-gray">
+            {isEditMode ? 'Edit Enhanced Product' : 'Enhanced Product Creation'}
+          </h1>
           <p className="text-gray-600 mt-2">
-            Create a product with comprehensive environmental data for accurate LCA calculations
+            {isEditMode ? 'Update' : 'Create'} a product with comprehensive environmental data for accurate LCA calculations
           </p>
         </div>
       </div>
 
       <EnhancedProductForm
+        initialData={existingProduct}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
-        mode="create"
+        mode={isEditMode ? "edit" : "create"}
       />
     </div>
   );

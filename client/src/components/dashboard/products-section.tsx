@@ -486,6 +486,15 @@ export default function ProductsSection() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => navigate(`/app/products/${mainProduct.id}/enhanced`)}
+                      className="text-avallen-green hover:text-avallen-green-light"
+                      title="Add Enhanced Details"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleEdit(mainProduct)}
                     >
                       <Edit2 className="w-4 h-4" />
@@ -539,6 +548,15 @@ export default function ProductsSection() {
                         onClick={() => navigate(`/app/products/${product.id}`)}
                       >
                         <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
+                        className="text-avallen-green hover:text-avallen-green-light"
+                        title="Add Enhanced Details"
+                      >
+                        <Plus className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
