@@ -64,9 +64,9 @@ Preferred communication style: Simple, everyday language.
 
 ### Company Onboarding Flow
 1. New users complete streamlined 5-step onboarding wizard
-2. Company profile and reporting period setup
+2. Company profile with country dropdown (22 common countries) and reporting period setup
 3. Optional OCR document upload with skip functionality
-4. Operational data entry (manual or extracted from documents)
+4. Optional operational data entry with skip functionality (utilities can be added later)
 5. Primary product information (#1 selling product focus)
 6. Onboarding completion unlocks main dashboard with guided narrator for additional setup
 
@@ -133,3 +133,11 @@ Preferred communication style: Simple, everyday language.
 - **Security**: Environment-based secrets management
 
 The application follows a monorepo structure with shared types between frontend and backend, ensuring type safety across the entire stack while maintaining clear separation of concerns.
+
+## Recent Changes (January 2025)
+- **Onboarding Optimization**: Successfully streamlined 5-step onboarding process with skip functionality
+- **Country Selection**: Added dropdown with 22 common countries for company address
+- **Optional Data Entry**: Made utilities (step 4) and document upload (step 3) optional with skip buttons
+- **Product Focus**: Updated step 5 to emphasize #1 selling product entry
+- **Error Resolution**: Fixed dashboard chart error that was preventing navigation completion
+- **Completion Flow**: Simplified onboarding completion to avoid double mutations and ensure proper navigation
