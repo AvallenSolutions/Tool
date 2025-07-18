@@ -91,18 +91,36 @@ export const products = pgTable("products", {
   name: varchar("name").notNull(),
   sku: varchar("sku").notNull(), // Product SKU code
   type: varchar("type"), // spirit, wine, beer, non-alcoholic
-  size: varchar("size"), // e.g., 500ml, 750ml
+  volume: varchar("volume"), // Manual entry e.g., 500ml, 750ml
   description: text("description"),
   productionModel: varchar("production_model"), // own, contract
   contractManufacturerId: integer("contract_manufacturer_id").references(() => suppliers.id),
+  
+  // Pack shot image
+  packShotUrl: varchar("pack_shot_url", { length: 500 }),
   
   // Production details
   annualProductionVolume: decimal("annual_production_volume", { precision: 10, scale: 2 }),
   productionUnit: varchar("production_unit").default("bottles"), // bottles, liters, kg
   
-  // Packaging details
+  // Ingredients (stored as JSON array)
+  ingredients: jsonb("ingredients").$type<Array<{ name: string; amount: number; unit: string }>>(),
+  
+  // Bottle material and recycling
+  bottleMaterial: varchar("bottle_material", { length: 100 }), // glass, aluminium, PET, paper, tetrapak
+  bottleRecycledContent: decimal("bottle_recycled_content", { precision: 5, scale: 2 }), // percentage
   bottleWeight: decimal("bottle_weight", { precision: 10, scale: 2 }), // kg
-  labelWeight: decimal("label_weight", { precision: 10, scale: 2 }), // kg
+  
+  // Label information
+  labelMaterial: varchar("label_material", { length: 100 }),
+  labelWeight: decimal("label_weight", { precision: 10, scale: 3 }), // in grams
+  
+  // Closure information
+  closureMaterial: varchar("closure_material", { length: 100 }),
+  closureWeight: decimal("closure_weight", { precision: 10, scale: 3 }), // in grams
+  hasBuiltInClosure: boolean("has_built_in_closure").default(false),
+  
+  // Other packaging
   capWeight: decimal("cap_weight", { precision: 10, scale: 2 }), // kg
   boxWeight: decimal("box_weight", { precision: 10, scale: 2 }), // kg for shipping
   

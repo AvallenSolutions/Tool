@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Package, ArrowRight, CheckCircle } from "lucide-react";
+import { X, Package, ArrowRight, CheckCircle, Plus, Trash2, Upload, Image } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -27,14 +28,28 @@ const guidedSteps = [
     title: 'Basic Product Information',
     content: 'First, let\'s enter the basic details about your product. This information will be used for tracking and reporting.',
     showForm: true,
-    fields: ['name', 'sku', 'type']
+    fields: ['name', 'sku', 'type', 'volume', 'packShot']
+  },
+  {
+    id: 'ingredients',
+    title: 'Ingredients & Recipe',
+    content: 'Tell us about the ingredients used in making this product. This is critical for accurate LCA calculations.',
+    showForm: true,
+    fields: ['ingredients']
+  },
+  {
+    id: 'packaging',
+    title: 'Packaging Materials',
+    content: 'Now let\'s capture the packaging details. This includes bottle, labels, and closures.',
+    showForm: true,
+    fields: ['bottleMaterial', 'bottleRecycledContent', 'labelMaterial', 'labelWeight', 'closureMaterial', 'closureWeight']
   },
   {
     id: 'production-details',
     title: 'Production Details',
-    content: 'Now tell us about how this product is made. This helps us calculate the right environmental metrics.',
+    content: 'Finally, tell us about how this product is made and produced annually.',
     showForm: true,
-    fields: ['size', 'productionModel', 'annualVolume']
+    fields: ['productionModel', 'annualVolume']
   },
   {
     id: 'review',
@@ -51,7 +66,16 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
     name: '',
     sku: '',
     type: '',
-    size: '',
+    volume: '',
+    packShotUrl: '',
+    ingredients: [{ name: '', amount: 0, unit: 'ml' }],
+    bottleMaterial: '',
+    bottleRecycledContent: '',
+    labelMaterial: '',
+    labelWeight: '',
+    closureMaterial: '',
+    closureWeight: '',
+    hasBuiltInClosure: false,
     productionModel: '',
     annualVolume: '',
     status: 'active'
@@ -85,10 +109,33 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
 
   const currentGuidedStep = guidedSteps[currentStep];
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean | any[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const addIngredient = () => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: [...prev.ingredients, { name: '', amount: 0, unit: 'ml' }]
+    }));
+  };
+
+  const removeIngredient = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateIngredient = (index: number, field: string, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.map((ingredient, i) => 
+        i === index ? { ...ingredient, [field]: value } : ingredient
+      )
     }));
   };
 
@@ -108,9 +155,26 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
 
   const handleCreateProduct = () => {
     const productData = {
-      ...formData,
+      name: formData.name,
+      sku: formData.sku,
+      type: formData.type,
+      size: formData.volume, // Map volume to size for current database
+      productionModel: formData.productionModel,
       annualProductionVolume: formData.annualVolume ? parseInt(formData.annualVolume) : null,
-      productionUnit: 'bottles'
+      productionUnit: 'bottles',
+      status: 'active',
+      // Store comprehensive data in description field for now
+      description: JSON.stringify({
+        ingredients: formData.ingredients,
+        bottleMaterial: formData.bottleMaterial,
+        bottleRecycledContent: formData.bottleRecycledContent,
+        labelMaterial: formData.labelMaterial,
+        labelWeight: formData.labelWeight,
+        closureMaterial: formData.closureMaterial,
+        closureWeight: formData.closureWeight,
+        hasBuiltInClosure: formData.hasBuiltInClosure,
+        packShotUrl: formData.packShotUrl
+      })
     };
     createProductMutation.mutate(productData);
   };
@@ -128,9 +192,13 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.name && formData.sku && formData.type;
+        return formData.name && formData.sku && formData.type && formData.volume;
       case 2:
-        return formData.size && formData.productionModel;
+        return formData.ingredients.length > 0 && formData.ingredients.every(ing => ing.name && ing.amount > 0);
+      case 3:
+        return formData.bottleMaterial && formData.labelMaterial && formData.labelWeight;
+      case 4:
+        return formData.productionModel;
       default:
         return true;
     }
@@ -200,10 +268,10 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                   <div className="space-y-2">
                     <Label htmlFor="type">Product Type *</Label>
                     <Select onValueChange={(value) => handleInputChange('type', value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Select product type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
                         <SelectItem value="spirit">Spirit</SelectItem>
                         <SelectItem value="beer">Beer</SelectItem>
                         <SelectItem value="wine">Wine</SelectItem>
@@ -213,34 +281,224 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                     </Select>
                   </div>
                 )}
-                
-                {currentGuidedStep.fields?.includes('size') && (
+
+                {currentGuidedStep.fields?.includes('volume') && (
                   <div className="space-y-2">
-                    <Label htmlFor="size">Size *</Label>
-                    <Select onValueChange={(value) => handleInputChange('size', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
+                    <Label htmlFor="volume">Volume *</Label>
+                    <Input
+                      id="volume"
+                      value={formData.volume}
+                      onChange={(e) => handleInputChange('volume', e.target.value)}
+                      placeholder="e.g., 750ml, 500ml, 1L"
+                    />
+                  </div>
+                )}
+
+                {currentGuidedStep.fields?.includes('packShot') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="packShot">Pack Shot Image</Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm text-gray-600">Click to upload product image</p>
+                      <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // In a real app, you'd upload this to a storage service
+                            handleInputChange('packShotUrl', URL.createObjectURL(file));
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {currentGuidedStep.fields?.includes('ingredients') && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Ingredients & Recipe *</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addIngredient}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Ingredient
+                      </Button>
+                    </div>
+                    
+                    {formData.ingredients.map((ingredient, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-3 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Ingredient {index + 1}</span>
+                          {formData.ingredients.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeIngredient(index)}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <Input
+                            placeholder="Ingredient name"
+                            value={ingredient.name}
+                            onChange={(e) => updateIngredient(index, 'name', e.target.value)}
+                          />
+                          <Input
+                            type="number"
+                            placeholder="Amount"
+                            value={ingredient.amount}
+                            onChange={(e) => updateIngredient(index, 'amount', parseFloat(e.target.value) || 0)}
+                          />
+                        </div>
+                        
+                        <Select onValueChange={(value) => updateIngredient(index, 'unit', value)}>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Unit" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                            <SelectItem value="ml">ml</SelectItem>
+                            <SelectItem value="L">L</SelectItem>
+                            <SelectItem value="g">g</SelectItem>
+                            <SelectItem value="kg">kg</SelectItem>
+                            <SelectItem value="%">%</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {currentGuidedStep.fields?.includes('bottleMaterial') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="bottleMaterial">Bottle Material *</Label>
+                    <Select onValueChange={(value) => handleInputChange('bottleMaterial', value)}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Select bottle material" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="50ml">50ml</SelectItem>
-                        <SelectItem value="200ml">200ml</SelectItem>
-                        <SelectItem value="375ml">375ml</SelectItem>
-                        <SelectItem value="500ml">500ml</SelectItem>
-                        <SelectItem value="750ml">750ml</SelectItem>
-                        <SelectItem value="1L">1L</SelectItem>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                        <SelectItem value="glass">Glass</SelectItem>
+                        <SelectItem value="aluminium">Aluminium</SelectItem>
+                        <SelectItem value="PET">PET Plastic</SelectItem>
+                        <SelectItem value="paper">Paper</SelectItem>
+                        <SelectItem value="tetrapak">Tetrapak</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 )}
-                
+
+                {currentGuidedStep.fields?.includes('bottleRecycledContent') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="bottleRecycledContent">% Recycled Content in Bottle</Label>
+                    <Input
+                      id="bottleRecycledContent"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.bottleRecycledContent}
+                      onChange={(e) => handleInputChange('bottleRecycledContent', e.target.value)}
+                      placeholder="e.g., 30"
+                    />
+                  </div>
+                )}
+
+                {currentGuidedStep.fields?.includes('labelMaterial') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="labelMaterial">Label Material *</Label>
+                    <Select onValueChange={(value) => handleInputChange('labelMaterial', value)}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Select label material" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                        <SelectItem value="paper">Paper</SelectItem>
+                        <SelectItem value="plastic">Plastic</SelectItem>
+                        <SelectItem value="vinyl">Vinyl</SelectItem>
+                        <SelectItem value="foil">Foil</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {currentGuidedStep.fields?.includes('labelWeight') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="labelWeight">Label Weight (grams) *</Label>
+                    <Input
+                      id="labelWeight"
+                      type="number"
+                      step="0.1"
+                      value={formData.labelWeight}
+                      onChange={(e) => handleInputChange('labelWeight', e.target.value)}
+                      placeholder="e.g., 5.2"
+                    />
+                  </div>
+                )}
+
+                {currentGuidedStep.fields?.includes('closureMaterial') && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="hasBuiltInClosure"
+                        checked={formData.hasBuiltInClosure}
+                        onCheckedChange={(checked) => handleInputChange('hasBuiltInClosure', checked)}
+                      />
+                      <Label htmlFor="hasBuiltInClosure" className="text-sm">
+                        Product has built-in closure (e.g., cans)
+                      </Label>
+                    </div>
+                    
+                    {!formData.hasBuiltInClosure && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="closureMaterial">Closure Material *</Label>
+                          <Select onValueChange={(value) => handleInputChange('closureMaterial', value)}>
+                            <SelectTrigger className="bg-white">
+                              <SelectValue placeholder="Select closure material" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                              <SelectItem value="cork">Cork</SelectItem>
+                              <SelectItem value="plastic">Plastic Cap</SelectItem>
+                              <SelectItem value="metal">Metal Cap</SelectItem>
+                              <SelectItem value="synthetic">Synthetic Cork</SelectItem>
+                              <SelectItem value="screw">Screw Cap</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="closureWeight">Closure Weight (grams) *</Label>
+                          <Input
+                            id="closureWeight"
+                            type="number"
+                            step="0.1"
+                            value={formData.closureWeight}
+                            onChange={(e) => handleInputChange('closureWeight', e.target.value)}
+                            placeholder="e.g., 3.5"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 {currentGuidedStep.fields?.includes('productionModel') && (
                   <div className="space-y-2">
                     <Label htmlFor="productionModel">Production Model *</Label>
                     <Select onValueChange={(value) => handleInputChange('productionModel', value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue placeholder="How is this product made?" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
                         <SelectItem value="own">Own Production</SelectItem>
                         <SelectItem value="contract">Contract Manufacturing</SelectItem>
                         <SelectItem value="hybrid">Hybrid Model</SelectItem>
@@ -265,14 +523,39 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                 {currentGuidedStep.fields?.includes('review') && (
                   <div className="space-y-3">
                     <div className="bg-lightest-gray p-4 rounded-lg">
-                      <h4 className="font-semibold text-slate-gray mb-2">Product Summary</h4>
-                      <div className="space-y-2 text-sm">
-                        <div><strong>Name:</strong> {formData.name}</div>
-                        <div><strong>SKU:</strong> {formData.sku}</div>
-                        <div><strong>Type:</strong> {formData.type}</div>
-                        <div><strong>Size:</strong> {formData.size}</div>
-                        <div><strong>Production:</strong> {formData.productionModel}</div>
-                        {formData.annualVolume && <div><strong>Annual Volume:</strong> {formData.annualVolume} bottles</div>}
+                      <h4 className="font-semibold text-slate-gray mb-3">Product Summary</h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div><strong>Name:</strong> {formData.name}</div>
+                          <div><strong>SKU:</strong> {formData.sku}</div>
+                          <div><strong>Type:</strong> {formData.type}</div>
+                          <div><strong>Volume:</strong> {formData.volume}</div>
+                        </div>
+                        
+                        {formData.ingredients.length > 0 && (
+                          <div>
+                            <strong>Ingredients:</strong>
+                            <ul className="ml-4 mt-1 space-y-1">
+                              {formData.ingredients.map((ing, idx) => (
+                                <li key={idx} className="text-xs">
+                                  {ing.name} - {ing.amount} {ing.unit}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div><strong>Bottle:</strong> {formData.bottleMaterial}</div>
+                          <div><strong>Recycled Content:</strong> {formData.bottleRecycledContent}%</div>
+                          <div><strong>Label:</strong> {formData.labelMaterial} ({formData.labelWeight}g)</div>
+                          <div><strong>Closure:</strong> {formData.hasBuiltInClosure ? 'Built-in' : `${formData.closureMaterial} (${formData.closureWeight}g)`}</div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div><strong>Production:</strong> {formData.productionModel}</div>
+                          {formData.annualVolume && <div><strong>Annual Volume:</strong> {formData.annualVolume} bottles</div>}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -129,7 +129,29 @@ export class DatabaseStorage implements IStorage {
   // Product operations
   async getProductsByCompany(companyId: number): Promise<Product[]> {
     return await db
-      .select()
+      .select({
+        id: products.id,
+        companyId: products.companyId,
+        name: products.name,
+        sku: products.sku,
+        type: products.type,
+        size: products.size,
+        description: products.description,
+        productionModel: products.productionModel,
+        contractManufacturerId: products.contractManufacturerId,
+        annualProductionVolume: products.annualProductionVolume,
+        productionUnit: products.productionUnit,
+        bottleWeight: products.bottleWeight,
+        labelWeight: products.labelWeight,
+        capWeight: products.capWeight,
+        boxWeight: products.boxWeight,
+        carbonFootprint: products.carbonFootprint,
+        waterFootprint: products.waterFootprint,
+        status: products.status,
+        isMainProduct: products.isMainProduct,
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
       .from(products)
       .where(eq(products.companyId, companyId))
       .orderBy(desc(products.createdAt));

@@ -139,6 +139,24 @@ body {
   }
 }
 
+/* Fix dropdown transparency issues */
+.dark [data-radix-popper-content-wrapper] {
+  background-color: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-radix-popper-content-wrapper] {
+  background-color: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.select-content {
+  background-color: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
 /* Custom button variant for tour */
 .tour-btn-primary {
   background-color: hsl(var(--avallen-green));
