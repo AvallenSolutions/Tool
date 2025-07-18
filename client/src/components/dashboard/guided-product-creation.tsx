@@ -71,14 +71,14 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
     packShotUrl: '',
     ingredients: [{ name: '', amount: 0, unit: 'ml' }],
     bottleMaterial: '',
-    bottleRecycledContent: '',
+    bottleRecycledContent: 0,
     labelMaterial: '',
-    labelWeight: '',
+    labelWeight: 0,
     closureMaterial: '',
-    closureWeight: '',
+    closureWeight: 0,
     hasBuiltInClosure: false,
     productionModel: '',
-    annualVolume: '',
+    annualVolume: 0,
     status: 'active'
   });
   const [isVisible, setIsVisible] = useState(true);
@@ -480,7 +480,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                       type="number"
                       min="0"
                       max="100"
-                      value={formData.bottleRecycledContent}
+                      value={formData.bottleRecycledContent || ''}
                       onChange={(e) => handleInputChange('bottleRecycledContent', e.target.value)}
                       placeholder="e.g., 30"
                     />
@@ -511,7 +511,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                       id="labelWeight"
                       type="number"
                       step="0.1"
-                      value={formData.labelWeight}
+                      value={formData.labelWeight || ''}
                       onChange={(e) => handleInputChange('labelWeight', e.target.value)}
                       placeholder="e.g., 5.2"
                     />
@@ -555,7 +555,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                             id="closureWeight"
                             type="number"
                             step="0.1"
-                            value={formData.closureWeight}
+                            value={formData.closureWeight || ''}
                             onChange={(e) => handleInputChange('closureWeight', e.target.value)}
                             placeholder="e.g., 3.5"
                           />
@@ -587,7 +587,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                     <Input
                       id="annualVolume"
                       type="number"
-                      value={formData.annualVolume}
+                      value={formData.annualVolume || ''}
                       onChange={(e) => handleInputChange('annualVolume', e.target.value)}
                       placeholder="e.g., 10000"
                     />

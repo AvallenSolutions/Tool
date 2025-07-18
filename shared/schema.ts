@@ -92,6 +92,7 @@ export const products = pgTable("products", {
   sku: varchar("sku").notNull(), // Product SKU code
   type: varchar("type"), // spirit, wine, beer, non-alcoholic
   volume: varchar("volume"), // Manual entry e.g., 500ml, 750ml
+  size: varchar("size"), // Product size classification
   description: text("description"),
   productionModel: varchar("production_model"), // own, contract
   contractManufacturerId: integer("contract_manufacturer_id").references(() => suppliers.id),
@@ -113,7 +114,7 @@ export const products = pgTable("products", {
   
   // Label information
   labelMaterial: varchar("label_material", { length: 100 }),
-  labelWeight: decimal("label_weight", { precision: 10, scale: 3 }), // in grams
+  labelWeight: decimal("label_weight", { precision: 10, scale: 2 }), // in grams
   
   // Closure information
   closureMaterial: varchar("closure_material", { length: 100 }),
