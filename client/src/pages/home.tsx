@@ -13,12 +13,13 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (user) {
+    if (user && company !== undefined) {
       if (!company) {
         navigate("/app/onboarding");
       } else if (!company.onboardingComplete) {
         navigate("/app/onboarding");
       } else {
+        // Company is complete, go to dashboard
         navigate("/app/dashboard");
       }
     }

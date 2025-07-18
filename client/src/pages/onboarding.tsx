@@ -47,6 +47,19 @@ export default function Onboarding() {
           <p className="text-gray-600 mt-2">
             Let's get your sustainability platform set up in just a few steps.
           </p>
+          
+          {/* Debug/bypass button */}
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800 mb-2">
+              Already completed onboarding? 
+            </p>
+            <Button
+              onClick={() => navigate("/app/dashboard")}
+              className="bg-avallen-green text-white hover:bg-avallen-green-light"
+            >
+              Go to Dashboard
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
