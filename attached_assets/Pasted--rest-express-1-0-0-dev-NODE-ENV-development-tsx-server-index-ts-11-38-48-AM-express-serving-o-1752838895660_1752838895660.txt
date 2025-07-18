@@ -1,0 +1,48 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+11:38:48 AM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[vite:css] @import must precede all other statements (besides @charset or empty @layer)
+3  |  @tailwind utilities;
+4  |  
+5  |  @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&display=swap');
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6  |  
+7  |  :root {
+11:38:51 AM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+11:38:56 AM [express] GET /api/auth/user 200 in 235ms :: {"id":"44886248","email":"tim@avallen.soluti…
+11:38:56 AM [express] GET /api/company 304 in 111ms :: {"id":1,"name":"Avallen Test","industry":"spir…
+11:38:56 AM [express] GET /api/dashboard/metrics 200 in 148ms :: {"totalCO2e":42,"waterUsage":"1000.0…
+11:38:56 AM [express] GET /api/reports 200 in 274ms :: []
+11:38:57 AM [express] GET /api/products 200 in 152ms :: [{"id":1,"companyId":1,"name":"Avallen Calvad…
+11:38:57 AM [express] GET /api/suppliers 200 in 147ms :: []
+11:39:47 AM [express] GET /api/auth/user 304 in 246ms :: {"id":"44886248","email":"tim@avallen.soluti…
+11:39:48 AM [express] GET /api/dashboard/metrics 304 in 159ms :: {"totalCO2e":42,"waterUsage":"1000.0…
+11:39:48 AM [express] GET /api/company 304 in 237ms :: {"id":1,"name":"Avallen Test","industry":"spir…
+11:39:48 AM [express] GET /api/suppliers 304 in 269ms :: []
+11:39:48 AM [express] GET /api/reports 304 in 288ms :: []
+11:39:48 AM [express] GET /api/products 304 in 295ms :: [{"id":1,"companyId":1,"name":"Avallen Calvad…
+Error creating product: ZodError: [
+  {
+    "code": "too_big",
+    "maximum": 500,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at most 500 character(s)",
+    "path": [
+      "packShotUrl"
+    ]
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "number",
+    "path": [
+      "bottleRecycledContent"
+    ],
+    "message": "Expected string, received number"
+  },

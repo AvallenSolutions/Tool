@@ -97,7 +97,7 @@ export const products = pgTable("products", {
   contractManufacturerId: integer("contract_manufacturer_id").references(() => suppliers.id),
   
   // Pack shot image
-  packShotUrl: varchar("pack_shot_url", { length: 500 }),
+  packShotUrl: text("pack_shot_url"),
   
   // Production details
   annualProductionVolume: decimal("annual_production_volume", { precision: 10, scale: 2 }),
@@ -350,6 +350,12 @@ export const insertProductSchema = createInsertSchema(products).omit({
   companyId: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  // Convert number fields to proper types
+  bottleRecycledContent: z.union([z.string(), z.number()]).optional().nullable(),
+  labelWeight: z.union([z.string(), z.number()]).optional().nullable(),
+  closureWeight: z.union([z.string(), z.number()]).optional().nullable(),
+  packShotUrl: z.string().optional().nullable(),
 });
 export type InsertProductType = z.infer<typeof insertProductSchema>;
 export type Company = typeof companies.$inferSelect;

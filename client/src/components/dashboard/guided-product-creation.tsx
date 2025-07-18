@@ -185,11 +185,11 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
       packShotUrl: formData.packShotUrl,
       ingredients: formData.ingredients,
       bottleMaterial: formData.bottleMaterial,
-      bottleRecycledContent: formData.bottleRecycledContent ? parseFloat(formData.bottleRecycledContent) : null,
+      bottleRecycledContent: formData.bottleRecycledContent || null,
       labelMaterial: formData.labelMaterial,
-      labelWeight: formData.labelWeight ? parseFloat(formData.labelWeight) : null,
+      labelWeight: formData.labelWeight || null,
       closureMaterial: formData.closureMaterial,
-      closureWeight: formData.closureWeight ? parseFloat(formData.closureWeight) : null,
+      closureWeight: formData.closureWeight || null,
       hasBuiltInClosure: formData.hasBuiltInClosure
     };
     createProductMutation.mutate(productData);
