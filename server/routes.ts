@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
 import { lcaService, LCAJobManager } from "./lca";
+import { PDFService } from "./pdfService";
 import path from "path";
 import fs from "fs";
 
@@ -742,6 +743,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting queue stats:", error);
       res.status(500).json({ message: "Failed to get queue stats" });
+    }
+  });
+
+  // PDF download route for LCA reports
+  app.get('/api/lca/product/:productId/download-pdf', isAuthenticated, async (req: any, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      const userId = req.user.claims.sub;
+      
+      // Get product data
+      const product = await dbStorage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Get company data
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      // Verify user owns this product
+      if (product.companyId !== company.id) {
+        return res.status(403).json({ message: "Unauthorized access to product" });
+      }
+      
+      // Get latest LCA results for this product
+      const lcaHistory = await lcaService.getProductLCAHistory(productId);
+      const latestLCA = lcaHistory[0];
+      
+      if (!latestLCA || !latestLCA.results) {
+        return res.status(404).json({ message: "No LCA results found for this product" });
+      }
+      
+      // Get operational data
+      const companyDataList = await dbStorage.getCompanyData(company.id);
+      const operationalData = companyDataList[0] || {};
+      
+      // Prepare data for PDF generation
+      const pdfData = {
+        product: {
+          id: product.id,
+          name: product.name,
+          sku: product.sku || `SKU-${product.id}`,
+          volume: product.volume || '750ml',
+          annualProductionVolume: product.annualProductionVolume || 0,
+          productionUnit: product.productionUnit || 'units',
+          bottleWeight: product.bottleWeight || 0,
+          labelWeight: product.labelWeight || 0,
+          bottleMaterial: product.bottleMaterial || 'Glass',
+          labelMaterial: product.labelMaterial || 'Paper',
+        },
+        company: {
+          name: company.name,
+          industry: company.industry,
+          size: company.size,
+          address: company.address,
+          country: company.country,
+          website: company.website,
+          reportingPeriodStart: company.currentReportingPeriodStart?.toISOString() || new Date().toISOString(),
+          reportingPeriodEnd: company.currentReportingPeriodEnd?.toISOString() || new Date().toISOString(),
+        },
+        lcaResults: {
+          totalCarbonFootprint: latestLCA.results.totalCarbonFootprint || 0,
+          totalWaterFootprint: latestLCA.results.totalWaterFootprint || 0,
+          impactsByCategory: latestLCA.results.impactsByCategory || [],
+          calculationDate: latestLCA.results.calculationDate || latestLCA.createdAt?.toISOString() || new Date().toISOString(),
+          systemName: latestLCA.olcaSystemName || 'LCA System',
+          systemId: latestLCA.olcaSystemId || 'system-001',
+        },
+        operationalData: {
+          electricityConsumption: operationalData.electricityConsumption || 0,
+          gasConsumption: operationalData.gasConsumption || 0,
+          waterConsumption: operationalData.waterConsumption || 0,
+          wasteGenerated: operationalData.wasteGenerated || 0,
+        }
+      };
+      
+      // Generate PDF
+      const pdfBuffer = await PDFService.generateLCAPDF(pdfData);
+      
+      // Set response headers for PDF download
+      const filename = `LCA_Report_${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      // Send PDF
+      res.send(pdfBuffer);
+      
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      res.status(500).json({ message: "Failed to generate PDF report" });
     }
   });
 

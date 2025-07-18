@@ -17,7 +17,8 @@ import {
   XCircle, 
   AlertCircle,
   BarChart3,
-  Settings
+  Settings,
+  Download
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Product } from "@shared/schema";
@@ -110,6 +111,47 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
     },
   });
 
+  // Download PDF report
+  const downloadPDFMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      const response = await fetch(`/api/lca/product/${productId}/download-pdf`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/pdf',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download PDF');
+      }
+      
+      return response.blob();
+    },
+    onSuccess: (blob) => {
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `LCA_Report_${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "PDF Downloaded",
+        description: "Your LCA report has been downloaded successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Download Failed",
+        description: "Failed to download PDF report. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get latest completed job
   const latestCompletedJob = lcaHistory?.find((job: LCAJob) => job.status === 'completed');
   const activeJob = lcaHistory?.find((job: LCAJob) => 
@@ -131,6 +173,10 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
     if (currentJobId) {
       cancelCalculationMutation.mutate(currentJobId);
     }
+  };
+
+  const handleDownloadPDF = () => {
+    downloadPDFMutation.mutate(product.id);
   };
 
   const formatDuration = (seconds: number) => {
@@ -304,8 +350,20 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
               </div>
             )}
 
-            <div className="text-xs text-gray-500">
-              Last calculated: {new Date(latestCompletedJob.results.calculationDate).toLocaleDateString()}
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-gray-500">
+                Last calculated: {new Date(latestCompletedJob.results.calculationDate).toLocaleDateString()}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPDF}
+                disabled={downloadPDFMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {downloadPDFMutation.isPending ? 'Generating...' : 'Download PDF'}
+              </Button>
             </div>
           </div>
         )}
@@ -321,6 +379,17 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
               <Calculator className="w-4 h-4 mr-2" />
               {latestCompletedJob ? 'Recalculate LCA' : 'Calculate LCA'}
             </Button>
+            {latestCompletedJob && (
+              <Button
+                variant="outline"
+                onClick={handleDownloadPDF}
+                disabled={downloadPDFMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                PDF
+              </Button>
+            )}
           </div>
         )}
 
