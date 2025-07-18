@@ -249,20 +249,28 @@ export default function ProductsSection() {
               Manage your product SKUs and track individual footprints
             </p>
           </div>
-          <Dialog open={isAddDialogOpen || !!editingProduct} onOpenChange={(open) => {
-            setIsAddDialogOpen(open);
-            if (!open) {
-              setEditingProduct(null);
-              resetForm();
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => navigate('/app/products/create/enhanced')}
+              className="bg-avallen-green hover:bg-avallen-green-light text-white"
+            >
+              <Package className="w-4 h-4 mr-2" />
+              Enhanced Product
+            </Button>
+            <Dialog open={isAddDialogOpen || !!editingProduct} onOpenChange={(open) => {
+              setIsAddDialogOpen(open);
+              if (!open) {
+                setEditingProduct(null);
+                resetForm();
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-avallen-green text-avallen-green hover:bg-avallen-green-light hover:text-white">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Quick Add
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
                   {editingProduct ? "Edit Product" : "Add New Product"}
@@ -419,6 +427,7 @@ export default function ProductsSection() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
