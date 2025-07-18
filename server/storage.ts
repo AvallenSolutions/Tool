@@ -104,7 +104,8 @@ export class DatabaseStorage implements IStorage {
     const [company] = await db
       .select()
       .from(companies)
-      .where(eq(companies.ownerId, ownerId));
+      .where(eq(companies.ownerId, ownerId))
+      .orderBy(desc(companies.createdAt));
     return company;
   }
 

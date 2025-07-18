@@ -85,14 +85,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...companyData 
       } = req.body;
       
-      const validatedData = insertCompanySchema.parse({
-        ...companyData,
-        ownerId: userId,
-      });
+      // Check if company already exists
+      let company = await dbStorage.getCompanyByOwner(userId);
       
-      const company = await dbStorage.createCompany(validatedData);
+      if (company) {
+        // Update existing company
+        company = await dbStorage.updateCompany(company.id, {
+          ...companyData,
+          onboardingComplete: true,
+        });
+      } else {
+        // Create new company
+        const validatedData = insertCompanySchema.parse({
+          ...companyData,
+          ownerId: userId,
+        });
+        company = await dbStorage.createCompany(validatedData);
+      }
       
-      // Create operational data if provided
+      // Create or update operational data if provided
       if (electricityConsumption || gasConsumption || waterConsumption || wasteGenerated) {
         await dbStorage.updateCompanyData(company.id, {
           electricityConsumption: electricityConsumption || 0,
@@ -106,8 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(company);
     } catch (error) {
-      console.error("Error creating company:", error);
-      res.status(500).json({ message: "Failed to create company" });
+      console.error("Error creating/updating company:", error);
+      res.status(500).json({ message: "Failed to create/update company" });
     }
   });
 
