@@ -35,6 +35,18 @@ export default function Dashboard() {
     }
   }, [company]);
 
+  // Auto-start tour for testing
+  useEffect(() => {
+    if (company) {
+      const timer = setTimeout(() => {
+        if (!localStorage.getItem('dashboard-tour-completed')) {
+          setShowTour(true);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [company]);
+
   // Development helper - reset tour state
   const resetTour = () => {
     localStorage.removeItem('dashboard-tour-completed');
