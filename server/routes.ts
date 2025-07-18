@@ -187,6 +187,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const productId = parseInt(req.params.id);
+      
+      // Validate productId is a valid number
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+      
       const product = await dbStorage.getProductById(productId);
       
       if (!product) {
@@ -215,6 +221,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const productId = parseInt(req.params.id);
+      
+      // Validate productId is a valid number
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+      
       const updates = req.body;
       
       console.log('🛠️ Server received PATCH request for product:', productId);

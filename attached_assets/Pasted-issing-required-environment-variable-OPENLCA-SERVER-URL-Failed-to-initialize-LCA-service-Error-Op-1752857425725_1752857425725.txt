@@ -1,0 +1,45 @@
+issing required environment variable: OPENLCA_SERVER_URL
+Failed to initialize LCA service: Error: OpenLCA configuration is invalid
+    at LCAService.initialize (/home/runner/workspace/server/lca.ts:28:15)
+    at <anonymous> (/home/runner/workspace/server/index.ts:43:22)
+    at <anonymous> (/home/runner/workspace/server/index.ts:80:1)
+LCA service initialization failed (OpenLCA may not be available): OpenLCA configuration is invalid
+4:43:58 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+4:44:08 PM [express] GET /api/auth/user 304 in 253ms :: {"id":"44886248","email":"tim@avallen.soluti…
+4:44:08 PM [express] GET /api/company 304 in 124ms :: {"id":1,"name":"Avallen Test","industry":"spir…
+4:44:08 PM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+4:44:08 PM [express] GET /api/dashboard/metrics 304 in 150ms :: {"totalCO2e":42,"waterUsage":"1000.0…
+4:44:08 PM [express] GET /api/reports 304 in 279ms :: []
+4:44:08 PM [express] GET /api/suppliers 304 in 280ms :: []
+4:44:08 PM [express] GET /api/products 304 in 359ms :: [{"id":7,"companyId":1,"name":"Avallen Test",…
+4:44:11 PM [express] GET /api/auth/user 304 in 111ms :: {"id":"44886248","email":"tim@avallen.soluti…
+4:44:11 PM [express] GET /api/company 304 in 111ms :: {"id":1,"name":"Avallen Test","industry":"spir…
+4:44:11 PM [express] GET /api/reports 304 in 191ms :: []
+4:44:11 PM [express] GET /api/suppliers 304 in 191ms :: []
+4:44:11 PM [express] GET /api/dashboard/metrics 304 in 198ms :: {"totalCO2e":42,"waterUsage":"1000.0…
+4:44:11 PM [express] GET /api/products 304 in 248ms :: [{"id":7,"companyId":1,"name":"Avallen Test",…
+4:46:08 PM [express] GET /api/products/3 304 in 4915ms :: {"id":3,"companyId":1,"name":"Avallen Calv…
+4:46:08 PM [express] GET /api/lca/product/3/history 304 in 112ms :: []
+4:46:08 PM [express] GET /api/lca/product/3/validate 304 in 108ms :: {"valid":true,"errors":[],"warn…
+4:48:10 PM [express] DELETE /api/products/7 200 in 4894ms :: {"message":"Product deleted successfull…
+4:48:10 PM [express] GET /api/products/7 404 in 149ms :: {"message":"Product not found"}
+4:48:12 PM [express] GET /api/products 200 in 148ms :: [{"id":3,"companyId":1,"name":"Avallen Calvad…
+Error fetching product: error: invalid input syntax for type integer: "NaN"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.getProductById (/home/runner/workspace/server/storage.ts:168:23)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:190:23) {
+  length: 146,
+  severity: 'ERROR',
+  code: '22P02',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: "unnamed portal parameter $1 = '...'",
+  schema: undefined,

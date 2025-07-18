@@ -11,24 +11,29 @@ export default function CreateEnhancedProduct() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [, params] = useRoute('/app/products/:id/enhanced');
-  const isEditMode = !!params?.id;
+  
+  // Check both routes to determine if we're editing or creating
+  const [matchEdit, paramsEdit] = useRoute('/app/products/:id/enhanced');
+  const [matchCreate] = useRoute('/app/products/create/enhanced');
+  
+  const isEditMode = matchEdit && paramsEdit?.id && paramsEdit.id !== 'create';
+  const productId = isEditMode ? paramsEdit.id : null;
 
   // Fetch existing product data if editing
   const { data: existingProduct, isLoading: isLoadingProduct } = useQuery({
-    queryKey: ['/api/products', params?.id],
+    queryKey: ['/api/products', productId],
     queryFn: async () => {
-      if (!params?.id) return null;
-      const response = await apiRequest("GET", `/api/products/${params.id}`);
+      if (!productId) return null;
+      const response = await apiRequest("GET", `/api/products/${productId}`);
       return response.json();
     },
-    enabled: isEditMode,
+    enabled: isEditMode && !!productId,
   });
 
   const createProductMutation = useMutation({
     mutationFn: async (data: any) => {
       const method = isEditMode ? "PATCH" : "POST";
-      const url = isEditMode ? `/api/products/${params.id}` : "/api/products";
+      const url = isEditMode ? `/api/products/${productId}` : "/api/products";
       const response = await apiRequest(method, url, data);
       return response.json();
     },
