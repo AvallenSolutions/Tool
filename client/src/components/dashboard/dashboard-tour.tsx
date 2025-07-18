@@ -87,6 +87,7 @@ interface DashboardTourProps {
 export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [cardPosition, setCardPosition] = useState({ top: '50%', left: 'auto', right: '2rem', bottom: 'auto' });
 
   const currentTourStep = tourSteps[currentStep];
 
@@ -109,10 +110,56 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
       el.classList.remove('tour-highlight');
     });
     
-    // Add highlight to current target
+    // Add highlight to current target and position card
     const targetElement = document.getElementById(currentTourStep.target);
     if (targetElement) {
       targetElement.classList.add('tour-highlight');
+      
+      // Scroll to element smoothly
+      targetElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest' 
+      });
+      
+      // Position the card to avoid covering the target
+      setTimeout(() => {
+        const rect = targetElement.getBoundingClientRect();
+        const cardWidth = 400;
+        const cardHeight = 300;
+        
+        let newPosition = { top: '50%', left: 'auto', right: '2rem', bottom: 'auto' };
+        
+        // If target is on the right side, position card on the left
+        if (rect.right > window.innerWidth / 2) {
+          newPosition = { 
+            top: Math.max(20, rect.top - 50) + 'px', 
+            left: '2rem', 
+            right: 'auto', 
+            bottom: 'auto' 
+          };
+        }
+        // If target is on the left side, position card on the right
+        else if (rect.left < window.innerWidth / 2) {
+          newPosition = { 
+            top: Math.max(20, rect.top - 50) + 'px', 
+            left: 'auto', 
+            right: '2rem', 
+            bottom: 'auto' 
+          };
+        }
+        // If target is at the bottom, position card at the top
+        else if (rect.bottom > window.innerHeight * 0.7) {
+          newPosition = { 
+            top: '2rem', 
+            left: 'auto', 
+            right: '2rem', 
+            bottom: 'auto' 
+          };
+        }
+        
+        setCardPosition(newPosition);
+      }, 100);
     }
   }, [currentStep, currentTourStep.target]);
 
@@ -150,7 +197,18 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
       <div className="fixed inset-0 bg-black bg-opacity-70 z-40 tour-overlay" />
       
       {/* Tour card */}
-      <div className="fixed z-50 tour-card max-w-md">
+      <div 
+        className="fixed z-50 max-w-md"
+        style={{
+          top: cardPosition.top,
+          left: cardPosition.left,
+          right: cardPosition.right,
+          bottom: cardPosition.bottom,
+          transform: cardPosition.top === '50%' ? 'translateY(-50%)' : 'none',
+          animation: 'slideIn 0.3s ease',
+          minWidth: '400px'
+        }}
+      >
         <Card className="w-full bg-white border-2 border-avallen-green shadow-2xl">
           <CardHeader className="pb-3 bg-lightest-gray">
             <div className="flex items-center justify-between">
@@ -179,30 +237,30 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
               {currentTourStep.content}
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentStep === 0}
-                className="flex items-center gap-2 border-light-gray w-full sm:w-auto"
+                className="flex items-center gap-2 border-light-gray"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
               </Button>
               
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   onClick={handleSkip}
                   className="text-gray-500 hover:text-gray-700 text-sm"
                 >
-                  Skip Tour
+                  Skip
                 </Button>
                 <Button
                   onClick={handleNext}
-                  className="bg-avallen-green hover:bg-avallen-green-light text-white flex items-center gap-2 px-4 py-2"
+                  className="bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2 px-6 py-2 font-medium"
                 >
-                  {currentStep === tourSteps.length - 1 ? 'Finish Tour' : 'Next'}
+                  {currentStep === tourSteps.length - 1 ? 'Finish' : 'Next'}
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
