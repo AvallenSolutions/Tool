@@ -90,6 +90,8 @@ body {
   right: 2rem;
   transform: translateY(-50%);
   animation: slideInRight 0.3s ease;
+  min-width: 400px;
+  max-width: 500px;
 }
 
 @keyframes slideInRight {

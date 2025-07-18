@@ -150,8 +150,8 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
       <div className="fixed inset-0 bg-black bg-opacity-70 z-40 tour-overlay" />
       
       {/* Tour card */}
-      <div className="fixed z-50 tour-card">
-        <Card className="w-96 bg-white border-2 border-avallen-green shadow-2xl">
+      <div className="fixed z-50 tour-card max-w-md">
+        <Card className="w-full bg-white border-2 border-avallen-green shadow-2xl">
           <CardHeader className="pb-3 bg-lightest-gray">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -179,28 +179,28 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
               {currentTourStep.content}
             </p>
             
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentStep === 0}
-                className="flex items-center gap-2 border-light-gray"
+                className="flex items-center gap-2 border-light-gray w-full sm:w-auto"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
               </Button>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <Button
                   variant="ghost"
                   onClick={handleSkip}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 text-sm"
                 >
                   Skip Tour
                 </Button>
                 <Button
                   onClick={handleNext}
-                  className="bg-avallen-green hover:bg-avallen-green-light text-white flex items-center gap-2"
+                  className="bg-avallen-green hover:bg-avallen-green-light text-white flex items-center gap-2 px-4 py-2"
                 >
                   {currentStep === tourSteps.length - 1 ? 'Finish Tour' : 'Next'}
                   <ChevronRight className="w-4 h-4" />
