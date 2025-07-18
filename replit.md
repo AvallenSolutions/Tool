@@ -63,16 +63,19 @@ Preferred communication style: Simple, everyday language.
 5. User redirected to appropriate dashboard or onboarding
 
 ### Company Onboarding Flow
-1. New users complete multi-step onboarding wizard
-2. Company profile, operational data, and initial products created
-3. Supplier invitations sent during setup
-4. Onboarding completion unlocks main dashboard
+1. New users complete streamlined 5-step onboarding wizard
+2. Company profile and reporting period setup
+3. Optional OCR document upload with skip functionality
+4. Operational data entry (manual or extracted from documents)
+5. Primary product information (#1 selling product focus)
+6. Onboarding completion unlocks main dashboard with guided narrator for additional setup
 
 ### Supplier Collaboration Flow
-1. Companies create supplier records with unique tokens
+1. Companies create supplier records with unique tokens (post-onboarding)
 2. Suppliers receive portal links via email
 3. Suppliers submit environmental data through dedicated portal
 4. Data integrated into company's sustainability calculations
+5. Supplier setup moved to post-onboarding guided narrator flow
 
 ### Report Generation Flow
 1. Users initiate report generation from dashboard

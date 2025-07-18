@@ -42,10 +42,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     productType: '',
     productSize: '',
     productionModel: '',
-    // Supplier data
-    supplierName: '',
-    supplierEmail: '',
-    supplierType: '',
     // Document upload tracking
     documentsUploaded: false,
   });
@@ -68,7 +64,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     },
   });
 
-  const totalSteps = 6;
+  const totalSteps = 5;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -119,8 +115,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         return formData.electricityConsumption && formData.waterConsumption;
       case 5:
         return formData.productName && formData.productType && formData.productionModel;
-      case 6:
-        return formData.supplierName && formData.supplierEmail;
       default:
         return true;
     }
@@ -344,8 +338,8 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
           <div className="space-y-4">
             <div className="text-center mb-6">
               <Package className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Product Information</h3>
-              <p className="text-gray-600">Tell us about your main product</p>
+              <h3 className="text-xl font-semibold text-slate-gray mb-2">Your #1 Selling Product</h3>
+              <p className="text-gray-600">Tell us about your best-selling product. You can add additional SKUs later once setup is complete.</p>
             </div>
             
             <div>
@@ -354,7 +348,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 id="productName"
                 value={formData.productName}
                 onChange={(e) => handleInputChange('productName', e.target.value)}
-                placeholder="e.g., Premium Gin"
+                placeholder="e.g., Premium Gin (your top-selling product)"
               />
             </div>
             
@@ -414,58 +408,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
           </div>
         );
 
-      case 6:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Users className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Supplier Setup</h3>
-              <p className="text-gray-600">Add your first supplier for Scope 3 tracking</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="supplierName">Supplier Name *</Label>
-              <Input
-                id="supplierName"
-                value={formData.supplierName}
-                onChange={(e) => handleInputChange('supplierName', e.target.value)}
-                placeholder="e.g., Glass Bottle Co."
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="supplierEmail">Contact Email *</Label>
-              <Input
-                id="supplierEmail"
-                type="email"
-                value={formData.supplierEmail}
-                onChange={(e) => handleInputChange('supplierEmail', e.target.value)}
-                placeholder="contact@supplier.com"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="supplierType">Supplier Type</Label>
-              <Select value={formData.supplierType} onValueChange={(value) => handleInputChange('supplierType', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ingredient">Ingredient Supplier</SelectItem>
-                  <SelectItem value="packaging">Packaging Supplier</SelectItem>
-                  <SelectItem value="contract_manufacturer">Contract Manufacturer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <p className="text-yellow-800 text-sm">
-                💡 Don't worry, you can add more suppliers later in the Suppliers section.
-              </p>
-            </div>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -503,14 +445,26 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             >
               Back
             </Button>
-            <Button
-              onClick={handleNext}
-              disabled={!isStepValid() || createCompanyMutation.isPending}
-              className="bg-avallen-green hover:bg-avallen-green-light text-white"
-            >
-              {createCompanyMutation.isPending ? "Setting up..." : 
-               currentStep === totalSteps ? "Complete Setup" : "Continue"}
-            </Button>
+            
+            <div className="flex space-x-2">
+              {currentStep === 3 && (
+                <Button
+                  variant="outline"
+                  onClick={handleNext}
+                  className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                >
+                  Skip for now
+                </Button>
+              )}
+              <Button
+                onClick={handleNext}
+                disabled={!isStepValid() || createCompanyMutation.isPending}
+                className="bg-avallen-green hover:bg-avallen-green-light text-white"
+              >
+                {createCompanyMutation.isPending ? "Setting up..." : 
+                 currentStep === totalSteps ? "Complete Setup" : "Continue"}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
