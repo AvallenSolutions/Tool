@@ -7,6 +7,7 @@ import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertU
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
+import { calculateProductLCA } from "./lca";
 import path from "path";
 import fs from "fs";
 
@@ -175,6 +176,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/products/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      const productId = parseInt(req.params.id);
+      const product = await dbStorage.getProductById(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Verify the product belongs to the user's company
+      if (product.companyId !== company.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(product);
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      res.status(500).json({ message: "Failed to fetch product" });
+    }
+  });
+
   app.patch('/api/products/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -192,6 +221,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating product:", error);
       res.status(500).json({ message: "Failed to update product" });
+    }
+  });
+
+  app.post('/api/products/:id/lca', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      const productId = parseInt(req.params.id);
+      const product = await dbStorage.getProductById(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Verify the product belongs to the user's company
+      if (product.companyId !== company.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Calculate LCA based on product data
+      const lcaResults = await calculateProductLCA(product);
+      
+      // Update product with LCA results
+      const updatedProduct = await dbStorage.updateProduct(productId, {
+        carbonFootprint: lcaResults.carbonFootprint,
+        waterFootprint: lcaResults.waterFootprint,
+      });
+      
+      res.json({
+        message: "LCA calculation completed successfully",
+        product: updatedProduct,
+        lcaResults
+      });
+    } catch (error) {
+      console.error("Error calculating LCA:", error);
+      res.status(500).json({ message: "Failed to calculate LCA" });
     }
   });
 

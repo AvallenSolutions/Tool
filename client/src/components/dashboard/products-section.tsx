@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Package, Edit2, Trash2, Star, Factory, ExternalLink } from "lucide-react";
+import { useLocation } from "wouter";
+import { Plus, Package, Edit2, Trash2, Star, Factory, ExternalLink, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,7 @@ export default function ProductsSection() {
     isMainProduct: false,
   });
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["/api/products"],
@@ -468,6 +470,13 @@ export default function ProductsSection() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => navigate(`/app/products/${mainProduct.id}`)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleEdit(mainProduct)}
                     >
                       <Edit2 className="w-4 h-4" />
@@ -515,6 +524,13 @@ export default function ProductsSection() {
                           <div className="text-xs text-gray-500">per unit</div>
                         </div>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/app/products/${product.id}`)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
