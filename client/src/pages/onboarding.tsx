@@ -76,11 +76,19 @@ export default function Onboarding() {
             <div className="grid gap-3">
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
-                <span className="text-slate-gray">Company profile and reporting period</span>
+                <span className="text-slate-gray">Company profile & reporting period</span>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
                 <span className="text-slate-gray">Operational footprint data collection</span>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
+                <div className="w-2 h-2 bg-avallen-green rounded-full" />
+                <span className="text-slate-gray">Set up your first product</span>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
+                <div className="w-2 h-2 bg-avallen-green rounded-full" />
+                <span className="text-slate-gray">Get you ready to build out your full environmental impact</span>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
