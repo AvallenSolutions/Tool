@@ -10,6 +10,7 @@ import EmissionsChart from "@/components/dashboard/emissions-chart";
 import ReportStatus from "@/components/dashboard/report-status";
 import ProductFootprint from "@/components/dashboard/product-footprint";
 import SupplierList from "@/components/dashboard/supplier-list";
+import ProductsSection from "@/components/dashboard/products-section";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -51,10 +52,12 @@ export default function Dashboard() {
             <ReportStatus />
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
             <ProductFootprint />
             <SupplierList />
           </div>
+
+          <ProductsSection />
         </main>
       </div>
     </div>

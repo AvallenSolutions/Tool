@@ -89,14 +89,30 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   companyId: integer("company_id").references(() => companies.id),
   name: varchar("name").notNull(),
+  sku: varchar("sku").notNull(), // Product SKU code
   type: varchar("type"), // spirit, wine, beer, non-alcoholic
   size: varchar("size"), // e.g., 500ml, 750ml
+  description: text("description"),
   productionModel: varchar("production_model"), // own, contract
   contractManufacturerId: integer("contract_manufacturer_id").references(() => suppliers.id),
+  
+  // Production details
+  annualProductionVolume: decimal("annual_production_volume", { precision: 10, scale: 2 }),
+  productionUnit: varchar("production_unit").default("bottles"), // bottles, liters, kg
+  
+  // Packaging details
+  bottleWeight: decimal("bottle_weight", { precision: 10, scale: 2 }), // kg
+  labelWeight: decimal("label_weight", { precision: 10, scale: 2 }), // kg
+  capWeight: decimal("cap_weight", { precision: 10, scale: 2 }), // kg
+  boxWeight: decimal("box_weight", { precision: 10, scale: 2 }), // kg for shipping
   
   // Calculated footprints
   carbonFootprint: decimal("carbon_footprint", { precision: 10, scale: 4 }),
   waterFootprint: decimal("water_footprint", { precision: 10, scale: 2 }),
+  
+  // Status and priorities
+  status: varchar("status").default("active"), // active, discontinued, development
+  isMainProduct: boolean("is_main_product").default(false),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -286,12 +302,6 @@ export const insertCompanySchema = createInsertSchema(companies).omit({
   updatedAt: true,
 });
 
-export const insertProductSchema = createInsertSchema(products).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({
   id: true,
   createdAt: true,
@@ -313,10 +323,19 @@ export const insertUploadedDocumentSchema = createInsertSchema(uploadedDocuments
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Product types
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  companyId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertProductType = z.infer<typeof insertProductSchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
-export type Product = typeof products.$inferSelect;
-export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
 export type Report = typeof reports.$inferSelect;

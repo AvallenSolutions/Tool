@@ -40,6 +40,7 @@ export interface IStorage {
   getProductsByCompany(companyId: number): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
+  deleteProduct(id: number): Promise<void>;
   
   // Supplier operations
   getSuppliersByCompany(companyId: number): Promise<Supplier[]>;
@@ -148,6 +149,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(products.id, id))
       .returning();
     return product;
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    await db.delete(products).where(eq(products.id, id));
   }
 
   // Supplier operations
