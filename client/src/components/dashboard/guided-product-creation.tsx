@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface GuidedProductCreationProps {
   onComplete: () => void;
@@ -92,13 +93,30 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
     },
     onSuccess: (product) => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Product Created!",
-        description: `${product.name} has been added to your catalog.`,
+        description: `${product.name} has been added to your catalog with comprehensive LCA data.`,
       });
       handleComplete();
+      // Navigate to products page after successful creation
+      setTimeout(() => {
+        window.location.href = "/products";
+      }, 1000);
     },
-    onError: () => {
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      console.error("Error creating product:", error);
       toast({
         title: "Error",
         description: "Failed to create product. Please try again.",
@@ -160,7 +178,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
       type: formData.type,
       size: formData.volume, // Map volume to size for current database
       productionModel: formData.productionModel,
-      annualProductionVolume: formData.annualVolume ? parseInt(formData.annualVolume) : null,
+      annualProductionVolume: formData.annualVolume ? formData.annualVolume : null,
       productionUnit: 'bottles',
       status: 'active',
       // Store comprehensive data in description field for now
@@ -297,19 +315,42 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                 {currentGuidedStep.fields?.includes('packShot') && (
                   <div className="space-y-2">
                     <Label htmlFor="packShot">Pack Shot Image</Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm text-gray-600">Click to upload product image</p>
-                      <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
-                      <Input
+                    <div 
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors"
+                      onClick={() => document.getElementById('packshot-upload')?.click()}
+                    >
+                      {formData.packShotUrl ? (
+                        <div className="space-y-2">
+                          <img 
+                            src={formData.packShotUrl} 
+                            alt="Pack shot preview" 
+                            className="w-20 h-20 object-cover mx-auto rounded"
+                          />
+                          <p className="text-sm text-green-600">✓ Image uploaded</p>
+                          <p className="text-xs text-gray-500">Click to change</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm text-gray-600">Click to upload product image</p>
+                          <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                        </div>
+                      )}
+                      <input
+                        id="packshot-upload"
                         type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            // In a real app, you'd upload this to a storage service
-                            handleInputChange('packShotUrl', URL.createObjectURL(file));
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              if (event.target?.result) {
+                                handleInputChange('packShotUrl', event.target.result as string);
+                              }
+                            };
+                            reader.readAsDataURL(file);
                           }
                         }}
                       />
