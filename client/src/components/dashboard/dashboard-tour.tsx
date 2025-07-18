@@ -47,28 +47,28 @@ const tourSteps: TourStep[] = [
     title: 'Emissions Breakdown',
     content: 'This chart shows your emissions trends over time and helps you identify patterns and improvement opportunities in your sustainability journey.',
     target: 'emissions-chart',
-    position: 'left'
+    position: 'right'
   },
   {
     id: 'product-catalog',
     title: 'Product Catalog',
     content: 'Manage your product SKUs and track individual product footprints. This is crucial as consumers increasingly want product-level sustainability information.',
     target: 'products-section',
-    position: 'top'
+    position: 'left'
   },
   {
     id: 'supplier-database',
     title: 'Supplier Database',
     content: 'Collaborate with your suppliers to collect their environmental data. Supply chain emissions often make up the largest portion of your total footprint.',
     target: 'suppliers-section',
-    position: 'top'
+    position: 'left'
   },
   {
     id: 'reports',
     title: 'Reports',
     content: 'Generate comprehensive sustainability reports for stakeholders, compliance, and certification programs. Track your report generation status here.',
     target: 'reports-section',
-    position: 'left'
+    position: 'right'
   },
   {
     id: 'sidebar',
@@ -87,7 +87,6 @@ interface DashboardTourProps {
 export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const [tourPosition, setTourPosition] = useState({ top: 0, left: 0 });
 
   const currentTourStep = tourSteps[currentStep];
 
@@ -99,71 +98,6 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
       document.body.classList.remove('tour-active');
     };
   }, []);
-
-  useEffect(() => {
-    // Calculate position for tour card based on target element
-    const calculatePosition = () => {
-      const targetElement = document.getElementById(currentTourStep.target);
-      if (!targetElement) return;
-
-      const rect = targetElement.getBoundingClientRect();
-      const cardWidth = 384; // w-96 = 384px
-      const cardHeight = 200; // approximate height
-      const offset = 20;
-
-      let top = 0;
-      let left = 0;
-
-      switch (currentTourStep.position) {
-        case 'top':
-          top = rect.top - cardHeight - offset;
-          left = rect.left + (rect.width - cardWidth) / 2;
-          break;
-        case 'bottom':
-          top = rect.bottom + offset;
-          left = rect.left + (rect.width - cardWidth) / 2;
-          break;
-        case 'left':
-          top = rect.top + (rect.height - cardHeight) / 2;
-          left = rect.left - cardWidth - offset;
-          break;
-        case 'right':
-          top = rect.top + (rect.height - cardHeight) / 2;
-          left = rect.right + offset;
-          break;
-      }
-
-      // Ensure card stays within viewport
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      if (left < 20) left = 20;
-      if (left + cardWidth > viewportWidth - 20) left = viewportWidth - cardWidth - 20;
-      if (top < 20) top = 20;
-      if (top + cardHeight > viewportHeight - 20) top = viewportHeight - cardHeight - 20;
-
-      setTourPosition({ top, left });
-
-      // Add spotlight effect to target element
-      targetElement.style.position = 'relative';
-      targetElement.style.zIndex = '60';
-      targetElement.style.borderRadius = '8px';
-    };
-
-    calculatePosition();
-    window.addEventListener('resize', calculatePosition);
-    
-    return () => {
-      window.removeEventListener('resize', calculatePosition);
-      // Clean up previous target styling
-      const prevTarget = document.getElementById(currentTourStep.target);
-      if (prevTarget) {
-        prevTarget.style.position = '';
-        prevTarget.style.zIndex = '';
-        prevTarget.style.borderRadius = '';
-      }
-    };
-  }, [currentStep, currentTourStep.target, currentTourStep.position]);
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -193,36 +127,23 @@ export default function DashboardTour({ onComplete, onSkip }: DashboardTourProps
 
   if (!isVisible) return null;
 
-  const getArrowClass = () => {
-    switch (currentTourStep.position) {
-      case 'top':
-        return 'tour-arrow-down';
-      case 'bottom':
-        return 'tour-arrow-up';
-      case 'left':
-        return 'tour-arrow-right';
-      case 'right':
-        return 'tour-arrow-left';
-      default:
-        return '';
-    }
-  };
-
   return (
     <>
       {/* Tour overlay */}
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40 tour-overlay" />
+      
+      {/* Tour spotlight */}
+      <div 
+        className="fixed z-50 tour-spotlight"
+        style={{
+          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
+          pointerEvents: 'none'
+        }}
+      />
 
       {/* Tour card */}
-      <div 
-        className="fixed z-50 tour-card"
-        style={{
-          top: `${tourPosition.top}px`,
-          left: `${tourPosition.left}px`,
-          transition: 'all 0.3s ease'
-        }}
-      >
-        <Card className={`w-96 border-avallen-green shadow-xl relative ${getArrowClass()}`}>
+      <div className="fixed z-50 tour-card">
+        <Card className="w-96 border-avallen-green shadow-xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
