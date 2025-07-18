@@ -8,6 +8,15 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### January 18, 2025
+- **Navigation Fix**: Fixed product creation redirect from `/products` to `/app/products` to match correct route structure
+- **Bottle Weight Field**: Added mandatory bottle weight input field to guided product creation packaging section
+- **Form Validation**: Enhanced packaging step validation to require bottle weight alongside material selection
+- **Database Issues**: Resolved schema compatibility issues and fixed React form validation warnings
+- **Server Stability**: Fixed database connection and image processing errors that were causing application crashes
+
 ## System Architecture
 
 ### Frontend Architecture
