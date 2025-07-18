@@ -254,8 +254,8 @@ export default function ProductsSection() {
               onClick={() => navigate('/app/products/create/enhanced')}
               className="bg-avallen-green hover:bg-avallen-green-light text-white font-medium"
             >
-              <Package className="w-4 h-4 mr-2" />
-              Enhanced Product Form
+              <Plus className="w-4 h-4 mr-2" />
+              Add Product
             </Button>
             <Dialog open={isAddDialogOpen || !!editingProduct} onOpenChange={(open) => {
               setIsAddDialogOpen(open);
@@ -267,7 +267,7 @@ export default function ProductsSection() {
               <DialogTrigger asChild>
                 <Button variant="outline" className="border-avallen-green text-avallen-green hover:bg-avallen-green-light hover:text-white">
                   <Plus className="w-4 h-4 mr-2" />
-                  Quick Add
+                  Quick Add (Basic)
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
@@ -554,9 +554,9 @@ export default function ProductsSection() {
                         size="sm"
                         onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
                         className="text-avallen-green hover:text-avallen-green-light"
-                        title="Add Enhanced Details"
+                        title="Edit Product Details"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Edit2 className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"

@@ -71,15 +71,11 @@ export default function Onboarding() {
               </div>
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
-                <span className="text-slate-gray">Operational footprint data collection</span>
+                <span className="text-slate-gray">Document upload (optional)</span>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
-                <span className="text-slate-gray">Product information and footprint setup</span>
-              </div>
-              <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
-                <div className="w-2 h-2 bg-avallen-green rounded-full" />
-                <span className="text-slate-gray">Supplier collaboration setup</span>
+                <span className="text-slate-gray">Operational data (optional)</span>
               </div>
             </div>
           </div>
@@ -87,8 +83,7 @@ export default function Onboarding() {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold text-blue-900 mb-2">💡 Pro Tip</h4>
             <p className="text-blue-800 text-sm">
-              Have your utility bills, product information, and supplier contact details ready. 
-              This will help you complete the setup faster.
+              Have your company details and utility bills ready. You can add products and suppliers later from the dashboard.
             </p>
           </div>
 
@@ -104,7 +99,7 @@ export default function Onboarding() {
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              This should take about 10-15 minutes to complete.
+              This should take about 5-10 minutes to complete.
             </p>
           </div>
         </CardContent>

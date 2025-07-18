@@ -32,16 +32,11 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     website: '',
     reportingPeriodStart: '',
     reportingPeriodEnd: '',
-    // Operational data
+    // Operational data (optional)
     electricityConsumption: '',
     gasConsumption: '',
     waterConsumption: '',
     wasteGenerated: '',
-    // Product data
-    productName: '',
-    productType: '',
-    productSize: '',
-    productionModel: '',
     // Document upload tracking
     documentsUploaded: false,
   });
@@ -54,23 +49,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     onSuccess: async (company) => {
       queryClient.invalidateQueries({ queryKey: ["/api/company"] });
       
-      // Create the main product if product data exists
-      if (formData.productName && formData.productType && formData.productSize) {
-        try {
-          await apiRequest("POST", "/api/products", {
-            name: formData.productName,
-            sku: `${formData.productName.replace(/\s+/g, '-').toUpperCase()}-${formData.productSize}`,
-            type: formData.productType,
-            size: formData.productSize,
-            productionModel: formData.productionModel || 'own',
-            status: 'active',
-            isMainProduct: true,
-          });
-          queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-        } catch (error) {
-          console.error("Failed to create product:", error);
-        }
-      }
+      // No longer creating products during onboarding - they can be added later from the dashboard
       
       toast({
         title: "Setup Complete!",
@@ -87,7 +66,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     },
   });
 
-  const totalSteps = 5;
+  const totalSteps = 4;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -141,8 +120,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         return true; // Document upload is optional
       case 4:
         return true; // Utilities are optional, can be skipped
-      case 5:
-        return formData.productName && formData.productType && formData.productionModel;
       default:
         return true;
     }
@@ -384,80 +361,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
           </div>
         );
 
-      case 5:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Package className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Your #1 Selling Product</h3>
-              <p className="text-gray-600">Tell us about your best-selling product. You can add additional SKUs later once setup is complete.</p>
-            </div>
-            
-            <div>
-              <Label htmlFor="productName">Product Name *</Label>
-              <Input
-                id="productName"
-                value={formData.productName}
-                onChange={(e) => handleInputChange('productName', e.target.value)}
-                placeholder="e.g., Premium Gin (your top-selling product)"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="productType">Product Type *</Label>
-                <Select value={formData.productType} onValueChange={(value) => handleInputChange('productType', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="spirit">Spirit</SelectItem>
-                    <SelectItem value="wine">Wine</SelectItem>
-                    <SelectItem value="beer">Beer</SelectItem>
-                    <SelectItem value="non-alcoholic">Non-alcoholic</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="productSize">Size</Label>
-                <Input
-                  id="productSize"
-                  value={formData.productSize}
-                  onChange={(e) => handleInputChange('productSize', e.target.value)}
-                  placeholder="e.g., 500ml"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium text-slate-gray mb-3">How is this product made? *</Label>
-              <RadioGroup 
-                value={formData.productionModel} 
-                onValueChange={(value) => handleInputChange('productionModel', value)}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              >
-                <div className="flex items-center space-x-2 border border-light-gray rounded-lg p-4 cursor-pointer hover:border-avallen-green">
-                  <RadioGroupItem value="own" id="own" />
-                  <div className="flex-1">
-                    <Label htmlFor="own" className="font-medium text-slate-gray cursor-pointer">
-                      Own Production
-                    </Label>
-                    <p className="text-sm text-gray-500">We make this product in our own facilities</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 border border-light-gray rounded-lg p-4 cursor-pointer hover:border-avallen-green">
-                  <RadioGroupItem value="contract" id="contract" />
-                  <div className="flex-1">
-                    <Label htmlFor="contract" className="font-medium text-slate-gray cursor-pointer">
-                      Contract Manufacturing
-                    </Label>
-                    <p className="text-sm text-gray-500">This product is made by a third-party manufacturer</p>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
-        );
+
 
       default:
         return null;

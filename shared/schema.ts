@@ -84,46 +84,105 @@ export const companyData = pgTable("company_data", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Products table
+// Products table - Enhanced unified schema
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   companyId: integer("company_id").references(() => companies.id),
+  
+  // Basic Information
   name: varchar("name").notNull(),
-  sku: varchar("sku").notNull(), // Product SKU code
-  type: varchar("type"), // spirit, wine, beer, non-alcoholic
-  volume: varchar("volume"), // Manual entry e.g., 500ml, 750ml
-  size: varchar("size"), // Product size classification
+  sku: varchar("sku").notNull(),
+  type: varchar("type"), // spirit, wine, beer, non-alcoholic, cider, liqueur, other
+  volume: varchar("volume"), // e.g., 500ml, 750ml
   description: text("description"),
-  productionModel: varchar("production_model"), // own, contract
-  contractManufacturerId: integer("contract_manufacturer_id").references(() => suppliers.id),
+  packShotUrl: text("pack_shot_url"), // Product photo URL
   
-  // Pack shot image
-  packShotUrl: text("pack_shot_url"),
-  
-  // Production details
+  // Production Information
+  productionModel: varchar("production_model"), // own, contract, hybrid
+  contractManufacturerId: integer("contract_manufacturer_id"),
   annualProductionVolume: decimal("annual_production_volume", { precision: 10, scale: 2 }),
-  productionUnit: varchar("production_unit").default("bottles"), // bottles, liters, kg
+  productionUnit: varchar("production_unit").default("bottles"), // bottles, liters, cases, kg
   
-  // Ingredients (stored as JSON array)
-  ingredients: jsonb("ingredients").$type<Array<{ name: string; amount: number; unit: string }>>(),
+  // Enhanced Ingredients (comprehensive JSONB structure)
+  ingredients: jsonb("ingredients").$type<Array<{
+    name: string;
+    type: 'grain' | 'fruit' | 'botanical' | 'additive' | 'water' | 'yeast' | 'other';
+    amount: number;
+    unit: string;
+    origin?: string;
+    organicCertified: boolean;
+    transportDistance?: number;
+    transportMode?: 'truck' | 'rail' | 'ship' | 'air' | 'pipeline';
+    supplier?: string;
+    processingMethod?: string;
+  }>>(),
   
-  // Bottle material and recycling
-  bottleMaterial: varchar("bottle_material", { length: 100 }), // glass, aluminium, PET, paper, tetrapak
-  bottleRecycledContent: decimal("bottle_recycled_content", { precision: 5, scale: 2 }), // percentage
-  bottleWeight: decimal("bottle_weight", { precision: 10, scale: 2 }), // kg
+  // Packaging - Primary Container
+  bottleMaterial: varchar("bottle_material"), // glass, aluminum, pet, hdpe, paperboard, tetrapack, bag-in-box
+  bottleWeight: decimal("bottle_weight", { precision: 10, scale: 3 }),
+  bottleRecycledContent: decimal("bottle_recycled_content", { precision: 5, scale: 2 }),
+  bottleRecyclability: varchar("bottle_recyclability"), // fully-recyclable, partially-recyclable, not-recyclable
+  bottleColor: varchar("bottle_color"),
+  bottleThickness: decimal("bottle_thickness", { precision: 10, scale: 3 }),
   
-  // Label information
-  labelMaterial: varchar("label_material", { length: 100 }),
-  labelWeight: decimal("label_weight", { precision: 10, scale: 2 }), // in grams
+  // Packaging - Labels & Printing
+  labelMaterial: varchar("label_material"), // paper, plastic, metal, fabric, none
+  labelWeight: decimal("label_weight", { precision: 10, scale: 3 }),
+  labelPrintingMethod: varchar("label_printing_method"), // digital, offset, flexographic, screen, none
+  labelInkType: varchar("label_ink_type"), // water-based, solvent-based, uv-cured, eco-friendly, none
+  labelSize: decimal("label_size", { precision: 10, scale: 2 }),
   
-  // Closure information
-  closureMaterial: varchar("closure_material", { length: 100 }),
-  closureWeight: decimal("closure_weight", { precision: 10, scale: 3 }), // in grams
+  // Packaging - Closure System
+  closureType: varchar("closure_type"), // cork, screw-cap, crown-cap, can-top, pump, none
+  closureMaterial: varchar("closure_material"), // aluminum, plastic, cork, synthetic-cork, other
+  closureWeight: decimal("closure_weight", { precision: 10, scale: 3 }),
   hasBuiltInClosure: boolean("has_built_in_closure").default(false),
+  linerMaterial: varchar("liner_material"),
   
-  // Other packaging
-  capWeight: decimal("cap_weight", { precision: 10, scale: 2 }), // kg
-  boxWeight: decimal("box_weight", { precision: 10, scale: 2 }), // kg for shipping
+  // Packaging - Secondary
+  hasSecondaryPackaging: boolean("has_secondary_packaging").default(false),
+  boxMaterial: varchar("box_material"), // cardboard, plastic, wood, metal, none
+  boxWeight: decimal("box_weight", { precision: 10, scale: 3 }),
+  fillerMaterial: varchar("filler_material"), // foam, paper, plastic, none
+  fillerWeight: decimal("filler_weight", { precision: 10, scale: 3 }),
+  
+  // Production Process - Energy
+  electricityKwh: decimal("electricity_kwh", { precision: 10, scale: 3 }),
+  gasM3: decimal("gas_m3", { precision: 10, scale: 3 }),
+  steamKg: decimal("steam_kg", { precision: 10, scale: 3 }),
+  fuelLiters: decimal("fuel_liters", { precision: 10, scale: 3 }),
+  renewableEnergyPercent: decimal("renewable_energy_percent", { precision: 5, scale: 2 }),
+  
+  // Production Process - Water
+  processWaterLiters: decimal("process_water_liters", { precision: 10, scale: 2 }),
+  cleaningWaterLiters: decimal("cleaning_water_liters", { precision: 10, scale: 2 }),
+  coolingWaterLiters: decimal("cooling_water_liters", { precision: 10, scale: 2 }),
+  wasteWaterTreatment: boolean("waste_water_treatment").default(false),
+  
+  // Production Process - Waste
+  organicWasteKg: decimal("organic_waste_kg", { precision: 10, scale: 3 }),
+  packagingWasteKg: decimal("packaging_waste_kg", { precision: 10, scale: 3 }),
+  hazardousWasteKg: decimal("hazardous_waste_kg", { precision: 10, scale: 3 }),
+  wasteRecycledPercent: decimal("waste_recycled_percent", { precision: 5, scale: 2 }),
+  
+  // Production Methods (JSONB for flexibility)
+  productionMethods: jsonb("production_methods").$type<Record<string, any>>(),
+  
+  // Distribution
+  averageTransportDistance: decimal("average_transport_distance", { precision: 10, scale: 2 }),
+  primaryTransportMode: varchar("primary_transport_mode"), // truck, rail, ship, air, pipeline
+  distributionCenters: integer("distribution_centers"),
+  coldChainRequired: boolean("cold_chain_required").default(false),
+  packagingEfficiency: decimal("packaging_efficiency", { precision: 5, scale: 2 }),
+  
+  // End of Life
+  returnableContainer: boolean("returnable_container").default(false),
+  recyclingRate: decimal("recycling_rate", { precision: 5, scale: 2 }),
+  disposalMethod: varchar("disposal_method"), // recycling, landfill, incineration, composting
+  consumerEducation: boolean("consumer_education").default(false),
+  
+  // Certifications
+  certifications: jsonb("certifications").$type<string[]>(),
   
   // Calculated footprints
   carbonFootprint: decimal("carbon_footprint", { precision: 10, scale: 4 }),
@@ -424,11 +483,33 @@ export const insertProductSchema = createInsertSchema(products).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  // Convert number fields to proper types
+  // Convert number fields to proper types for form handling
+  annualProductionVolume: z.union([z.string(), z.number()]).optional().nullable(),
+  bottleWeight: z.union([z.string(), z.number()]).optional().nullable(),
   bottleRecycledContent: z.union([z.string(), z.number()]).optional().nullable(),
   labelWeight: z.union([z.string(), z.number()]).optional().nullable(),
+  labelSize: z.union([z.string(), z.number()]).optional().nullable(),
   closureWeight: z.union([z.string(), z.number()]).optional().nullable(),
-  packShotUrl: z.string().optional().nullable(),
+  boxWeight: z.union([z.string(), z.number()]).optional().nullable(),
+  fillerWeight: z.union([z.string(), z.number()]).optional().nullable(),
+  electricityKwh: z.union([z.string(), z.number()]).optional().nullable(),
+  gasM3: z.union([z.string(), z.number()]).optional().nullable(),
+  steamKg: z.union([z.string(), z.number()]).optional().nullable(),
+  fuelLiters: z.union([z.string(), z.number()]).optional().nullable(),
+  renewableEnergyPercent: z.union([z.string(), z.number()]).optional().nullable(),
+  processWaterLiters: z.union([z.string(), z.number()]).optional().nullable(),
+  cleaningWaterLiters: z.union([z.string(), z.number()]).optional().nullable(),
+  coolingWaterLiters: z.union([z.string(), z.number()]).optional().nullable(),
+  organicWasteKg: z.union([z.string(), z.number()]).optional().nullable(),
+  packagingWasteKg: z.union([z.string(), z.number()]).optional().nullable(),
+  hazardousWasteKg: z.union([z.string(), z.number()]).optional().nullable(),
+  wasteRecycledPercent: z.union([z.string(), z.number()]).optional().nullable(),
+  averageTransportDistance: z.union([z.string(), z.number()]).optional().nullable(),
+  distributionCenters: z.union([z.string(), z.number()]).optional().nullable(),
+  packagingEfficiency: z.union([z.string(), z.number()]).optional().nullable(),
+  recyclingRate: z.union([z.string(), z.number()]).optional().nullable(),
+  carbonFootprint: z.union([z.string(), z.number()]).optional().nullable(),
+  waterFootprint: z.union([z.string(), z.number()]).optional().nullable(),
   companyId: z.number().optional(),
 });
 export type InsertProductType = z.infer<typeof insertProductSchema>;
