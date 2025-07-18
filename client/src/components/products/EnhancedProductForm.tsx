@@ -187,6 +187,32 @@ export default function EnhancedProductForm({
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please choose an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string;
+        setUploadedImage(imageUrl);
+        form.setValue('productImage', imageUrl);
+        toast({
+          title: "Photo uploaded",
+          description: "Product photo uploaded successfully",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   // Transform database data for editing mode
   const getInitialFormData = () => {
@@ -365,6 +391,13 @@ export default function EnhancedProductForm({
     control: form.control,
     name: 'ingredients',
   });
+
+  // Initialize uploaded image from initial data
+  useEffect(() => {
+    if (initialData?.packShotUrl) {
+      setUploadedImage(initialData.packShotUrl);
+    }
+  }, [initialData]);
   
   const handleSubmit = (data: EnhancedProductForm) => {
     setValidationErrors({});
@@ -475,21 +508,24 @@ export default function EnhancedProductForm({
                         <p className="text-sm text-gray-600">
                           Upload a photo of your product to help with identification
                         </p>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          className="flex items-center gap-2"
-                          onClick={() => {
-                            // For now, simulate file upload
-                            toast({
-                              title: "Photo Upload",
-                              description: "Photo upload functionality coming soon",
-                            });
-                          }}
-                        >
-                          <Upload className="w-4 h-4" />
-                          Upload Photo
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            className="hidden"
+                            id="photo-upload"
+                          />
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            className="flex items-center gap-2"
+                            onClick={() => document.getElementById('photo-upload')?.click()}
+                          >
+                            <Upload className="w-4 h-4" />
+                            Upload Photo
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -572,6 +608,8 @@ export default function EnhancedProductForm({
                     <Input
                       id="annualProductionVolume"
                       type="number"
+                      min="0"
+                      step="1"
                       {...form.register('annualProductionVolume', { valueAsNumber: true })}
                       placeholder="e.g., 10000"
                     />
