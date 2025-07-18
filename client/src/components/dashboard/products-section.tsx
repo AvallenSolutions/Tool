@@ -10,29 +10,113 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface Product {
   id: number;
+  companyId: number;
+  
+  // Basic Information
   name: string;
   sku: string;
   type: string;
   volume: string;
-  description: string;
+  description?: string;
+  packShotUrl?: string;
+  
+  // Production Information
   productionModel: string;
+  contractManufacturerId?: number;
   annualProductionVolume: number;
   productionUnit: string;
-  carbonFootprint: number;
-  waterFootprint: number;
-  status: string;
-  isMainProduct: boolean;
-  createdAt: string;
-  // LCA data fields
-  packShotUrl?: string;
-  ingredients?: Array<{ name: string; amount: number; unit: string }>;
+  
+  // Enhanced Ingredients
+  ingredients?: Array<{
+    name: string;
+    type: string;
+    amount: number;
+    unit: string;
+    origin?: string;
+    organicCertified: boolean;
+    transportDistance?: number;
+    transportMode?: string;
+    supplier?: string;
+    processingMethod?: string;
+  }>;
+  
+  // Packaging - Primary Container
   bottleMaterial?: string;
+  bottleWeight?: number;
   bottleRecycledContent?: number;
+  bottleRecyclability?: string;
+  bottleColor?: string;
+  bottleThickness?: number;
+  
+  // Packaging - Labels & Printing
   labelMaterial?: string;
   labelWeight?: number;
+  labelPrintingMethod?: string;
+  labelInkType?: string;
+  labelSize?: number;
+  
+  // Packaging - Closure System
+  closureType?: string;
   closureMaterial?: string;
   closureWeight?: number;
   hasBuiltInClosure?: boolean;
+  linerMaterial?: string;
+  
+  // Packaging - Secondary
+  hasSecondaryPackaging?: boolean;
+  boxMaterial?: string;
+  boxWeight?: number;
+  fillerMaterial?: string;
+  fillerWeight?: number;
+  
+  // Production Process - Energy
+  electricityKwh?: number;
+  gasM3?: number;
+  steamKg?: number;
+  fuelLiters?: number;
+  renewableEnergyPercent?: number;
+  
+  // Production Process - Water
+  processWaterLiters?: number;
+  cleaningWaterLiters?: number;
+  coolingWaterLiters?: number;
+  wasteWaterTreatment?: boolean;
+  
+  // Production Process - Waste
+  organicWasteKg?: number;
+  packagingWasteKg?: number;
+  hazardousWasteKg?: number;
+  wasteRecycledPercent?: number;
+  
+  // Production Methods
+  productionMethods?: Record<string, any>;
+  
+  // Distribution
+  averageTransportDistance?: number;
+  primaryTransportMode?: string;
+  distributionCenters?: number;
+  coldChainRequired?: boolean;
+  packagingEfficiency?: number;
+  
+  // End of Life
+  returnableContainer?: boolean;
+  recyclingRate?: number;
+  disposalMethod?: string;
+  consumerEducation?: boolean;
+  
+  // Certifications
+  certifications?: string[];
+  
+  // Calculated footprints
+  carbonFootprint?: number;
+  waterFootprint?: number;
+  
+  // Status and priorities
+  status: string;
+  isMainProduct: boolean;
+  
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function ProductsSection() {
@@ -161,6 +245,25 @@ export default function ProductsSection() {
                       <p className="text-sm text-gray-500">
                         SKU: {mainProduct.sku} • {mainProduct.volume} • {mainProduct.type}
                       </p>
+                      {mainProduct.bottleMaterial && (
+                        <p className="text-xs text-gray-400">
+                          {mainProduct.bottleMaterial} bottle • {mainProduct.productionModel} production
+                        </p>
+                      )}
+                      {mainProduct.certifications && mainProduct.certifications.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {mainProduct.certifications.slice(0, 2).map((cert, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs px-1 py-0">
+                              {cert}
+                            </Badge>
+                          ))}
+                          {mainProduct.certifications.length > 2 && (
+                            <Badge variant="outline" className="text-xs px-1 py-0">
+                              +{mainProduct.certifications.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -220,6 +323,25 @@ export default function ProductsSection() {
                           <p className="text-xs text-gray-400">
                             {product.annualProductionVolume.toLocaleString()} {product.productionUnit}/year
                           </p>
+                        )}
+                        {product.bottleMaterial && (
+                          <p className="text-xs text-gray-400">
+                            {product.bottleMaterial} bottle • {product.productionModel} production
+                          </p>
+                        )}
+                        {product.certifications && product.certifications.length > 0 && (
+                          <div className="flex gap-1 mt-1">
+                            {product.certifications.slice(0, 2).map((cert, idx) => (
+                              <Badge key={idx} variant="outline" className="text-xs px-1 py-0">
+                                {cert}
+                              </Badge>
+                            ))}
+                            {product.certifications.length > 2 && (
+                              <Badge variant="outline" className="text-xs px-1 py-0">
+                                +{product.certifications.length - 2}
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

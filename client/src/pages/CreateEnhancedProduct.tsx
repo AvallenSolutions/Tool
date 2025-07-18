@@ -27,7 +27,7 @@ export default function CreateEnhancedProduct() {
 
   const createProductMutation = useMutation({
     mutationFn: async (data: any) => {
-      const method = isEditMode ? "PUT" : "POST";
+      const method = isEditMode ? "PATCH" : "POST";
       const url = isEditMode ? `/api/products/${params.id}` : "/api/products";
       const response = await apiRequest(method, url, data);
       return response.json();
@@ -52,7 +52,7 @@ export default function CreateEnhancedProduct() {
   });
 
   const handleSubmit = (data: any) => {
-    // Transform the enhanced form data to match our API schema
+    // Transform the enhanced form data to match the database schema columns
     const transformedData = {
       // Basic fields
       name: data.name,
@@ -65,28 +65,77 @@ export default function CreateEnhancedProduct() {
       productionUnit: data.productionUnit,
       status: data.status,
       isMainProduct: data.isMainProduct,
+      packShotUrl: data.productImage,
       
       // Ingredients array
       ingredients: data.ingredients,
       
-      // Packaging details - flatten complex structure
+      // Packaging - Primary Container
       bottleMaterial: data.packaging.primaryContainer.material,
       bottleWeight: data.packaging.primaryContainer.weight,
       bottleRecycledContent: data.packaging.primaryContainer.recycledContent,
+      bottleRecyclability: data.packaging.primaryContainer.recyclability,
+      bottleColor: data.packaging.primaryContainer.color,
+      bottleThickness: data.packaging.primaryContainer.thickness,
+      
+      // Packaging - Labels & Printing
       labelMaterial: data.packaging.labeling.labelMaterial,
       labelWeight: data.packaging.labeling.labelWeight,
+      labelPrintingMethod: data.packaging.labeling.printingMethod,
+      labelInkType: data.packaging.labeling.inkType,
+      labelSize: data.packaging.labeling.labelSize,
+      
+      // Packaging - Closure System
+      closureType: data.packaging.closure.closureType,
       closureMaterial: data.packaging.closure.material,
       closureWeight: data.packaging.closure.weight,
       hasBuiltInClosure: data.packaging.closure.hasLiner,
+      linerMaterial: data.packaging.closure.linerMaterial,
       
-      // Store complex data as JSON for later processing
-      enhancedData: {
-        packaging: data.packaging,
-        production: data.production,
-        distribution: data.distribution,
-        endOfLife: data.endOfLife,
-        certifications: data.certifications,
-      }
+      // Packaging - Secondary
+      hasSecondaryPackaging: data.packaging.secondaryPackaging.hasSecondaryPackaging,
+      boxMaterial: data.packaging.secondaryPackaging.boxMaterial,
+      boxWeight: data.packaging.secondaryPackaging.boxWeight,
+      fillerMaterial: data.packaging.secondaryPackaging.fillerMaterial,
+      fillerWeight: data.packaging.secondaryPackaging.fillerWeight,
+      
+      // Production Process - Energy
+      electricityKwh: data.production.energyConsumption.electricityKwh,
+      gasM3: data.production.energyConsumption.gasM3,
+      steamKg: data.production.energyConsumption.steamKg,
+      fuelLiters: data.production.energyConsumption.fuelLiters,
+      renewableEnergyPercent: data.production.energyConsumption.renewableEnergyPercent,
+      
+      // Production Process - Water
+      processWaterLiters: data.production.waterUsage.processWaterLiters,
+      cleaningWaterLiters: data.production.waterUsage.cleaningWaterLiters,
+      coolingWaterLiters: data.production.waterUsage.coolingWaterLiters,
+      wasteWaterTreatment: data.production.waterUsage.wasteWaterTreatment,
+      
+      // Production Process - Waste
+      organicWasteKg: data.production.wasteGeneration.organicWasteKg,
+      packagingWasteKg: data.production.wasteGeneration.packagingWasteKg,
+      hazardousWasteKg: data.production.wasteGeneration.hazardousWasteKg,
+      wasteRecycledPercent: data.production.wasteGeneration.wasteRecycledPercent,
+      
+      // Production Methods (as JSONB)
+      productionMethods: data.production.productionMethods,
+      
+      // Distribution
+      averageTransportDistance: data.distribution.averageTransportDistance,
+      primaryTransportMode: data.distribution.primaryTransportMode,
+      distributionCenters: data.distribution.distributionCenters,
+      coldChainRequired: data.distribution.coldChainRequired,
+      packagingEfficiency: data.distribution.packagingEfficiency,
+      
+      // End of Life
+      returnableContainer: data.endOfLife.returnableContainer,
+      recyclingRate: data.endOfLife.recyclingRate,
+      disposalMethod: data.endOfLife.disposalMethod,
+      consumerEducation: data.endOfLife.consumerEducation,
+      
+      // Certifications
+      certifications: data.certifications,
     };
 
     createProductMutation.mutate(transformedData);

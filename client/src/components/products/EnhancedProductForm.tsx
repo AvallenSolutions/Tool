@@ -159,7 +159,7 @@ const enhancedProductSchema = z.object({
   certifications: z.array(z.enum([
     'organic', 'fair-trade', 'carbon-neutral', 'b-corp', 'iso-14001', 
     'sustainable-packaging', 'renewable-energy', 'water-stewardship', 'other'
-  ])).optional(),
+  ])).default([]),
   
   // Status
   status: z.enum(['active', 'discontinued', 'development']).default('active'),
@@ -169,11 +169,13 @@ const enhancedProductSchema = z.object({
 type EnhancedProductForm = z.infer<typeof enhancedProductSchema>;
 
 interface EnhancedProductFormProps {
-  initialData?: Partial<EnhancedProductForm>;
+  initialData?: any; // Database product data
   onSubmit: (data: EnhancedProductForm) => void;
   onCancel?: () => void;
   mode?: 'create' | 'edit';
 }
+
+
 
 export default function EnhancedProductForm({ 
   initialData, 
@@ -186,38 +188,38 @@ export default function EnhancedProductForm({
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const form = useForm<EnhancedProductForm>({
-    resolver: zodResolver(enhancedProductSchema),
-    defaultValues: {
+  // Transform database data for editing mode
+  const getInitialFormData = () => {
+    const baseDefaults = {
       name: '',
       sku: '',
-      type: 'spirit',
+      type: 'spirit' as const,
       volume: '',
       description: '',
-      productionModel: 'own',
+      productionModel: 'own' as const,
       annualProductionVolume: 0,
-      productionUnit: 'bottles',
+      productionUnit: 'bottles' as const,
       ingredients: [{ 
         name: '', 
-        type: 'grain', 
+        type: 'grain' as const, 
         amount: 0, 
         unit: 'kg', 
         organicCertified: false 
       }],
       packaging: {
         primaryContainer: {
-          material: 'glass',
+          material: 'glass' as const,
           weight: 0,
           recycledContent: 0,
-          recyclability: 'fully-recyclable',
+          recyclability: 'fully-recyclable' as const,
         },
         labeling: {
-          labelMaterial: 'paper',
+          labelMaterial: 'paper' as const,
           labelWeight: 0,
         },
         closure: {
-          closureType: 'cork',
-          material: 'cork',
+          closureType: 'cork' as const,
+          material: 'cork' as const,
           weight: 0,
           hasLiner: false,
         },
@@ -251,7 +253,7 @@ export default function EnhancedProductForm({
       },
       distribution: {
         averageTransportDistance: 0,
-        primaryTransportMode: 'truck',
+        primaryTransportMode: 'truck' as const,
         distributionCenters: 0,
         coldChainRequired: false,
         packagingEfficiency: 0,
@@ -259,14 +261,104 @@ export default function EnhancedProductForm({
       endOfLife: {
         returnableContainer: false,
         recyclingRate: 0,
-        disposalMethod: 'recycling',
+        disposalMethod: 'recycling' as const,
         consumerEducation: false,
       },
-      certifications: [],
-      status: 'active',
+      certifications: [] as string[],
+      status: 'active' as const,
       isMainProduct: false,
-      ...initialData,
-    },
+    };
+
+    if (!initialData) return baseDefaults;
+
+    // Transform database data to form structure
+    return {
+      ...baseDefaults,
+      name: initialData.name || '',
+      sku: initialData.sku || '',
+      type: initialData.type || 'spirit',
+      volume: initialData.volume || '',
+      description: initialData.description || '',
+      productImage: initialData.packShotUrl || '',
+      productionModel: initialData.productionModel || 'own',
+      annualProductionVolume: initialData.annualProductionVolume || 0,
+      productionUnit: initialData.productionUnit || 'bottles',
+      ingredients: initialData.ingredients || baseDefaults.ingredients,
+      packaging: {
+        primaryContainer: {
+          material: initialData.bottleMaterial || 'glass',
+          weight: initialData.bottleWeight || 0,
+          recycledContent: initialData.bottleRecycledContent || 0,
+          recyclability: initialData.bottleRecyclability || 'fully-recyclable',
+          color: initialData.bottleColor || '',
+          thickness: initialData.bottleThickness || 0,
+        },
+        labeling: {
+          labelMaterial: initialData.labelMaterial || 'paper',
+          labelWeight: initialData.labelWeight || 0,
+          printingMethod: initialData.labelPrintingMethod || 'digital',
+          inkType: initialData.labelInkType || 'water-based',
+          labelSize: initialData.labelSize || 0,
+        },
+        closure: {
+          closureType: initialData.closureType || 'cork',
+          material: initialData.closureMaterial || 'cork',
+          weight: initialData.closureWeight || 0,
+          hasLiner: initialData.hasBuiltInClosure || false,
+          linerMaterial: initialData.linerMaterial || '',
+        },
+        secondaryPackaging: {
+          hasSecondaryPackaging: initialData.hasSecondaryPackaging || false,
+          boxMaterial: initialData.boxMaterial || 'cardboard',
+          boxWeight: initialData.boxWeight || 0,
+          fillerMaterial: initialData.fillerMaterial || 'paper',
+          fillerWeight: initialData.fillerWeight || 0,
+        },
+      },
+      production: {
+        energyConsumption: {
+          electricityKwh: initialData.electricityKwh || 0,
+          gasM3: initialData.gasM3 || 0,
+          steamKg: initialData.steamKg || 0,
+          fuelLiters: initialData.fuelLiters || 0,
+          renewableEnergyPercent: initialData.renewableEnergyPercent || 0,
+        },
+        waterUsage: {
+          processWaterLiters: initialData.processWaterLiters || 0,
+          cleaningWaterLiters: initialData.cleaningWaterLiters || 0,
+          coolingWaterLiters: initialData.coolingWaterLiters || 0,
+          wasteWaterTreatment: initialData.wasteWaterTreatment || false,
+        },
+        wasteGeneration: {
+          organicWasteKg: initialData.organicWasteKg || 0,
+          packagingWasteKg: initialData.packagingWasteKg || 0,
+          hazardousWasteKg: initialData.hazardousWasteKg || 0,
+          wasteRecycledPercent: initialData.wasteRecycledPercent || 0,
+        },
+        productionMethods: initialData.productionMethods || {},
+      },
+      distribution: {
+        averageTransportDistance: initialData.averageTransportDistance || 0,
+        primaryTransportMode: initialData.primaryTransportMode || 'truck',
+        distributionCenters: initialData.distributionCenters || 0,
+        coldChainRequired: initialData.coldChainRequired || false,
+        packagingEfficiency: initialData.packagingEfficiency || 0,
+      },
+      endOfLife: {
+        returnableContainer: initialData.returnableContainer || false,
+        recyclingRate: initialData.recyclingRate || 0,
+        disposalMethod: initialData.disposalMethod || 'recycling',
+        consumerEducation: initialData.consumerEducation || false,
+      },
+      certifications: initialData.certifications || [],
+      status: initialData.status || 'active',
+      isMainProduct: initialData.isMainProduct || false,
+    };
+  };
+  
+  const form = useForm<EnhancedProductForm>({
+    resolver: zodResolver(enhancedProductSchema),
+    defaultValues: getInitialFormData(),
   });
   
   const { fields: ingredientFields, append: appendIngredient, remove: removeIngredient } = useFieldArray({
