@@ -64,7 +64,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     },
   });
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -106,12 +106,14 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.name && formData.industry && formData.size && formData.reportingPeriodStart && formData.reportingPeriodEnd;
+        return formData.name && formData.industry && formData.size;
       case 2:
-        return true; // Document upload is optional
+        return formData.reportingPeriodStart && formData.reportingPeriodEnd;
       case 3:
-        return formData.electricityConsumption && formData.waterConsumption;
+        return true; // Document upload is optional
       case 4:
+        return formData.electricityConsumption && formData.waterConsumption;
+      case 5:
         return formData.productName && formData.productType && formData.productionModel;
       default:
         return true;
@@ -125,8 +127,8 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
           <div className="space-y-4">
             <div className="text-center mb-6">
               <Building className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Company Profile & Reporting Period</h3>
-              <p className="text-gray-600">Tell us about your company and set up your sustainability reporting timeframe</p>
+              <h3 className="text-xl font-semibold text-slate-gray mb-2">Company Profile</h3>
+              <p className="text-gray-600">Tell us about your company</p>
             </div>
             
             <div>
@@ -199,36 +201,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 />
               </div>
             </div>
-            
-            <div className="border-t pt-4 mt-6">
-              <h4 className="font-semibold text-slate-gray mb-4">Reporting Period</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="reportingPeriodStart">Start Date *</Label>
-                  <Input
-                    id="reportingPeriodStart"
-                    type="date"
-                    value={formData.reportingPeriodStart}
-                    onChange={(e) => handleInputChange('reportingPeriodStart', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="reportingPeriodEnd">End Date *</Label>
-                  <Input
-                    id="reportingPeriodEnd"
-                    type="date"
-                    value={formData.reportingPeriodEnd}
-                    onChange={(e) => handleInputChange('reportingPeriodEnd', e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-blue-50 p-4 rounded-lg mt-4">
-                <p className="text-blue-800 text-sm">
-                  💡 Most companies use a 12-month period that aligns with their fiscal year.
-                </p>
-              </div>
-            </div>
           </div>
         );
 
@@ -236,9 +208,47 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
+              <Calendar className="w-12 h-12 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-gray mb-2">Reporting Period</h3>
+              <p className="text-gray-600">Define your sustainability reporting period</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="reportingPeriodStart">Start Date *</Label>
+                <Input
+                  id="reportingPeriodStart"
+                  type="date"
+                  value={formData.reportingPeriodStart}
+                  onChange={(e) => handleInputChange('reportingPeriodStart', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="reportingPeriodEnd">End Date *</Label>
+                <Input
+                  id="reportingPeriodEnd"
+                  type="date"
+                  value={formData.reportingPeriodEnd}
+                  onChange={(e) => handleInputChange('reportingPeriodEnd', e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                💡 Most companies use a 12-month period that aligns with their fiscal year.
+              </p>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
               <FileText className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Operational Footprint Data Collection</h3>
-              <p className="text-gray-600">Collect your operational environmental data through document upload or manual entry</p>
+              <h3 className="text-xl font-semibold text-slate-gray mb-2">Upload Documents</h3>
+              <p className="text-gray-600">Upload utility bills and environmental documents for automatic data extraction</p>
             </div>
             
             <div className="bg-blue-50 p-4 rounded-lg mb-4">
@@ -260,13 +270,76 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
               <Zap className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Set Up Your First Product</h3>
-              <p className="text-gray-600">Configure your primary product for environmental impact tracking</p>
+              <h3 className="text-xl font-semibold text-slate-gray mb-2">Operational Footprint</h3>
+              <p className="text-gray-600">Your direct operations (Scope 1 & 2)</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="electricityConsumption">Electricity Consumption (kWh/year) *</Label>
+                <Input
+                  id="electricityConsumption"
+                  type="number"
+                  value={formData.electricityConsumption}
+                  onChange={(e) => handleInputChange('electricityConsumption', e.target.value)}
+                  placeholder="e.g., 50000"
+                />
+              </div>
+              <div>
+                <Label htmlFor="gasConsumption">Gas Consumption (kWh/year)</Label>
+                <Input
+                  id="gasConsumption"
+                  type="number"
+                  value={formData.gasConsumption}
+                  onChange={(e) => handleInputChange('gasConsumption', e.target.value)}
+                  placeholder="e.g., 25000"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="waterConsumption">Water Consumption (L/year) *</Label>
+                <Input
+                  id="waterConsumption"
+                  type="number"
+                  value={formData.waterConsumption}
+                  onChange={(e) => handleInputChange('waterConsumption', e.target.value)}
+                  placeholder="e.g., 100000"
+                />
+              </div>
+              <div>
+                <Label htmlFor="wasteGenerated">Waste Generated (kg/year)</Label>
+                <Input
+                  id="wasteGenerated"
+                  type="number"
+                  value={formData.wasteGenerated}
+                  onChange={(e) => handleInputChange('wasteGenerated', e.target.value)}
+                  placeholder="e.g., 5000"
+                />
+              </div>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-green-800 text-sm">
+                💡 Check your utility bills for accurate consumption data.
+              </p>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-6">
+              <Package className="w-12 h-12 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-gray mb-2">Your #1 Selling Product</h3>
+              <p className="text-gray-600">Tell us about your best-selling product. You can add additional SKUs later once setup is complete.</p>
             </div>
             
             <div>
@@ -331,94 +404,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   </div>
                 </div>
               </RadioGroup>
-            </div>
-            
-            <div className="border-t pt-4 mt-6">
-              <h4 className="font-semibold text-slate-gray mb-4">Operational Data</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="electricityConsumption">Electricity Consumption (kWh/year) *</Label>
-                  <Input
-                    id="electricityConsumption"
-                    type="number"
-                    value={formData.electricityConsumption}
-                    onChange={(e) => handleInputChange('electricityConsumption', e.target.value)}
-                    placeholder="e.g., 50000"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="gasConsumption">Gas Consumption (kWh/year)</Label>
-                  <Input
-                    id="gasConsumption"
-                    type="number"
-                    value={formData.gasConsumption}
-                    onChange={(e) => handleInputChange('gasConsumption', e.target.value)}
-                    placeholder="e.g., 25000"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <Label htmlFor="waterConsumption">Water Consumption (L/year) *</Label>
-                  <Input
-                    id="waterConsumption"
-                    type="number"
-                    value={formData.waterConsumption}
-                    onChange={(e) => handleInputChange('waterConsumption', e.target.value)}
-                    placeholder="e.g., 100000"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="wasteGenerated">Waste Generated (kg/year)</Label>
-                  <Input
-                    id="wasteGenerated"
-                    type="number"
-                    value={formData.wasteGenerated}
-                    onChange={(e) => handleInputChange('wasteGenerated', e.target.value)}
-                    placeholder="e.g., 5000"
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-green-50 p-4 rounded-lg mt-4">
-                <p className="text-green-800 text-sm">
-                  💡 Check your utility bills for accurate consumption data.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Package className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Get You Ready to Build Out Your Full Environmental Impact</h3>
-              <p className="text-gray-600">Complete your initial setup and prepare for comprehensive sustainability tracking</p>
-            </div>
-            
-            <div className="bg-green-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-green-800 mb-3">🎉 Great! You're almost done</h4>
-              <p className="text-green-700 mb-4">
-                You've successfully set up your company profile, reporting period, and primary product. 
-                Once you complete this setup, you'll be ready to start building out your full environmental impact.
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-green-700">Add more products and suppliers</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-green-700">Generate detailed sustainability reports</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-green-700">Track your environmental progress over time</span>
-                </div>
-              </div>
             </div>
           </div>
         );
