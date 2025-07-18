@@ -252,10 +252,10 @@ export default function ProductsSection() {
           <div className="flex items-center gap-2">
             <Button
               onClick={() => navigate('/app/products/create/enhanced')}
-              className="bg-avallen-green hover:bg-avallen-green-light text-white"
+              className="bg-avallen-green hover:bg-avallen-green-light text-white font-medium"
             >
               <Package className="w-4 h-4 mr-2" />
-              Enhanced Product
+              Enhanced Product Form
             </Button>
             <Dialog open={isAddDialogOpen || !!editingProduct} onOpenChange={(open) => {
               setIsAddDialogOpen(open);
@@ -270,9 +270,9 @@ export default function ProductsSection() {
                   Quick Add
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-lg font-semibold text-slate-gray dark:text-white">
                   {editingProduct ? "Edit Product" : "Add New Product"}
                 </DialogTitle>
               </DialogHeader>

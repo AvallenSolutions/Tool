@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&display=swap');
 
 :root {
   --background: 0 0% 100%;
@@ -73,6 +73,23 @@ body {
   color: hsl(var(--foreground));
   background: hsl(var(--background));
   font-family: 'Roboto Slab', serif;
+}
+
+/* Dialog overlay and content styling */
+[data-radix-dialog-overlay] {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(4px);
+}
+
+[data-radix-dialog-content] {
+  background: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark [data-radix-dialog-content] {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
 }
 
 /* Ensure buttons are always visible */
