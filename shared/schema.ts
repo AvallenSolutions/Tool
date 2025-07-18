@@ -137,7 +137,7 @@ export const products = pgTable("products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Product inputs/ingredients
+// Product inputs/ingredients - Enhanced for OpenLCA
 export const productInputs = pgTable("product_inputs", {
   id: serial("id").primaryKey(),
   productId: integer("product_id").references(() => products.id),
@@ -146,6 +146,21 @@ export const productInputs = pgTable("product_inputs", {
   quantity: decimal("quantity", { precision: 10, scale: 4 }),
   unit: varchar("unit"),
   supplierId: integer("supplier_id").references(() => suppliers.id),
+  
+  // OpenLCA Integration Fields
+  inputCategory: varchar("input_category"), // agricultural_inputs, transport_inputs, processing_inputs, etc.
+  olcaFlowId: varchar("olca_flow_id"), // OpenLCA flow ID
+  olcaProcessId: varchar("olca_process_id"), // OpenLCA process ID
+  
+  // Transport data
+  transportMode: varchar("transport_mode"), // lorry, rail, ship, air
+  transportDistance: decimal("transport_distance", { precision: 10, scale: 2 }), // km
+  originLocation: varchar("origin_location"),
+  
+  // Processing data
+  energyConsumption: decimal("energy_consumption", { precision: 10, scale: 4 }), // kWh
+  waterUsage: decimal("water_usage", { precision: 10, scale: 4 }), // liters
+  wasteOutput: decimal("waste_output", { precision: 10, scale: 4 }), // kg
   
   // Environmental impact per unit
   carbonIntensity: decimal("carbon_intensity", { precision: 10, scale: 4 }),
@@ -218,6 +233,9 @@ export const reports = pgTable("reports", {
   totalWaterUsage: decimal("total_water_usage", { precision: 10, scale: 2 }),
   totalWasteGenerated: decimal("total_waste_generated", { precision: 10, scale: 2 }),
   
+  // OpenLCA Integration - Store detailed LCA results
+  reportData: jsonb("report_data"), // Store detailed LCA results from OpenLCA
+  
   // Expert review
   reviewRequested: boolean("review_requested").default(false),
   reviewedBy: varchar("reviewed_by"),
@@ -229,6 +247,54 @@ export const reports = pgTable("reports", {
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// OpenLCA Flow Mappings - For mapping user inputs to OpenLCA flows
+export const olcaFlowMappings = pgTable("olca_flow_mappings", {
+  id: serial("id").primaryKey(),
+  inputName: varchar("input_name").notNull(),
+  inputType: varchar("input_type").notNull(),
+  inputCategory: varchar("input_category").notNull(),
+  olcaFlowId: varchar("olca_flow_id").notNull(),
+  olcaFlowName: varchar("olca_flow_name").notNull(),
+  olcaUnit: varchar("olca_unit"),
+  confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// OpenLCA Process Mappings - For mapping processes to OpenLCA processes
+export const olcaProcessMappings = pgTable("olca_process_mappings", {
+  id: serial("id").primaryKey(),
+  processName: varchar("process_name").notNull(),
+  processType: varchar("process_type").notNull(),
+  olcaProcessId: varchar("olca_process_id").notNull(),
+  olcaProcessName: varchar("olca_process_name").notNull(),
+  region: varchar("region"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// LCA Calculation Jobs - For tracking background LCA calculations
+export const lcaCalculationJobs = pgTable("lca_calculation_jobs", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").references(() => products.id),
+  jobId: varchar("job_id").notNull(), // Bull job ID
+  status: varchar("status").default("pending"), // pending, processing, completed, failed
+  progress: integer("progress").default(0), // 0-100
+  
+  // OpenLCA specific data
+  olcaSystemId: varchar("olca_system_id"), // OpenLCA product system ID
+  olcaSystemName: varchar("olca_system_name"),
+  
+  // Results
+  results: jsonb("results"), // Store detailed LCA results
+  errorMessage: text("error_message"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
 });
 
 // Relations
@@ -306,6 +372,13 @@ export const uploadedDocumentRelations = relations(uploadedDocuments, ({ one }) 
   }),
 }));
 
+export const lcaCalculationJobRelations = relations(lcaCalculationJobs, ({ one }) => ({
+  product: one(products, {
+    fields: [lcaCalculationJobs.productId],
+    references: [products.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   id: true,
@@ -369,3 +442,20 @@ export type UploadedDocument = typeof uploadedDocuments.$inferSelect;
 export type InsertUploadedDocument = z.infer<typeof insertUploadedDocumentSchema>;
 export type CompanyData = typeof companyData.$inferSelect;
 export type ProductInput = typeof productInputs.$inferSelect;
+
+// OpenLCA Types
+export type OlcaFlowMapping = typeof olcaFlowMappings.$inferSelect;
+export type InsertOlcaFlowMapping = typeof olcaFlowMappings.$inferInsert;
+export type OlcaProcessMapping = typeof olcaProcessMappings.$inferSelect;
+export type InsertOlcaProcessMapping = typeof olcaProcessMappings.$inferInsert;
+export type LcaCalculationJob = typeof lcaCalculationJobs.$inferSelect;
+export type InsertLcaCalculationJob = typeof lcaCalculationJobs.$inferInsert;
+
+// Enhanced Product Input with OpenLCA fields
+export type InsertProductInput = typeof productInputs.$inferInsert;
+export const insertProductInputSchema = createInsertSchema(productInputs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertProductInputType = z.infer<typeof insertProductInputSchema>;

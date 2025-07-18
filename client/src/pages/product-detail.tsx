@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Calculator, Package, Leaf, Droplets, Scale, Edit3 } from "lucide-react";
 import { Product } from "@shared/schema";
+import LCACalculationCard from "@/components/lca/LCACalculationCard";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -347,62 +348,8 @@ export default function ProductDetail() {
                   </CardContent>
                 </Card>
 
-                {/* Environmental Impact */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Leaf className="w-5 h-5 text-avallen-green" />
-                      Environmental Impact
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {product.carbonFootprint || product.waterFootprint ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {product.carbonFootprint && (
-                          <div className="p-4 bg-green-50 rounded-lg">
-                            <h4 className="font-semibold text-slate-gray mb-2">Carbon Footprint</h4>
-                            <p className="text-2xl font-bold text-avallen-green">
-                              {product.carbonFootprint} kg CO₂e
-                            </p>
-                          </div>
-                        )}
-                        {product.waterFootprint && (
-                          <div className="p-4 bg-blue-50 rounded-lg">
-                            <h4 className="font-semibold text-slate-gray mb-2">Water Footprint</h4>
-                            <p className="text-2xl font-bold text-blue-600">
-                              {product.waterFootprint} L
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <Calculator className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                        <h4 className="font-semibold text-slate-gray mb-2">No LCA Data Available</h4>
-                        <p className="text-gray-600 mb-4">
-                          Environmental impact calculations haven't been performed for this product yet.
-                        </p>
-                        <Button 
-                          onClick={handleCreateLCA}
-                          disabled={createLCAMutation.isPending}
-                          className="bg-avallen-green hover:bg-green-600 text-white"
-                        >
-                          {createLCAMutation.isPending ? (
-                            <>
-                              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                              Calculating...
-                            </>
-                          ) : (
-                            <>
-                              <Calculator className="w-4 h-4 mr-2" />
-                              Start LCA Calculation
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                {/* LCA Analysis */}
+                <LCACalculationCard product={product} />
               </div>
             </div>
           </div>

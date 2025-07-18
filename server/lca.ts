@@ -1,181 +1,320 @@
-import { Product } from "@shared/schema";
+import { openLCAClient, OpenLCAUtils } from './openLCA';
+import { lcaMappingService } from './lcaMapping';
+import { LCAJobManager } from './jobs/lcaCalculationJob';
+import { storage } from './storage';
+import type { Product, ProductInput } from '@shared/schema';
 
-interface LCAResults {
-  carbonFootprint: number;
-  waterFootprint: number;
-  breakdown: {
-    packaging: {
-      bottle: number;
-      label: number;
-      closure: number;
-    };
-    ingredients: number;
-    transportation: number;
-    production: number;
-  };
-}
+// LCA Service - High-level interface for LCA operations
+export class LCAService {
+  private static instance: LCAService;
+  private initialized = false;
 
-// Carbon intensity factors (kg CO2e per unit)
-const CARBON_FACTORS = {
-  // Packaging materials (kg CO2e per kg)
-  glass: 0.8,
-  aluminium: 8.24,
-  PET: 2.2,
-  paper: 0.9,
-  tetrapak: 0.5,
-  cork: 0.1,
-  plastic: 2.5,
-  metal: 5.0,
-  synthetic: 3.0,
-  vinyl: 4.0,
-  foil: 8.0,
-  screw: 2.0,
-  
-  // Production processes (kg CO2e per unit)
-  own_production: 0.5,
-  contract_production: 0.7,
-  hybrid_production: 0.6,
-  
-  // Transportation (kg CO2e per km per kg)
-  transport_factor: 0.0001,
-  
-  // Base ingredient factors (kg CO2e per kg)
-  base_ingredient: 0.5,
-};
+  private constructor() {}
 
-// Water consumption factors (L per unit)
-const WATER_FACTORS = {
-  // Packaging materials (L per kg)
-  glass: 1.5,
-  aluminium: 155,
-  PET: 17,
-  paper: 20,
-  tetrapak: 15,
-  cork: 2,
-  plastic: 17,
-  metal: 100,
-  synthetic: 25,
-  vinyl: 30,
-  foil: 155,
-  screw: 17,
-  
-  // Production processes (L per unit)
-  own_production: 10,
-  contract_production: 15,
-  hybrid_production: 12,
-  
-  // Base ingredient factors (L per kg)
-  base_ingredient: 5,
-};
+  static getInstance(): LCAService {
+    if (!LCAService.instance) {
+      LCAService.instance = new LCAService();
+    }
+    return LCAService.instance;
+  }
 
-export async function calculateProductLCA(product: Product): Promise<LCAResults> {
-  let totalCarbon = 0;
-  let totalWater = 0;
-  
-  const breakdown = {
-    packaging: {
-      bottle: 0,
-      label: 0,
-      closure: 0,
-    },
-    ingredients: 0,
-    transportation: 0,
-    production: 0,
-  };
+  // Initialize the LCA service
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
 
-  // Calculate packaging emissions
-  if (product.bottleMaterial && product.bottleWeight) {
-    const bottleWeightKg = parseFloat(product.bottleWeight.toString()) / 1000; // Convert grams to kg
-    const carbonFactor = CARBON_FACTORS[product.bottleMaterial as keyof typeof CARBON_FACTORS] || CARBON_FACTORS.glass;
-    const waterFactor = WATER_FACTORS[product.bottleMaterial as keyof typeof WATER_FACTORS] || WATER_FACTORS.glass;
-    
-    breakdown.packaging.bottle = bottleWeightKg * carbonFactor;
-    totalCarbon += breakdown.packaging.bottle;
-    totalWater += bottleWeightKg * waterFactor;
-    
-    // Apply recycled content reduction
-    if (product.bottleRecycledContent) {
-      const recycledReduction = parseFloat(product.bottleRecycledContent.toString()) / 100;
-      breakdown.packaging.bottle *= (1 - recycledReduction * 0.5); // 50% reduction for recycled content
-      totalCarbon -= breakdown.packaging.bottle * recycledReduction * 0.5;
-      totalWater -= bottleWeightKg * waterFactor * recycledReduction * 0.3; // 30% water reduction
+    try {
+      // Validate OpenLCA configuration
+      if (!OpenLCAUtils.validateConfiguration()) {
+        throw new Error('OpenLCA configuration is invalid');
+      }
+
+      // Test OpenLCA connection
+      const isConnected = await openLCAClient.testConnection();
+      if (!isConnected) {
+        throw new Error('Cannot connect to OpenLCA server');
+      }
+
+      // Initialize mapping service
+      await lcaMappingService.initialize();
+
+      // Get database info
+      const dbInfo = await openLCAClient.getDatabaseInfo();
+      console.log('Connected to OpenLCA database:', dbInfo.name || 'Unknown');
+
+      this.initialized = true;
+      console.log('LCA service initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize LCA service:', error);
+      throw error;
     }
   }
 
-  // Calculate label emissions
-  if (product.labelMaterial && product.labelWeight) {
-    const labelWeightKg = parseFloat(product.labelWeight.toString()) / 1000; // Convert grams to kg
-    const carbonFactor = CARBON_FACTORS[product.labelMaterial as keyof typeof CARBON_FACTORS] || CARBON_FACTORS.paper;
-    const waterFactor = WATER_FACTORS[product.labelMaterial as keyof typeof WATER_FACTORS] || WATER_FACTORS.paper;
-    
-    breakdown.packaging.label = labelWeightKg * carbonFactor;
-    totalCarbon += breakdown.packaging.label;
-    totalWater += labelWeightKg * waterFactor;
-  }
+  // Calculate LCA for a product
+  async calculateProductLCA(
+    productId: number,
+    options?: {
+      impactMethodId?: string;
+      allocationMethod?: string;
+      includeTransport?: boolean;
+      includeProcessing?: boolean;
+      forceRecalculation?: boolean;
+    }
+  ): Promise<{ jobId: string; estimatedDuration: number }> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
 
-  // Calculate closure emissions
-  if (!product.hasBuiltInClosure && product.closureMaterial && product.closureWeight) {
-    const closureWeightKg = parseFloat(product.closureWeight.toString()) / 1000; // Convert grams to kg
-    const carbonFactor = CARBON_FACTORS[product.closureMaterial as keyof typeof CARBON_FACTORS] || CARBON_FACTORS.cork;
-    const waterFactor = WATER_FACTORS[product.closureMaterial as keyof typeof WATER_FACTORS] || WATER_FACTORS.cork;
-    
-    breakdown.packaging.closure = closureWeightKg * carbonFactor;
-    totalCarbon += breakdown.packaging.closure;
-    totalWater += closureWeightKg * waterFactor;
-  }
+    const product = await storage.getProductById(productId);
+    if (!product) {
+      throw new Error(`Product not found: ${productId}`);
+    }
 
-  // Calculate ingredient emissions
-  if (product.ingredients && Array.isArray(product.ingredients)) {
-    for (const ingredient of product.ingredients) {
-      if (ingredient.amount && ingredient.unit) {
-        let amountKg = ingredient.amount;
-        
-        // Convert to kg if needed
-        if (ingredient.unit === 'g') {
-          amountKg = ingredient.amount / 1000;
-        } else if (ingredient.unit === 'ml') {
-          amountKg = ingredient.amount / 1000; // Approximate density of 1 g/ml
-        } else if (ingredient.unit === 'L') {
-          amountKg = ingredient.amount; // Approximate density of 1 kg/L
-        }
-        
-        const ingredientCarbon = amountKg * CARBON_FACTORS.base_ingredient;
-        const ingredientWater = amountKg * WATER_FACTORS.base_ingredient;
-        
-        breakdown.ingredients += ingredientCarbon;
-        totalCarbon += ingredientCarbon;
-        totalWater += ingredientWater;
+    // Check if calculation is already in progress
+    if (!options?.forceRecalculation) {
+      const existingJobs = await storage.getLcaCalculationJobsByProduct(productId);
+      const activeJob = existingJobs.find(job => 
+        job.status === 'pending' || job.status === 'processing'
+      );
+      
+      if (activeJob) {
+        return {
+          jobId: activeJob.jobId,
+          estimatedDuration: this.estimateCalculationDuration(product),
+        };
       }
     }
-  }
 
-  // Calculate production emissions
-  if (product.productionModel) {
-    const productionFactor = CARBON_FACTORS[`${product.productionModel}_production` as keyof typeof CARBON_FACTORS] || CARBON_FACTORS.own_production;
-    const productionWater = WATER_FACTORS[`${product.productionModel}_production` as keyof typeof WATER_FACTORS] || WATER_FACTORS.own_production;
+    // Queue new calculation
+    const job = await LCAJobManager.queueLCACalculation(productId, options);
     
-    breakdown.production = productionFactor;
-    totalCarbon += breakdown.production;
-    totalWater += productionWater;
+    return {
+      jobId: job.jobId,
+      estimatedDuration: this.estimateCalculationDuration(product),
+    };
   }
 
-  // Calculate transportation emissions (simplified)
-  // Assume average transportation distance of 500km
-  const averageDistance = 500; // km
-  const productWeightKg = (
-    (product.bottleWeight ? parseFloat(product.bottleWeight.toString()) / 1000 : 0) +
-    (product.labelWeight ? parseFloat(product.labelWeight.toString()) / 1000 : 0) +
-    (product.closureWeight ? parseFloat(product.closureWeight.toString()) / 1000 : 0) +
-    0.5 // Approximate product content weight
-  );
-  
-  breakdown.transportation = productWeightKg * averageDistance * CARBON_FACTORS.transport_factor;
-  totalCarbon += breakdown.transportation;
+  // Get LCA calculation status
+  async getCalculationStatus(jobId: string): Promise<{
+    status: string;
+    progress: number;
+    results?: any;
+    errorMessage?: string;
+    estimatedTimeRemaining?: number;
+  }> {
+    const job = await storage.getLcaCalculationJobByJobId(jobId);
+    if (!job) {
+      throw new Error(`Job not found: ${jobId}`);
+    }
 
-  // Round to 4 decimal places for carbon footprint and 2 for water
-  return {
-    carbonFootprint: Math.round(totalCarbon * 10000) / 10000,
-    waterFootprint: Math.round(totalWater * 100) / 100,
-    breakdown
-  };
+    const bullJob = await LCAJobManager.getJobStatus(jobId);
+    const estimatedTimeRemaining = bullJob ? 
+      this.estimateRemainingTime(job.progress, bullJob.processedOn || Date.now()) : 
+      0;
+
+    return {
+      status: job.status,
+      progress: job.progress,
+      results: job.results,
+      errorMessage: job.errorMessage,
+      estimatedTimeRemaining,
+    };
+  }
+
+  // Get all LCA calculations for a product
+  async getProductLCAHistory(productId: number): Promise<any[]> {
+    const jobs = await storage.getLcaCalculationJobsByProduct(productId);
+    return jobs.map(job => ({
+      id: job.id,
+      jobId: job.jobId,
+      status: job.status,
+      progress: job.progress,
+      results: job.results,
+      createdAt: job.createdAt,
+      completedAt: job.completedAt,
+      olcaSystemId: job.olcaSystemId,
+      olcaSystemName: job.olcaSystemName,
+    }));
+  }
+
+  // Cancel LCA calculation
+  async cancelCalculation(jobId: string): Promise<boolean> {
+    return await LCAJobManager.cancelJob(jobId);
+  }
+
+  // Get LCA service status
+  async getServiceStatus(): Promise<{
+    initialized: boolean;
+    openLCAConnected: boolean;
+    mappingStats: any;
+    queueStats: any;
+    databaseInfo?: any;
+  }> {
+    const status = {
+      initialized: this.initialized,
+      openLCAConnected: false,
+      mappingStats: lcaMappingService.getMappingStats(),
+      queueStats: await LCAJobManager.getQueueStats(),
+      databaseInfo: undefined,
+    };
+
+    if (this.initialized) {
+      try {
+        status.openLCAConnected = await openLCAClient.testConnection();
+        if (status.openLCAConnected) {
+          status.databaseInfo = await openLCAClient.getDatabaseInfo();
+        }
+      } catch (error) {
+        console.error('Error checking OpenLCA connection:', error);
+      }
+    }
+
+    return status;
+  }
+
+  // Estimate calculation duration based on product complexity
+  private estimateCalculationDuration(product: Product): number {
+    // Base duration in seconds
+    let baseDuration = 60; // 1 minute minimum
+
+    // Add time based on product complexity
+    if (product.ingredients && Array.isArray(product.ingredients)) {
+      baseDuration += product.ingredients.length * 15; // 15 seconds per ingredient
+    }
+
+    // Add time for production volume (larger volumes take longer)
+    const volume = parseFloat(product.annualProductionVolume?.toString() || '1000');
+    if (volume > 10000) baseDuration += 30;
+    if (volume > 100000) baseDuration += 60;
+
+    return baseDuration;
+  }
+
+  // Estimate remaining time for a calculation
+  private estimateRemainingTime(progress: number, startTime: number): number {
+    if (progress <= 0) return 0;
+    
+    const elapsed = Date.now() - startTime;
+    const estimated = (elapsed / progress) * (100 - progress);
+    
+    return Math.max(0, Math.floor(estimated / 1000)); // Return in seconds
+  }
+
+  // Validate product data for LCA calculation
+  async validateProductForLCA(productId: number): Promise<{
+    valid: boolean;
+    errors: string[];
+    warnings: string[];
+  }> {
+    const product = await storage.getProductById(productId);
+    if (!product) {
+      return {
+        valid: false,
+        errors: ['Product not found'],
+        warnings: [],
+      };
+    }
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Check required fields
+    if (!product.name) errors.push('Product name is required');
+    if (!product.annualProductionVolume) errors.push('Annual production volume is required');
+
+    // Check packaging data
+    if (!product.bottleMaterial) warnings.push('Bottle material not specified');
+    if (!product.bottleWeight) warnings.push('Bottle weight not specified');
+
+    // Check ingredients
+    if (!product.ingredients || !Array.isArray(product.ingredients) || product.ingredients.length === 0) {
+      warnings.push('No ingredients specified');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  }
+
+  // Get available impact methods from OpenLCA
+  async getAvailableImpactMethods(): Promise<Array<{
+    id: string;
+    name: string;
+    description?: string;
+    categories: string[];
+  }>> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    try {
+      const methods = await openLCAClient.searchImpactMethods('');
+      return methods.map(method => ({
+        id: method['@id'],
+        name: method.name || 'Unknown',
+        description: method.description,
+        categories: method.impactCategories?.map(cat => cat.name || 'Unknown') || [],
+      }));
+    } catch (error) {
+      console.error('Error fetching impact methods:', error);
+      return [];
+    }
+  }
+
+  // Search for flows in OpenLCA
+  async searchFlows(query: string, flowType?: string): Promise<Array<{
+    id: string;
+    name: string;
+    flowType: string;
+    unit?: string;
+  }>> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    try {
+      const flows = await openLCAClient.searchFlows(query, flowType);
+      return flows.map(flow => ({
+        id: flow['@id'],
+        name: flow.name || 'Unknown',
+        flowType: flow.flowType || 'Unknown',
+        unit: flow.referenceFlowProperty?.name,
+      }));
+    } catch (error) {
+      console.error('Error searching flows:', error);
+      return [];
+    }
+  }
+
+  // Search for processes in OpenLCA
+  async searchProcesses(query: string, processType?: string): Promise<Array<{
+    id: string;
+    name: string;
+    processType: string;
+    location?: string;
+  }>> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    try {
+      const processes = await openLCAClient.searchProcesses(query, processType);
+      return processes.map(process => ({
+        id: process['@id'],
+        name: process.name || 'Unknown',
+        processType: process.processType || 'Unknown',
+        location: undefined, // This would need to be extracted from the process data
+      }));
+    } catch (error) {
+      console.error('Error searching processes:', error);
+      return [];
+    }
+  }
 }
+
+// Export singleton instance
+export const lcaService = LCAService.getInstance();
+
+// Export utility functions
+export { OpenLCAUtils, LCAJobManager };

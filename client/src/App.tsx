@@ -16,6 +16,7 @@ import Suppliers from "@/pages/suppliers";
 import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
 import SupplierPortal from "@/pages/supplier-portal";
+import Admin from "@/pages/admin";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -38,6 +39,7 @@ function Router() {
           <Route path="/app/reports" component={Reports} />
           <Route path="/app/suppliers" component={Suppliers} />
           <Route path="/app/settings" component={Settings} />
+          <Route path="/app/admin" component={Admin} />
           <Route path="/app/onboarding" component={Onboarding} />
         </>
       )}

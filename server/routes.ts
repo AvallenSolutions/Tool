@@ -7,7 +7,7 @@ import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertU
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
-import { calculateProductLCA } from "./lca";
+import { lcaService, LCAJobManager } from "./lca";
 import path from "path";
 import fs from "fs";
 
@@ -245,19 +245,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      // Calculate LCA based on product data
-      const lcaResults = await calculateProductLCA(product);
-      
-      // Update product with LCA results
-      const updatedProduct = await dbStorage.updateProduct(productId, {
-        carbonFootprint: lcaResults.carbonFootprint,
-        waterFootprint: lcaResults.waterFootprint,
-      });
+      // Start LCA calculation using the new service
+      const result = await lcaService.calculateProductLCA(productId);
       
       res.json({
-        message: "LCA calculation completed successfully",
-        product: updatedProduct,
-        lcaResults
+        message: "LCA calculation started successfully",
+        jobId: result.jobId,
+        estimatedDuration: result.estimatedDuration
       });
     } catch (error) {
       console.error("Error calculating LCA:", error);
@@ -638,6 +632,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error applying document data:", error);
       res.status(500).json({ message: "Failed to apply document data" });
+    }
+  });
+
+  // OpenLCA Integration Routes
+  app.get('/api/lca/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const status = await lcaService.getServiceStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting LCA service status:", error);
+      res.status(500).json({ message: "Failed to get LCA service status" });
+    }
+  });
+
+  app.post('/api/lca/calculate/:productId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { productId } = req.params;
+      const { options } = req.body;
+      
+      const result = await lcaService.calculateProductLCA(parseInt(productId), options);
+      res.json(result);
+    } catch (error) {
+      console.error("Error starting LCA calculation:", error);
+      res.status(500).json({ message: "Failed to start LCA calculation" });
+    }
+  });
+
+  app.get('/api/lca/calculation/:jobId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { jobId } = req.params;
+      const status = await lcaService.getCalculationStatus(jobId);
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting LCA calculation status:", error);
+      res.status(500).json({ message: "Failed to get calculation status" });
+    }
+  });
+
+  app.delete('/api/lca/calculation/:jobId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { jobId } = req.params;
+      const success = await lcaService.cancelCalculation(jobId);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error cancelling LCA calculation:", error);
+      res.status(500).json({ message: "Failed to cancel calculation" });
+    }
+  });
+
+  app.get('/api/lca/product/:productId/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const { productId } = req.params;
+      const history = await lcaService.getProductLCAHistory(parseInt(productId));
+      res.json(history);
+    } catch (error) {
+      console.error("Error getting LCA history:", error);
+      res.status(500).json({ message: "Failed to get LCA history" });
+    }
+  });
+
+  app.get('/api/lca/product/:productId/validate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { productId } = req.params;
+      const validation = await lcaService.validateProductForLCA(parseInt(productId));
+      res.json(validation);
+    } catch (error) {
+      console.error("Error validating product for LCA:", error);
+      res.status(500).json({ message: "Failed to validate product" });
+    }
+  });
+
+  app.get('/api/lca/impact-methods', isAuthenticated, async (req: any, res) => {
+    try {
+      const methods = await lcaService.getAvailableImpactMethods();
+      res.json(methods);
+    } catch (error) {
+      console.error("Error getting impact methods:", error);
+      res.status(500).json({ message: "Failed to get impact methods" });
+    }
+  });
+
+  app.get('/api/lca/flows/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const { query, flowType } = req.query;
+      const flows = await lcaService.searchFlows(query as string, flowType as string);
+      res.json(flows);
+    } catch (error) {
+      console.error("Error searching flows:", error);
+      res.status(500).json({ message: "Failed to search flows" });
+    }
+  });
+
+  app.get('/api/lca/processes/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const { query, processType } = req.query;
+      const processes = await lcaService.searchProcesses(query as string, processType as string);
+      res.json(processes);
+    } catch (error) {
+      console.error("Error searching processes:", error);
+      res.status(500).json({ message: "Failed to search processes" });
+    }
+  });
+
+  app.get('/api/lca/queue/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const stats = await LCAJobManager.getQueueStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting queue stats:", error);
+      res.status(500).json({ message: "Failed to get queue stats" });
     }
   });
 

@@ -462,7 +462,7 @@ export default function ProductsSection() {
                     {mainProduct.carbonFootprint && (
                       <div className="text-right">
                         <div className="text-sm font-medium text-slate-gray">
-                          {mainProduct.carbonFootprint.toFixed(2)} kg CO2e
+                          {parseFloat(mainProduct.carbonFootprint?.toString() || '0').toFixed(2)} kg CO2e
                         </div>
                         <div className="text-xs text-gray-500">per unit</div>
                       </div>
@@ -519,7 +519,7 @@ export default function ProductsSection() {
                       {product.carbonFootprint && (
                         <div className="text-right">
                           <div className="text-sm font-medium text-slate-gray">
-                            {product.carbonFootprint.toFixed(2)} kg CO2e
+                            {parseFloat(product.carbonFootprint?.toString() || '0').toFixed(2)} kg CO2e
                           </div>
                           <div className="text-xs text-gray-500">per unit</div>
                         </div>

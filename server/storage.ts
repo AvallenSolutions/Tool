@@ -7,6 +7,9 @@ import {
   companyData,
   productInputs,
   uploadedDocuments,
+  olcaFlowMappings,
+  olcaProcessMappings,
+  lcaCalculationJobs,
   type User,
   type UpsertUser,
   type Company,
@@ -21,6 +24,12 @@ import {
   type InsertUploadedDocument,
   type CompanyData,
   type ProductInput,
+  type OlcaFlowMapping,
+  type InsertOlcaFlowMapping,
+  type OlcaProcessMapping,
+  type InsertOlcaProcessMapping,
+  type LcaCalculationJob,
+  type InsertLcaCalculationJob,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -63,6 +72,25 @@ export interface IStorage {
   createDocument(document: InsertUploadedDocument): Promise<UploadedDocument>;
   updateDocument(id: number, updates: Partial<InsertUploadedDocument>): Promise<UploadedDocument>;
   getDocumentById(id: number): Promise<UploadedDocument | undefined>;
+
+  // OpenLCA Flow Mapping operations
+  getAllFlowMappings(): Promise<OlcaFlowMapping[]>;
+  createFlowMapping(mapping: InsertOlcaFlowMapping): Promise<OlcaFlowMapping>;
+  updateFlowMapping(id: number, updates: Partial<InsertOlcaFlowMapping>): Promise<OlcaFlowMapping>;
+  getFlowMappingsByInput(inputName: string, inputType: string): Promise<OlcaFlowMapping[]>;
+
+  // OpenLCA Process Mapping operations
+  getAllProcessMappings(): Promise<OlcaProcessMapping[]>;
+  createProcessMapping(mapping: InsertOlcaProcessMapping): Promise<OlcaProcessMapping>;
+  updateProcessMapping(id: number, updates: Partial<InsertOlcaProcessMapping>): Promise<OlcaProcessMapping>;
+  getProcessMappingsByName(processName: string): Promise<OlcaProcessMapping[]>;
+
+  // LCA Calculation Job operations
+  createLcaCalculationJob(job: InsertLcaCalculationJob): Promise<LcaCalculationJob>;
+  updateLcaCalculationJob(id: number, updates: Partial<InsertLcaCalculationJob>): Promise<LcaCalculationJob>;
+  getLcaCalculationJobById(id: number): Promise<LcaCalculationJob | undefined>;
+  getLcaCalculationJobsByProduct(productId: number): Promise<LcaCalculationJob[]>;
+  getLcaCalculationJobByJobId(jobId: string): Promise<LcaCalculationJob | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -288,6 +316,117 @@ export class DatabaseStorage implements IStorage {
       .from(uploadedDocuments)
       .where(eq(uploadedDocuments.id, id));
     return document;
+  }
+
+  // OpenLCA Flow Mapping operations
+  async getAllFlowMappings(): Promise<OlcaFlowMapping[]> {
+    return await db
+      .select()
+      .from(olcaFlowMappings)
+      .orderBy(desc(olcaFlowMappings.createdAt));
+  }
+
+  async createFlowMapping(mapping: InsertOlcaFlowMapping): Promise<OlcaFlowMapping> {
+    const [newMapping] = await db
+      .insert(olcaFlowMappings)
+      .values(mapping)
+      .returning();
+    return newMapping;
+  }
+
+  async updateFlowMapping(id: number, updates: Partial<InsertOlcaFlowMapping>): Promise<OlcaFlowMapping> {
+    const [mapping] = await db
+      .update(olcaFlowMappings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(olcaFlowMappings.id, id))
+      .returning();
+    return mapping;
+  }
+
+  async getFlowMappingsByInput(inputName: string, inputType: string): Promise<OlcaFlowMapping[]> {
+    return await db
+      .select()
+      .from(olcaFlowMappings)
+      .where(and(
+        eq(olcaFlowMappings.inputName, inputName),
+        eq(olcaFlowMappings.inputType, inputType)
+      ))
+      .orderBy(desc(olcaFlowMappings.confidenceScore));
+  }
+
+  // OpenLCA Process Mapping operations
+  async getAllProcessMappings(): Promise<OlcaProcessMapping[]> {
+    return await db
+      .select()
+      .from(olcaProcessMappings)
+      .orderBy(desc(olcaProcessMappings.createdAt));
+  }
+
+  async createProcessMapping(mapping: InsertOlcaProcessMapping): Promise<OlcaProcessMapping> {
+    const [newMapping] = await db
+      .insert(olcaProcessMappings)
+      .values(mapping)
+      .returning();
+    return newMapping;
+  }
+
+  async updateProcessMapping(id: number, updates: Partial<InsertOlcaProcessMapping>): Promise<OlcaProcessMapping> {
+    const [mapping] = await db
+      .update(olcaProcessMappings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(olcaProcessMappings.id, id))
+      .returning();
+    return mapping;
+  }
+
+  async getProcessMappingsByName(processName: string): Promise<OlcaProcessMapping[]> {
+    return await db
+      .select()
+      .from(olcaProcessMappings)
+      .where(eq(olcaProcessMappings.processName, processName))
+      .orderBy(desc(olcaProcessMappings.createdAt));
+  }
+
+  // LCA Calculation Job operations
+  async createLcaCalculationJob(job: InsertLcaCalculationJob): Promise<LcaCalculationJob> {
+    const [newJob] = await db
+      .insert(lcaCalculationJobs)
+      .values(job)
+      .returning();
+    return newJob;
+  }
+
+  async updateLcaCalculationJob(id: number, updates: Partial<InsertLcaCalculationJob>): Promise<LcaCalculationJob> {
+    const [job] = await db
+      .update(lcaCalculationJobs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(lcaCalculationJobs.id, id))
+      .returning();
+    return job;
+  }
+
+  async getLcaCalculationJobById(id: number): Promise<LcaCalculationJob | undefined> {
+    const [job] = await db
+      .select()
+      .from(lcaCalculationJobs)
+      .where(eq(lcaCalculationJobs.id, id));
+    return job;
+  }
+
+  async getLcaCalculationJobsByProduct(productId: number): Promise<LcaCalculationJob[]> {
+    return await db
+      .select()
+      .from(lcaCalculationJobs)
+      .where(eq(lcaCalculationJobs.productId, productId))
+      .orderBy(desc(lcaCalculationJobs.createdAt));
+  }
+
+  async getLcaCalculationJobByJobId(jobId: string): Promise<LcaCalculationJob | undefined> {
+    const [job] = await db
+      .select()
+      .from(lcaCalculationJobs)
+      .where(eq(lcaCalculationJobs.jobId, jobId));
+    return job;
   }
 }
 

@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { lcaService } from "./lca";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -37,6 +38,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize LCA service (graceful fallback if OpenLCA not available)
+  try {
+    await lcaService.initialize();
+    console.log("LCA service initialized successfully");
+  } catch (error) {
+    console.warn("LCA service initialization failed (OpenLCA may not be available):", error.message);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
