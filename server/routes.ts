@@ -77,12 +77,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/company', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const { 
+        electricityConsumption, 
+        gasConsumption, 
+        waterConsumption, 
+        wasteGenerated,
+        ...companyData 
+      } = req.body;
+      
       const validatedData = insertCompanySchema.parse({
-        ...req.body,
+        ...companyData,
         ownerId: userId,
       });
       
       const company = await dbStorage.createCompany(validatedData);
+      
+      // Create operational data if provided
+      if (electricityConsumption || gasConsumption || waterConsumption || wasteGenerated) {
+        await dbStorage.updateCompanyData(company.id, {
+          electricityConsumption: electricityConsumption || 0,
+          gasConsumption: gasConsumption || 0,
+          waterConsumption: waterConsumption || 0,
+          wasteGenerated: wasteGenerated || 0,
+          reportingPeriodStart: company.currentReportingPeriodStart,
+          reportingPeriodEnd: company.currentReportingPeriodEnd,
+        });
+      }
+      
       res.json(company);
     } catch (error) {
       console.error("Error creating company:", error);
@@ -397,18 +418,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Company not found" });
       }
       
-      const companyData = await dbStorage.getCompanyData(company.id);
-      const reports = await dbStorage.getReportsByCompany(company.id);
+      const companyDataList = await dbStorage.getCompanyData(company.id);
+      const latestData = companyDataList[0];
       
-      // Calculate aggregated metrics
-      const latestReport = reports[0];
+      // Calculate CO2e from energy consumption (simplified calculation)
+      const electricityEmissions = (latestData?.electricityConsumption || 0) * 0.4; // kg CO2e per kWh
+      const gasEmissions = (latestData?.gasConsumption || 0) * 2.0; // kg CO2e per cubic meter
+      const totalCO2e = (electricityEmissions + gasEmissions) / 1000; // Convert to tonnes
+      
       const metrics = {
-        totalCO2e: latestReport?.totalScope1 || 0 + latestReport?.totalScope2 || 0 + latestReport?.totalScope3 || 0,
-        waterUsage: latestReport?.totalWaterUsage || 0,
-        wasteGenerated: latestReport?.totalWasteGenerated || 0,
-        scope1: latestReport?.totalScope1 || 0,
-        scope2: latestReport?.totalScope2 || 0,
-        scope3: latestReport?.totalScope3 || 0,
+        totalCO2e: totalCO2e,
+        waterUsage: latestData?.waterConsumption || 0,
+        wasteGenerated: latestData?.wasteGenerated || 0,
+        energyConsumed: (latestData?.electricityConsumption || 0) + (latestData?.gasConsumption || 0),
       };
       
       res.json(metrics);

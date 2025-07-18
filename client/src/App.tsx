@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
+import Products from "@/pages/products";
 import Reports from "@/pages/reports";
 import Suppliers from "@/pages/suppliers";
 import Settings from "@/pages/settings";
@@ -25,6 +26,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/app/dashboard" component={Dashboard} />
+          <Route path="/app/products" component={Products} />
           <Route path="/app/reports" component={Reports} />
           <Route path="/app/suppliers" component={Suppliers} />
           <Route path="/app/settings" component={Settings} />

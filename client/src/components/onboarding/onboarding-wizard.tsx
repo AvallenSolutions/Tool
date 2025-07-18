@@ -51,8 +51,27 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       const response = await apiRequest("POST", "/api/company", data);
       return response.json();
     },
-    onSuccess: (company) => {
+    onSuccess: async (company) => {
       queryClient.invalidateQueries({ queryKey: ["/api/company"] });
+      
+      // Create the main product if product data exists
+      if (formData.productName && formData.productType && formData.productSize) {
+        try {
+          await apiRequest("POST", "/api/products", {
+            name: formData.productName,
+            sku: `${formData.productName.replace(/\s+/g, '-').toUpperCase()}-${formData.productSize}`,
+            type: formData.productType,
+            size: formData.productSize,
+            productionModel: formData.productionModel || 'own',
+            status: 'active',
+            isMainProduct: true,
+          });
+          queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        } catch (error) {
+          console.error("Failed to create product:", error);
+        }
+      }
+      
       toast({
         title: "Setup Complete!",
         description: "Welcome to your sustainability dashboard.",
@@ -102,6 +121,11 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       currentReportingPeriodStart: formData.reportingPeriodStart,
       currentReportingPeriodEnd: formData.reportingPeriodEnd,
       onboardingComplete: true,
+      // Pass operational data for metrics
+      electricityConsumption: formData.electricityConsumption ? parseFloat(formData.electricityConsumption) : 0,
+      gasConsumption: formData.gasConsumption ? parseFloat(formData.gasConsumption) : 0,
+      waterConsumption: formData.waterConsumption ? parseFloat(formData.waterConsumption) : 0,
+      wasteGenerated: formData.wasteGenerated ? parseFloat(formData.wasteGenerated) : 0,
     };
 
     createCompanyMutation.mutate(companyData);
