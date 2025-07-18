@@ -141,9 +141,9 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg border-avallen-green shadow-xl">
-          <CardHeader className="pb-3">
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <Card className="w-full max-w-lg bg-white border-2 border-avallen-green shadow-2xl">
+          <CardHeader className="pb-3 bg-lightest-gray">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-avallen-green" />
@@ -160,13 +160,13 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <Badge variant="outline" className="w-fit">
+            <Badge variant="outline" className="w-fit border-avallen-green text-avallen-green">
               Step {currentStep + 1} of {guidedSteps.length}
             </Badge>
           </CardHeader>
           
-          <CardContent className="pb-6">
-            <p className="text-gray-600 mb-6 leading-relaxed">
+          <CardContent className="pb-6 bg-white">
+            <p className="text-slate-gray mb-6 leading-relaxed font-medium">
               {currentGuidedStep.content}
             </p>
             
@@ -301,7 +301,8 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                 <Button
                   onClick={handleNext}
                   disabled={!isStepValid() || createProductMutation.isPending}
-                  className="bg-avallen-green hover:bg-avallen-green-light text-white flex items-center gap-2"
+                  className="bg-avallen-green hover:bg-green-600 text-white flex items-center gap-2 px-6 py-2 font-medium opacity-100 visible"
+                  style={{ backgroundColor: 'hsl(var(--avallen-green))', color: 'white' }}
                 >
                   {createProductMutation.isPending ? "Creating..." : 
                    currentStep === guidedSteps.length - 1 ? (
