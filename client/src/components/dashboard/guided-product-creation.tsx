@@ -176,23 +176,21 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
       name: formData.name,
       sku: formData.sku,
       type: formData.type,
-      size: formData.volume, // Map volume to size for current database
+      volume: formData.volume, // Use volume field to match database schema
       productionModel: formData.productionModel,
       annualProductionVolume: formData.annualVolume ? formData.annualVolume : null,
       productionUnit: 'bottles',
       status: 'active',
-      // Store comprehensive data in description field for now
-      description: JSON.stringify({
-        ingredients: formData.ingredients,
-        bottleMaterial: formData.bottleMaterial,
-        bottleRecycledContent: formData.bottleRecycledContent,
-        labelMaterial: formData.labelMaterial,
-        labelWeight: formData.labelWeight,
-        closureMaterial: formData.closureMaterial,
-        closureWeight: formData.closureWeight,
-        hasBuiltInClosure: formData.hasBuiltInClosure,
-        packShotUrl: formData.packShotUrl
-      })
+      // Store comprehensive data using proper schema fields
+      packShotUrl: formData.packShotUrl,
+      ingredients: formData.ingredients,
+      bottleMaterial: formData.bottleMaterial,
+      bottleRecycledContent: formData.bottleRecycledContent ? parseFloat(formData.bottleRecycledContent) : null,
+      labelMaterial: formData.labelMaterial,
+      labelWeight: formData.labelWeight ? parseFloat(formData.labelWeight) : null,
+      closureMaterial: formData.closureMaterial,
+      closureWeight: formData.closureWeight ? parseFloat(formData.closureWeight) : null,
+      hasBuiltInClosure: formData.hasBuiltInClosure
     };
     createProductMutation.mutate(productData);
   };
@@ -344,10 +342,45 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            // Optimize image size before storing
+                            const img = new Image();
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              const ctx = canvas.getContext('2d');
+                              
+                              // Max dimensions for optimization
+                              const MAX_WIDTH = 400;
+                              const MAX_HEIGHT = 400;
+                              
+                              let { width, height } = img;
+                              
+                              // Calculate new dimensions
+                              if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                  height = (height * MAX_WIDTH) / width;
+                                  width = MAX_WIDTH;
+                                }
+                              } else {
+                                if (height > MAX_HEIGHT) {
+                                  width = (width * MAX_HEIGHT) / height;
+                                  height = MAX_HEIGHT;
+                                }
+                              }
+                              
+                              canvas.width = width;
+                              canvas.height = height;
+                              
+                              // Draw and compress
+                              ctx?.drawImage(img, 0, 0, width, height);
+                              const compressedDataURL = canvas.toDataURL('image/jpeg', 0.7);
+                              
+                              handleInputChange('packShotUrl', compressedDataURL);
+                            };
+                            
                             const reader = new FileReader();
-                            reader.onload = (event) => {
-                              if (event.target?.result) {
-                                handleInputChange('packShotUrl', event.target.result as string);
+                            reader.onload = (e) => {
+                              if (e.target?.result) {
+                                img.src = e.target.result as string;
                               }
                             };
                             reader.readAsDataURL(file);

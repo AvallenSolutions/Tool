@@ -18,7 +18,7 @@ interface Product {
   name: string;
   sku: string;
   type: string;
-  size: string;
+  volume: string;
   description: string;
   productionModel: string;
   annualProductionVolume: number;
@@ -28,6 +28,16 @@ interface Product {
   status: string;
   isMainProduct: boolean;
   createdAt: string;
+  // LCA data fields
+  packShotUrl?: string;
+  ingredients?: Array<{ name: string; amount: number; unit: string }>;
+  bottleMaterial?: string;
+  bottleRecycledContent?: number;
+  labelMaterial?: string;
+  labelWeight?: number;
+  closureMaterial?: string;
+  closureWeight?: number;
+  hasBuiltInClosure?: boolean;
 }
 
 export default function ProductsSection() {
@@ -37,7 +47,7 @@ export default function ProductsSection() {
     name: '',
     sku: '',
     type: '',
-    size: '',
+    volume: '',
     description: '',
     productionModel: '',
     annualProductionVolume: '',
@@ -442,7 +452,7 @@ export default function ProductsSection() {
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-500">
-                        SKU: {mainProduct.sku} • {mainProduct.size} • {mainProduct.type}
+                        SKU: {mainProduct.sku} • {mainProduct.volume} • {mainProduct.type}
                       </p>
                     </div>
                   </div>
