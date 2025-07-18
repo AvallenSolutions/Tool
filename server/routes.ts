@@ -217,7 +217,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const productId = parseInt(req.params.id);
       const updates = req.body;
       
+      console.log('🛠️ Server received PATCH request for product:', productId);
+      console.log('📋 Update data received:', JSON.stringify(updates, null, 2));
+      
       const product = await dbStorage.updateProduct(productId, updates);
+      console.log('✅ Product updated successfully:', product.name);
       res.json(product);
     } catch (error) {
       console.error("Error updating product:", error);

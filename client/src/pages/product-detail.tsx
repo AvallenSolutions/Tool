@@ -117,7 +117,7 @@ export default function ProductDetail() {
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate(`/app/products/${id}/edit`)}
+                  onClick={() => navigate(`/app/products/${id}/enhanced`)}
                   className="flex items-center gap-2 btn-always-visible border border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
                 >
                   <Edit3 className="w-4 h-4" />

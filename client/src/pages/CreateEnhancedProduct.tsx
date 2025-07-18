@@ -36,13 +36,13 @@ export default function CreateEnhancedProduct() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
-        title: isEditMode ? "Product Updated!" : "Enhanced Product Created!",
-        description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive LCA data for accurate environmental impact calculations.`,
+        title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
+        description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive environmental data. All changes have been saved to the database.`,
       });
       navigate('/app/products');
     },
     onError: (error) => {
-      console.error("Error saving product:", error);
+      console.error("❌ Error saving product:", error);
       toast({
         title: "Error",
         description: `Failed to ${isEditMode ? 'update' : 'create'} product. Please try again.`,
@@ -52,6 +52,8 @@ export default function CreateEnhancedProduct() {
   });
 
   const handleSubmit = (data: any) => {
+    console.log('🔄 Form submitted with data:', data);
+    
     // Transform the enhanced form data to match the database schema columns
     const transformedData = {
       // Basic fields
@@ -138,6 +140,7 @@ export default function CreateEnhancedProduct() {
       certifications: data.certifications,
     };
 
+    console.log('📤 Sending transformed data to API:', transformedData);
     createProductMutation.mutate(transformedData);
   };
 
