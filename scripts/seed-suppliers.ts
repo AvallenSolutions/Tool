@@ -87,6 +87,58 @@ async function seedSuppliers() {
       isVerified: true,
     }).returning();
 
+    // Additional packaging suppliers
+    const [alpineGlass] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'Alpine Glass Works',
+      supplierCategory: 'bottle_producer',
+      website: 'https://alpineglass.com',
+      contactEmail: 'orders@alpineglass.com',
+      description: 'Artisan glass bottles for premium spirits with custom design capabilities',
+      location: 'Austria',
+      isVerified: true,
+    }).returning();
+
+    const [vintageCork] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'Vintage Cork Company',
+      supplierCategory: 'closure_producer',
+      website: 'https://vintagecork.com',
+      contactEmail: 'sales@vintagecork.com',
+      description: 'Traditional cork closures and modern synthetic alternatives',
+      location: 'Spain',
+      isVerified: true,
+    }).returning();
+
+    const [premiumLabelCo] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'Premium Label Co',
+      supplierCategory: 'label_maker',
+      website: 'https://premiumlabels.com',
+      contactEmail: 'design@premiumlabels.com',
+      description: 'High-quality labels with sustainable materials and custom printing',
+      location: 'Germany',
+      isVerified: true,
+    }).returning();
+
+    // Additional ingredient suppliers
+    const [frenchGrains] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'French Grain House',
+      supplierCategory: 'ingredient_supplier',
+      website: 'https://frenchgrains.fr',
+      contactEmail: 'export@frenchgrains.fr',
+      description: 'Premium French wheat and corn for luxury spirit production',
+      location: 'France',
+      isVerified: true,
+    }).returning();
+
+    const [mountainSpices] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'Mountain Spice Traders',
+      supplierCategory: 'ingredient_supplier',
+      website: 'https://mountainspices.com',
+      contactEmail: 'sourcing@mountainspices.com',
+      description: 'Ethically sourced spices and botanicals from mountain regions',
+      location: 'Nepal',
+      isVerified: true,
+    }).returning();
+
     console.log('✅ Suppliers created successfully');
 
     // Create bottle products
@@ -186,7 +238,7 @@ async function seedSuppliers() {
     // Create label products
     await db.insert(supplierProducts).values([
       {
-        supplierId: premiumLabels.id,
+        supplierId: premiumLabelCo.id,
         productName: 'Premium Paper Label - Waterproof',
         productDescription: 'High-quality waterproof paper label with premium finish. Suitable for spirits bottles.',
         sku: 'PL-WP-001',
@@ -216,7 +268,7 @@ async function seedSuppliers() {
         isVerified: true,
       },
       {
-        supplierId: premiumLabels.id,
+        supplierId: premiumLabelCo.id,
         productName: 'Luxury Metallic Label',
         productDescription: 'Premium metallic finish label for luxury spirits brands. Gold/silver foil options available.',
         sku: 'PL-LUX-001',
@@ -465,6 +517,268 @@ async function seedSuppliers() {
         minimumOrderQuantity: 1000,
         leadTimeDays: 3,
         certifications: ['NSF Certified', 'FDA Approved'],
+        isVerified: true,
+      },
+      
+      // Additional packaging products
+      {
+        supplierId: alpineGlass.id,
+        productName: 'Artisan 750ml Flint Glass Bottle',
+        productDescription: 'Hand-crafted flint glass bottle with unique texture. Perfect for premium gin and vodka brands seeking distinctive packaging.',
+        sku: 'AGW-750-ART',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.89,
+          water_footprint_liters: 2.8,
+          energy_consumption_mj: 12.4,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Glass industry LCA database',
+          verification_body: 'SGS',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          capacity_ml: 750,
+          material: 'Flint Glass',
+          weight_g: 520,
+          neck_finish: '28mm ROPP',
+          color: 'Clear',
+          shape: 'Artisan Textured',
+          origin_country: 'Austria'
+        },
+        basePrice: 1.85,
+        currency: 'EUR',
+        minimumOrderQuantity: 5000,
+        leadTimeDays: 21,
+        certifications: ['ISO 9001', 'BRC Packaging'],
+        isVerified: true,
+      },
+      {
+        supplierId: vintageCork.id,
+        productName: 'Premium Synthetic Cork - T-Top',
+        productDescription: 'High-performance synthetic cork with excellent seal properties. Consistent quality and no cork taint risk.',
+        sku: 'VCC-SYN-TTOP',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.012,
+          water_footprint_liters: 0.08,
+          energy_consumption_mj: 0.34,
+          calculation_method: 'PEF',
+          data_source: 'Polymer industry LCA',
+          verification_body: 'TÜV SÜD',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          length_mm: 44,
+          diameter_mm: 24,
+          material: 'TPE Polymer',
+          compression_force_n: 125,
+          extraction_force_n: 180,
+          color: 'Natural Cork',
+          surface_treatment: 'Smooth'
+        },
+        basePrice: 0.28,
+        currency: 'EUR',
+        minimumOrderQuantity: 10000,
+        leadTimeDays: 14,
+        certifications: ['FDA Approved', 'EU Food Contact'],
+        isVerified: true,
+      },
+      {
+        supplierId: premiumLabelCo.id,
+        productName: 'Waterproof Polymer Label - Premium',
+        productDescription: 'Durable waterproof labels with high-quality printing. Resistant to condensation and handling.',
+        sku: 'PLC-POLY-PREM',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.045,
+          water_footprint_liters: 0.12,
+          energy_consumption_mj: 0.89,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Label industry study',
+          verification_body: 'ISEGA',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          material: 'BOPP Film',
+          thickness_microns: 60,
+          adhesive_type: 'Permanent Acrylic',
+          print_quality: 'HD Digital',
+          finish: 'Gloss',
+          size_mm: '90x120',
+          colors_available: 8
+        },
+        basePrice: 0.15,
+        currency: 'EUR',
+        minimumOrderQuantity: 5000,
+        leadTimeDays: 10,
+        certifications: ['FSC Certified', 'Cradle to Cradle'],
+        isVerified: true,
+      },
+
+      // Additional ingredient products
+      {
+        supplierId: frenchGrains.id,
+        productName: 'Premium French Wheat - Milling Grade',
+        productDescription: 'High-protein French wheat ideal for grain spirits and vodka production. Consistent starch content and excellent fermentation properties.',
+        sku: 'FGH-WHEAT-001',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.72,
+          water_footprint_liters: 1180,
+          energy_consumption_mj: 2.9,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'French agriculture LCA',
+          verification_body: 'ADEME',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Grain',
+          variety: 'French Wheat',
+          protein_content_percentage: 12.5,
+          moisture_content_percentage: 13.0,
+          origin_country: 'France',
+          organic_certified: false,
+          typical_usage_per_unit: 3.2,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 0.95,
+        currency: 'EUR',
+        minimumOrderQuantity: 2000,
+        leadTimeDays: 5,
+        certifications: ['Label Rouge', 'HACCP'],
+        isVerified: true,
+      },
+      {
+        supplierId: frenchGrains.id,
+        productName: 'Organic French Corn - Non-GMO',
+        productDescription: 'Certified organic French corn for bourbon and whiskey production. Sweet variety with high starch conversion rate.',
+        sku: 'FGH-CORN-ORG',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.68,
+          water_footprint_liters: 900,
+          energy_consumption_mj: 2.1,
+          calculation_method: 'PEF',
+          data_source: 'Organic farming LCA study',
+          verification_body: 'Ecocert',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Grain',
+          variety: 'French Sweet Corn',
+          protein_content_percentage: 8.9,
+          moisture_content_percentage: 14.0,
+          origin_country: 'France',
+          organic_certified: true,
+          typical_usage_per_unit: 2.8,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 1.35,
+        currency: 'EUR',
+        minimumOrderQuantity: 1000,
+        leadTimeDays: 8,
+        certifications: ['EU Organic', 'Non-GMO Project'],
+        isVerified: true,
+      },
+      {
+        supplierId: mountainSpices.id,
+        productName: 'Wild Himalayan Cardamom Pods',
+        productDescription: 'Premium green cardamom pods from high-altitude Himalayan farms. Intense aroma perfect for gin botanicals.',
+        sku: 'MST-CARD-HIM',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 3.2,
+          water_footprint_liters: 2400,
+          energy_consumption_mj: 5.8,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Spice trade carbon study',
+          verification_body: 'Rainforest Alliance',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Botanical',
+          variety: 'Green Cardamom',
+          essential_oil_content_percentage: 7.2,
+          moisture_content_percentage: 10.0,
+          origin_country: 'Nepal',
+          organic_certified: true,
+          typical_usage_per_unit: 0.003,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 85.50,
+        currency: 'USD',
+        minimumOrderQuantity: 10,
+        leadTimeDays: 20,
+        certifications: ['Fair Trade', 'Organic Certified'],
+        isVerified: true,
+      },
+      {
+        supplierId: mountainSpices.id,
+        productName: 'Alpine Juniper Berries - Wild Harvested',
+        productDescription: 'Wild-harvested juniper berries from Alpine regions. Distinctive piney flavor with citrus notes for premium gin production.',
+        sku: 'MST-JUN-ALP',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 1.89,
+          water_footprint_liters: 680,
+          energy_consumption_mj: 3.4,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Wild harvest sustainability study',
+          verification_body: 'IFOAM',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Botanical',
+          variety: 'Wild Alpine Juniper',
+          essential_oil_content_percentage: 3.1,
+          moisture_content_percentage: 9.5,
+          origin_country: 'Austria',
+          organic_certified: true,
+          typical_usage_per_unit: 0.012,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 32.80,
+        currency: 'EUR',
+        minimumOrderQuantity: 20,
+        leadTimeDays: 18,
+        certifications: ['Wild Harvest Certified', 'EU Organic'],
+        isVerified: true,
+      },
+      {
+        supplierId: scotlandGrain.id,
+        productName: 'Highland Rye - Heritage Variety',
+        productDescription: 'Heritage Scottish rye variety with complex flavor profile. Perfect for rye whiskey and experimental grain bills.',
+        sku: 'SGC-RYE-HER',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.94,
+          water_footprint_liters: 1350,
+          energy_consumption_mj: 3.6,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Heritage grain LCA study',
+          verification_body: 'Scottish Agricultural College',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Grain',
+          variety: 'Highland Heritage Rye',
+          protein_content_percentage: 13.2,
+          moisture_content_percentage: 12.8,
+          origin_country: 'Scotland',
+          organic_certified: false,
+          typical_usage_per_unit: 1.8,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 1.65,
+        currency: 'GBP',
+        minimumOrderQuantity: 800,
+        leadTimeDays: 12,
+        certifications: ['Scottish Quality Assured', 'Heritage Seed Foundation'],
         isVerified: true,
       }
     ]);
