@@ -30,8 +30,11 @@ import {
   CheckCircle,
   Upload,
   Camera,
-  Loader2
+  Loader2,
+  Search,
+  Building2
 } from 'lucide-react';
+import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
 
 // Enhanced validation schema for comprehensive LCA data
 const enhancedProductSchema = z.object({
@@ -189,6 +192,7 @@ export default function EnhancedProductForm({
   const [activeTab, setActiveTab] = useState('basic');
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [selectedSupplierProducts, setSelectedSupplierProducts] = useState<Record<string, any>>({});
   const { toast } = useToast();
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -799,7 +803,63 @@ export default function EnhancedProductForm({
                 <div className="space-y-6">
                   {/* Primary Container */}
                   <Card className="p-4">
-                    <h3 className="font-semibold mb-4">Primary Container (Bottle/Can)</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold">Primary Container (Bottle/Can)</h3>
+                      <SupplierSelectionModal
+                        inputType="bottle"
+                        onSelect={(product) => {
+                          setSelectedSupplierProducts(prev => ({ ...prev, bottle: product }));
+                          if (product.productAttributes) {
+                            const attrs = product.productAttributes;
+                            form.setValue('packaging.primaryContainer.material', attrs.material_type?.toLowerCase() || 'glass');
+                            form.setValue('packaging.primaryContainer.weight', attrs.weight_grams || 500);
+                            form.setValue('packaging.primaryContainer.recycledContent', attrs.recycled_content_percentage || 0);
+                          }
+                          toast({
+                            title: "Supplier Product Selected",
+                            description: `Selected ${product.productName} from ${product.supplierName}`,
+                          });
+                        }}
+                        onManualEntry={() => {
+                          setSelectedSupplierProducts(prev => ({ ...prev, bottle: null }));
+                          toast({
+                            title: "Manual Entry Mode",
+                            description: "You can now enter bottle specifications manually",
+                          });
+                        }}
+                        selectedProduct={selectedSupplierProducts.bottle}
+                      >
+                        <Button type="button" variant="outline" size="sm" className="flex items-center gap-2">
+                          {selectedSupplierProducts.bottle ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              {selectedSupplierProducts.bottle.productName}
+                            </>
+                          ) : (
+                            <>
+                              <Search className="w-4 h-4" />
+                              Browse Verified Bottles
+                            </>
+                          )}
+                        </Button>
+                      </SupplierSelectionModal>
+                    </div>
+                    
+                    {selectedSupplierProducts.bottle && (
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Building2 className="w-4 h-4 text-green-600" />
+                          <span className="font-medium">{selectedSupplierProducts.bottle.supplierName}</span>
+                          {selectedSupplierProducts.bottle.hasPrecalculatedLca && (
+                            <Badge variant="secondary" className="text-xs">Verified LCA</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {selectedSupplierProducts.bottle.productDescription}
+                        </p>
+                      </div>
+                    )}
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Material *</Label>
@@ -864,7 +924,61 @@ export default function EnhancedProductForm({
                   
                   {/* Labeling */}
                   <Card className="p-4">
-                    <h3 className="font-semibold mb-4">Labels & Printing</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold">Labels & Printing</h3>
+                      <SupplierSelectionModal
+                        inputType="label"
+                        onSelect={(product) => {
+                          setSelectedSupplierProducts(prev => ({ ...prev, label: product }));
+                          if (product.productAttributes) {
+                            const attrs = product.productAttributes;
+                            form.setValue('packaging.labeling.labelMaterial', attrs.material_type?.toLowerCase().split(' ')[0] || 'paper');
+                            form.setValue('packaging.labeling.labelWeight', attrs.weight_grams_per_sq_meter ? attrs.weight_grams_per_sq_meter / 100 : 2.5);
+                          }
+                          toast({
+                            title: "Supplier Product Selected",
+                            description: `Selected ${product.productName} from ${product.supplierName}`,
+                          });
+                        }}
+                        onManualEntry={() => {
+                          setSelectedSupplierProducts(prev => ({ ...prev, label: null }));
+                          toast({
+                            title: "Manual Entry Mode",
+                            description: "You can now enter label specifications manually",
+                          });
+                        }}
+                        selectedProduct={selectedSupplierProducts.label}
+                      >
+                        <Button type="button" variant="outline" size="sm" className="flex items-center gap-2">
+                          {selectedSupplierProducts.label ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              {selectedSupplierProducts.label.productName}
+                            </>
+                          ) : (
+                            <>
+                              <Search className="w-4 h-4" />
+                              Browse Verified Labels
+                            </>
+                          )}
+                        </Button>
+                      </SupplierSelectionModal>
+                    </div>
+                    
+                    {selectedSupplierProducts.label && (
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Building2 className="w-4 h-4 text-green-600" />
+                          <span className="font-medium">{selectedSupplierProducts.label.supplierName}</span>
+                          {selectedSupplierProducts.label.hasPrecalculatedLca && (
+                            <Badge variant="secondary" className="text-xs">Verified LCA</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {selectedSupplierProducts.label.productDescription}
+                        </p>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Label Material *</Label>
@@ -899,7 +1013,68 @@ export default function EnhancedProductForm({
                   
                   {/* Closure */}
                   <Card className="p-4">
-                    <h3 className="font-semibold mb-4">Closure System</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold">Closure System</h3>
+                      <SupplierSelectionModal
+                        inputType="closure"
+                        onSelect={(product) => {
+                          setSelectedSupplierProducts(prev => ({ ...prev, closure: product }));
+                          if (product.productAttributes) {
+                            const attrs = product.productAttributes;
+                            const materialMap: Record<string, string> = {
+                              'Natural Cork': 'cork',
+                              'Synthetic Cork': 'synthetic-cork',
+                              'Aluminum': 'aluminum',
+                              'Plastic': 'plastic',
+                              'Steel': 'aluminum'
+                            };
+                            form.setValue('packaging.closure.material', materialMap[attrs.material_type] || 'cork');
+                            form.setValue('packaging.closure.weight', attrs.weight_grams || 5);
+                          }
+                          toast({
+                            title: "Supplier Product Selected",
+                            description: `Selected ${product.productName} from ${product.supplierName}`,
+                          });
+                        }}
+                        onManualEntry={() => {
+                          setSelectedSupplierProducts(prev => ({ ...prev, closure: null }));
+                          toast({
+                            title: "Manual Entry Mode",
+                            description: "You can now enter closure specifications manually",
+                          });
+                        }}
+                        selectedProduct={selectedSupplierProducts.closure}
+                      >
+                        <Button type="button" variant="outline" size="sm" className="flex items-center gap-2">
+                          {selectedSupplierProducts.closure ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              {selectedSupplierProducts.closure.productName}
+                            </>
+                          ) : (
+                            <>
+                              <Search className="w-4 h-4" />
+                              Browse Verified Closures
+                            </>
+                          )}
+                        </Button>
+                      </SupplierSelectionModal>
+                    </div>
+                    
+                    {selectedSupplierProducts.closure && (
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Building2 className="w-4 h-4 text-green-600" />
+                          <span className="font-medium">{selectedSupplierProducts.closure.supplierName}</span>
+                          {selectedSupplierProducts.closure.hasPrecalculatedLca && (
+                            <Badge variant="secondary" className="text-xs">Verified LCA</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {selectedSupplierProducts.closure.productDescription}
+                        </p>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Closure Type *</Label>

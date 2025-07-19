@@ -404,6 +404,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Verified supplier network routes
+  app.get('/api/verified-suppliers', isAuthenticated, async (req: any, res) => {
+    try {
+      const { category } = req.query;
+      
+      let suppliers;
+      if (category) {
+        suppliers = await dbStorage.getVerifiedSuppliersByCategory(category);
+      } else {
+        suppliers = await dbStorage.getVerifiedSuppliers();
+      }
+      
+      res.json(suppliers);
+    } catch (error) {
+      console.error("Error fetching verified suppliers:", error);
+      res.status(500).json({ message: "Failed to fetch verified suppliers" });
+    }
+  });
+
+  app.get('/api/supplier-products', isAuthenticated, async (req: any, res) => {
+    try {
+      const { category, search, supplierId } = req.query;
+      
+      let products;
+      if (supplierId) {
+        products = await dbStorage.getSupplierProductsBySupplierId(supplierId as string);
+      } else if (search) {
+        products = await dbStorage.searchSupplierProducts(search as string, category as string);
+      } else if (category) {
+        products = await dbStorage.getSupplierProductsByCategory(category as string);
+      } else {
+        products = await dbStorage.getSupplierProducts();
+      }
+      
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching supplier products:", error);
+      res.status(500).json({ message: "Failed to fetch supplier products" });
+    }
+  });
+
+  app.get('/api/supplier-products/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const product = await dbStorage.getSupplierProductById(id);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Supplier product not found" });
+      }
+      
+      res.json(product);
+    } catch (error) {
+      console.error("Error fetching supplier product:", error);
+      res.status(500).json({ message: "Failed to fetch supplier product" });
+    }
+  });
+
+  // Admin routes for supplier management (restricted to admin users)
+  app.post('/api/admin/verified-suppliers', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check
+      const supplier = await dbStorage.createVerifiedSupplier(req.body);
+      res.json(supplier);
+    } catch (error) {
+      console.error("Error creating verified supplier:", error);
+      res.status(500).json({ message: "Failed to create verified supplier" });
+    }
+  });
+
+  app.put('/api/admin/verified-suppliers/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check
+      const { id } = req.params;
+      const supplier = await dbStorage.updateVerifiedSupplier(id, req.body);
+      res.json(supplier);
+    } catch (error) {
+      console.error("Error updating verified supplier:", error);
+      res.status(500).json({ message: "Failed to update verified supplier" });
+    }
+  });
+
+  app.post('/api/admin/supplier-products', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check
+      const product = await dbStorage.createSupplierProduct(req.body);
+      res.json(product);
+    } catch (error) {
+      console.error("Error creating supplier product:", error);
+      res.status(500).json({ message: "Failed to create supplier product" });
+    }
+  });
+
+  app.put('/api/admin/supplier-products/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check
+      const { id } = req.params;
+      const product = await dbStorage.updateSupplierProduct(id, req.body);
+      res.json(product);
+    } catch (error) {
+      console.error("Error updating supplier product:", error);
+      res.status(500).json({ message: "Failed to update supplier product" });
+    }
+  });
+
   // Supplier portal routes (public)
   app.get('/api/supplier-portal/:token', async (req, res) => {
     try {

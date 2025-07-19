@@ -206,6 +206,9 @@ export const productInputs = pgTable("product_inputs", {
   unit: varchar("unit"),
   supplierId: integer("supplier_id").references(() => suppliers.id),
   
+  // Link to verified supplier product (overrides manual data entry)
+  supplierProductId: uuid("supplier_product_id").references(() => supplierProducts.id),
+  
   // OpenLCA Integration Fields
   inputCategory: varchar("input_category"), // agricultural_inputs, transport_inputs, processing_inputs, etc.
   olcaFlowId: varchar("olca_flow_id"), // OpenLCA flow ID
@@ -229,7 +232,7 @@ export const productInputs = pgTable("product_inputs", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Suppliers table
+// Suppliers table (client-specific suppliers)
 export const suppliers = pgTable("suppliers", {
   id: serial("id").primaryKey(),
   companyId: integer("company_id").references(() => companies.id),
@@ -248,6 +251,63 @@ export const suppliers = pgTable("suppliers", {
   // Submitted data
   submittedData: jsonb("submitted_data"),
   submittedAt: timestamp("submitted_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Verified suppliers table (global pre-vetted supplier network)
+export const verifiedSuppliers = pgTable("verified_suppliers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  supplierName: varchar("supplier_name", { length: 255 }).notNull().unique(),
+  supplierCategory: varchar("supplier_category", { length: 100 }).notNull(), // bottle_producer, label_maker, closure_producer, secondary_packaging, ingredient_supplier, contract_distillery
+  website: varchar("website", { length: 255 }),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  description: text("description"),
+  location: varchar("location"), // Country or region
+  
+  // Verification status
+  isVerified: boolean("is_verified").notNull().default(false),
+  verifiedBy: varchar("verified_by").references(() => users.id),
+  verifiedAt: timestamp("verified_at"),
+  
+  // Admin notes
+  adminNotes: text("admin_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Supplier products table (products offered by verified suppliers)
+export const supplierProducts = pgTable("supplier_products", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  supplierId: uuid("supplier_id").notNull().references(() => verifiedSuppliers.id),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  productDescription: text("product_description"),
+  sku: varchar("sku"), // Supplier's SKU/product code
+  
+  // LCA data handling
+  hasPrecalculatedLca: boolean("has_precalculated_lca").notNull().default(false),
+  lcaDataJson: jsonb("lca_data_json"), // Pre-calculated LCA results
+  productAttributes: jsonb("product_attributes"), // Raw material data for calculation
+  
+  // Verification and quality
+  isVerified: boolean("is_verified").notNull().default(false),
+  verifiedBy: varchar("verified_by").references(() => users.id),
+  verifiedAt: timestamp("verified_at"),
+  
+  // Pricing and availability (optional)
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  minimumOrderQuantity: integer("minimum_order_quantity"),
+  leadTimeDays: integer("lead_time_days"),
+  
+  // Quality certifications
+  certifications: jsonb("certifications").$type<string[]>(),
+  
+  // Admin workflow
+  submissionStatus: varchar("submission_status").default("pending"), // pending, approved, rejected, needs_revision
+  adminNotes: text("admin_notes"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -404,6 +464,22 @@ export const productInputRelations = relations(productInputs, ({ one }) => ({
     fields: [productInputs.supplierId],
     references: [suppliers.id],
   }),
+  supplierProduct: one(supplierProducts, {
+    fields: [productInputs.supplierProductId],
+    references: [supplierProducts.id],
+  }),
+}));
+
+export const verifiedSupplierRelations = relations(verifiedSuppliers, ({ many }) => ({
+  products: many(supplierProducts),
+}));
+
+export const supplierProductRelations = relations(supplierProducts, ({ one, many }) => ({
+  supplier: one(verifiedSuppliers, {
+    fields: [supplierProducts.supplierId],
+    references: [verifiedSuppliers.id],
+  }),
+  productInputs: many(productInputs),
 }));
 
 export const companyDataRelations = relations(companyData, ({ one }) => ({
@@ -540,3 +616,80 @@ export const insertProductInputSchema = createInsertSchema(productInputs).omit({
   updatedAt: true,
 });
 export type InsertProductInputType = z.infer<typeof insertProductInputSchema>;
+
+// Verified Supplier Types
+export type VerifiedSupplier = typeof verifiedSuppliers.$inferSelect;
+export type InsertVerifiedSupplier = typeof verifiedSuppliers.$inferInsert;
+export const insertVerifiedSupplierSchema = createInsertSchema(verifiedSuppliers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SupplierProduct = typeof supplierProducts.$inferSelect;
+export type InsertSupplierProduct = typeof supplierProducts.$inferInsert;
+export const insertSupplierProductSchema = createInsertSchema(supplierProducts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Category-specific product attribute schemas
+export const bottleProducerAttributesSchema = z.object({
+  material_type: z.enum(['Glass', 'PET', 'Aluminum', 'HDPE']),
+  weight_grams: z.number().positive(),
+  recycled_content_percentage: z.number().min(0).max(100),
+  color: z.string().optional(),
+  height_mm: z.number().positive().optional(),
+  diameter_mm: z.number().positive().optional(),
+});
+
+export const labelMakerAttributesSchema = z.object({
+  material_type: z.enum(['Paper - Coated', 'Paper - Uncoated', 'Polypropylene', 'Vinyl', 'Polyester']),
+  weight_grams_per_sq_meter: z.number().positive(),
+  dimensions_mm: z.string(), // e.g., "80x120"
+  recycled_content_percentage: z.number().min(0).max(100),
+  adhesive_type: z.enum(['Water-based', 'Solvent-based', 'Hot-melt', 'UV-curable']),
+  finish: z.enum(['Matte', 'Gloss', 'Semi-gloss']).optional(),
+});
+
+export const closureProducerAttributesSchema = z.object({
+  material_type: z.enum(['Natural Cork', 'Synthetic Cork', 'Aluminum', 'Plastic', 'Steel']),
+  weight_grams: z.number().positive(),
+  diameter_mm: z.number().positive().optional(),
+  length_mm: z.number().positive().optional(),
+  liner_material: z.string().optional(),
+});
+
+export const secondaryPackagingAttributesSchema = z.object({
+  material_type: z.enum(['Corrugated Cardboard', 'Paperboard', 'Plastic', 'Wood']),
+  weight_grams: z.number().positive(),
+  recycled_content_percentage: z.number().min(0).max(100),
+  dimensions_mm: z.string().optional(), // e.g., "300x200x100"
+  strength_grade: z.string().optional(),
+});
+
+export const ingredientSupplierAttributesSchema = z.object({
+  ingredient_type: z.enum(['Grain', 'Fruit', 'Botanical', 'Additive', 'Water', 'Yeast', 'Sugar', 'Acid']),
+  origin_country: z.string(),
+  organic_certified: z.boolean().default(false),
+  processing_method: z.string().optional(),
+  alcohol_content_percentage: z.number().min(0).max(100).optional(),
+  density_kg_per_liter: z.number().positive().optional(),
+});
+
+// Pre-calculated LCA data schema
+export const lcaDataSchema = z.object({
+  carbon_footprint_kg_co2_eq: z.number(),
+  water_footprint_liters: z.number(),
+  energy_consumption_mj: z.number(),
+  waste_generation_kg: z.number().optional(),
+  land_use_m2_year: z.number().optional(),
+  acidification_potential: z.number().optional(),
+  eutrophication_potential: z.number().optional(),
+  ozone_depletion_potential: z.number().optional(),
+  calculation_method: z.string(), // e.g., "ISO 14040/14044", "PEF", "EPD"
+  verification_body: z.string().optional(),
+  valid_until: z.string().optional(), // ISO date string
+  data_source: z.string(), // e.g., "Third-party LCA", "EPD", "Internal calculation"
+});

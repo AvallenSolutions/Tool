@@ -3,6 +3,8 @@ import {
   companies,
   products,
   suppliers,
+  verifiedSuppliers,
+  supplierProducts,
   reports,
   companyData,
   productInputs,
@@ -18,6 +20,10 @@ import {
   type InsertProduct,
   type Supplier,
   type InsertSupplier,
+  type VerifiedSupplier,
+  type InsertVerifiedSupplier,
+  type SupplierProduct,
+  type InsertSupplierProduct,
   type Report,
   type InsertReport,
   type UploadedDocument,
@@ -52,11 +58,27 @@ export interface IStorage {
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
   
-  // Supplier operations
+  // Supplier operations (client-specific suppliers)
   getSuppliersByCompany(companyId: number): Promise<Supplier[]>;
   createSupplier(supplier: InsertSupplier): Promise<Supplier>;
   updateSupplier(id: number, updates: Partial<InsertSupplier>): Promise<Supplier>;
   getSupplierByToken(token: string): Promise<Supplier | undefined>;
+  
+  // Verified supplier network operations
+  getVerifiedSuppliers(): Promise<VerifiedSupplier[]>;
+  getVerifiedSuppliersByCategory(category: string): Promise<VerifiedSupplier[]>;
+  getVerifiedSupplierById(id: string): Promise<VerifiedSupplier | undefined>;
+  createVerifiedSupplier(supplier: InsertVerifiedSupplier): Promise<VerifiedSupplier>;
+  updateVerifiedSupplier(id: string, updates: Partial<InsertVerifiedSupplier>): Promise<VerifiedSupplier>;
+  
+  // Supplier product operations
+  getSupplierProducts(): Promise<SupplierProduct[]>;
+  getSupplierProductsBySupplierId(supplierId: string): Promise<SupplierProduct[]>;
+  getSupplierProductsByCategory(category: string): Promise<SupplierProduct[]>;
+  getSupplierProductById(id: string): Promise<SupplierProduct | undefined>;
+  createSupplierProduct(product: InsertSupplierProduct): Promise<SupplierProduct>;
+  updateSupplierProduct(id: string, updates: Partial<InsertSupplierProduct>): Promise<SupplierProduct>;
+  searchSupplierProducts(query: string, category?: string): Promise<SupplierProduct[]>;
   
   // Report operations
   getReportsByCompany(companyId: number): Promise<Report[]>;
@@ -225,6 +247,168 @@ export class DatabaseStorage implements IStorage {
       .from(suppliers)
       .where(eq(suppliers.portalToken, token));
     return supplier;
+  }
+
+  // Verified supplier network operations
+  async getVerifiedSuppliers(): Promise<VerifiedSupplier[]> {
+    return await db
+      .select()
+      .from(verifiedSuppliers)
+      .where(eq(verifiedSuppliers.isVerified, true))
+      .orderBy(verifiedSuppliers.supplierName);
+  }
+
+  async getVerifiedSuppliersByCategory(category: string): Promise<VerifiedSupplier[]> {
+    return await db
+      .select()
+      .from(verifiedSuppliers)
+      .where(and(
+        eq(verifiedSuppliers.isVerified, true),
+        eq(verifiedSuppliers.supplierCategory, category)
+      ))
+      .orderBy(verifiedSuppliers.supplierName);
+  }
+
+  async getVerifiedSupplierById(id: string): Promise<VerifiedSupplier | undefined> {
+    const [supplier] = await db
+      .select()
+      .from(verifiedSuppliers)
+      .where(eq(verifiedSuppliers.id, id));
+    return supplier;
+  }
+
+  async createVerifiedSupplier(supplier: InsertVerifiedSupplier): Promise<VerifiedSupplier> {
+    const [newSupplier] = await db
+      .insert(verifiedSuppliers)
+      .values(supplier)
+      .returning();
+    return newSupplier;
+  }
+
+  async updateVerifiedSupplier(id: string, updates: Partial<InsertVerifiedSupplier>): Promise<VerifiedSupplier> {
+    const [supplier] = await db
+      .update(verifiedSuppliers)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(verifiedSuppliers.id, id))
+      .returning();
+    return supplier;
+  }
+
+  // Supplier product operations
+  async getSupplierProducts(): Promise<SupplierProduct[]> {
+    return await db
+      .select()
+      .from(supplierProducts)
+      .where(eq(supplierProducts.isVerified, true))
+      .orderBy(supplierProducts.productName);
+  }
+
+  async getSupplierProductsBySupplierId(supplierId: string): Promise<SupplierProduct[]> {
+    return await db
+      .select()
+      .from(supplierProducts)
+      .where(and(
+        eq(supplierProducts.supplierId, supplierId),
+        eq(supplierProducts.isVerified, true)
+      ))
+      .orderBy(supplierProducts.productName);
+  }
+
+  async getSupplierProductsByCategory(category: string): Promise<SupplierProduct[]> {
+    return await db
+      .select({
+        id: supplierProducts.id,
+        supplierId: supplierProducts.supplierId,
+        productName: supplierProducts.productName,
+        productDescription: supplierProducts.productDescription,
+        sku: supplierProducts.sku,
+        hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+        lcaDataJson: supplierProducts.lcaDataJson,
+        productAttributes: supplierProducts.productAttributes,
+        isVerified: supplierProducts.isVerified,
+        basePrice: supplierProducts.basePrice,
+        currency: supplierProducts.currency,
+        minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+        leadTimeDays: supplierProducts.leadTimeDays,
+        certifications: supplierProducts.certifications,
+        createdAt: supplierProducts.createdAt,
+        updatedAt: supplierProducts.updatedAt,
+        supplierName: verifiedSuppliers.supplierName,
+        supplierCategory: verifiedSuppliers.supplierCategory,
+      })
+      .from(supplierProducts)
+      .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+      .where(and(
+        eq(verifiedSuppliers.supplierCategory, category),
+        eq(verifiedSuppliers.isVerified, true),
+        eq(supplierProducts.isVerified, true)
+      ))
+      .orderBy(supplierProducts.productName);
+  }
+
+  async getSupplierProductById(id: string): Promise<SupplierProduct | undefined> {
+    const [product] = await db
+      .select()
+      .from(supplierProducts)
+      .where(eq(supplierProducts.id, id));
+    return product;
+  }
+
+  async createSupplierProduct(product: InsertSupplierProduct): Promise<SupplierProduct> {
+    const [newProduct] = await db
+      .insert(supplierProducts)
+      .values(product)
+      .returning();
+    return newProduct;
+  }
+
+  async updateSupplierProduct(id: string, updates: Partial<InsertSupplierProduct>): Promise<SupplierProduct> {
+    const [product] = await db
+      .update(supplierProducts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(supplierProducts.id, id))
+      .returning();
+    return product;
+  }
+
+  async searchSupplierProducts(query: string, category?: string): Promise<SupplierProduct[]> {
+    let whereClause = and(
+      eq(supplierProducts.isVerified, true),
+      eq(verifiedSuppliers.isVerified, true)
+    );
+
+    if (category) {
+      whereClause = and(
+        whereClause,
+        eq(verifiedSuppliers.supplierCategory, category)
+      );
+    }
+
+    return await db
+      .select({
+        id: supplierProducts.id,
+        supplierId: supplierProducts.supplierId,
+        productName: supplierProducts.productName,
+        productDescription: supplierProducts.productDescription,
+        sku: supplierProducts.sku,
+        hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+        lcaDataJson: supplierProducts.lcaDataJson,
+        productAttributes: supplierProducts.productAttributes,
+        isVerified: supplierProducts.isVerified,
+        basePrice: supplierProducts.basePrice,
+        currency: supplierProducts.currency,
+        minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+        leadTimeDays: supplierProducts.leadTimeDays,
+        certifications: supplierProducts.certifications,
+        createdAt: supplierProducts.createdAt,
+        updatedAt: supplierProducts.updatedAt,
+        supplierName: verifiedSuppliers.supplierName,
+        supplierCategory: verifiedSuppliers.supplierCategory,
+      })
+      .from(supplierProducts)
+      .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+      .where(whereClause)
+      .orderBy(supplierProducts.productName);
   }
 
   // Report operations
