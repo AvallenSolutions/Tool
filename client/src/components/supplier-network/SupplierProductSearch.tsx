@@ -53,7 +53,21 @@ export default function SupplierProductSearch({
   const [selectedCategory, setSelectedCategory] = useState(category || "");
 
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ['/api/supplier-products', { category: selectedCategory, search: searchTerm }],
+    queryKey: ['/api/supplier-products', selectedCategory, searchTerm],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append('category', selectedCategory);
+      if (searchTerm) params.append('search', searchTerm);
+      
+      const url = `/api/supplier-products${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url, { credentials: 'include' });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load supplier products. Please try again.');
+      }
+      
+      return response.json();
+    },
     enabled: true,
   });
 
