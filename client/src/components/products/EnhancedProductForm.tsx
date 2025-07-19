@@ -37,17 +37,17 @@ const enhancedProductSchema = z.object({
   // Basic Information
   name: z.string().min(1, "Product name is required"),
   sku: z.string().min(1, "SKU is required"),
-  type: z.enum(['spirit', 'wine', 'beer', 'non-alcoholic', 'cider', 'liqueur', 'other']),
+  type: z.enum(['spirit', 'wine', 'beer', 'non-alcoholic', 'cider', 'liqueur', 'other']).default('spirit'),
   volume: z.string().min(1, "Volume is required"),
   description: z.string().optional(),
   productImage: z.string().optional(), // Product photo URL
   
-  // Production Information
-  productionModel: z.enum(['own', 'contract', 'hybrid']),
-  annualProductionVolume: z.number().min(0, "Production volume must be positive"),
-  productionUnit: z.enum(['bottles', 'liters', 'cases', 'kg']),
+  // Production Information (with defaults)
+  productionModel: z.enum(['own', 'contract', 'hybrid']).default('own'),
+  annualProductionVolume: z.number().min(0, "Production volume must be positive").default(1000),
+  productionUnit: z.enum(['bottles', 'liters', 'cases', 'kg']).default('bottles'),
   
-  // Detailed Ingredients
+  // Detailed Ingredients (simplified for MVP)
   ingredients: z.array(z.object({
     name: z.string().min(1, "Ingredient name is required"),
     type: z.enum(['grain', 'fruit', 'botanical', 'additive', 'water', 'yeast', 'other']),
@@ -59,24 +59,24 @@ const enhancedProductSchema = z.object({
     transportMode: z.enum(['truck', 'rail', 'ship', 'air', 'pipeline']).optional(),
     supplier: z.string().optional(),
     processingMethod: z.string().optional(),
-  })).min(1, "At least one ingredient is required"),
+  })).optional().default([{ name: 'Primary ingredient', type: 'grain', amount: 1, unit: 'kg', organicCertified: false }]),
   
   // Packaging Details
   packaging: z.object({
     // Primary Packaging (Bottle/Container)
     primaryContainer: z.object({
-      material: z.enum(['glass', 'aluminum', 'pet', 'hdpe', 'paperboard', 'tetrapack', 'bag-in-box']),
-      weight: z.number().min(0, "Weight must be positive"),
-      recycledContent: z.number().min(0).max(100, "Recycled content must be 0-100%"),
-      recyclability: z.enum(['fully-recyclable', 'partially-recyclable', 'not-recyclable']),
+      material: z.enum(['glass', 'aluminum', 'pet', 'hdpe', 'paperboard', 'tetrapack', 'bag-in-box']).default('glass'),
+      weight: z.number().min(0, "Weight must be positive").default(500),
+      recycledContent: z.number().min(0).max(100, "Recycled content must be 0-100%").default(0),
+      recyclability: z.enum(['fully-recyclable', 'partially-recyclable', 'not-recyclable']).default('fully-recyclable'),
       color: z.string().optional(),
       thickness: z.number().min(0).optional(),
     }),
     
     // Labels & Printing
     labeling: z.object({
-      labelMaterial: z.enum(['paper', 'plastic', 'metal', 'fabric', 'none']),
-      labelWeight: z.number().min(0),
+      labelMaterial: z.enum(['paper', 'plastic', 'metal', 'fabric', 'none']).default('paper'),
+      labelWeight: z.number().min(0).default(5),
       printingMethod: z.enum(['digital', 'offset', 'flexographic', 'screen', 'none']).optional(),
       inkType: z.enum(['water-based', 'solvent-based', 'uv-cured', 'eco-friendly', 'none']).optional(),
       labelSize: z.number().min(0).optional(),
@@ -84,9 +84,9 @@ const enhancedProductSchema = z.object({
     
     // Closure System
     closure: z.object({
-      closureType: z.enum(['cork', 'screw-cap', 'crown-cap', 'can-top', 'pump', 'none']),
-      material: z.enum(['aluminum', 'plastic', 'cork', 'synthetic-cork', 'other']),
-      weight: z.number().min(0),
+      closureType: z.enum(['cork', 'screw-cap', 'crown-cap', 'can-top', 'pump', 'none']).default('cork'),
+      material: z.enum(['aluminum', 'plastic', 'cork', 'synthetic-cork', 'other']).default('cork'),
+      weight: z.number().min(0).default(5),
       hasLiner: z.boolean().default(false),
       linerMaterial: z.string().optional(),
     }),
@@ -223,30 +223,30 @@ export default function EnhancedProductForm({
       volume: '',
       description: '',
       productionModel: 'own' as const,
-      annualProductionVolume: 0,
+      annualProductionVolume: 1000,
       productionUnit: 'bottles' as const,
       ingredients: [{ 
-        name: '', 
+        name: 'Primary ingredient', 
         type: 'grain' as const, 
-        amount: 0, 
+        amount: 1, 
         unit: 'kg', 
         organicCertified: false 
       }],
       packaging: {
         primaryContainer: {
           material: 'glass' as const,
-          weight: 0,
+          weight: 500,
           recycledContent: 0,
           recyclability: 'fully-recyclable' as const,
         },
         labeling: {
           labelMaterial: 'paper' as const,
-          labelWeight: 0,
+          labelWeight: 5,
         },
         closure: {
           closureType: 'cork' as const,
           material: 'cork' as const,
-          weight: 0,
+          weight: 5,
           hasLiner: false,
         },
         secondaryPackaging: {
@@ -400,6 +400,7 @@ export default function EnhancedProductForm({
   }, [initialData]);
   
   const handleSubmit = (data: EnhancedProductForm) => {
+    console.log('🚀 Form handleSubmit called with data:', data);
     setValidationErrors({});
     onSubmit(data);
   };
@@ -459,7 +460,14 @@ export default function EnhancedProductForm({
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => {
+            console.error('❌ Form validation errors:', errors);
+            toast({
+              title: "Validation Error",
+              description: "Please check all required fields and correct any errors.",
+              variant: "destructive",
+            });
+          })} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-6">
                 {tabs.map((tab) => (
@@ -1277,7 +1285,11 @@ export default function EnhancedProductForm({
                     Cancel
                   </Button>
                 )}
-                <Button type="submit" className="bg-avallen-green hover:bg-green-600">
+                <Button 
+                  type="submit" 
+                  className="bg-avallen-green hover:bg-green-600"
+                  onClick={() => console.log('🔵 Submit button clicked')}
+                >
                   <Save className="w-4 h-4 mr-2" />
                   {mode === 'create' ? 'Create Product' : 'Save Changes'}
                 </Button>
