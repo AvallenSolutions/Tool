@@ -38,13 +38,32 @@ export default function CreateEnhancedProduct() {
       return response.json();
     },
     onSuccess: (product) => {
+      console.log('✅ Product saved successfully:', product);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products", product.id?.toString()] });
+      
       toast({
         title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
         description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive environmental data. All changes have been saved to the database.`,
+        duration: 5000,
       });
-      navigate('/app/products');
+      
+      // Navigate to the product detail page instead of the list
+      if (isEditMode) {
+        // Stay on the same page for edit mode
+        return;
+      } else {
+        // Ensure product ID exists before navigating
+        if (product.id) {
+          console.log(`🧭 Navigating to product detail page: /app/products/${product.id}`);
+          navigate(`/app/products/${product.id}`);
+        } else {
+          console.error('⚠️ Product created but ID is missing, navigating to products list');
+          navigate('/app/products');
+        }
+      }
     },
     onError: (error) => {
       console.error("❌ Error saving product:", error);
@@ -58,6 +77,7 @@ export default function CreateEnhancedProduct() {
 
   const handleSubmit = (data: any) => {
     console.log('🔄 Form submitted with data:', data);
+    const startTime = Date.now();
     
     // Transform the enhanced form data to match the database schema columns
     const transformedData = {
@@ -144,8 +164,11 @@ export default function CreateEnhancedProduct() {
       // Certifications
       certifications: data.certifications,
     };
-
+    
+    const transformTime = Date.now() - startTime;
+    console.log(`📊 Data transformation completed in ${transformTime}ms`);
     console.log('📤 Sending transformed data to API:', transformedData);
+    
     createProductMutation.mutate(transformedData);
   };
 

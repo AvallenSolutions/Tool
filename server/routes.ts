@@ -157,6 +157,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/products', isAuthenticated, async (req: any, res) => {
     try {
+      console.log('📦 Creating product...');
+      const startTime = Date.now();
+      
       const userId = req.user.claims.sub;
       const company = await dbStorage.getCompanyByOwner(userId);
       
@@ -164,12 +167,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Company not found" });
       }
       
+      console.log('🔍 Starting validation...');
+      const validationStart = Date.now();
+      
       const validatedData = insertProductSchema.parse({
         ...req.body,
         companyId: company.id,
       });
       
+      const validationTime = Date.now() - validationStart;
+      console.log(`✅ Validation completed in ${validationTime}ms`);
+      
       const product = await dbStorage.createProduct(validatedData);
+      
+      const endTime = Date.now();
+      console.log(`✅ Product created successfully in ${endTime - startTime}ms:`, product.name, 'ID:', product.id);
+      
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);
@@ -190,6 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate productId is a valid number
       if (isNaN(productId)) {
+        console.error(`⚠️ Invalid product ID received in GET: "${req.params.id}"`);
         return res.status(400).json({ message: "Invalid product ID" });
       }
       
@@ -224,6 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate productId is a valid number
       if (isNaN(productId)) {
+        console.error(`⚠️ Invalid product ID received in PATCH: "${req.params.id}"`);
         return res.status(400).json({ message: "Invalid product ID" });
       }
       
