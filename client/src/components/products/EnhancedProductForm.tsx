@@ -694,7 +694,58 @@ export default function EnhancedProductForm({
                   {ingredientFields.map((field, index) => (
                     <Card key={field.id} className="p-4">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium">Ingredient {index + 1}</h4>
+                        <div className="flex items-center gap-4">
+                          <h4 className="font-medium">Ingredient {index + 1}</h4>
+                          <SupplierSelectionModal
+                            inputType="ingredient"
+                            onSelect={(product) => {
+                              setSelectedSupplierProducts(prev => ({ 
+                                ...prev, 
+                                [`ingredient_${index}`]: product 
+                              }));
+                              if (product.productAttributes) {
+                                const attrs = product.productAttributes;
+                                form.setValue(`ingredients.${index}.name`, product.productName);
+                                form.setValue(`ingredients.${index}.type`, attrs.ingredient_type?.toLowerCase() || 'grain');
+                                form.setValue(`ingredients.${index}.origin`, attrs.origin_country || '');
+                                form.setValue(`ingredients.${index}.organicCertified`, attrs.organic_certified === true);
+                                if (attrs.typical_usage_per_unit) {
+                                  form.setValue(`ingredients.${index}.amount`, attrs.typical_usage_per_unit);
+                                  form.setValue(`ingredients.${index}.unit`, attrs.usage_unit || 'kg');
+                                }
+                              }
+                              toast({
+                                title: "Supplier Product Selected",
+                                description: `Selected ${product.productName} from ${product.supplierName}`,
+                              });
+                            }}
+                            onManualEntry={() => {
+                              setSelectedSupplierProducts(prev => ({ 
+                                ...prev, 
+                                [`ingredient_${index}`]: null 
+                              }));
+                              toast({
+                                title: "Manual Entry Mode",
+                                description: "You can now enter ingredient details manually",
+                              });
+                            }}
+                            selectedProduct={selectedSupplierProducts[`ingredient_${index}`]}
+                          >
+                            <Button type="button" variant="outline" size="sm" className="flex items-center gap-2">
+                              {selectedSupplierProducts[`ingredient_${index}`] ? (
+                                <>
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                  Verified Supplier
+                                </>
+                              ) : (
+                                <>
+                                  <Search className="w-4 h-4" />
+                                  Browse Verified Ingredients
+                                </>
+                              )}
+                            </Button>
+                          </SupplierSelectionModal>
+                        </div>
                         {ingredientFields.length > 1 && (
                           <Button
                             type="button"
@@ -706,6 +757,21 @@ export default function EnhancedProductForm({
                           </Button>
                         )}
                       </div>
+                      
+                      {selectedSupplierProducts[`ingredient_${index}`] && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Building2 className="w-4 h-4 text-green-600" />
+                            <span className="font-medium">{selectedSupplierProducts[`ingredient_${index}`].supplierName}</span>
+                            {selectedSupplierProducts[`ingredient_${index}`].hasPrecalculatedLca && (
+                              <Badge variant="secondary" className="text-xs">Verified LCA</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {selectedSupplierProducts[`ingredient_${index}`].productDescription}
+                          </p>
+                        </div>
+                      )}
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">

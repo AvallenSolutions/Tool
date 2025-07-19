@@ -56,6 +56,37 @@ async function seedSuppliers() {
       isVerified: true,
     }).returning();
 
+    // Create ingredient suppliers
+    const [scotlandGrain] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'Scotland Grain Co',
+      supplierCategory: 'ingredient_supplier',
+      website: 'https://scotlandgrain.com',
+      contactEmail: 'supply@scotlandgrain.com',
+      description: 'Premium Scottish malted barley and grains for whisky production',
+      location: 'Scotland',
+      isVerified: true,
+    }).returning();
+
+    const [organicBotanicals] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'Organic Botanicals Ltd',
+      supplierCategory: 'ingredient_supplier',
+      website: 'https://organicbotanicals.com',
+      contactEmail: 'orders@organicbotanicals.com',
+      description: 'Certified organic botanicals and herbs for gin and spirit production',
+      location: 'Netherlands',
+      isVerified: true,
+    }).returning();
+
+    const [purisWater] = await db.insert(verifiedSuppliers).values({
+      supplierName: 'Puris Water Systems',
+      supplierCategory: 'ingredient_supplier',
+      website: 'https://puriswater.com',
+      contactEmail: 'info@puriswater.com',
+      description: 'Premium water treatment and purification systems for beverage production',
+      location: 'Switzerland',
+      isVerified: true,
+    }).returning();
+
     console.log('✅ Suppliers created successfully');
 
     // Create bottle products
@@ -269,7 +300,177 @@ async function seedSuppliers() {
       }
     ]);
 
+    // Create ingredient products
+    await db.insert(supplierProducts).values([
+      {
+        supplierId: scotlandGrain.id,
+        productName: 'Premium Malted Barley - Scottish Highlands',
+        productDescription: 'Premium 2-row malted barley from Scottish Highlands farms. Consistent quality and flavor profile perfect for single malt whisky production.',
+        sku: 'SGC-MALT-001',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.89,
+          water_footprint_liters: 1200,
+          energy_consumption_mj: 3.2,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Farm-to-gate LCA by independent assessor',
+          verification_body: 'Carbon Trust',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Grain',
+          variety: 'Two-row Barley',
+          origin_country: 'Scotland',
+          organic_certified: false,
+          moisture_content_percentage: 4.5,
+          protein_content_percentage: 10.8,
+          typical_usage_per_unit: 2.5,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 1.20,
+        currency: 'USD',
+        minimumOrderQuantity: 1000,
+        leadTimeDays: 7,
+        certifications: ['Red Tractor Assured', 'HACCP'],
+        isVerified: true,
+      },
+      {
+        supplierId: scotlandGrain.id,
+        productName: 'Organic Scottish Oats - Premium Grade',
+        productDescription: 'Certified organic Scottish oats, perfect for adding texture and flavor to grain-forward spirits.',
+        sku: 'SGC-OATS-001',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.76,
+          water_footprint_liters: 1050,
+          energy_consumption_mj: 2.8,
+          calculation_method: 'PEF',
+          data_source: 'Organic farm LCA study',
+          verification_body: 'Soil Association',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Grain',
+          variety: 'Scottish Oats',
+          origin_country: 'Scotland',
+          organic_certified: true,
+          moisture_content_percentage: 12.0,
+          protein_content_percentage: 16.9,
+          typical_usage_per_unit: 0.5,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 1.85,
+        currency: 'USD',
+        minimumOrderQuantity: 500,
+        leadTimeDays: 10,
+        certifications: ['Organic Certified', 'Soil Association'],
+        isVerified: true,
+      },
+      {
+        supplierId: organicBotanicals.id,
+        productName: 'Organic Juniper Berries - Premium',
+        productDescription: 'Premium organic juniper berries from sustainable farms. Essential for gin production with intense aromatic profile.',
+        sku: 'OB-JUN-001',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 2.34,
+          water_footprint_liters: 890,
+          energy_consumption_mj: 4.1,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Botanical ingredient LCA database',
+          verification_body: 'EcoCert',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Botanical',
+          variety: 'Juniperus communis',
+          origin_country: 'Italy',
+          organic_certified: true,
+          moisture_content_percentage: 8.0,
+          essential_oil_content_percentage: 2.8,
+          typical_usage_per_unit: 0.015,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 28.50,
+        currency: 'USD',
+        minimumOrderQuantity: 25,
+        leadTimeDays: 14,
+        certifications: ['EU Organic', 'Fair Trade'],
+        isVerified: true,
+      },
+      {
+        supplierId: organicBotanicals.id,
+        productName: 'Organic Coriander Seeds',
+        productDescription: 'Premium organic coriander seeds with bright, citrusy notes. Perfect for gin and herbal spirits.',
+        sku: 'OB-COR-001',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 1.89,
+          water_footprint_liters: 750,
+          energy_consumption_mj: 3.5,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Spice trade LCA study',
+          verification_body: 'EcoCert',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Botanical',
+          variety: 'Coriandrum sativum',
+          origin_country: 'Morocco',
+          organic_certified: true,
+          moisture_content_percentage: 9.5,
+          essential_oil_content_percentage: 1.2,
+          typical_usage_per_unit: 0.008,
+          usage_unit: 'kg',
+          harvest_year: 2024
+        },
+        basePrice: 12.50,
+        currency: 'USD',
+        minimumOrderQuantity: 50,
+        leadTimeDays: 12,
+        certifications: ['EU Organic', 'Rainforest Alliance'],
+        isVerified: true,
+      },
+      {
+        supplierId: purisWater.id,
+        productName: 'Purified Production Water - Premium Grade',
+        productDescription: 'Ultra-pure water system for spirit production. Removes all impurities while maintaining optimal mineral content.',
+        sku: 'PWS-PURE-001',
+        hasPrecalculatedLca: true,
+        lcaDataJson: {
+          carbon_footprint_kg_co2_eq: 0.0012,
+          water_footprint_liters: 1.0,
+          energy_consumption_mj: 0.0089,
+          calculation_method: 'ISO 14040/14044',
+          data_source: 'Water treatment LCA study',
+          verification_body: 'Water Quality Association',
+          valid_until: '2025-12-31'
+        },
+        productAttributes: {
+          ingredient_type: 'Water',
+          ph_level: 7.2,
+          total_dissolved_solids_ppm: 50,
+          origin_country: 'Local Source',
+          organic_certified: false,
+          mineral_content: 'Optimal for spirits',
+          typical_usage_per_unit: 3.5,
+          usage_unit: 'L',
+          treatment_method: 'Reverse Osmosis + UV'
+        },
+        basePrice: 0.15,
+        currency: 'USD',
+        minimumOrderQuantity: 1000,
+        leadTimeDays: 3,
+        certifications: ['NSF Certified', 'FDA Approved'],
+        isVerified: true,
+      }
+    ]);
+
     console.log('✅ Supplier products created successfully');
+    console.log('✅ Ingredient suppliers and products created successfully');
     console.log('🎉 Database seeding completed!');
 
   } catch (error) {
