@@ -80,17 +80,17 @@ export default function SupplierProductSearch({
   }
 
   return (
-    <Card className={cn("w-full", className)}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className={cn("w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700", className)}>
+      <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
           <Package className="h-5 w-5" />
           Browse Verified Supplier Products
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-600 dark:text-gray-400">
           Choose from pre-vetted products with verified LCA data and supplier information
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 bg-white dark:bg-gray-900">
         {/* Search and Filter Controls */}
         <div className="flex gap-3">
           <div className="flex-1 relative">
@@ -153,12 +153,12 @@ export default function SupplierProductSearch({
                 <Card 
                   key={product.id}
                   className={cn(
-                    "cursor-pointer transition-all hover:shadow-md",
+                    "cursor-pointer transition-all hover:shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
                     selectedProductId === product.id && "ring-2 ring-primary"
                   )}
                   onClick={() => onSelect(product)}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 bg-white dark:bg-gray-800">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
                         <h4 className="font-semibold text-sm">{product.productName}</h4>

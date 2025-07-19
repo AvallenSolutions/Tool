@@ -89,7 +89,7 @@ export default function SupplierSelectionModal({
         {children}
       </DialogTrigger>
       
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
@@ -101,18 +101,18 @@ export default function SupplierSelectionModal({
         </DialogHeader>
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 overflow-hidden">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="browse" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-800">
+            <TabsTrigger value="browse" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100">
               <Package className="h-4 w-4" />
               Browse Products
             </TabsTrigger>
-            <TabsTrigger value="details" disabled={!currentProduct} className="flex items-center gap-2">
+            <TabsTrigger value="details" disabled={!currentProduct} className="flex items-center gap-2 text-gray-700 dark:text-gray-300 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100">
               <Building2 className="h-4 w-4" />
               Product Details
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="browse" className="flex-1 overflow-hidden">
+          <TabsContent value="browse" className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
             <div className="h-full overflow-auto">
               <SupplierProductSearch
                 category={category}
@@ -123,7 +123,7 @@ export default function SupplierSelectionModal({
             </div>
           </TabsContent>
 
-          <TabsContent value="details" className="flex-1 overflow-hidden">
+          <TabsContent value="details" className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
             {currentProduct ? (
               <div className="h-full overflow-auto">
                 <SupplierProductDetail 
@@ -132,7 +132,7 @@ export default function SupplierSelectionModal({
                 />
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                 <div className="text-center">
                   <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No product selected</p>
@@ -144,14 +144,14 @@ export default function SupplierSelectionModal({
         </Tabs>
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-4 border-t">
-          <Button variant="outline" onClick={handleManualEntry} className="flex items-center gap-2">
+        <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+          <Button variant="outline" onClick={handleManualEntry} className="flex items-center gap-2 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600">
             <Plus className="h-4 w-4" />
             Enter Manually
           </Button>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600">
               Cancel
             </Button>
             
@@ -171,11 +171,11 @@ export default function SupplierSelectionModal({
 
         {/* Selected Product Summary */}
         {currentProduct && (
-          <div className="bg-muted/50 rounded-lg p-3 text-sm">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm">
             <div className="flex items-center justify-between">
               <div>
-                <span className="font-medium">{currentProduct.productName}</span>
-                <span className="text-muted-foreground ml-2">by {currentProduct.supplierName}</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{currentProduct.productName}</span>
+                <span className="text-gray-600 dark:text-gray-400 ml-2">by {currentProduct.supplierName}</span>
               </div>
               <div className="flex items-center gap-2">
                 {currentProduct.hasPrecalculatedLca && (

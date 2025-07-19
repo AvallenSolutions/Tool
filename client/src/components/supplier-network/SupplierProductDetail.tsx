@@ -121,15 +121,15 @@ export default function SupplierProductDetail({ product, showLcaData = true }: S
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+      <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <Package className="h-5 w-5" />
               {product.productName}
             </CardTitle>
-            <CardDescription className="flex items-center gap-2">
+            <CardDescription className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <Building className="h-4 w-4" />
               {product.supplierName}
               {product.sku && (
@@ -149,7 +149,7 @@ export default function SupplierProductDetail({ product, showLcaData = true }: S
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         {/* Product Description */}
         {product.productDescription && (
           <div>

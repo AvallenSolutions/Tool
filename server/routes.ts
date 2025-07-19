@@ -448,6 +448,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/supplier-products/:id', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
+      
+      // Validate UUID format
+      if (!id || typeof id !== 'string' || !id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        return res.status(400).json({ message: "Invalid product ID format" });
+      }
+      
       const product = await dbStorage.getSupplierProductById(id);
       
       if (!product) {
