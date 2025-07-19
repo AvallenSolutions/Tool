@@ -449,9 +449,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
+      // Log the received ID for debugging
+      console.log('🔍 Received supplier product ID:', id, 'Type:', typeof id);
+      
+      // Check if ID is actually "[object Object]" string
+      if (id === '[object Object]' || id === '[object%20Object]') {
+        console.error('⚠️ Received [object Object] as ID - this indicates a frontend issue');
+        return res.status(400).json({ 
+          message: "Invalid product ID - received [object Object]. Please check frontend implementation." 
+        });
+      }
+      
       // Validate UUID format
       if (!id || typeof id !== 'string' || !id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        return res.status(400).json({ message: "Invalid product ID format" });
+        return res.status(400).json({ message: "Invalid product ID format. Expected UUID." });
       }
       
       const product = await dbStorage.getSupplierProductById(id);

@@ -23,15 +23,29 @@ export class LCAService {
     if (this.initialized) return;
 
     try {
+      // Check if OpenLCA is configured
+      const hasValidConfig = process.env.OPENLCA_SERVER_URL && 
+                           process.env.OPENLCA_SERVER_URL !== 'http://localhost:8080';
+      
+      if (!hasValidConfig) {
+        console.log('OpenLCA not configured - LCA service will run in mock mode');
+        this.initialized = true;
+        return;
+      }
+
       // Validate OpenLCA configuration
       if (!OpenLCAUtils.validateConfiguration()) {
-        throw new Error('OpenLCA configuration is invalid');
+        console.warn('OpenLCA configuration is invalid - running in mock mode');
+        this.initialized = true;
+        return;
       }
 
       // Test OpenLCA connection
       const isConnected = await openLCAClient.testConnection();
       if (!isConnected) {
-        throw new Error('Cannot connect to OpenLCA server');
+        console.warn('Cannot connect to OpenLCA server - running in mock mode');
+        this.initialized = true;
+        return;
       }
 
       // Initialize mapping service
@@ -42,10 +56,10 @@ export class LCAService {
       console.log('Connected to OpenLCA database:', dbInfo.name || 'Unknown');
 
       this.initialized = true;
-      console.log('LCA service initialized successfully');
+      console.log('LCA service initialized successfully with OpenLCA');
     } catch (error) {
-      console.error('Failed to initialize LCA service:', error);
-      throw error;
+      console.warn('LCA service initialization failed, running in mock mode:', error.message);
+      this.initialized = true;
     }
   }
 
