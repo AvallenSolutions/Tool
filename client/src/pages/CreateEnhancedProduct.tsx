@@ -4,6 +4,7 @@ import { useLocation, useRoute } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import EnhancedProductForm from '@/components/products/EnhancedProductForm';
+import { LoadingTimerPopup } from '@/components/ui/loading-timer-popup';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +12,7 @@ export default function CreateEnhancedProduct() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [isNavigating, setIsNavigating] = useState(false);
   
   // Check both routes to determine if we're editing or creating
   const [matchEdit, paramsEdit] = useRoute('/app/products/:id/enhanced');
@@ -40,29 +42,53 @@ export default function CreateEnhancedProduct() {
     onSuccess: (product) => {
       console.log('✅ Product saved successfully:', product);
       
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products", product.id?.toString()] });
-      
-      toast({
-        title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
-        description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive environmental data. All changes have been saved to the database.`,
-        duration: 5000,
-      });
-      
-      // Navigate to the product detail page instead of the list
-      if (isEditMode) {
-        // Stay on the same page for edit mode
-        return;
-      } else {
-        // Ensure product ID exists before navigating
+      try {
+        // Invalidate queries safely
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
         if (product.id) {
-          console.log(`🧭 Navigating to product detail page: /app/products/${product.id}`);
-          navigate(`/app/products/${product.id}`);
-        } else {
-          console.error('⚠️ Product created but ID is missing, navigating to products list');
-          navigate('/app/products');
+          queryClient.invalidateQueries({ queryKey: ["/api/products", product.id.toString()] });
         }
+        
+        toast({
+          title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
+          description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive environmental data. All changes have been saved to the database.`,
+          duration: 5000,
+        });
+        
+        // Handle navigation with delay and error checking
+        if (isEditMode) {
+          // Stay on the same page for edit mode
+          return;
+        } else {
+          setIsNavigating(true);
+          // Add small delay to ensure DOM is stable before navigation
+          setTimeout(() => {
+            try {
+              if (product.id) {
+                console.log(`🧭 Navigating to product detail page: /app/products/${product.id}`);
+                navigate(`/app/products/${product.id}`);
+              } else {
+                console.error('⚠️ Product created but ID is missing, navigating to products list');
+                navigate('/app/products');
+              }
+            } catch (navError) {
+              console.error('❌ Navigation error:', navError);
+              navigate('/app/products'); // Fallback navigation
+            } finally {
+              setIsNavigating(false);
+            }
+          }, 500);
+        }
+      } catch (error) {
+        console.error('❌ Error in success handler:', error);
+        toast({
+          title: "Product Created",
+          description: "Product was created successfully, but there was an issue with the interface. Refreshing...",
+          variant: "default",
+        });
+        // Fallback to products list if anything fails
+        setTimeout(() => navigate('/app/products'), 1000);
       }
     },
     onError: (error) => {
@@ -77,6 +103,13 @@ export default function CreateEnhancedProduct() {
 
   const handleSubmit = (data: any) => {
     console.log('🔄 Form submitted with data:', data);
+    
+    // Prevent double submission
+    if (createProductMutation.isPending) {
+      console.log('⚠️ Submission already in progress, ignoring duplicate request');
+      return;
+    }
+    
     const startTime = Date.now();
     
     // Transform the enhanced form data to match the database schema columns
@@ -214,6 +247,19 @@ export default function CreateEnhancedProduct() {
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         mode={isEditMode ? "edit" : "create"}
+        isSubmitting={createProductMutation.isPending}
+      />
+      
+      {/* Loading Timer Popup */}
+      <LoadingTimerPopup
+        isOpen={createProductMutation.isPending || isNavigating}
+        title={isNavigating ? "Redirecting..." : (isEditMode ? "Updating Product" : "Creating Product")}
+        description={
+          isNavigating 
+            ? "Taking you to the product details page..." 
+            : "Processing your data and saving to the database. This may take a few moments..."
+        }
+        estimatedTime={isNavigating ? 1000 : 3000}
       />
     </div>
   );

@@ -29,7 +29,8 @@ import {
   Save,
   CheckCircle,
   Upload,
-  Camera
+  Camera,
+  Loader2
 } from 'lucide-react';
 
 // Enhanced validation schema for comprehensive LCA data
@@ -173,6 +174,7 @@ interface EnhancedProductFormProps {
   onSubmit: (data: EnhancedProductForm) => void;
   onCancel?: () => void;
   mode?: 'create' | 'edit';
+  isSubmitting?: boolean; // Loading state for submit button
 }
 
 
@@ -181,7 +183,8 @@ export default function EnhancedProductForm({
   initialData, 
   onSubmit, 
   onCancel,
-  mode = 'create'
+  mode = 'create',
+  isSubmitting = false
 }: EnhancedProductFormProps) {
   const [activeTab, setActiveTab] = useState('basic');
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
@@ -401,6 +404,13 @@ export default function EnhancedProductForm({
   
   const handleSubmit = (data: EnhancedProductForm) => {
     console.log('🚀 Form handleSubmit called with data:', data);
+    
+    // Prevent submission if already submitting
+    if (isSubmitting) {
+      console.log('⚠️ Form submission blocked - already in progress');
+      return;
+    }
+    
     setValidationErrors({});
     onSubmit(data);
   };
@@ -1281,17 +1291,32 @@ export default function EnhancedProductForm({
               
               <div className="flex items-center gap-2">
                 {onCancel && (
-                  <Button type="button" variant="outline" onClick={onCancel}>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={onCancel}
+                    disabled={isSubmitting}
+                  >
                     Cancel
                   </Button>
                 )}
                 <Button 
                   type="submit" 
-                  className="bg-avallen-green hover:bg-green-600"
+                  disabled={isSubmitting}
+                  className="bg-avallen-green hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => console.log('🔵 Submit button clicked')}
                 >
-                  <Save className="w-4 h-4 mr-2" />
-                  {mode === 'create' ? 'Create Product' : 'Save Changes'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {mode === 'create' ? 'Creating...' : 'Saving...'}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      {mode === 'create' ? 'Create Product' : 'Save Changes'}
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
