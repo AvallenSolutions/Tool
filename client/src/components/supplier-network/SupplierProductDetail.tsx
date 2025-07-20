@@ -121,7 +121,7 @@ export default function SupplierProductDetail({ product, showLcaData = true }: S
   };
 
   return (
-    <div className="h-full max-h-[600px] overflow-y-auto">
+    <div className="h-full max-h-[75vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
       <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
         <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-start justify-between">

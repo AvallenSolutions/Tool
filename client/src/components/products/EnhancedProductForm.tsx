@@ -717,6 +717,7 @@ export default function EnhancedProductForm({
                               toast({
                                 title: "Supplier Product Selected",
                                 description: `Selected ${product.productName} from ${product.supplierName}`,
+                                variant: "success",
                               });
                             }}
                             onManualEntry={() => {
@@ -807,9 +808,9 @@ export default function EnhancedProductForm({
                           <Label>Amount *</Label>
                           <Input
                             type="number"
-                            step="0.01"
+                            step="0.001"
                             {...form.register(`ingredients.${index}.amount`, { valueAsNumber: true })}
-                            placeholder="0.00"
+                            placeholder="0.000"
                           />
                         </div>
                         
@@ -833,7 +834,11 @@ export default function EnhancedProductForm({
                           <Label>Transport Distance (km)</Label>
                           <Input
                             type="number"
-                            {...form.register(`ingredients.${index}.transportDistance`, { valueAsNumber: true })}
+                            step="0.1"
+                            {...form.register(`ingredients.${index}.transportDistance`, { 
+                              valueAsNumber: true,
+                              setValueAs: (v) => v === "" ? undefined : Number(v)
+                            })}
                             placeholder="0"
                           />
                         </div>
@@ -884,6 +889,7 @@ export default function EnhancedProductForm({
                           toast({
                             title: "Supplier Product Selected",
                             description: `Selected ${product.productName} from ${product.supplierName}`,
+                            variant: "success",
                           });
                         }}
                         onManualEntry={() => {
@@ -998,12 +1004,27 @@ export default function EnhancedProductForm({
                           setSelectedSupplierProducts(prev => ({ ...prev, label: product }));
                           if (product.productAttributes) {
                             const attrs = product.productAttributes;
-                            form.setValue('packaging.labeling.labelMaterial', attrs.material_type?.toLowerCase().split(' ')[0] || 'paper');
+                            // Handle different label material mappings
+                            let materialType = 'paper'; // default
+                            if (attrs.material_type) {
+                              const material = attrs.material_type.toLowerCase();
+                              if (material.includes('metal') || material.includes('foil')) {
+                                materialType = 'metal';
+                              } else if (material.includes('plastic') || material.includes('polymer')) {
+                                materialType = 'plastic';
+                              } else if (material.includes('fabric') || material.includes('textile')) {
+                                materialType = 'fabric';
+                              } else if (material.includes('paper')) {
+                                materialType = 'paper';
+                              }
+                            }
+                            form.setValue('packaging.labeling.labelMaterial', materialType);
                             form.setValue('packaging.labeling.labelWeight', attrs.weight_grams_per_sq_meter ? attrs.weight_grams_per_sq_meter / 100 : 2.5);
                           }
                           toast({
                             title: "Supplier Product Selected",
                             description: `Selected ${product.productName} from ${product.supplierName}`,
+                            variant: "success",
                           });
                         }}
                         onManualEntry={() => {
@@ -1100,6 +1121,7 @@ export default function EnhancedProductForm({
                           toast({
                             title: "Supplier Product Selected",
                             description: `Selected ${product.productName} from ${product.supplierName}`,
+                            variant: "success",
                           });
                         }}
                         onManualEntry={() => {
@@ -1360,7 +1382,11 @@ export default function EnhancedProductForm({
                       <Label>Average Transport Distance (km)</Label>
                       <Input
                         type="number"
-                        {...form.register('distribution.averageTransportDistance', { valueAsNumber: true })}
+                        step="0.1"
+                        {...form.register('distribution.averageTransportDistance', { 
+                          valueAsNumber: true,
+                          setValueAs: (v) => v === "" ? 0 : Number(v)
+                        })}
                         placeholder="500"
                       />
                     </div>
@@ -1397,7 +1423,11 @@ export default function EnhancedProductForm({
                       <Label>Packaging Efficiency (units per transport)</Label>
                       <Input
                         type="number"
-                        {...form.register('distribution.packagingEfficiency', { valueAsNumber: true })}
+                        step="1"
+                        {...form.register('distribution.packagingEfficiency', { 
+                          valueAsNumber: true,
+                          setValueAs: (v) => v === "" ? 0 : Number(v)
+                        })}
                         placeholder="24"
                       />
                     </div>

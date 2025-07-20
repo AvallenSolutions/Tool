@@ -125,7 +125,7 @@ export default function SupplierSelectionModal({
 
           <TabsContent value="details" className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
             {currentProduct ? (
-              <div className="h-full overflow-auto">
+              <div className="h-full max-h-[65vh] overflow-auto">
                 <SupplierProductDetail 
                   product={currentProduct}
                   showLcaData={true}

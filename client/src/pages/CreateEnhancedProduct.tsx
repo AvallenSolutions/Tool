@@ -54,6 +54,7 @@ export default function CreateEnhancedProduct() {
           title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
           description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive environmental data. All changes have been saved to the database.`,
           duration: 5000,
+          variant: "success",
         });
         
         // Handle navigation - stay on enhanced form page instead of redirecting
@@ -80,9 +81,9 @@ export default function CreateEnhancedProduct() {
     onError: (error) => {
       console.error("❌ Error saving product:", error);
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: `Failed to ${isEditMode ? 'update' : 'create'} product. Please try again.`,
-        variant: "destructive",
+        variant: "success", // Using green background for consistency
       });
     },
   });

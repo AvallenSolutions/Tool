@@ -52,7 +52,7 @@ export function LoadingTimerPopup({
 
   return (
     <Dialog open={isOpen} modal>
-      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-md bg-[#209d50] border-green-600 text-white" onInteractOutside={(e) => e.preventDefault()}>
         <div className="flex flex-col items-center space-y-6 py-8">
           <div className="relative">
             <Loader2 className="w-12 h-12 animate-spin text-avallen-green" />
