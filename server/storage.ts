@@ -38,7 +38,7 @@ import {
   type InsertLcaCalculationJob,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike, or } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -381,6 +381,20 @@ export class DatabaseStorage implements IStorage {
       whereClause = and(
         whereClause,
         eq(verifiedSuppliers.supplierCategory, category)
+      );
+    }
+
+    // Add search filter for both product name and supplier name
+    if (query && query.trim()) {
+      const searchTerm = `%${query.toLowerCase().trim()}%`;
+      whereClause = and(
+        whereClause,
+        or(
+          ilike(supplierProducts.productName, searchTerm),
+          ilike(verifiedSuppliers.supplierName, searchTerm),
+          ilike(supplierProducts.productDescription, searchTerm),
+          ilike(supplierProducts.sku, searchTerm)
+        )
       );
     }
 

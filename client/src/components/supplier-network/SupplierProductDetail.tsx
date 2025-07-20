@@ -121,8 +121,9 @@ export default function SupplierProductDetail({ product, showLcaData = true }: S
   };
 
   return (
-    <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-      <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div className="h-full max-h-[600px] overflow-y-auto">
+      <Card className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+        <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
@@ -204,6 +205,7 @@ export default function SupplierProductDetail({ product, showLcaData = true }: S
         {/* LCA Data */}
         {renderLcaData()}
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

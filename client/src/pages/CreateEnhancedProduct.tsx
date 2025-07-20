@@ -56,29 +56,15 @@ export default function CreateEnhancedProduct() {
           duration: 5000,
         });
         
-        // Handle navigation with delay and error checking
+        // Handle navigation - stay on enhanced form page instead of redirecting
         if (isEditMode) {
           // Stay on the same page for edit mode
           return;
         } else {
-          setIsNavigating(true);
-          // Add small delay to ensure DOM is stable before navigation
-          setTimeout(() => {
-            try {
-              if (product.id) {
-                console.log(`🧭 Navigating to product detail page: /app/products/${product.id}`);
-                navigate(`/app/products/${product.id}`);
-              } else {
-                console.error('⚠️ Product created but ID is missing, navigating to products list');
-                navigate('/app/products');
-              }
-            } catch (navError) {
-              console.error('❌ Navigation error:', navError);
-              navigate('/app/products'); // Fallback navigation
-            } finally {
-              setIsNavigating(false);
-            }
-          }, 500);
+          // Stay on enhanced form page after creation instead of navigating away
+          console.log(`✅ Product created successfully: ${product.name} (ID: ${product.id})`);
+          console.log(`📍 Staying on enhanced form page to allow further editing/viewing`);
+          // No navigation - user stays on the enhanced form page
         }
       } catch (error) {
         console.error('❌ Error in success handler:', error);
