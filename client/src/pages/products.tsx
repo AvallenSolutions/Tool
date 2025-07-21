@@ -48,18 +48,19 @@ export default function Products() {
           <div className="mb-6 p-4 bg-gradient-to-r from-avallen-green/10 to-avallen-green/5 border border-avallen-green/20 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-gray mb-2">Enhanced Product Data Collection</h3>
+                <h3 className="text-lg font-semibold text-slate-gray mb-2">Product Registration</h3>
                 <p className="text-sm text-gray-600">
-                  Collect 10x more detailed environmental data with our comprehensive 6-tab form for accurate LCA calculations
+                  Complete product registration with comprehensive environmental impact assessment for accurate sustainability reporting
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <Button 
                   onClick={() => navigate('/app/products/create/enhanced')}
-                  className="bg-avallen-green hover:bg-avallen-green-light text-white font-medium px-6 py-2 shadow-md border-2 border-avallen-green-dark"
+                  style={{ backgroundColor: '#209d50', borderColor: '#209d50' }}
+                  className="hover:bg-green-600 text-white font-medium px-6 py-2 shadow-md border-2"
                 >
                   <Package className="w-4 h-4 mr-2" />
-                  Try Enhanced Form
+                  Create Product
                 </Button>
               </div>
             </div>

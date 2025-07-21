@@ -454,13 +454,13 @@ export default function EnhancedProductForm({
         certifications: [],
         awards: [],
       },
-      certifications: initialData.certifications || [],
+      certifications: [],
       status: initialData.status || 'active',
       isMainProduct: initialData.isMainProduct || false,
     };
   };
   
-  const form = useForm<EnhancedProductForm>({
+  const form = useForm({
     resolver: zodResolver(enhancedProductSchema),
     defaultValues: getInitialFormData(),
   });
@@ -550,10 +550,10 @@ export default function EnhancedProductForm({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-6 h-6 text-avallen-green" />
-            {mode === 'create' ? 'Create Enhanced Product' : 'Edit Product'}
+            {mode === 'create' ? 'Register Product' : 'Edit Product'}
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Comprehensive product data collection for accurate LCA calculations
+            Complete product registration including environmental impact assessment
           </p>
         </CardHeader>
         <CardContent>
@@ -566,11 +566,11 @@ export default function EnhancedProductForm({
             });
           })} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-8">
+              <TabsList className="grid w-full grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-1">
                 {tabs.map((tab) => (
-                  <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-1">
+                  <TabsTrigger key={tab.id} value={tab.id} className="flex flex-col items-center gap-1 px-2 py-2 text-xs">
                     <tab.icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="hidden lg:inline text-xs">{tab.label}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>

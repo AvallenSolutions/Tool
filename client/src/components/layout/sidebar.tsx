@@ -15,7 +15,6 @@ export default function Sidebar() {
   const navItems = [
     { path: "/app/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/app/products", label: "Products", icon: Package },
-    { path: "/app/lca", label: "Environmental Impact", icon: Leaf },
     { path: "/app/reports", label: "Reports", icon: FileText },
     { path: "/app/suppliers", label: "Suppliers", icon: Users },
     { path: "/app/settings", label: "Settings", icon: Settings },
