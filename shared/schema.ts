@@ -722,7 +722,7 @@ export const lcaQuestionnaires = pgTable("lca_questionnaires", {
       mainCropType: string;
       yieldTonPerHectare: number;
       dieselLPerHectare: number;
-      sequestrationTonCo2PerTonCrop?: number;
+      sequestrationTonCo2PerTonCrop: number;
     };
     inboundTransport: {
       distanceKm: number;

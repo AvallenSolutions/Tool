@@ -905,7 +905,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       
       // Get product data
-      const product = await dbStorage.getProduct(productId);
+      const products = await dbStorage.getProductsByCompany(company.id);
+      const product = products.find(p => p.id === productId);
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }

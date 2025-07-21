@@ -76,7 +76,7 @@ export default function SimpleLCAForm({ productId, existingData, onComplete, cla
         mainCropType: '',
         yieldTonPerHectare: 3.5,
         dieselLPerHectare: 120,
-        sequestrationTonCo2PerTonCrop: 0,
+        sequestrationTonCo2PerTonCrop: 0.1,
       },
       inboundTransport: {
         distanceKm: 100,
