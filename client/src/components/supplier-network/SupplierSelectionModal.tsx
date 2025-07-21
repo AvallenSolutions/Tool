@@ -91,14 +91,17 @@ export default function SupplierSelectionModal({
   const category = getSupplierCategoryFromInputType(inputType);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter producers based on category and search term
-  const filteredProducers = mockProducers.filter(producer => 
-    producer.category === category &&
-    (producer.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     producer.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     producer.specialties.some(specialty => 
-       specialty.toLowerCase().includes(searchTerm.toLowerCase())
-     ))
+  // Fetch real supplier products from API
+  const { data: supplierProducts = [], isLoading } = useQuery({
+    queryKey: ['/api/supplier-products', category],
+    enabled: isOpen
+  });
+
+  // Filter products based on search term
+  const filteredProducers = supplierProducts.filter((product: any) => 
+    product.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelect = (supplier: any) => {
@@ -118,22 +121,22 @@ export default function SupplierSelectionModal({
       </div>
       
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-blue-600" />
-            Select Supplier Product
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col bg-white border border-gray-200 shadow-2xl">
+        <DialogHeader className="border-b border-gray-200 pb-4">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-gray-900">
+            <Building2 className="h-6 w-6 text-[#209d50]" />
+            Select Verified Supplier Product
           </DialogTitle>
         </DialogHeader>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <div className="relative py-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
             placeholder="Search by name, location, or specialty..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 py-3 text-base bg-white border-gray-300 focus:border-[#209d50] focus:ring-[#209d50]"
           />
         </div>
 
@@ -147,8 +150,8 @@ export default function SupplierSelectionModal({
             </div>
           ) : (
             filteredProducers.map((producer) => (
-              <Card key={producer.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
+              <Card key={producer.id} className="cursor-pointer hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white">
+                <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -213,12 +216,18 @@ export default function SupplierSelectionModal({
         </div>
 
         {/* Footer */}
-        <Separator />
-        <div className="flex justify-between items-center text-sm text-gray-500">
-          <span>{filteredProducers.length} verified producers found</span>
-          <Button variant="ghost" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
+        <div className="border-t border-gray-200 pt-4 mt-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600 font-medium">{filteredProducers.length} verified producers found</span>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleManualEntry} className="border-gray-300">
+                Enter Manually
+              </Button>
+              <Button variant="ghost" onClick={() => setIsOpen(false)} className="text-gray-600 hover:text-gray-900">
+                Cancel
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
