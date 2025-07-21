@@ -597,7 +597,7 @@ export class DatabaseStorage implements IStorage {
   async updateLcaCalculationJob(id: number, updates: Partial<InsertLcaCalculationJob>): Promise<LcaCalculationJob> {
     const [job] = await db
       .update(lcaCalculationJobs)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updates)
       .where(eq(lcaCalculationJobs.id, id))
       .returning();
     return job;

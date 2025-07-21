@@ -693,3 +693,111 @@ export const lcaDataSchema = z.object({
   valid_until: z.string().optional(), // ISO date string
   data_source: z.string(), // e.g., "Third-party LCA", "EPD", "Internal calculation"
 });
+
+// LCA Questionnaires table - stores structured LCA data collection
+export const lcaQuestionnaires = pgTable("lca_questionnaires", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  reportingPeriodStart: date("reporting_period_start").notNull(),
+  reportingPeriodEnd: date("reporting_period_end").notNull(),
+  
+  // Structured LCA data as JSONB
+  lcaData: jsonb("lca_data").notNull().$type<{
+    agriculture: {
+      mainCropType: string;
+      yieldTonPerHectare: number;
+      dieselLPerHectare: number;
+      sequestrationTonCo2PerTonCrop?: number;
+    };
+    inboundTransport: {
+      distanceKm: number;
+      mode: string;
+    };
+    processing: {
+      waterM3PerTonCrop: number;
+      electricityKwhPerTonCrop: number;
+      juiceLPerTonCrop?: number;
+      pulpKgPerTonCrop?: number;
+      ciderLPerLSpirit?: number;
+      lpgKgPerLAlcohol?: number;
+      netWaterUseLPerBottle: number;
+      spiritYieldLPerTonCrop?: number;
+      angelsSharePercentage?: number;
+    };
+    packaging: Array<{
+      component: string;
+      material: string;
+      weightGrams: number;
+    }>;
+  }>(),
+  
+  status: varchar("status").notNull().default("incomplete"), // incomplete, complete, processing, calculated
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Uploaded Supplier LCAs table - manages uploaded LCA/EPD documents for contract producers
+export const uploadedSupplierLcas = pgTable("uploaded_supplier_lcas", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  questionnaireId: uuid("questionnaire_id").references(() => lcaQuestionnaires.id).notNull(),
+  fileUrl: varchar("file_url", { length: 255 }).notNull(),
+  originalFileName: varchar("original_file_name", { length: 255 }),
+  
+  verificationStatus: varchar("verification_status", { length: 50 }).notNull().default("pending_review"), // pending_review, approved, rejected
+  
+  // Extracted data points from manual review
+  extractedDataJson: jsonb("extracted_data_json").$type<{
+    kgCo2ePerLitre?: number;
+    waterFootprintLPerLitre?: number;
+    energyMjPerLitre?: number;
+    reviewNotes?: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
+  }>(),
+  
+  // Admin review fields
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations for new LCA tables
+export const lcaQuestionnaireRelations = relations(lcaQuestionnaires, ({ one, many }) => ({
+  product: one(products, {
+    fields: [lcaQuestionnaires.productId],
+    references: [products.id],
+  }),
+  uploadedLcas: many(uploadedSupplierLcas),
+}));
+
+export const uploadedSupplierLcaRelations = relations(uploadedSupplierLcas, ({ one }) => ({
+  questionnaire: one(lcaQuestionnaires, {
+    fields: [uploadedSupplierLcas.questionnaireId],
+    references: [lcaQuestionnaires.id],
+  }),
+  reviewedByUser: one(users, {
+    fields: [uploadedSupplierLcas.reviewedBy],
+    references: [users.id],
+  }),
+}));
+
+// Type exports for new LCA tables
+export type LcaQuestionnaire = typeof lcaQuestionnaires.$inferSelect;
+export type InsertLcaQuestionnaire = typeof lcaQuestionnaires.$inferInsert;
+export const insertLcaQuestionnaireSchema = createInsertSchema(lcaQuestionnaires).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UploadedSupplierLca = typeof uploadedSupplierLcas.$inferSelect;
+export type InsertUploadedSupplierLca = typeof uploadedSupplierLcas.$inferInsert;
+export const insertUploadedSupplierLcaSchema = createInsertSchema(uploadedSupplierLcas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
