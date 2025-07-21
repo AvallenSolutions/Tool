@@ -1154,7 +1154,7 @@ export default function EnhancedProductForm({
                         <Label>Label Material *</Label>
                         <Select 
                           value={form.watch('packaging.labeling.labelMaterial')} 
-                          onValueChange={(value) => form.setValue('packaging.labeling.labelMaterial', value as any)}
+                          onValueChange={(value) => form.setValue('packaging.labeling.labelMaterial', value as 'paper' | 'plastic' | 'metal' | 'fabric' | 'none')}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select material" />
@@ -1198,7 +1198,7 @@ export default function EnhancedProductForm({
                               'Plastic': 'plastic',
                               'Steel': 'aluminum'
                             };
-                            form.setValue('packaging.closure.material', materialMap[attrs.material_type] || 'cork');
+                            form.setValue('packaging.closure.material', (materialMap[attrs.material_type] || 'cork') as 'cork' | 'synthetic-cork' | 'aluminum' | 'plastic' | 'other');
                             form.setValue('packaging.closure.weight', attrs.weight_grams || 5);
                           }
                           toast({

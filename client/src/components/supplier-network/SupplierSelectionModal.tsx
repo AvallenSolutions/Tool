@@ -8,12 +8,24 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Building2, MapPin, CheckCircle, Loader2 } from 'lucide-react';
 
+// Map input types to supplier categories
+function getSupplierCategoryFromInputType(inputType: string): string {
+  switch (inputType) {
+    case 'ingredient': return 'ingredient_supplier';
+    case 'bottle': return 'bottle_producer';
+    case 'closure': return 'closure_producer';
+    case 'label': return 'label_maker';
+    case 'contract': return 'contract_distillery';
+    default: return 'ingredient_supplier';
+  }
+}
+
 interface SupplierSelectionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  inputType: string;
   onSelect: (supplier: any) => void;
-  category?: string;
-  title?: string;
+  onManualEntry: () => void;
+  selectedProduct: any;
+  children: React.ReactNode;
 }
 
 // Mock verified producer data - in production this would come from API
@@ -69,12 +81,14 @@ const mockProducers = [
 ];
 
 export default function SupplierSelectionModal({ 
-  isOpen, 
-  onClose, 
-  onSelect, 
-  category = "contract_distillery",
-  title = "Select Supplier" 
+  inputType,
+  onSelect,
+  onManualEntry,
+  selectedProduct,
+  children
 }: SupplierSelectionModalProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const category = getSupplierCategoryFromInputType(inputType);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filter producers based on category and search term
@@ -89,16 +103,26 @@ export default function SupplierSelectionModal({
 
   const handleSelect = (supplier: any) => {
     onSelect(supplier);
-    onClose();
+    setIsOpen(false);
+  };
+  
+  const handleManualEntry = () => {
+    onManualEntry();
+    setIsOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      <div onClick={() => setIsOpen(true)}>
+        {children}
+      </div>
+      
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-blue-600" />
-            {title}
+            Select Supplier Product
           </DialogTitle>
         </DialogHeader>
 
@@ -192,11 +216,12 @@ export default function SupplierSelectionModal({
         <Separator />
         <div className="flex justify-between items-center text-sm text-gray-500">
           <span>{filteredProducers.length} verified producers found</span>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
