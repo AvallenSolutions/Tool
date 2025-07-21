@@ -32,7 +32,10 @@ import {
   Camera,
   Loader2,
   Search,
-  Building2
+  Building2,
+  TreePine,
+  Award,
+  Shield
 } from 'lucide-react';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
 
@@ -141,6 +144,61 @@ const enhancedProductSchema = z.object({
       filtrationMethod: z.enum(['mechanical', 'chemical', 'carbon', 'none']).optional(),
     }),
   }),
+  
+  // Environmental Impact Data (LCA Integration)
+  environmentalImpact: z.object({
+    // Production model choice affects LCA approach
+    productionModel: z.enum(['self-produced', 'contract-producer']).default('self-produced'),
+    
+    // Self-produced LCA data (simple questionnaire)
+    selfProducedData: z.object({
+      agriculture: z.object({
+        mainCropType: z.string().optional(),
+        yieldTonPerHectare: z.number().min(0).optional(),
+        dieselLPerHectare: z.number().min(0).optional(),
+        sequestrationTonCo2PerTonCrop: z.number().min(0).default(0.1),
+      }).optional(),
+      inboundTransport: z.object({
+        distanceKm: z.number().min(0).optional(),
+        mode: z.enum(['truck', 'rail', 'ship', 'air']).optional(),
+      }).optional(),
+      processing: z.object({
+        waterM3PerTonCrop: z.number().min(0).optional(),
+        electricityKwhPerTonCrop: z.number().min(0).optional(),
+        netWaterUseLPerBottle: z.number().min(0).optional(),
+        spiritYieldLPerTonCrop: z.number().min(0).optional(),
+        angelsSharePercentage: z.number().min(0).max(100).optional(),
+      }).optional(),
+    }).optional(),
+    
+    // Contract producer data method
+    contractProducerMethod: z.enum(['verified-network', 'document-upload', 'producer-invitation']).optional(),
+    contractProducerData: z.object({
+      selectedSupplierId: z.string().optional(),
+      uploadedDocumentId: z.string().optional(),
+      invitedProducerEmail: z.string().email().optional(),
+    }).optional(),
+  }).optional(),
+  
+  // Certifications & Awards
+  certificationsAndAwards: z.object({
+    certifications: z.array(z.object({
+      name: z.string().min(1, "Certification name is required"),
+      issuingBody: z.string().min(1, "Issuing body is required"),
+      certificateUrl: z.string().url().optional(),
+      uploadedFileUrl: z.string().optional(),
+      expiryDate: z.string().optional(),
+      verificationLevel: z.enum(['verified', 'self-declared', 'pending']).default('self-declared'),
+    })).default([]),
+    awards: z.array(z.object({
+      name: z.string().min(1, "Award name is required"),
+      awardingBody: z.string().min(1, "Awarding body is required"),
+      year: z.number().min(1900).max(new Date().getFullYear()),
+      category: z.string().optional(),
+      logoUrl: z.string().optional(),
+      description: z.string().optional(),
+    })).default([]),
+  }).optional(),
   
   // Transportation & Distribution
   distribution: z.object({
@@ -383,6 +441,19 @@ export default function EnhancedProductForm({
         disposalMethod: initialData.disposalMethod || 'recycling',
         consumerEducation: initialData.consumerEducation || false,
       },
+      environmentalImpact: {
+        productionModel: 'self-produced' as const,
+        selfProducedData: {
+          agriculture: {},
+          inboundTransport: {},
+          processing: {},
+        },
+        contractProducerData: {},
+      },
+      certificationsAndAwards: {
+        certifications: [],
+        awards: [],
+      },
       certifications: initialData.certifications || [],
       status: initialData.status || 'active',
       isMainProduct: initialData.isMainProduct || false,
@@ -397,6 +468,16 @@ export default function EnhancedProductForm({
   const { fields: ingredientFields, append: appendIngredient, remove: removeIngredient } = useFieldArray({
     control: form.control,
     name: 'ingredients',
+  });
+
+  const { fields: certificationFields, append: appendCertification, remove: removeCertification } = useFieldArray({
+    control: form.control,
+    name: 'certificationsAndAwards.certifications',
+  });
+
+  const { fields: awardFields, append: appendAward, remove: removeAward } = useFieldArray({
+    control: form.control,
+    name: 'certificationsAndAwards.awards',
   });
 
   // Initialize uploaded image from initial data
@@ -457,6 +538,8 @@ export default function EnhancedProductForm({
     { id: 'ingredients', label: 'Ingredients', icon: Leaf },
     { id: 'packaging', label: 'Packaging', icon: Package },
     { id: 'production', label: 'Production', icon: Factory },
+    { id: 'environmental', label: 'Environmental Impact', icon: TreePine },
+    { id: 'certifications', label: 'Certifications & Awards', icon: Award },
     { id: 'distribution', label: 'Distribution', icon: Truck },
     { id: 'endoflife', label: 'End of Life', icon: Recycle },
   ];
@@ -483,7 +566,7 @@ export default function EnhancedProductForm({
             });
           })} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-8">
                 {tabs.map((tab) => (
                   <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-1">
                     <tab.icon className="w-4 h-4" />
@@ -1361,6 +1444,459 @@ export default function EnhancedProductForm({
                     </div>
                   </Card>
                 </div>
+              </TabsContent>
+              
+              {/* Environmental Impact Tab */}
+              <TabsContent value="environmental" className="space-y-6">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TreePine className="w-4 h-4 text-green-600" />
+                    <h4 className="font-medium text-green-900">Environmental Impact Assessment</h4>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    Complete your LCA data collection by providing information about agriculture, transport, and processing. Choose between self-produced or contract producer data collection methods.
+                  </p>
+                </div>
+                
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-4">Production Model</h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Production Method</Label>
+                      <Select 
+                        value={form.watch('environmentalImpact.productionModel')} 
+                        onValueChange={(value) => form.setValue('environmentalImpact.productionModel', value as any)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select production model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="self-produced">Self-Produced (I make the product myself)</SelectItem>
+                          <SelectItem value="contract-producer">Contract Producer (Made by third party)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {form.watch('environmentalImpact.productionModel') === 'self-produced' && (
+                      <div className="space-y-6 mt-6">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-blue-900 mb-2">Self-Produced LCA Data</h4>
+                          <p className="text-sm text-blue-700">
+                            Provide information about your production process including agriculture, transport, and processing data.
+                          </p>
+                        </div>
+                        
+                        {/* Agriculture Data */}
+                        <Card className="p-4">
+                          <h4 className="font-medium mb-4">1. Agriculture</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Main Crop Type</Label>
+                              <Select 
+                                value={form.watch('environmentalImpact.selfProducedData.agriculture.mainCropType')} 
+                                onValueChange={(value) => form.setValue('environmentalImpact.selfProducedData.agriculture.mainCropType', value)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select main ingredient" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="barley">Barley</SelectItem>
+                                  <SelectItem value="wheat">Wheat</SelectItem>
+                                  <SelectItem value="corn">Corn/Maize</SelectItem>
+                                  <SelectItem value="grapes">Grapes</SelectItem>
+                                  <SelectItem value="apples">Apples</SelectItem>
+                                  <SelectItem value="sugarcane">Sugarcane</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Farm Yield (tons per hectare)</Label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                {...form.register('environmentalImpact.selfProducedData.agriculture.yieldTonPerHectare', { valueAsNumber: true })}
+                                placeholder="3.5"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Fuel Use (liters per hectare)</Label>
+                              <Input
+                                type="number"
+                                step="1"
+                                {...form.register('environmentalImpact.selfProducedData.agriculture.dieselLPerHectare', { valueAsNumber: true })}
+                                placeholder="120"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Carbon Sequestration (tons CO2 per ton crop)</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                {...form.register('environmentalImpact.selfProducedData.agriculture.sequestrationTonCo2PerTonCrop', { valueAsNumber: true })}
+                                placeholder="0.1"
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                        
+                        {/* Transport Data */}
+                        <Card className="p-4">
+                          <h4 className="font-medium mb-4">2. Transportation</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Distance from Farm (km)</Label>
+                              <Input
+                                type="number"
+                                step="1"
+                                {...form.register('environmentalImpact.selfProducedData.inboundTransport.distanceKm', { valueAsNumber: true })}
+                                placeholder="100"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Transport Method</Label>
+                              <Select 
+                                value={form.watch('environmentalImpact.selfProducedData.inboundTransport.mode')} 
+                                onValueChange={(value) => form.setValue('environmentalImpact.selfProducedData.inboundTransport.mode', value as any)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select transport method" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="truck">Truck</SelectItem>
+                                  <SelectItem value="rail">Rail</SelectItem>
+                                  <SelectItem value="ship">Ship</SelectItem>
+                                  <SelectItem value="air">Air</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </Card>
+                        
+                        {/* Processing Data */}
+                        <Card className="p-4">
+                          <h4 className="font-medium mb-4">3. Processing</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Water Use (m³ per ton crop)</Label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                {...form.register('environmentalImpact.selfProducedData.processing.waterM3PerTonCrop', { valueAsNumber: true })}
+                                placeholder="5.0"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Electricity (kWh per ton crop)</Label>
+                              <Input
+                                type="number"
+                                step="1"
+                                {...form.register('environmentalImpact.selfProducedData.processing.electricityKwhPerTonCrop', { valueAsNumber: true })}
+                                placeholder="500"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Net Water Use (liters per bottle)</Label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                {...form.register('environmentalImpact.selfProducedData.processing.netWaterUseLPerBottle', { valueAsNumber: true })}
+                                placeholder="3.0"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Spirit Yield (liters per ton crop)</Label>
+                              <Input
+                                type="number"
+                                step="1"
+                                {...form.register('environmentalImpact.selfProducedData.processing.spiritYieldLPerTonCrop', { valueAsNumber: true })}
+                                placeholder="40"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Angel's Share (%)</Label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                max="100"
+                                {...form.register('environmentalImpact.selfProducedData.processing.angelsSharePercentage', { valueAsNumber: true })}
+                                placeholder="2.0"
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    )}
+                    
+                    {form.watch('environmentalImpact.productionModel') === 'contract-producer' && (
+                      <div className="space-y-6 mt-6">
+                        <div className="bg-orange-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-orange-900 mb-2">Contract Producer LCA Data</h4>
+                          <p className="text-sm text-orange-700">
+                            Choose how you want to collect environmental data from your contract producer.
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Data Collection Method</Label>
+                          <Select 
+                            value={form.watch('environmentalImpact.contractProducerMethod')} 
+                            onValueChange={(value) => form.setValue('environmentalImpact.contractProducerMethod', value as any)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select data collection method" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="verified-network">Verified Supplier Network</SelectItem>
+                              <SelectItem value="document-upload">Upload LCA/EPD Document</SelectItem>
+                              <SelectItem value="producer-invitation">Invite Producer to Submit Data</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {form.watch('environmentalImpact.contractProducerMethod') === 'verified-network' && (
+                          <Card className="p-4 bg-blue-50">
+                            <h5 className="font-medium mb-2">Select from Verified Network</h5>
+                            <p className="text-sm text-gray-600 mb-4">Browse our pre-vetted contract producers with verified environmental data.</p>
+                            <Button type="button" variant="outline" className="flex items-center gap-2">
+                              <Search className="w-4 h-4" />
+                              Browse Verified Producers
+                            </Button>
+                          </Card>
+                        )}
+                        
+                        {form.watch('environmentalImpact.contractProducerMethod') === 'document-upload' && (
+                          <Card className="p-4 bg-purple-50">
+                            <h5 className="font-medium mb-2">Upload LCA/EPD Document</h5>
+                            <p className="text-sm text-gray-600 mb-4">Upload an existing Life Cycle Assessment or Environmental Product Declaration.</p>
+                            <Button type="button" variant="outline" className="flex items-center gap-2">
+                              <Upload className="w-4 h-4" />
+                              Upload Document
+                            </Button>
+                          </Card>
+                        )}
+                        
+                        {form.watch('environmentalImpact.contractProducerMethod') === 'producer-invitation' && (
+                          <Card className="p-4 bg-green-50">
+                            <h5 className="font-medium mb-2">Invite Producer</h5>
+                            <p className="text-sm text-gray-600 mb-4">Send an invitation to your contract producer to submit their environmental data.</p>
+                            <div className="space-y-2">
+                              <Label>Producer Email</Label>
+                              <Input
+                                type="email"
+                                {...form.register('environmentalImpact.contractProducerData.invitedProducerEmail')}
+                                placeholder="producer@example.com"
+                              />
+                            </div>
+                          </Card>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </TabsContent>
+              
+              {/* Certifications & Awards Tab */}
+              <TabsContent value="certifications" className="space-y-6">
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="w-4 h-4 text-yellow-600" />
+                    <h4 className="font-medium text-yellow-900">Certifications & Awards</h4>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    Add your product's certifications and awards to showcase sustainability credentials and quality recognition.
+                  </p>
+                </div>
+                
+                {/* Certifications Section */}
+                <Card className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Certifications
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendCertification({
+                        name: '',
+                        issuingBody: '',
+                        verificationLevel: 'self-declared' as const
+                      })}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Certification
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {certificationFields.map((field, index) => (
+                      <Card key={field.id} className="p-4 border-l-4 border-l-green-500">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-medium">Certification {index + 1}</h4>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeCertification(index)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Certification Name</Label>
+                            <Input
+                              {...form.register(`certificationsAndAwards.certifications.${index}.name`)}
+                              placeholder="e.g., Organic, Fair Trade, B-Corp"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Issuing Body</Label>
+                            <Input
+                              {...form.register(`certificationsAndAwards.certifications.${index}.issuingBody`)}
+                              placeholder="e.g., Soil Association, Fairtrade Foundation"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Certificate URL (optional)</Label>
+                            <Input
+                              type="url"
+                              {...form.register(`certificationsAndAwards.certifications.${index}.certificateUrl`)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Expiry Date (optional)</Label>
+                            <Input
+                              type="date"
+                              {...form.register(`certificationsAndAwards.certifications.${index}.expiryDate`)}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Upload Certificate (optional)</Label>
+                            <Button type="button" variant="outline" size="sm" className="flex items-center gap-2">
+                              <Upload className="w-4 h-4" />
+                              Upload File
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Card>
+                
+                {/* Awards Section */}
+                <Card className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Award className="w-4 h-4" />
+                      Awards
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendAward({
+                        name: '',
+                        awardingBody: '',
+                        year: new Date().getFullYear()
+                      })}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Award
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {awardFields.map((field, index) => (
+                      <Card key={field.id} className="p-4 border-l-4 border-l-yellow-500">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-medium">Award {index + 1}</h4>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeAward(index)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Award Name</Label>
+                            <Input
+                              {...form.register(`certificationsAndAwards.awards.${index}.name`)}
+                              placeholder="e.g., Best Sustainable Spirits Award"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Awarding Body</Label>
+                            <Input
+                              {...form.register(`certificationsAndAwards.awards.${index}.awardingBody`)}
+                              placeholder="e.g., Drinks Business Green Awards"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Year</Label>
+                            <Input
+                              type="number"
+                              min="1900"
+                              max={new Date().getFullYear()}
+                              {...form.register(`certificationsAndAwards.awards.${index}.year`, { valueAsNumber: true })}
+                              placeholder={new Date().getFullYear().toString()}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Category (optional)</Label>
+                            <Input
+                              {...form.register(`certificationsAndAwards.awards.${index}.category`)}
+                              placeholder="e.g., Sustainability, Innovation"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Upload Award Logo (optional)</Label>
+                            <Button type="button" variant="outline" size="sm" className="flex items-center gap-2">
+                              <Upload className="w-4 h-4" />
+                              Upload Logo
+                            </Button>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Description (optional)</Label>
+                            <Textarea
+                              {...form.register(`certificationsAndAwards.awards.${index}.description`)}
+                              placeholder="Brief description of the award and achievement"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </Card>
               </TabsContent>
               
               {/* Distribution Tab */}
