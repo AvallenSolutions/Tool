@@ -137,7 +137,7 @@ export default function ProductDetail() {
                   ) : (
                     <>
                       <Calculator className="w-4 h-4" />
-                      Create LCA
+                      Conduct LCA
                     </>
                   )}
                 </Button>
