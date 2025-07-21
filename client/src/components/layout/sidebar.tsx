@@ -22,14 +22,14 @@ export default function Sidebar() {
   ];
 
   return (
-    <nav className="w-64 bg-white border-r border-light-gray flex flex-col" id="sidebar-nav">
+    <nav className="w-64 bg-[#209d50] border-r border-green-600 flex flex-col" id="sidebar-nav">
       {/* Logo */}
-      <div className="p-6 border-b border-light-gray">
+      <div className="p-6 border-b border-green-600">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-avallen-green rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">A</span>
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <span className="text-[#209d50] font-bold text-sm">A</span>
           </div>
-          <span className="text-xl font-bold text-slate-gray">Avallen Solutions</span>
+          <span className="text-xl font-bold text-white">Avallen Solutions</span>
         </div>
       </div>
 
@@ -46,8 +46,8 @@ export default function Sidebar() {
                   variant="ghost"
                   className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                     isActive
-                      ? "bg-avallen-green text-white hover:bg-avallen-green-light"
-                      : "text-slate-gray hover:bg-lightest-gray"
+                      ? "bg-white text-[#209d50] hover:bg-gray-100"
+                      : "text-white hover:bg-green-600"
                   }`}
                   onClick={() => navigate(item.path)}
                 >
@@ -61,25 +61,25 @@ export default function Sidebar() {
       </div>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-light-gray">
+      <div className="p-4 border-t border-green-600">
         <div className="flex items-center space-x-3 mb-4">
           <Avatar className="w-10 h-10">
             <AvatarImage src={user?.profileImageUrl} alt={user?.firstName} />
-            <AvatarFallback className="bg-avallen-green text-white">
+            <AvatarFallback className="bg-white text-[#209d50]">
               {user?.firstName?.[0]}{user?.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="text-sm font-medium text-slate-gray">
+            <p className="text-sm font-medium text-white">
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="text-xs text-gray-500">{user?.email}</p>
+            <p className="text-xs text-green-100">{user?.email}</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-slate-gray hover:bg-lightest-gray"
+          className="w-full justify-start text-white hover:bg-green-600"
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4 mr-2" />
