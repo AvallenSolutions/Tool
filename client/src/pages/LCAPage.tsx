@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SimpleLCAForm from '@/components/lca/SimpleLCAForm';
+import ContractProducerForm from '@/components/lca/ContractProducerForm';
 import { 
   Leaf, 
   ArrowLeft, 
@@ -12,13 +13,15 @@ import {
   Clock, 
   AlertCircle,
   FileText,
-  Calculator
+  Calculator,
+  Building2
 } from 'lucide-react';
 
 export default function LCAPage() {
   const [, setLocation] = useLocation();
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [formType, setFormType] = useState<'self' | 'contract'>('self');
 
   // Fetch user's products
   const { data: products, isLoading: productsLoading } = useQuery({
@@ -192,13 +195,29 @@ export default function LCAPage() {
             </div>
             
             {!showForm && (
-              <Button 
-                onClick={() => setShowForm(true)}
-                className="bg-[#209d50] hover:bg-[#1a7d40] text-white"
-              >
-                <Leaf className="h-4 w-4 mr-2" />
-                Start Assessment
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => {
+                    setFormType('self');
+                    setShowForm(true);
+                  }}
+                  className="bg-[#209d50] hover:bg-[#1a7d40] text-white"
+                >
+                  <Leaf className="h-4 w-4 mr-2" />
+                  Self-Produced Assessment
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setFormType('contract');
+                    setShowForm(true);
+                  }}
+                  className="border-[#209d50] text-[#209d50] hover:bg-[#209d50] hover:text-white"
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Contract Producer
+                </Button>
+              </div>
             )}
           </div>
 
@@ -233,13 +252,34 @@ export default function LCAPage() {
             </Card>
           )}
 
-          {/* LCA Form */}
+          {/* LCA Forms */}
           {showForm && (
-            <SimpleLCAForm
-              productId={selectedProductId}
-              onComplete={handleFormComplete}
-              className="mb-6"
-            />
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  {formType === 'self' ? 'Self-Produced Assessment' : 'Contract Producer Assessment'}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+              
+              {formType === 'self' ? (
+                <SimpleLCAForm
+                  productId={selectedProductId}
+                  onComplete={handleFormComplete}
+                />
+              ) : (
+                <ContractProducerForm
+                  productId={selectedProductId}
+                  onComplete={handleFormComplete}
+                />
+              )}
+            </div>
           )}
 
           {/* Instructions */}
@@ -252,31 +292,31 @@ export default function LCAPage() {
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="text-center">
                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-green-600 font-bold text-lg">1</span>
+                      <Leaf className="h-6 w-6 text-green-600" />
                     </div>
-                    <h4 className="font-semibold mb-2">Agriculture Data</h4>
+                    <h4 className="font-semibold mb-2">Self-Produced</h4>
                     <p className="text-sm text-muted-foreground">
-                      Tell us about your main ingredient, farm yield, and fuel usage
+                      Complete a 3-section questionnaire covering agriculture, transport, and production
                     </p>
                   </div>
                   
                   <div className="text-center">
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-blue-600 font-bold text-lg">2</span>
+                      <Building2 className="h-6 w-6 text-blue-600" />
                     </div>
-                    <h4 className="font-semibold mb-2">Transportation</h4>
+                    <h4 className="font-semibold mb-2">Contract Producer</h4>
                     <p className="text-sm text-muted-foreground">
-                      Distance from farm and transport method
+                      Use verified network, upload documents, or invite your producer to submit data
                     </p>
                   </div>
                   
                   <div className="text-center">
                     <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-purple-600 font-bold text-lg">3</span>
+                      <CheckCircle className="h-6 w-6 text-purple-600" />
                     </div>
-                    <h4 className="font-semibold mb-2">Production</h4>
+                    <h4 className="font-semibold mb-2">Get Results</h4>
                     <p className="text-sm text-muted-foreground">
-                      Water and electricity usage in your production process
+                      Receive accurate environmental impact calculations for reporting
                     </p>
                   </div>
                 </div>

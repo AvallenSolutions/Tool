@@ -1063,6 +1063,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // LCA Document Upload endpoint
+  app.post('/api/upload-lca-documents', isAuthenticated, upload.array('documents'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+
+      const uploadedDocuments = req.files.map((file: any) => ({
+        fileName: file.originalname,
+        fileUrl: `/uploads/${file.filename}`,
+        documentType: 'lca_report', // Default type, can be enhanced
+        fileSize: file.size,
+      }));
+
+      res.json(uploadedDocuments);
+    } catch (error) {
+      console.error("Error uploading LCA documents:", error);
+      res.status(500).json({ message: "Failed to upload documents" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

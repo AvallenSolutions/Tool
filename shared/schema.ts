@@ -416,6 +416,21 @@ export const lcaCalculationJobs = pgTable("lca_calculation_jobs", {
   completedAt: timestamp("completed_at"),
 });
 
+// Contract producer invitations
+export const contractProducerInvitations = pgTable("contract_producer_invitations", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  producerName: text("producer_name").notNull(),
+  producerEmail: text("producer_email").notNull(),
+  invitationToken: text("invitation_token").notNull().unique(),
+  invitationMessage: text("invitation_message"),
+  status: text("status").notNull().default("pending"), // 'pending', 'submitted', 'completed'
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  respondedAt: timestamp("responded_at"),
+  lcaData: jsonb("lca_data"), // Submitted LCA data from producer
+});
+
 // Relations
 export const userRelations = relations(users, ({ one, many }) => ({
   company: one(companies, {

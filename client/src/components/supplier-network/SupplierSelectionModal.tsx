@@ -1,195 +1,201 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Search, Package, Building2, Plus } from "lucide-react";
-import SupplierProductSearch from "./SupplierProductSearch";
-import SupplierProductDetail from "./SupplierProductDetail";
-
-interface SupplierProduct {
-  id: string;
-  supplierId: string;
-  productName: string;
-  productDescription?: string;
-  sku?: string;
-  hasPrecalculatedLca: boolean;
-  lcaDataJson?: any;
-  productAttributes?: any;
-  basePrice?: number;
-  currency?: string;
-  minimumOrderQuantity?: number;
-  leadTimeDays?: number;
-  certifications?: string[];
-  supplierName: string;
-  supplierCategory: string;
-}
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
+import { Search, Building2, MapPin, CheckCircle, Loader2 } from 'lucide-react';
 
 interface SupplierSelectionModalProps {
-  inputType: string; // 'bottle', 'label', 'closure', etc.
-  onSelect: (product: SupplierProduct) => void;
-  onManualEntry: () => void;
-  children: React.ReactNode;
-  selectedProduct?: SupplierProduct;
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (supplier: any) => void;
+  category?: string;
+  title?: string;
 }
 
-// Map input types to supplier categories
-const INPUT_TYPE_TO_CATEGORY: Record<string, string> = {
-  bottle: "bottle_producer",
-  label: "label_maker", 
-  closure: "closure_producer",
-  packaging: "secondary_packaging",
-  ingredient: "ingredient_supplier",
-  spirits: "contract_distillery",
-};
+// Mock verified producer data - in production this would come from API
+const mockProducers = [
+  {
+    id: "prod_1",
+    supplierName: "Highland Distillery Co.",
+    location: "Scotland, UK",
+    category: "contract_distillery",
+    verificationStatus: "verified",
+    environmentalRating: "A",
+    specialties: ["Single Malt", "Grain Whisky"],
+    lcaDataAvailable: true,
+    carbonFootprint: "2.3 kg CO₂e/L",
+    lastUpdated: "2024-12-15"
+  },
+  {
+    id: "prod_2", 
+    supplierName: "Celtic Craft Spirits",
+    location: "Ireland",
+    category: "contract_distillery",
+    verificationStatus: "verified",
+    environmentalRating: "A+",
+    specialties: ["Irish Whiskey", "Gin"],
+    lcaDataAvailable: true,
+    carbonFootprint: "2.1 kg CO₂e/L",
+    lastUpdated: "2024-12-20"
+  },
+  {
+    id: "prod_3",
+    supplierName: "Artisan Spirits Ltd",
+    location: "England, UK", 
+    category: "contract_distillery",
+    verificationStatus: "verified",
+    environmentalRating: "B+",
+    specialties: ["Gin", "Vodka", "Rum"],
+    lcaDataAvailable: true,
+    carbonFootprint: "2.7 kg CO₂e/L",
+    lastUpdated: "2024-12-10"
+  },
+  {
+    id: "prod_4",
+    supplierName: "Green Mountain Brewery",
+    location: "Vermont, USA",
+    category: "contract_brewery",
+    verificationStatus: "verified", 
+    environmentalRating: "A",
+    specialties: ["Craft Beer", "Cider"],
+    lcaDataAvailable: true,
+    carbonFootprint: "0.8 kg CO₂e/L",
+    lastUpdated: "2024-12-18"
+  }
+];
 
-const CATEGORY_LABELS: Record<string, string> = {
-  bottle_producer: "Bottle Producers",
-  label_maker: "Label Makers",
-  closure_producer: "Closure Producers", 
-  secondary_packaging: "Secondary Packaging",
-  ingredient_supplier: "Ingredient Suppliers",
-  contract_distillery: "Contract Distilleries",
-};
-
-export default function SupplierSelectionModal({
-  inputType,
-  onSelect,
-  onManualEntry,
-  children,
-  selectedProduct,
+export default function SupplierSelectionModal({ 
+  isOpen, 
+  onClose, 
+  onSelect, 
+  category = "contract_distillery",
+  title = "Select Supplier" 
 }: SupplierSelectionModalProps) {
-  const [open, setOpen] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("browse");
-  const [currentProduct, setCurrentProduct] = useState<SupplierProduct | null>(selectedProduct || null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const category = INPUT_TYPE_TO_CATEGORY[inputType];
-  const categoryLabel = CATEGORY_LABELS[category] || "Suppliers";
+  // Filter producers based on category and search term
+  const filteredProducers = mockProducers.filter(producer => 
+    producer.category === category &&
+    (producer.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     producer.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     producer.specialties.some(specialty => 
+       specialty.toLowerCase().includes(searchTerm.toLowerCase())
+     ))
+  );
 
-  const handleProductSelect = (product: SupplierProduct) => {
-    setCurrentProduct(product);
-    setSelectedTab("details");
-  };
-
-  const handleConfirmSelection = () => {
-    if (currentProduct) {
-      onSelect(currentProduct);
-      setOpen(false);
-    }
-  };
-
-  const handleManualEntry = () => {
-    onManualEntry();
-    setOpen(false);
+  const handleSelect = (supplier: any) => {
+    onSelect(supplier);
+    onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
-      
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Select {categoryLabel.slice(0, -1)} Product
+            <Building2 className="h-5 w-5 text-blue-600" />
+            {title}
           </DialogTitle>
-          <DialogDescription>
-            Choose from our verified supplier network or enter product details manually
-          </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 overflow-hidden">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-800">
-            <TabsTrigger value="browse" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100">
-              <Package className="h-4 w-4" />
-              Browse Products
-            </TabsTrigger>
-            <TabsTrigger value="details" disabled={!currentProduct} className="flex items-center gap-2 text-gray-700 dark:text-gray-300 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100">
-              <Building2 className="h-4 w-4" />
-              Product Details
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="browse" className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
-            <div className="h-full overflow-auto">
-              <SupplierProductSearch
-                category={category}
-                onSelect={handleProductSelect}
-                selectedProductId={currentProduct?.id}
-                className="border-0 shadow-none"
-              />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="details" className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
-            {currentProduct ? (
-              <div className="h-full max-h-[65vh] overflow-auto">
-                <SupplierProductDetail 
-                  product={currentProduct}
-                  showLcaData={true}
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                <div className="text-center">
-                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No product selected</p>
-                  <p className="text-sm">Select a product from the browse tab to view details</p>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <Button variant="outline" onClick={handleManualEntry} className="flex items-center gap-2 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600">
-            <Plus className="h-4 w-4" />
-            Enter Manually
-          </Button>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)} className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600">
-              Cancel
-            </Button>
-            
-            {currentProduct && (
-              <Button onClick={handleConfirmSelection} className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Use This Product
-                {currentProduct.hasPrecalculatedLca && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    LCA Verified
-                  </Badge>
-                )}
-              </Button>
-            )}
-          </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by name, location, or specialty..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
-        {/* Selected Product Summary */}
-        {currentProduct && (
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="font-medium text-gray-900 dark:text-gray-100">{currentProduct.productName}</span>
-                <span className="text-gray-600 dark:text-gray-400 ml-2">by {currentProduct.supplierName}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {currentProduct.hasPrecalculatedLca && (
-                  <Badge variant="secondary" className="text-xs">Verified LCA</Badge>
-                )}
-                {currentProduct.certifications && currentProduct.certifications.length > 0 && (
-                  <Badge variant="outline" className="text-xs">
-                    {currentProduct.certifications.length} cert{currentProduct.certifications.length > 1 ? 's' : ''}
-                  </Badge>
-                )}
-              </div>
+        {/* Results */}
+        <div className="flex-1 overflow-y-auto space-y-3">
+          {filteredProducers.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No verified producers found</p>
+              <p className="text-sm">Try adjusting your search terms</p>
             </div>
-          </div>
-        )}
+          ) : (
+            filteredProducers.map((producer) => (
+              <Card key={producer.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-lg">{producer.supplierName}</h3>
+                        <Badge 
+                          variant="outline" 
+                          className="text-green-700 border-green-200 bg-green-50"
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                        <Badge 
+                          variant="outline"
+                          className={`${
+                            producer.environmentalRating.startsWith('A') 
+                              ? 'text-green-700 border-green-200 bg-green-50'
+                              : 'text-blue-700 border-blue-200 bg-blue-50'
+                          }`}
+                        >
+                          Rating: {producer.environmentalRating}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {producer.location}
+                        </div>
+                        <div>
+                          Carbon Footprint: <span className="font-medium">{producer.carbonFootprint}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {producer.specialties.map((specialty) => (
+                          <Badge 
+                            key={specialty} 
+                            variant="secondary" 
+                            className="text-xs"
+                          >
+                            {specialty}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <p className="text-xs text-gray-500">
+                        LCA data last updated: {producer.lastUpdated}
+                      </p>
+                    </div>
+
+                    <Button 
+                      onClick={() => handleSelect(producer)}
+                      className="ml-4 bg-[#209d50] hover:bg-[#1a7d40] text-white"
+                    >
+                      Select
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Footer */}
+        <Separator />
+        <div className="flex justify-between items-center text-sm text-gray-500">
+          <span>{filteredProducers.length} verified producers found</span>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
