@@ -12,6 +12,8 @@ import {
   olcaFlowMappings,
   olcaProcessMappings,
   lcaCalculationJobs,
+  lcaQuestionnaires,
+  uploadedSupplierLcas,
   type User,
   type UpsertUser,
   type Company,
@@ -36,6 +38,10 @@ import {
   type InsertOlcaProcessMapping,
   type LcaCalculationJob,
   type InsertLcaCalculationJob,
+  type LcaQuestionnaire,
+  type InsertLcaQuestionnaire,
+  type UploadedSupplierLca,
+  type InsertUploadedSupplierLca,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ilike, or } from "drizzle-orm";
@@ -113,6 +119,16 @@ export interface IStorage {
   getLcaCalculationJobById(id: number): Promise<LcaCalculationJob | undefined>;
   getLcaCalculationJobsByProduct(productId: number): Promise<LcaCalculationJob[]>;
   getLcaCalculationJobByJobId(jobId: string): Promise<LcaCalculationJob | undefined>;
+
+  // LCA Questionnaire operations
+  createLcaQuestionnaire(questionnaire: InsertLcaQuestionnaire): Promise<LcaQuestionnaire>;
+  getLcaQuestionnaireById(id: string): Promise<LcaQuestionnaire | undefined>;
+  getLcaQuestionnairesByProduct(productId: number): Promise<LcaQuestionnaire[]>;
+  updateLcaQuestionnaire(id: string, updates: Partial<InsertLcaQuestionnaire>): Promise<LcaQuestionnaire>;
+
+  // Uploaded Supplier LCA operations
+  createUploadedSupplierLca(upload: InsertUploadedSupplierLca): Promise<UploadedSupplierLca>;
+  getUploadedSupplierLcasByQuestionnaire(questionnaireId: string): Promise<UploadedSupplierLca[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -625,6 +641,57 @@ export class DatabaseStorage implements IStorage {
       .from(lcaCalculationJobs)
       .where(eq(lcaCalculationJobs.jobId, jobId));
     return job;
+  }
+
+  // LCA Questionnaire operations
+  async createLcaQuestionnaire(questionnaire: InsertLcaQuestionnaire): Promise<LcaQuestionnaire> {
+    const [newQuestionnaire] = await db
+      .insert(lcaQuestionnaires)
+      .values(questionnaire)
+      .returning();
+    return newQuestionnaire;
+  }
+
+  async getLcaQuestionnaireById(id: string): Promise<LcaQuestionnaire | undefined> {
+    const [questionnaire] = await db
+      .select()
+      .from(lcaQuestionnaires)
+      .where(eq(lcaQuestionnaires.id, id));
+    return questionnaire;
+  }
+
+  async getLcaQuestionnairesByProduct(productId: number): Promise<LcaQuestionnaire[]> {
+    return await db
+      .select()
+      .from(lcaQuestionnaires)
+      .where(eq(lcaQuestionnaires.productId, productId))
+      .orderBy(desc(lcaQuestionnaires.createdAt));
+  }
+
+  async updateLcaQuestionnaire(id: string, updates: Partial<InsertLcaQuestionnaire>): Promise<LcaQuestionnaire> {
+    const [questionnaire] = await db
+      .update(lcaQuestionnaires)
+      .set(updates)
+      .where(eq(lcaQuestionnaires.id, id))
+      .returning();
+    return questionnaire;
+  }
+
+  // Uploaded Supplier LCA operations  
+  async createUploadedSupplierLca(upload: InsertUploadedSupplierLca): Promise<UploadedSupplierLca> {
+    const [newUpload] = await db
+      .insert(uploadedSupplierLcas)
+      .values(upload)
+      .returning();
+    return newUpload;
+  }
+
+  async getUploadedSupplierLcasByQuestionnaire(questionnaireId: string): Promise<UploadedSupplierLca[]> {
+    return await db
+      .select()
+      .from(uploadedSupplierLcas)
+      .where(eq(uploadedSupplierLcas.questionnaireId, questionnaireId))
+      .orderBy(desc(uploadedSupplierLcas.createdAt));
   }
 }
 

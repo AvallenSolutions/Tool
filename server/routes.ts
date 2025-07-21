@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema } from "@shared/schema";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
@@ -989,6 +989,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating PDF:", error);
       res.status(500).json({ message: "Failed to generate PDF report" });
+    }
+  });
+
+  // LCA Questionnaire routes
+  app.get('/api/lca-questionnaires', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      const productId = req.query.productId ? parseInt(req.query.productId) : null;
+      if (!productId) {
+        return res.status(400).json({ message: "Product ID required" });
+      }
+
+      const questionnaires = await dbStorage.getLcaQuestionnairesByProduct(productId);
+      res.json(questionnaires);
+    } catch (error) {
+      console.error("Error fetching LCA questionnaires:", error);
+      res.status(500).json({ message: "Failed to fetch LCA questionnaires" });
+    }
+  });
+
+  app.post('/api/lca-questionnaires', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      const validationResult = insertLcaQuestionnaireSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid LCA data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const questionnaire = await dbStorage.createLcaQuestionnaire(validationResult.data);
+      res.status(201).json(questionnaire);
+    } catch (error) {
+      console.error("Error creating LCA questionnaire:", error);
+      res.status(500).json({ message: "Failed to create LCA questionnaire" });
+    }
+  });
+
+  app.put('/api/lca-questionnaires/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      const questionnaireId = req.params.id;
+      const validationResult = insertLcaQuestionnaireSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid LCA data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const questionnaire = await dbStorage.updateLcaQuestionnaire(questionnaireId, validationResult.data);
+      res.json(questionnaire);
+    } catch (error) {
+      console.error("Error updating LCA questionnaire:", error);
+      res.status(500).json({ message: "Failed to update LCA questionnaire" });
     }
   });
 

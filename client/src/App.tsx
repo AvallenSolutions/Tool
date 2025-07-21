@@ -18,6 +18,7 @@ import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
 import SupplierPortal from "@/pages/supplier-portal";
 import Admin from "@/pages/admin";
+import LCAPage from "@/pages/LCAPage";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,6 +42,7 @@ function Router() {
           <Route path="/app/products/:id" component={ProductDetail} />
           <Route path="/app/reports" component={Reports} />
           <Route path="/app/suppliers" component={Suppliers} />
+          <Route path="/app/lca" component={LCAPage} />
           <Route path="/app/settings" component={Settings} />
           <Route path="/app/admin" component={Admin} />
           <Route path="/app/onboarding" component={Onboarding} />
