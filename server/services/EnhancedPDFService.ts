@@ -1,6 +1,6 @@
-import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
+import htmlPdf from 'html-pdf-node';
 
 export interface EnhancedLCAReportData {
   report: {
@@ -51,16 +51,8 @@ export class EnhancedPDFService {
       // Generate comprehensive HTML with CSS-based charts
       const html = this.generateEnhancedHTML(data);
 
-      // Convert to PDF using Puppeteer
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-
-      const pdfBuffer = await page.pdf({
+      // Convert to PDF using html-pdf-node (fallback for Puppeteer)
+      const options = { 
         format: 'A4',
         printBackground: true,
         margin: {
@@ -68,10 +60,13 @@ export class EnhancedPDFService {
           right: '15mm',
           bottom: '20mm',
           left: '15mm'
-        }
-      });
+        },
+        preferCSSPageSize: true
+      };
 
-      await browser.close();
+      const file = { content: html };
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      
       return pdfBuffer;
     } catch (error) {
       console.error('Error generating enhanced PDF:', error);
