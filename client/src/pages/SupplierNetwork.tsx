@@ -252,7 +252,7 @@ export default function SupplierNetwork() {
             </div>
             <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
+                <Button className="bg-green-600 hover:bg-green-700 text-white">
                   <Plus className="w-4 h-4 mr-2" />
                   Invite Your Supplier
                 </Button>
@@ -429,7 +429,7 @@ export default function SupplierNetwork() {
                 </Button>
                 <Button 
                   onClick={handleAddSupplier}
-                  className="bg-avallen-green hover:bg-avallen-green-light text-white"
+                  className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   Send Invitation
                 </Button>
