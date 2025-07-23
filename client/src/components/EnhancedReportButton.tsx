@@ -39,7 +39,8 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
       setIsGenerating(true);
       toast({
         title: "Enhanced Report Generation Started",
-        description: "Your professional LCA report is being generated. This may take a few minutes.",
+        description: "Professional LCA report generation in progress. The system is aggregating your LCA data, calculating carbon footprints, and generating charts. This typically takes 2-3 minutes.",
+        variant: "default",
       });
       // Start polling for status
       refetch();
@@ -116,16 +117,34 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600">
-          Professional multi-page LCA report with detailed analysis, charts, and ISO-compliant formatting.
+          Professional multi-page LCA report with detailed analysis, charts, and ISO-compliant formatting. 
+          {status === 'not_generated' && canGenerate && (
+            <span className="block mt-1 text-green-600 font-medium">Ready to generate</span>
+          )}
+          {!canGenerate && status === 'not_generated' && (
+            <span className="block mt-1 text-amber-600 font-medium">Complete your LCA report first</span>
+          )}
         </p>
 
         {status === 'generating' && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Generating report...</span>
-              <span>Please wait</span>
+          <div className="space-y-3 p-4 bg-blue-50 rounded-lg border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-blue-600 animate-spin" />
+                <span className="font-medium text-blue-900">Report Generation in Progress</span>
+              </div>
+              <span className="text-sm text-blue-700">~3 min remaining</span>
             </div>
             <Progress value={75} className="w-full" />
+            <div className="text-sm text-blue-700 space-y-1">
+              <p>• Aggregating LCA data from products and suppliers</p>
+              <p>• Calculating carbon footprint contributions by lifecycle stage</p>
+              <p>• Generating professional charts and analysis</p>
+              <p>• Formatting ISO 14040/14044 compliant report</p>
+            </div>
+            <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+              <strong>Admin Note:</strong> Background job processing with Bull Queue. Check server logs for detailed progress.
+            </div>
           </div>
         )}
 

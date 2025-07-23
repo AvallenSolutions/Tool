@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import htmlPdf from 'html-pdf-node';
+import { SimplePDFService } from './SimplePDFService';
 
 export interface EnhancedLCAReportData {
   report: {
@@ -48,7 +49,7 @@ export class EnhancedPDFService {
 
   async generateEnhancedLCAPDF(data: EnhancedLCAReportData): Promise<Buffer> {
     try {
-      // Generate comprehensive HTML with CSS-based charts
+      // Try to generate comprehensive HTML with CSS-based charts
       const html = this.generateEnhancedHTML(data);
 
       // Convert to PDF using html-pdf-node (fallback for Puppeteer)
@@ -69,8 +70,14 @@ export class EnhancedPDFService {
       
       return pdfBuffer;
     } catch (error) {
-      console.error('Error generating enhanced PDF:', error);
-      throw error;
+      console.error('Error generating enhanced PDF, falling back to simple PDF:', error);
+      
+      // Fallback to simple PDF service
+      const simplePDFService = new SimplePDFService();
+      const simpleBuffer = await simplePDFService.generateEnhancedLCAPDF(data);
+      
+      // Save as HTML file temporarily until PDF dependencies are resolved
+      return simpleBuffer;
     }
   }
 
