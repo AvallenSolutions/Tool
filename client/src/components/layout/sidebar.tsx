@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Leaf, Building2 } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Leaf, Building2, TestTube } from "lucide-react";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
@@ -19,6 +19,7 @@ export default function Sidebar() {
     { path: "/app/supplier-network", label: "Supplier Network", icon: Building2 },
     { path: "/app/settings", label: "Settings", icon: Settings },
     { path: "/app/admin", label: "Admin", icon: Shield },
+    { path: "/app/test", label: "Test Runner", icon: TestTube },
   ];
 
   return (

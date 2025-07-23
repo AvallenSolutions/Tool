@@ -1145,6 +1145,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // const adminRoutes = require('./routes/admin').default;
   // app.use('/api/admin', adminRoutes);
 
+  // Test routes for E2E validation
+  app.get('/api/test/e2e', async (req, res) => {
+    try {
+      console.log('🧪 Starting E2E Test Suite via API...');
+      const { runE2ETests } = await import('../scripts/test-runner');
+      const result = await runE2ETests();
+      
+      res.json({
+        success: result.success,
+        message: result.success ? 'All tests passed!' : 'Some tests failed',
+        report: result.report,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ E2E Test Suite failed:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Test suite crashed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  app.post('/api/test/seed', async (req, res) => {
+    try {
+      console.log('🌱 Seeding test data via API...');
+      const { runTestSeeding } = await import('../scripts/test-seed');
+      const result = await runTestSeeding();
+      
+      res.json({
+        success: true,
+        message: 'Test data seeded successfully',
+        data: {
+          company: result.company,
+          product: result.product,
+          supplierCount: result.supplierIds.length
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Test data seeding failed:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Seeding failed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
