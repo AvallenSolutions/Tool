@@ -78,9 +78,9 @@ export default function Settings() {
     retry: false,
   });
 
-  // Initialize sustainability data
+  // Initialize sustainability data with proper types
   const [sustainabilityData, setSustainabilityData] = useState({
-    certifications: [],
+    certifications: [] as string[],
     environmentalPolicies: {
       wasteManagement: '',
       energyEfficiency: '',
@@ -89,14 +89,14 @@ export default function Settings() {
     },
     facilitiesData: {
       energySource: '',
-      renewableEnergyPercentage: undefined,
-      wasteRecyclingPercentage: undefined,
+      renewableEnergyPercentage: undefined as number | undefined,
+      wasteRecyclingPercentage: undefined as number | undefined,
       waterTreatment: '',
-      transportationMethods: [],
+      transportationMethods: [] as string[],
     },
     sustainabilityReporting: {
       hasAnnualReport: false,
-      reportingStandards: [],
+      reportingStandards: [] as string[],
       thirdPartyVerification: false,
       scopeEmissions: {
         scope1: false,
