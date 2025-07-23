@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, companies } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
@@ -409,14 +411,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await dbStorage.getCompanyByOwner(userId);
+      console.log('🔍 Reports API: User ID:', userId);
       
-      if (!company) {
-        return res.status(404).json({ message: "Company not found" });
+      // Get all companies owned by user and find reports across all of them
+      const allUserCompanies = await db.select().from(companies).where(eq(companies.ownerId, userId));
+      console.log('🔍 Reports API: User companies:', allUserCompanies.map(c => ({ id: c.id, name: c.name })));
+      
+      const allReports = [];
+      for (const company of allUserCompanies) {
+        const companyReports = await dbStorage.getReportsByCompany(company.id);
+        allReports.push(...companyReports);
       }
       
-      const reports = await dbStorage.getReportsByCompany(company.id);
-      res.json(reports);
+      console.log('🔍 Reports API: Total reports found:', allReports.length);
+      
+      res.json(allReports);
     } catch (error) {
       console.error("Error fetching reports:", error);
       res.status(500).json({ message: "Failed to fetch reports" });
