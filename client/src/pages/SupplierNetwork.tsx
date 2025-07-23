@@ -246,18 +246,22 @@ export default function SupplierNetwork() {
         <Header title="Supplier Network" subtitle="Browse verified suppliers and manage your supplier network" />
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-gray">Supplier Network</h1>
+              <p className="text-gray-600">Browse verified suppliers and manage your supplier network</p>
+            </div>
             <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your Supplier
-            </Button>
-          </DialogTrigger>
+              <DialogTrigger asChild>
+                <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Invite Your Supplier
+                </Button>
+              </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add Supplier to Your Network</DialogTitle>
+              <DialogTitle>Invite Your Supplier</DialogTitle>
               <DialogDescription>
-                Add suppliers specific to your company. Our team will review submissions for potential inclusion in the verified network.
+                Invite suppliers to join your network and provide environmental data. They'll receive an email invitation to complete their supplier profile.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-6 py-4">
@@ -425,9 +429,9 @@ export default function SupplierNetwork() {
                 </Button>
                 <Button 
                   onClick={handleAddSupplier}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-avallen-green hover:bg-avallen-green-light text-white"
                 >
-                  Add Supplier
+                  Send Invitation
                 </Button>
               </div>
             </div>

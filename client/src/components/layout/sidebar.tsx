@@ -16,7 +16,6 @@ export default function Sidebar() {
     { path: "/app/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/app/products", label: "Products", icon: Package },
     { path: "/app/reports", label: "Reports", icon: FileText },
-    { path: "/app/suppliers", label: "Suppliers", icon: Users },
     { path: "/app/supplier-network", label: "Supplier Network", icon: Building2 },
     { path: "/app/settings", label: "Settings", icon: Settings },
     { path: "/app/admin", label: "Admin", icon: Shield },
