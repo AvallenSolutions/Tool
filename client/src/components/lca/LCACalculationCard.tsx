@@ -67,9 +67,16 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
     refetchInterval: currentJobId ? 2000 : false,
   });
 
-  // Fetch product validation
+  // Fetch product validation - disable for now to prevent unauthorized errors on every page
   const { data: validation } = useQuery({
     queryKey: ["/api/lca/product", product.id, "validate"],
+    enabled: false, // Completely disable this query for now
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    meta: {
+      errorMessage: false
+    }
   });
 
   // Start LCA calculation
