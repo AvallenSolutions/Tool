@@ -16,7 +16,7 @@ import Reports from "@/pages/reports";
 import Suppliers from "@/pages/suppliers";
 import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
-import SupplierPortal from "@/pages/supplier-portal";
+import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
 import SupplierNetwork from "@/pages/SupplierNetwork";
 import LCAPage from "@/pages/LCAPage";
