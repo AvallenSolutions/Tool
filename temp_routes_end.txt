@@ -1,0 +1,6 @@
+export function registerRoutes(app) {
+  // Sample report endpoint
+  app.get('/sample-report', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'sample_enhanced_report.html'));
+  });
+}
