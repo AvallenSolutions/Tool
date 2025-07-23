@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -238,13 +240,13 @@ export default function SupplierNetwork() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Supplier Network</h1>
-          <p className="text-gray-600 mt-2">Browse verified suppliers and manage your supplier network</p>
-        </div>
-        <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="Supplier Network" subtitle="Browse verified suppliers and manage your supplier network" />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="flex justify-between items-center mb-6">
+            <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
           <DialogTrigger asChild>
             <Button className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-2" />
@@ -431,9 +433,9 @@ export default function SupplierNetwork() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+          </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="browse">Browse Network</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
@@ -716,7 +718,9 @@ export default function SupplierNetwork() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+          </Tabs>
+        </main>
+      </div>
     </div>
   );
 }
