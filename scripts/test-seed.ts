@@ -13,11 +13,22 @@ export const testData = {
     reportingPeriodEnd: "2024-12-31"
   },
   
-  product: {
-    name: "Heritage Apple Brandy",
-    productType: "Spirit",
-    sku: "ORC-HAB-001"
-  },
+  products: [
+    {
+      name: "Heritage Apple Brandy",
+      productType: "spirit",
+      sku: "ORC-HAB-001",
+      volume: "700ml",
+      description: "A premium apple brandy crafted from traditional Normandy apples"
+    },
+    {
+      name: "Premium Calvados Reserve",
+      productType: "spirit", 
+      sku: "ORC-PCR-002",
+      volume: "500ml",
+      description: "Aged Calvados with complex apple and oak notes"
+    }
+  ],
 
   suppliers: [
     {
@@ -133,22 +144,28 @@ export async function seedTestCompany() {
 }
 
 /**
- * Seed test product for the company
+ * Seed test products for the company
  */
-export async function seedTestProduct(companyId: number) {
-  console.log('🌱 Seeding test product...');
+export async function seedTestProducts(companyId: number) {
+  console.log('🌱 Seeding test products...');
   
-  const [product] = await db.insert(products).values({
-    companyId,
-    name: testData.product.name,
-    sku: testData.product.sku,
-    type: testData.product.productType,
-    volume: "700ml",
-    description: "A premium apple brandy crafted from traditional Normandy apples"
-  }).returning();
+  const createdProducts = [];
+  
+  for (const productData of testData.products) {
+    const [product] = await db.insert(products).values({
+      companyId,
+      name: productData.name,
+      sku: productData.sku,
+      type: productData.productType,
+      volume: productData.volume,
+      description: productData.description
+    }).returning();
 
-  console.log(`✅ Created product: ${product.name} (ID: ${product.id})`);
-  return product;
+    console.log(`✅ Created product: ${product.name} (ID: ${product.id})`);
+    createdProducts.push(product);
+  }
+  
+  return createdProducts;
 }
 
 /**
@@ -200,15 +217,15 @@ export async function seedTestDatabase() {
   try {
     await cleanDatabase();
     const company = await seedTestCompany();
-    const product = await seedTestProduct(company.id);
+    const products = await seedTestProducts(company.id);
     const supplierIds = await seedVerifiedSuppliers();
     
     console.log('🎉 Test database seeding completed successfully!');
-    console.log(`📊 Created: 1 company, 1 product, ${supplierIds.length} suppliers`);
+    console.log(`📊 Created: 1 company, ${products.length} products, ${supplierIds.length} suppliers`);
     
     return {
       company,
-      product,
+      products,
       supplierIds
     };
   } catch (error) {
@@ -224,19 +241,20 @@ export async function validateSeedData() {
   console.log('🔍 Validating seeded data...');
   
   const [company] = await db.select().from(companies).limit(1);
-  const [product] = await db.select().from(products).limit(1);
+  const productsList = await db.select().from(products);
   const suppliers = await db.select().from(verifiedSuppliers);
   const supplierProductsList = await db.select().from(supplierProducts);
   
   const validation = {
     company: !!company,
-    product: !!product,
+    products: productsList.length === testData.products.length,
     suppliers: suppliers.length === testData.suppliers.length,
     supplierProducts: supplierProductsList.length === testData.suppliers.length,
     allVerified: suppliers.every(s => s.verificationStatus === 'verified')
   };
   
   console.log('📋 Validation results:', validation);
+  console.log(`📊 Found: ${productsList.length} products, ${suppliers.length} suppliers, ${supplierProductsList.length} supplier products`);
   
   if (Object.values(validation).every(v => v)) {
     console.log('✅ All validation checks passed');

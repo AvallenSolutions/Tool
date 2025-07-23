@@ -1180,7 +1180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Test data seeded successfully',
         data: {
           company: result.company,
-          product: result.product,
+          products: result.products,
           supplierCount: result.supplierIds.length
         },
         timestamp: new Date().toISOString()
@@ -1190,6 +1190,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: 'Seeding failed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  app.post('/api/test/integrate', async (req, res) => {
+    try {
+      console.log('🔗 Running integration test...');
+      const { completeIntegrationTest } = await import('../scripts/lca-integration');
+      const result = await completeIntegrationTest();
+      
+      res.json({
+        success: result.success,
+        message: result.success ? 'Integration test completed successfully' : 'Integration test failed',
+        data: result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Integration test failed:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Integration test crashed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  app.get('/api/test/validate', async (req, res) => {
+    try {
+      console.log('🔍 Validating complete setup...');
+      const { validateCompleteSetup } = await import('../scripts/lca-integration');
+      const result = await validateCompleteSetup();
+      
+      res.json({
+        success: result.success,
+        message: result.success ? 'All validation checks passed' : 'Some validation checks failed',
+        data: result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('❌ Validation failed:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Validation crashed',
         error: error.message,
         timestamp: new Date().toISOString()
       });

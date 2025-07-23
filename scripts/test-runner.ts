@@ -45,12 +45,10 @@ export class E2ETestRunner {
       });
 
       // Validate product creation
-      const product = this.seededData.product;
-      this.logResult('Phase 1', 'Product Creation', 'PASS', {
-        id: product.id,
-        name: product.name,
-        sku: product.sku,
-        type: product.productType
+      const products = this.seededData.products;
+      this.logResult('Phase 1', 'Products Creation', 'PASS', {
+        count: products.length,
+        products: products.map(p => ({ id: p.id, name: p.name, sku: p.sku }))
       });
 
       // Validate database state
