@@ -1,27 +1,114 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User, Building, CreditCard, Settings as SettingsIcon, FileText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { User, Building, CreditCard, Settings as SettingsIcon, FileText, Leaf, Save, Loader2 } from "lucide-react";
 import DocumentUpload from "@/components/documents/document-upload";
+
+// Sustainability data constants
+const certificationOptions = [
+  'ISO 14001',
+  'FSC Certified',
+  'Cradle to Cradle',
+  'Carbon Neutral',
+  'Organic Certified',
+  'Fair Trade',
+  'B-Corp Certified',
+  'LEED Certified',
+  'Other'
+];
+
+const energySourceOptions = [
+  'Grid Electricity (Mixed)',
+  'Renewable Energy (100%)',
+  'Solar Power',
+  'Wind Power',
+  'Hydroelectric',
+  'Natural Gas',
+  'Coal',
+  'Nuclear',
+  'Biomass',
+  'Mixed Sources'
+];
+
+const reportingStandardOptions = [
+  'GRI Standards',
+  'CDP (Carbon Disclosure Project)',
+  'SASB (Sustainability Accounting Standards Board)',
+  'TCFD (Task Force on Climate-related Financial Disclosures)',
+  'UN Global Compact',
+  'ISO 26000',
+  'B-Corp Impact Assessment',
+  'Science Based Targets (SBTi)',
+  'Other'
+];
+
+const transportationOptions = [
+  'Road Transport (Truck)',
+  'Rail Transport',
+  'Sea Freight',
+  'Air Freight',
+  'Electric Vehicles',
+  'Hybrid Vehicles',
+  'Bicycle/Walking',
+  'Public Transportation',
+  'Multimodal Transport'
+];
 
 export default function Settings() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: company } = useQuery({
     queryKey: ["/api/company"],
     retry: false,
+  });
+
+  // Initialize sustainability data
+  const [sustainabilityData, setSustainabilityData] = useState({
+    certifications: [],
+    environmentalPolicies: {
+      wasteManagement: '',
+      energyEfficiency: '',
+      waterConservation: '',
+      carbonReduction: '',
+    },
+    facilitiesData: {
+      energySource: '',
+      renewableEnergyPercentage: undefined,
+      wasteRecyclingPercentage: undefined,
+      waterTreatment: '',
+      transportationMethods: [],
+    },
+    sustainabilityReporting: {
+      hasAnnualReport: false,
+      reportingStandards: [],
+      thirdPartyVerification: false,
+      scopeEmissions: {
+        scope1: false,
+        scope2: false,
+        scope3: false,
+      },
+    },
+    goals: {
+      carbonNeutralTarget: '',
+      sustainabilityGoals: '',
+      circularEconomyInitiatives: '',
+    },
   });
 
   useEffect(() => {
@@ -50,6 +137,28 @@ export default function Settings() {
     window.location.href = "/api/logout";
   };
 
+  const handleSaveSustainabilityData = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: 'Sustainability Data Saved',
+        description: 'Your sustainability information has been successfully updated.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Save Failed',
+        description: 'There was an error saving your sustainability data.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-lightest-gray">
       <Sidebar />
@@ -57,9 +166,10 @@ export default function Settings() {
         <Header title="Settings" subtitle="Manage your account and company settings" />
         <main className="flex-1 p-6 overflow-y-auto">
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="company">Company</TabsTrigger>
+              <TabsTrigger value="sustainability">Sustainability</TabsTrigger>
               <TabsTrigger value="data">Data Management</TabsTrigger>
               <TabsTrigger value="billing">Billing</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
@@ -217,6 +327,459 @@ export default function Settings() {
                   <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
                     Save Changes
                   </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sustainability" className="space-y-6">
+              {/* Environmental Certifications */}
+              <Card className="border-light-gray">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-slate-gray">
+                    <Leaf className="w-5 h-5 mr-2" />
+                    Environmental Certifications
+                  </CardTitle>
+                  <CardDescription>
+                    Select all environmental certifications your company currently holds.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    {certificationOptions.map((cert) => (
+                      <div key={cert} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`cert-${cert}`}
+                          checked={sustainabilityData.certifications.includes(cert)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSustainabilityData(prev => ({
+                                ...prev,
+                                certifications: [...prev.certifications, cert]
+                              }));
+                            } else {
+                              setSustainabilityData(prev => ({
+                                ...prev,
+                                certifications: prev.certifications.filter(c => c !== cert)
+                              }));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`cert-${cert}`} className="text-sm">{cert}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Environmental Policies */}
+              <Card className="border-light-gray">
+                <CardHeader>
+                  <CardTitle className="text-slate-gray">Environmental Policies</CardTitle>
+                  <CardDescription>
+                    Describe your company's environmental policies and practices.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="wasteManagement">Waste Management Policy</Label>
+                    <Textarea
+                      id="wasteManagement"
+                      value={sustainabilityData.environmentalPolicies.wasteManagement}
+                      onChange={(e) => setSustainabilityData(prev => ({
+                        ...prev,
+                        environmentalPolicies: {
+                          ...prev.environmentalPolicies,
+                          wasteManagement: e.target.value
+                        }
+                      }))}
+                      placeholder="Describe your waste reduction, recycling, and disposal practices..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="energyEfficiency">Energy Efficiency Measures</Label>
+                    <Textarea
+                      id="energyEfficiency"
+                      value={sustainabilityData.environmentalPolicies.energyEfficiency}
+                      onChange={(e) => setSustainabilityData(prev => ({
+                        ...prev,
+                        environmentalPolicies: {
+                          ...prev.environmentalPolicies,
+                          energyEfficiency: e.target.value
+                        }
+                      }))}
+                      placeholder="Describe your energy conservation and efficiency initiatives..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="waterConservation">Water Conservation Practices</Label>
+                    <Textarea
+                      id="waterConservation"
+                      value={sustainabilityData.environmentalPolicies.waterConservation}
+                      onChange={(e) => setSustainabilityData(prev => ({
+                        ...prev,
+                        environmentalPolicies: {
+                          ...prev.environmentalPolicies,
+                          waterConservation: e.target.value
+                        }
+                      }))}
+                      placeholder="Describe your water usage reduction and conservation measures..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="carbonReduction">Carbon Reduction Strategy</Label>
+                    <Textarea
+                      id="carbonReduction"
+                      value={sustainabilityData.environmentalPolicies.carbonReduction}
+                      onChange={(e) => setSustainabilityData(prev => ({
+                        ...prev,
+                        environmentalPolicies: {
+                          ...prev.environmentalPolicies,
+                          carbonReduction: e.target.value
+                        }
+                      }))}
+                      placeholder="Describe your carbon footprint reduction initiatives and targets..."
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Facilities and Operations */}
+              <Card className="border-light-gray">
+                <CardHeader>
+                  <CardTitle className="text-slate-gray">Facilities and Operations Data</CardTitle>
+                  <CardDescription>
+                    Provide details about your facilities' environmental performance.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="energySource">Primary Energy Source</Label>
+                      <Select 
+                        value={sustainabilityData.facilitiesData.energySource} 
+                        onValueChange={(value) => setSustainabilityData(prev => ({
+                          ...prev,
+                          facilitiesData: {
+                            ...prev.facilitiesData,
+                            energySource: value
+                          }
+                        }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select energy source" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Select energy source</SelectItem>
+                          {energySourceOptions.map(source => (
+                            <SelectItem key={source} value={source}>{source}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="renewableEnergyPercentage">Renewable Energy Percentage (%)</Label>
+                      <Input
+                        id="renewableEnergyPercentage"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={sustainabilityData.facilitiesData.renewableEnergyPercentage || ''}
+                        onChange={(e) => setSustainabilityData(prev => ({
+                          ...prev,
+                          facilitiesData: {
+                            ...prev.facilitiesData,
+                            renewableEnergyPercentage: parseFloat(e.target.value) || undefined
+                          }
+                        }))}
+                        placeholder="0-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="wasteRecyclingPercentage">Waste Recycling Percentage (%)</Label>
+                      <Input
+                        id="wasteRecyclingPercentage"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={sustainabilityData.facilitiesData.wasteRecyclingPercentage || ''}
+                        onChange={(e) => setSustainabilityData(prev => ({
+                          ...prev,
+                          facilitiesData: {
+                            ...prev.facilitiesData,
+                            wasteRecyclingPercentage: parseFloat(e.target.value) || undefined
+                          }
+                        }))}
+                        placeholder="0-100"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="waterTreatment">Water Treatment Method</Label>
+                      <Input
+                        id="waterTreatment"
+                        value={sustainabilityData.facilitiesData.waterTreatment}
+                        onChange={(e) => setSustainabilityData(prev => ({
+                          ...prev,
+                          facilitiesData: {
+                            ...prev.facilitiesData,
+                            waterTreatment: e.target.value
+                          }
+                        }))}
+                        placeholder="e.g., On-site treatment, Municipal treatment"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Transportation Methods Used</Label>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {transportationOptions.map((method) => (
+                        <div key={method} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`transport-${method}`}
+                            checked={sustainabilityData.facilitiesData.transportationMethods.includes(method)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSustainabilityData(prev => ({
+                                  ...prev,
+                                  facilitiesData: {
+                                    ...prev.facilitiesData,
+                                    transportationMethods: [...prev.facilitiesData.transportationMethods, method]
+                                  }
+                                }));
+                              } else {
+                                setSustainabilityData(prev => ({
+                                  ...prev,
+                                  facilitiesData: {
+                                    ...prev.facilitiesData,
+                                    transportationMethods: prev.facilitiesData.transportationMethods.filter(m => m !== method)
+                                  }
+                                }));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`transport-${method}`} className="text-sm">{method}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sustainability Reporting */}
+              <Card className="border-light-gray">
+                <CardHeader>
+                  <CardTitle className="text-slate-gray">Sustainability Reporting</CardTitle>
+                  <CardDescription>
+                    Information about your sustainability reporting practices and standards.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="hasAnnualReport"
+                      checked={sustainabilityData.sustainabilityReporting.hasAnnualReport}
+                      onCheckedChange={(checked) => setSustainabilityData(prev => ({
+                        ...prev,
+                        sustainabilityReporting: {
+                          ...prev.sustainabilityReporting,
+                          hasAnnualReport: checked as boolean
+                        }
+                      }))}
+                    />
+                    <Label htmlFor="hasAnnualReport">We publish an annual sustainability report</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="thirdPartyVerification"
+                      checked={sustainabilityData.sustainabilityReporting.thirdPartyVerification}
+                      onCheckedChange={(checked) => setSustainabilityData(prev => ({
+                        ...prev,
+                        sustainabilityReporting: {
+                          ...prev.sustainabilityReporting,
+                          thirdPartyVerification: checked as boolean
+                        }
+                      }))}
+                    />
+                    <Label htmlFor="thirdPartyVerification">Our sustainability data is third-party verified</Label>
+                  </div>
+
+                  <div>
+                    <Label>Reporting Standards Used</Label>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {reportingStandardOptions.map((standard) => (
+                        <div key={standard} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`standard-${standard}`}
+                            checked={sustainabilityData.sustainabilityReporting.reportingStandards.includes(standard)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSustainabilityData(prev => ({
+                                  ...prev,
+                                  sustainabilityReporting: {
+                                    ...prev.sustainabilityReporting,
+                                    reportingStandards: [...prev.sustainabilityReporting.reportingStandards, standard]
+                                  }
+                                }));
+                              } else {
+                                setSustainabilityData(prev => ({
+                                  ...prev,
+                                  sustainabilityReporting: {
+                                    ...prev.sustainabilityReporting,
+                                    reportingStandards: prev.sustainabilityReporting.reportingStandards.filter(s => s !== standard)
+                                  }
+                                }));
+                              }
+                            }}
+                          />
+                          <Label htmlFor={`standard-${standard}`} className="text-sm">{standard}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Scope Emissions Reporting</Label>
+                    <div className="grid grid-cols-3 gap-4 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="scope1"
+                          checked={sustainabilityData.sustainabilityReporting.scopeEmissions.scope1}
+                          onCheckedChange={(checked) => setSustainabilityData(prev => ({
+                            ...prev,
+                            sustainabilityReporting: {
+                              ...prev.sustainabilityReporting,
+                              scopeEmissions: {
+                                ...prev.sustainabilityReporting.scopeEmissions,
+                                scope1: checked as boolean
+                              }
+                            }
+                          }))}
+                        />
+                        <Label htmlFor="scope1" className="text-sm">Scope 1 (Direct emissions)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="scope2"
+                          checked={sustainabilityData.sustainabilityReporting.scopeEmissions.scope2}
+                          onCheckedChange={(checked) => setSustainabilityData(prev => ({
+                            ...prev,
+                            sustainabilityReporting: {
+                              ...prev.sustainabilityReporting,
+                              scopeEmissions: {
+                                ...prev.sustainabilityReporting.scopeEmissions,
+                                scope2: checked as boolean
+                              }
+                            }
+                          }))}
+                        />
+                        <Label htmlFor="scope2" className="text-sm">Scope 2 (Indirect emissions)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="scope3"
+                          checked={sustainabilityData.sustainabilityReporting.scopeEmissions.scope3}
+                          onCheckedChange={(checked) => setSustainabilityData(prev => ({
+                            ...prev,
+                            sustainabilityReporting: {
+                              ...prev.sustainabilityReporting,
+                              scopeEmissions: {
+                                ...prev.sustainabilityReporting.scopeEmissions,
+                                scope3: checked as boolean
+                              }
+                            }
+                          }))}
+                        />
+                        <Label htmlFor="scope3" className="text-sm">Scope 3 (Value chain emissions)</Label>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sustainability Goals */}
+              <Card className="border-light-gray">
+                <CardHeader>
+                  <CardTitle className="text-slate-gray">Sustainability Goals and Commitments</CardTitle>
+                  <CardDescription>
+                    Share your company's sustainability targets and future commitments.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="carbonNeutralTarget">Carbon Neutrality Target</Label>
+                    <Input
+                      id="carbonNeutralTarget"
+                      value={sustainabilityData.goals.carbonNeutralTarget}
+                      onChange={(e) => setSustainabilityData(prev => ({
+                        ...prev,
+                        goals: {
+                          ...prev.goals,
+                          carbonNeutralTarget: e.target.value
+                        }
+                      }))}
+                      placeholder="e.g., 2030, 2050, or describe your target"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="sustainabilityGoals">Sustainability Goals and Targets</Label>
+                    <Textarea
+                      id="sustainabilityGoals"
+                      value={sustainabilityData.goals.sustainabilityGoals}
+                      onChange={(e) => setSustainabilityData(prev => ({
+                        ...prev,
+                        goals: {
+                          ...prev.goals,
+                          sustainabilityGoals: e.target.value
+                        }
+                      }))}
+                      placeholder="Describe your specific sustainability goals, targets, and timelines..."
+                      rows={4}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="circularEconomyInitiatives">Circular Economy Initiatives</Label>
+                    <Textarea
+                      id="circularEconomyInitiatives"
+                      value={sustainabilityData.goals.circularEconomyInitiatives}
+                      onChange={(e) => setSustainabilityData(prev => ({
+                        ...prev,
+                        goals: {
+                          ...prev.goals,
+                          circularEconomyInitiatives: e.target.value
+                        }
+                      }))}
+                      placeholder="Describe your circular economy practices, reuse programs, and waste reduction initiatives..."
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end pt-4">
+                    <Button 
+                      onClick={handleSaveSustainabilityData}
+                      disabled={isSaving}
+                      className="bg-avallen-green hover:bg-avallen-green-light text-white"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save Sustainability Data
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
