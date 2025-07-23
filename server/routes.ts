@@ -1141,6 +1141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // const supplierDataCaptureRoutes = require('./routes/supplierDataCapture').default;
   // app.use('/api/supplier-data-capture', supplierDataCaptureRoutes);
 
+  // Add admin routes for Phase 2 (temporarily disabled until import issues are resolved)
+  // const adminRoutes = require('./routes/admin').default;
+  // app.use('/api/admin', adminRoutes);
+
   const httpServer = createServer(app);
   return httpServer;
 }
