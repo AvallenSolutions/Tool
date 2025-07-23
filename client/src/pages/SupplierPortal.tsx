@@ -44,6 +44,13 @@ interface ProductData {
   productAttributes: Record<string, any>;
   hasPrecalculatedLca: boolean;
   lcaDataJson?: Record<string, any>;
+  lcaDocuments: Array<{
+    name: string;
+    size: number;
+    type: string;
+    uploadedAt: string;
+    url?: string;
+  }>;
   environmentalCertifications: string[];
   sustainabilityMetrics: {
     carbonFootprint?: number;
@@ -103,14 +110,112 @@ export default function SupplierPortal() {
     productAttributes: {},
     hasPrecalculatedLca: false,
     lcaDataJson: {},
+    lcaDocuments: [],
     environmentalCertifications: [],
     sustainabilityMetrics: {},
   });
   
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<{[key: string]: boolean}>({});
 
   const { toast } = useToast();
+
+  const handleFileUpload = async (files: FileList, productId?: number) => {
+    const validFiles = Array.from(files).filter(file => {
+      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/csv'];
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: 'Invalid File Type',
+          description: 'Please upload PDF, Excel, or CSV files only.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      if (file.size > maxSize) {
+        toast({
+          title: 'File Too Large',
+          description: 'Please upload files smaller than 10MB.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    const uploadKey = productId ? `product-${productId}` : 'new-product';
+    setUploadingFiles(prev => ({ ...prev, [uploadKey]: true }));
+
+    try {
+      // Simulate file upload
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const uploadedFiles = validFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedAt: new Date().toISOString(),
+        url: URL.createObjectURL(file), // In production, this would be the actual file URL
+      }));
+
+      if (productId) {
+        // Update existing product
+        setProducts(prev => prev.map(product => 
+          product.id === productId 
+            ? { ...product, lcaDocuments: [...product.lcaDocuments, ...uploadedFiles] }
+            : product
+        ));
+      } else {
+        // Update new product being created
+        setNewProduct(prev => ({
+          ...prev,
+          lcaDocuments: [...prev.lcaDocuments, ...uploadedFiles]
+        }));
+      }
+
+      toast({
+        title: 'Files Uploaded',
+        description: `${validFiles.length} file${validFiles.length > 1 ? 's' : ''} uploaded successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Upload Failed',
+        description: 'There was an error uploading your files.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingFiles(prev => ({ ...prev, [uploadKey]: false }));
+    }
+  };
+
+  const handleRemoveLCADocument = (documentName: string, productId?: number) => {
+    if (productId) {
+      setProducts(prev => prev.map(product => 
+        product.id === productId 
+          ? { ...product, lcaDocuments: product.lcaDocuments.filter(doc => doc.name !== documentName) }
+          : product
+      ));
+    } else {
+      setNewProduct(prev => ({
+        ...prev,
+        lcaDocuments: prev.lcaDocuments.filter(doc => doc.name !== documentName)
+      }));
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   // Mock data for development - will be replaced with real API calls
   useEffect(() => {
@@ -177,6 +282,7 @@ export default function SupplierPortal() {
       productAttributes: {},
       hasPrecalculatedLca: false,
       lcaDataJson: {},
+      lcaDocuments: [],
       environmentalCertifications: [],
       sustainabilityMetrics: {},
     });
@@ -562,13 +668,45 @@ export default function SupplierPortal() {
                                     LCA Data
                                   </Badge>
                                 )}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRemoveProduct(product.id!)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                {product.lcaDocuments.length > 0 && (
+                                  <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+                                    <Upload className="w-3 h-3 mr-1" />
+                                    {product.lcaDocuments.length} Document{product.lcaDocuments.length > 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const input = document.createElement('input');
+                                      input.type = 'file';
+                                      input.multiple = true;
+                                      input.accept = '.pdf,.xlsx,.xls,.csv';
+                                      input.onchange = (e) => {
+                                        const files = (e.target as HTMLInputElement).files;
+                                        if (files) {
+                                          handleFileUpload(files, product.id);
+                                        }
+                                      };
+                                      input.click();
+                                    }}
+                                    disabled={uploadingFiles[`product-${product.id}`]}
+                                  >
+                                    {uploadingFiles[`product-${product.id}`] ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Upload className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleRemoveProduct(product.id!)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                             
@@ -578,6 +716,32 @@ export default function SupplierPortal() {
                                 <div className="flex flex-wrap gap-2">
                                   {product.environmentalCertifications.map((cert, index) => (
                                     <Badge key={index} variant="outline">{cert}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {product.lcaDocuments.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-sm font-medium text-gray-700 mb-2">LCA Documents:</p>
+                                <div className="space-y-2">
+                                  {product.lcaDocuments.map((doc, index) => (
+                                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                      <div className="flex items-center space-x-2">
+                                        <FileText className="w-4 h-4 text-gray-500" />
+                                        <div>
+                                          <p className="text-sm font-medium">{doc.name}</p>
+                                          <p className="text-xs text-gray-500">{formatFileSize(doc.size)}</p>
+                                        </div>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleRemoveLCADocument(doc.name, product.id)}
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
                                   ))}
                                 </div>
                               </div>
@@ -757,18 +921,96 @@ export default function SupplierPortal() {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="hasPrecalculatedLca"
-                            checked={newProduct.hasPrecalculatedLca}
-                            onCheckedChange={(checked) => setNewProduct(prev => ({
-                              ...prev,
-                              hasPrecalculatedLca: checked as boolean
-                            }))}
-                          />
-                          <Label htmlFor="hasPrecalculatedLca">
-                            I have precalculated LCA data for this product
-                          </Label>
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="hasPrecalculatedLca"
+                              checked={newProduct.hasPrecalculatedLca}
+                              onCheckedChange={(checked) => setNewProduct(prev => ({
+                                ...prev,
+                                hasPrecalculatedLca: checked as boolean
+                              }))}
+                            />
+                            <Label htmlFor="hasPrecalculatedLca">
+                              I have precalculated LCA data for this product
+                            </Label>
+                          </div>
+
+                          {newProduct.hasPrecalculatedLca && (
+                            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                              <div className="mb-3">
+                                <Label className="text-sm font-medium">Upload LCA Documents</Label>
+                                <p className="text-xs text-gray-600 mt-1">
+                                  Upload PDF, Excel, or CSV files containing your LCA calculations (max 10MB each)
+                                </p>
+                              </div>
+                              
+                              <div className="mb-3">
+                                <div className="flex items-center justify-center w-full">
+                                  <label
+                                    htmlFor="lca-upload"
+                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-green-300 border-dashed rounded-lg cursor-pointer bg-green-50 hover:bg-green-100"
+                                  >
+                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                      {uploadingFiles['new-product'] ? (
+                                        <>
+                                          <Loader2 className="w-8 h-8 mb-2 text-green-500 animate-spin" />
+                                          <p className="text-sm text-green-600">Uploading files...</p>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Upload className="w-8 h-8 mb-2 text-green-500" />
+                                          <p className="mb-2 text-sm text-green-600">
+                                            <span className="font-semibold">Click to upload</span> or drag and drop
+                                          </p>
+                                          <p className="text-xs text-gray-500">PDF, XLSX, XLS, CSV (MAX. 10MB)</p>
+                                        </>
+                                      )}
+                                    </div>
+                                    <input
+                                      id="lca-upload"
+                                      type="file"
+                                      className="hidden"
+                                      multiple
+                                      accept=".pdf,.xlsx,.xls,.csv"
+                                      onChange={(e) => {
+                                        if (e.target.files) {
+                                          handleFileUpload(e.target.files);
+                                        }
+                                      }}
+                                      disabled={uploadingFiles['new-product']}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+
+                              {newProduct.lcaDocuments.length > 0 && (
+                                <div>
+                                  <Label className="text-sm font-medium mb-2 block">Uploaded Documents:</Label>
+                                  <div className="space-y-2">
+                                    {newProduct.lcaDocuments.map((doc, index) => (
+                                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
+                                        <div className="flex items-center space-x-2">
+                                          <FileText className="w-4 h-4 text-green-600" />
+                                          <div>
+                                            <p className="text-sm font-medium">{doc.name}</p>
+                                            <p className="text-xs text-gray-500">{formatFileSize(doc.size)}</p>
+                                          </div>
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleRemoveLCADocument(doc.name)}
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex gap-2 pt-4">
