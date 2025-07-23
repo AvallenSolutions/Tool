@@ -18,6 +18,7 @@ import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
 import SupplierPortal from "@/pages/supplier-portal";
 import AdminDashboard from "@/pages/AdminDashboard";
+import SupplierNetwork from "@/pages/SupplierNetwork";
 import LCAPage from "@/pages/LCAPage";
 
 function Router() {
@@ -42,6 +43,7 @@ function Router() {
           <Route path="/app/products/:id" component={ProductDetail} />
           <Route path="/app/reports" component={Reports} />
           <Route path="/app/suppliers" component={Suppliers} />
+          <Route path="/app/supplier-network" component={SupplierNetwork} />
           <Route path="/app/lca" component={LCAPage} />
           <Route path="/app/settings" component={Settings} />
           <Route path="/app/admin" component={AdminDashboard} />
