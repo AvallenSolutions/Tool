@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { EnhancedReportButton } from "@/components/EnhancedReportButton";
 
 export default function Reports() {
   const { toast } = useToast();
@@ -150,6 +151,14 @@ export default function Reports() {
                             </Button>
                           )}
                         </div>
+                      </div>
+                      
+                      {/* Enhanced Report Section */}
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <EnhancedReportButton 
+                          reportId={report.id} 
+                          reportStatus={report.status} 
+                        />
                       </div>
                     </CardContent>
                   </Card>

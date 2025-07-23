@@ -432,6 +432,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced report generation endpoint
+  app.post('/api/reports/:id/generate-enhanced', isAuthenticated, async (req: any, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+
+      // Verify report exists and user has access
+      const reportResult = await db.select().from(reports).where(eq(reports.id, reportId));
+      const report = reportResult[0];
+      if (!report) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+
+      // Verify user owns the company that owns this report
+      const companyResult = await db.select().from(companies).where(eq(companies.id, report.companyId!));
+      const company = companyResult[0];
+      if (!company || company.ownerId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Only allow enhanced generation for approved/completed reports
+      if (report.status !== 'completed' && report.status !== 'approved') {
+        return res.status(400).json({ 
+          message: "Enhanced reports can only be generated for completed or approved reports" 
+        });
+      }
+
+      // Import and queue the enhanced report job
+      const { enhancedReportQueue } = await import('./jobs/EnhancedReportJob');
+      
+      const job = await enhancedReportQueue.add('generate-enhanced-report', {
+        reportId,
+        userId
+      });
+
+      console.log(`🚀 Queued enhanced report generation job ${job.id} for report ${reportId}`);
+
+      res.json({
+        message: "Enhanced report generation started",
+        jobId: job.id,
+        status: "generating"
+      });
+
+    } catch (error) {
+      console.error("Error generating enhanced report:", error);
+      res.status(500).json({ message: "Failed to start enhanced report generation" });
+    }
+  });
+
+  // Enhanced report status endpoint
+  app.get('/api/reports/:id/enhanced-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+
+      // Verify access
+      const [report] = await db.select().from(reports).where(eq(reports.id, reportId));
+      if (!report) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+
+      const [company] = await db.select().from(companies).where(eq(companies.id, report.companyId));
+      if (!company || company.ownerId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json({
+        status: report.enhancedReportStatus || 'not_generated',
+        filePath: report.enhancedPdfFilePath || null
+      });
+
+    } catch (error) {
+      console.error("Error checking enhanced report status:", error);
+      res.status(500).json({ message: "Failed to check enhanced report status" });
+    }
+  });
+
+  // Enhanced report download endpoint
+  app.get('/api/reports/:id/download-enhanced', isAuthenticated, async (req: any, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+
+      // Verify access
+      const [report] = await db.select().from(reports).where(eq(reports.id, reportId));
+      if (!report) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+
+      const [company] = await db.select().from(companies).where(eq(companies.id, report.companyId));
+      if (!company || company.ownerId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (!report.enhancedPdfFilePath || report.enhancedReportStatus !== 'completed') {
+        return res.status(404).json({ message: "Enhanced report not available" });
+      }
+
+      const filePath = path.join(process.cwd(), report.enhancedPdfFilePath);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "Enhanced report file not found" });
+      }
+
+      // Set download headers
+      const fileName = `Enhanced_LCA_Report_${report.id}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+
+    } catch (error) {
+      console.error("Error downloading enhanced report:", error);
+      res.status(500).json({ message: "Failed to download enhanced report" });
+    }
+  });
+
   app.post('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

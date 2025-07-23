@@ -385,6 +385,9 @@ export const reports = pgTable("reports", {
   
   // Generated files
   pdfFilePath: varchar("pdf_file_path"),
+  enhancedPdfFilePath: varchar("enhanced_pdf_file_path"),
+  enhancedReportStatus: varchar("enhanced_report_status").default("not_generated"), // not_generated, generating, completed, failed
+  totalCarbonFootprint: decimal("total_carbon_footprint", { precision: 10, scale: 3 }),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
