@@ -12,6 +12,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Building2, Package, CheckCircle, Clock, Eye, Users, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
 
 const supplierCategories = [
   { value: 'bottle_producer', label: 'Bottle Producer' },
@@ -144,13 +146,17 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage the verified supplier network</p>
-        </div>
-        <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="Admin Dashboard" subtitle="Manage the verified supplier network" />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600 mt-2">Manage the verified supplier network</p>
+            </div>
+            <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
           <DialogTrigger asChild>
             <Button className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-2" />
@@ -419,7 +425,9 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+          </Tabs>
+        </main>
+      </div>
     </div>
   );
 }
