@@ -58,10 +58,10 @@ export default function SupplierNetwork() {
   const [selectedTab, setSelectedTab] = useState('browse');
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [newSupplier, setNewSupplier] = useState({
     supplierName: '',
-    supplierCategory: '',
+    supplierCategory: 'none',
     website: '',
     contactEmail: '',
     description: '',
@@ -147,7 +147,7 @@ export default function SupplierNetwork() {
   const filteredSuppliers = mockSuppliers.filter(supplier => {
     const matchesSearch = supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          supplier.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || supplier.supplierCategory === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || selectedCategory === 'none' || supplier.supplierCategory === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -155,7 +155,7 @@ export default function SupplierNetwork() {
   const clientSuppliers = filteredSuppliers.filter(s => s.verificationStatus === 'client_provided');
 
   const handleAddSupplier = () => {
-    if (!newSupplier.supplierName || !newSupplier.supplierCategory) {
+    if (!newSupplier.supplierName || !newSupplier.supplierCategory || newSupplier.supplierCategory === 'none') {
       toast({
         title: 'Validation Error',
         description: 'Supplier name and category are required',
@@ -173,7 +173,7 @@ export default function SupplierNetwork() {
     setIsAddSupplierOpen(false);
     setNewSupplier({
       supplierName: '',
-      supplierCategory: '',
+      supplierCategory: 'none',
       website: '',
       contactEmail: '',
       description: '',
@@ -279,6 +279,7 @@ export default function SupplierNetwork() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">Select category</SelectItem>
                       {supplierCategories.map(cat => (
                         <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                       ))}
@@ -464,7 +465,7 @@ export default function SupplierNetwork() {
                       <SelectValue placeholder="All categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All categories</SelectItem>
+                      <SelectItem value="all">All categories</SelectItem>
                       {supplierCategories.map(cat => (
                         <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                       ))}
