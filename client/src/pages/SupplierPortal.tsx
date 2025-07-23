@@ -42,6 +42,8 @@ interface ProductData {
   productDescription: string;
   sku: string;
   productAttributes: Record<string, any>;
+  material?: string; // For physical products
+  ingredient?: string; // For ingredient suppliers
   hasPrecalculatedLca: boolean;
   lcaDataJson?: Record<string, any>;
   lcaDocuments: Array<{
@@ -68,6 +70,43 @@ const supplierCategories = [
   { value: 'packaging_supplier', label: 'Packaging Supplier' },
   { value: 'logistics_provider', label: 'Logistics Provider' },
   { value: 'other', label: 'Other' },
+];
+
+const physicalProductCategories = ['bottle_producer', 'cap_closure_producer', 'label_producer', 'packaging_supplier'];
+
+const materialOptions = [
+  'Glass',
+  'Aluminum',
+  'Steel',
+  'PET Plastic',
+  'HDPE Plastic',
+  'PP Plastic',
+  'Paper',
+  'Cardboard',
+  'Cork',
+  'Wood',
+  'Rubber',
+  'Synthetic Cork',
+  'Other'
+];
+
+const ingredientOptions = [
+  'Grain Neutral Spirit',
+  'Botanical Extract',
+  'Natural Flavoring',
+  'Artificial Flavoring',
+  'Sweetener',
+  'Preservative',
+  'Coloring Agent',
+  'Citric Acid',
+  'Water',
+  'Alcohol',
+  'Sugar',
+  'Honey',
+  'Fruit Extract',
+  'Herb Extract',
+  'Spice Extract',
+  'Other'
 ];
 
 const certificationOptions = [
@@ -108,6 +147,8 @@ export default function SupplierPortal() {
     productDescription: '',
     sku: '',
     productAttributes: {},
+    material: '',
+    ingredient: '',
     hasPrecalculatedLca: false,
     lcaDataJson: {},
     lcaDocuments: [],
@@ -265,6 +306,7 @@ export default function SupplierPortal() {
   };
 
   const handleAddProduct = () => {
+    // Basic validation
     if (!newProduct.productName || !newProduct.sku) {
       toast({
         title: 'Validation Error',
@@ -274,12 +316,38 @@ export default function SupplierPortal() {
       return;
     }
 
+    // Material validation for physical products
+    if (physicalProductCategories.includes(supplierData.supplierCategory)) {
+      if (!newProduct.material || newProduct.material === 'none') {
+        toast({
+          title: 'Validation Error',
+          description: 'Material selection is required for physical products.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Ingredient validation for ingredient suppliers
+    if (supplierData.supplierCategory === 'ingredient_supplier') {
+      if (!newProduct.ingredient || newProduct.ingredient === 'none') {
+        toast({
+          title: 'Validation Error',
+          description: 'Ingredient selection is required for ingredient suppliers.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     setProducts(prev => [...prev, { ...newProduct, id: Date.now() }]);
     setNewProduct({
       productName: '',
       productDescription: '',
       sku: '',
       productAttributes: {},
+      material: '',
+      ingredient: '',
       hasPrecalculatedLca: false,
       lcaDataJson: {},
       lcaDocuments: [],
@@ -657,6 +725,12 @@ export default function SupplierPortal() {
                               <div className="flex-1">
                                 <h3 className="font-semibold text-lg">{product.productName}</h3>
                                 <p className="text-gray-600">SKU: {product.sku}</p>
+                                {product.material && (
+                                  <p className="text-gray-600">Material: {product.material}</p>
+                                )}
+                                {product.ingredient && (
+                                  <p className="text-gray-600">Ingredient: {product.ingredient}</p>
+                                )}
                                 {product.productDescription && (
                                   <p className="text-gray-700 mt-2">{product.productDescription}</p>
                                 )}
@@ -819,6 +893,54 @@ export default function SupplierPortal() {
                           />
                         </div>
 
+                        {/* Material selection for physical products */}
+                        {physicalProductCategories.includes(supplierData.supplierCategory) && (
+                          <div>
+                            <Label htmlFor="material">Material *</Label>
+                            <Select 
+                              value={newProduct.material} 
+                              onValueChange={(value) => setNewProduct(prev => ({ 
+                                ...prev, 
+                                material: value 
+                              }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select material" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Select material</SelectItem>
+                                {materialOptions.map(material => (
+                                  <SelectItem key={material} value={material}>{material}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {/* Ingredient selection for ingredient suppliers */}
+                        {supplierData.supplierCategory === 'ingredient_supplier' && (
+                          <div>
+                            <Label htmlFor="ingredient">Ingredient *</Label>
+                            <Select 
+                              value={newProduct.ingredient} 
+                              onValueChange={(value) => setNewProduct(prev => ({ 
+                                ...prev, 
+                                ingredient: value 
+                              }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select ingredient" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Select ingredient</SelectItem>  
+                                {ingredientOptions.map(ingredient => (
+                                  <SelectItem key={ingredient} value={ingredient}>{ingredient}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
                         <div>
                           <Label>Environmental Certifications</Label>
                           <div className="grid grid-cols-3 gap-2 mt-2">
@@ -850,7 +972,7 @@ export default function SupplierPortal() {
                         <Separator />
 
                         <div>
-                          <Label>Sustainability Metrics (Optional)</Label>
+                          <Label>Sustainability Metrics</Label>
                           <div className="grid grid-cols-2 gap-4 mt-2">
                             <div>
                               <Label htmlFor="carbonFootprint">Carbon Footprint (kg CO2e)</Label>
