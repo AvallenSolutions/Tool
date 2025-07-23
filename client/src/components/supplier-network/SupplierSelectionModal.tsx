@@ -127,6 +127,9 @@ export default function SupplierSelectionModal({
             <Building2 className="h-6 w-6 text-[#209d50]" />
             Select Verified Supplier Product
           </DialogTitle>
+          <p className="text-sm text-gray-600 mt-2">
+            Browse and select from our network of verified suppliers with pre-calculated environmental data.
+          </p>
         </DialogHeader>
 
         {/* Search */}
@@ -155,50 +158,53 @@ export default function SupplierSelectionModal({
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-lg">{producer.supplierName}</h3>
+                        <h3 className="font-semibold text-lg">{producer.productName}</h3>
                         <Badge 
                           variant="outline" 
                           className="text-green-700 border-green-200 bg-green-50"
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
-                        <Badge 
-                          variant="outline"
-                          className={`${
-                            producer.environmentalRating.startsWith('A') 
-                              ? 'text-green-700 border-green-200 bg-green-50'
-                              : 'text-blue-700 border-blue-200 bg-blue-50'
-                          }`}
-                        >
-                          Rating: {producer.environmentalRating}
+                          LCA Verified
                         </Badge>
                       </div>
+
+                      <p className="text-sm text-gray-600 mb-2">By {producer.supplierName}</p>
+                      <p className="text-sm text-gray-600 mb-3">{producer.productDescription}</p>
 
                       <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
                           {producer.location}
                         </div>
-                        <div>
-                          Carbon Footprint: <span className="font-medium">{producer.carbonFootprint}</span>
-                        </div>
+                        {producer.basePrice && (
+                          <div>
+                            From: <span className="font-medium">{producer.currency} {producer.basePrice}</span>
+                          </div>
+                        )}
+                        {producer.minimumOrderQuantity && (
+                          <div>
+                            MOQ: <span className="font-medium">{producer.minimumOrderQuantity} units</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap gap-1 mb-3">
-                        {producer.specialties.map((specialty) => (
+                        {producer.certifications && producer.certifications.map((cert) => (
                           <Badge 
-                            key={specialty} 
+                            key={cert} 
                             variant="secondary" 
                             className="text-xs"
                           >
-                            {specialty}
+                            {cert}
                           </Badge>
                         ))}
                       </div>
 
-                      <p className="text-xs text-gray-500">
-                        LCA data last updated: {producer.lastUpdated}
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <span>SKU: {producer.sku}</span>
+                        {producer.leadTimeDays && (
+                          <span className="ml-2">• Lead time: {producer.leadTimeDays} days</span>
+                        )}
                       </p>
                     </div>
 

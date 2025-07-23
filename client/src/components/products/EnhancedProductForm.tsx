@@ -2068,23 +2068,7 @@ export default function EnhancedProductForm({
             
             <Separator />
             
-            {/* Validation Error Summary */}
-            {Object.keys(validationErrors).length > 0 && (
-              <Card className="p-4 border-red-200 bg-red-50">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="w-4 h-4 text-red-600" />
-                  <h4 className="font-medium text-red-900">Validation Errors</h4>
-                </div>
-                <div className="space-y-1">
-                  {Object.entries(validationErrors).map(([field, messages]) => (
-                    <div key={field} className="text-sm">
-                      <span className="font-medium text-red-800">{field}:</span>
-                      <span className="text-red-700 ml-1">{messages.join(', ')}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

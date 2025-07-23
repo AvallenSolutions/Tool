@@ -137,6 +137,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Supplier Products routes (public access for supplier selection)
+  app.get('/api/supplier-products/:category?', async (req, res) => {
+    try {
+      const { category } = req.params;
+      console.log('🔍 Received supplier product category:', category);
+      
+      const { db } = await import('./db');
+      const { verifiedSuppliers, supplierProducts } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      let query = db
+        .select({
+          id: supplierProducts.id,
+          productName: supplierProducts.productName,
+          productDescription: supplierProducts.productDescription,
+          sku: supplierProducts.sku,
+          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+          lcaDataJson: supplierProducts.lcaDataJson,
+          productAttributes: supplierProducts.productAttributes,
+          basePrice: supplierProducts.basePrice,
+          currency: supplierProducts.currency,
+          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+          leadTimeDays: supplierProducts.leadTimeDays,
+          certifications: supplierProducts.certifications,
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory,
+          location: verifiedSuppliers.location,
+          description: verifiedSuppliers.description
+        })
+        .from(supplierProducts)
+        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+        .where(eq(supplierProducts.isVerified, true));
+        
+      if (category) {
+        query = query.where(eq(verifiedSuppliers.supplierCategory, category));
+      }
+      
+      const products = await query;
+      console.log('✅ Found supplier products:', products.length);
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching supplier products:", error);
+      res.status(500).json({ message: "Failed to fetch supplier products" });
+    }
+  });
+
   // Product routes
   app.get('/api/products', isAuthenticated, async (req: any, res) => {
     try {
