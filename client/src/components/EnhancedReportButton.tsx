@@ -34,7 +34,7 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
 
   // Generate enhanced report mutation
   const generateMutation = useMutation({
-    mutationFn: () => apiRequest(`/api/reports/${reportId}/generate-enhanced`, { method: 'POST' }),
+    mutationFn: () => apiRequest('POST', `/api/reports/${reportId}/generate-enhanced`),
     onSuccess: () => {
       setIsGenerating(true);
       toast({
