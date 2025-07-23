@@ -52,19 +52,19 @@ export function LoadingTimerPopup({
 
   return (
     <Dialog open={isOpen} modal>
-      <DialogContent className="sm:max-w-md bg-[#209d50] border-green-600 text-white" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-md bg-white border-gray-200 text-gray-900 shadow-xl" onInteractOutside={(e) => e.preventDefault()}>
         <div className="flex flex-col items-center space-y-6 py-8">
           <div className="relative">
-            <Loader2 className="w-12 h-12 animate-spin text-avallen-green" />
+            <Loader2 className="w-12 h-12 animate-spin text-[#209d50]" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-avallen-green rounded-full animate-pulse" />
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-[#209d50] rounded-full animate-pulse" />
               </div>
             </div>
           </div>
           
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-slate-gray">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <p className="text-sm text-gray-600">{description}</p>
           </div>
           

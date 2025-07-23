@@ -14,6 +14,16 @@ export default function CreateEnhancedProduct() {
   const { toast } = useToast();
   const [isNavigating, setIsNavigating] = useState(false);
   
+  // Reset navigating state when component mounts and ensure cleanup
+  useEffect(() => {
+    setIsNavigating(false);
+    
+    // Cleanup function to reset state when component unmounts
+    return () => {
+      setIsNavigating(false);
+    };
+  }, []);
+  
   // Check both routes to determine if we're editing or creating
   const [matchEdit, paramsEdit] = useRoute('/app/products/:id/enhanced');
   const [matchCreate] = useRoute('/app/products/create/enhanced');
@@ -42,6 +52,9 @@ export default function CreateEnhancedProduct() {
     onSuccess: (product) => {
       console.log('✅ Product saved successfully:', product);
       
+      // Ensure navigation state is cleared
+      setIsNavigating(false);
+      
       try {
         // Invalidate queries safely
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -54,7 +67,7 @@ export default function CreateEnhancedProduct() {
           title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
           description: `${product.name} has been ${isEditMode ? 'updated' : 'created'} with comprehensive environmental data. All changes have been saved to the database.`,
           duration: 5000,
-          variant: "success",
+          variant: "default",
         });
         
         // Handle navigation - stay on enhanced form page instead of redirecting
@@ -69,6 +82,7 @@ export default function CreateEnhancedProduct() {
         }
       } catch (error) {
         console.error('❌ Error in success handler:', error);
+        setIsNavigating(false);
         toast({
           title: "Product Created",
           description: "Product was created successfully, but there was an issue with the interface. Refreshing...",
@@ -80,10 +94,12 @@ export default function CreateEnhancedProduct() {
     },
     onError: (error) => {
       console.error("❌ Error saving product:", error);
+      // Ensure navigation state is cleared on error
+      setIsNavigating(false);
       toast({
         title: "❌ Error",
         description: `Failed to ${isEditMode ? 'update' : 'create'} product. Please try again.`,
-        variant: "success", // Using green background for consistency
+        variant: "destructive",
       });
     },
   });
