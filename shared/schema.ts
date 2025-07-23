@@ -264,9 +264,26 @@ export const verifiedSuppliers = pgTable("verified_suppliers", {
   website: varchar("website", { length: 255 }),
   contactEmail: varchar("contact_email", { length: 255 }),
   description: text("description"),
-  location: varchar("location"), // Country or region
+  location: varchar("location"), // Country or region (legacy field)
   
-  // Verification status
+  // NEW COLUMNS FOR SUPPLIER DATA CAPTURE WORKFLOWS
+  submittedBy: varchar("submitted_by", { length: 50 }).notNull().default('ADMIN'), // 'ADMIN', 'SUPPLIER', 'CLIENT'
+  verificationStatus: varchar("verification_status", { length: 50 }).notNull().default('pending_review'), // 'pending_review', 'verified', 'client_provided'
+  submittedByUserId: varchar("submitted_by_user_id").references(() => users.id), // User who submitted the data
+  submittedByCompanyId: integer("submitted_by_company_id").references(() => companies.id), // Company that submitted (for CLIENT submissions)
+  
+  // ADDRESS INFORMATION FOR GEOCODING
+  addressStreet: varchar("address_street", { length: 255 }),
+  addressCity: varchar("address_city", { length: 100 }),
+  addressPostalCode: varchar("address_postal_code", { length: 50 }),
+  addressCountry: varchar("address_country", { length: 100 }),
+  
+  // GEOCODED COORDINATES
+  latitude: decimal("latitude", { precision: 9, scale: 6 }), // GPS latitude for distance calculation
+  longitude: decimal("longitude", { precision: 9, scale: 6 }), // GPS longitude for distance calculation
+  geocodedAt: timestamp("geocoded_at"), // When coordinates were last updated
+  
+  // Legacy verification status (keeping for backward compatibility)
   isVerified: boolean("is_verified").notNull().default(false),
   verifiedBy: varchar("verified_by").references(() => users.id),
   verifiedAt: timestamp("verified_at"),
@@ -290,6 +307,11 @@ export const supplierProducts = pgTable("supplier_products", {
   hasPrecalculatedLca: boolean("has_precalculated_lca").notNull().default(false),
   lcaDataJson: jsonb("lca_data_json"), // Pre-calculated LCA results
   productAttributes: jsonb("product_attributes"), // Raw material data for calculation
+  
+  // NEW: Data capture workflow fields
+  submittedBy: varchar("submitted_by", { length: 50 }).notNull().default('ADMIN'), // 'ADMIN', 'SUPPLIER', 'CLIENT'
+  submittedByUserId: varchar("submitted_by_user_id").references(() => users.id),
+  submittedByCompanyId: integer("submitted_by_company_id").references(() => companies.id),
   
   // Verification and quality
   isVerified: boolean("is_verified").notNull().default(false),

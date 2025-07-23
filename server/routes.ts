@@ -1137,6 +1137,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add supplier data capture routes (temporarily disabled until authentication is properly configured)
+  // const supplierDataCaptureRoutes = require('./routes/supplierDataCapture').default;
+  // app.use('/api/supplier-data-capture', supplierDataCaptureRoutes);
+
   const httpServer = createServer(app);
   return httpServer;
 }
