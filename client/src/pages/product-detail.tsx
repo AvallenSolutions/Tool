@@ -9,8 +9,26 @@ import Header from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calculator, Package, Leaf, Droplets, Scale, Edit3 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  ArrowLeft, 
+  Calculator, 
+  Package, 
+  Leaf, 
+  Droplets, 
+  Scale, 
+  Edit3, 
+  Award,
+  Factory,
+  Truck,
+  Recycle,
+  ChefHat,
+  TreePine,
+  Globe,
+  ExternalLink,
+  TrendingUp,
+  BarChart3
+} from "lucide-react";
 import { Product } from "@shared/schema";
 import LCACalculationCard from "@/components/lca/LCACalculationCard";
 
@@ -22,8 +40,29 @@ export default function ProductDetail() {
   const queryClient = useQueryClient();
 
   // Fetch product data
-  const { data: product, isLoading: productLoading } = useQuery({
+  const { data: product, isLoading: productLoading } = useQuery<Product>({
     queryKey: ["/api/products", id],
+    enabled: isAuthenticated && !!id,
+    retry: false,
+  });
+
+  // Fetch product inputs/suppliers
+  const { data: productInputs, isLoading: inputsLoading } = useQuery<any[]>({
+    queryKey: ["/api/product-inputs", id],
+    enabled: isAuthenticated && !!id,
+    retry: false,
+  });
+
+  // Fetch supplier products linked to this product
+  const { data: supplierProducts, isLoading: supplierProductsLoading } = useQuery<any[]>({
+    queryKey: ["/api/supplier-products", "by-product", id],
+    enabled: isAuthenticated && !!id,
+    retry: false,
+  });
+
+  // Fetch LCA history for this product
+  const { data: lcaHistory, isLoading: lcaLoading } = useQuery<any[]>({
+    queryKey: ["/api/lca/product", id, "history"],
     enabled: isAuthenticated && !!id,
     retry: false,
   });
@@ -63,7 +102,7 @@ export default function ProductDetail() {
     },
   });
 
-  if (isLoading || productLoading) {
+  if (isLoading || productLoading || inputsLoading || supplierProductsLoading || lcaLoading) {
     return (
       <div className="min-h-screen bg-lightest-gray flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-avallen-green border-t-transparent rounded-full" />
@@ -144,214 +183,383 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Product overview */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Product image and basic info */}
-              <Card className="lg:col-span-1">
+            {/* LCA Headline Metrics */}
+            {(product.carbonFootprint || product.waterFootprint || (lcaHistory && lcaHistory.length > 0)) && (
+              <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-l-4 border-l-avallen-green">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Package className="w-5 h-5 text-avallen-green" />
-                    Product Overview
+                    <BarChart3 className="w-5 h-5 text-avallen-green" />
+                    Environmental Impact Summary
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Product image */}
-                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    {product.packShotUrl ? (
-                      <img 
-                        src={product.packShotUrl} 
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <Package className="w-12 h-12" />
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {product.carbonFootprint && (
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-avallen-green">
+                          {parseFloat(product.carbonFootprint.toString()).toFixed(2)}
+                        </div>
+                        <div className="text-sm text-gray-600">kg CO₂-eq per unit</div>
+                        <div className="text-xs text-gray-500 mt-1">Carbon Footprint</div>
                       </div>
                     )}
-                  </div>
-                  
-                  {/* Basic info */}
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Product Name</label>
-                      <p className="text-lg font-semibold text-slate-gray">{product.name}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">SKU</label>
-                        <p className="font-medium text-slate-gray">{product.sku}</p>
+                    {product.waterFootprint && (
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-blue-600">
+                          {parseFloat(product.waterFootprint.toString()).toFixed(0)}
+                        </div>
+                        <div className="text-sm text-gray-600">liters per unit</div>
+                        <div className="text-xs text-gray-500 mt-1">Water Footprint</div>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Type</label>
-                        <Badge variant="outline" className="capitalize">
-                          {product.type || 'Not specified'}
-                        </Badge>
+                    )}
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-purple-600">
+                        {lcaHistory?.length || 0}
                       </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Volume</label>
-                        <p className="font-medium text-slate-gray">{product.volume || 'Not specified'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Status</label>
-                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                          {product.status || 'Active'}
-                        </Badge>
-                      </div>
+                      <div className="text-sm text-gray-600">assessments completed</div>
+                      <div className="text-xs text-gray-500 mt-1">LCA History</div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+            )}
 
-              {/* Detailed information */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Production Information */}
+            {/* Main Content with Tabs */}
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
+                <TabsTrigger value="packaging">Packaging</TabsTrigger>
+                <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+                <TabsTrigger value="certifications">Certifications</TabsTrigger>
+                <TabsTrigger value="impact">Impact</TabsTrigger>
+              </TabsList>
+
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Product Image & Basic Info */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-avallen-green" />
+                        Product Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                        {product.packShotUrl ? (
+                          <img 
+                            src={product.packShotUrl} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <Package className="w-12 h-12" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Product Name</label>
+                          <p className="text-lg font-semibold text-slate-gray">{product.name}</p>
+                        </div>
+                    
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">SKU</label>
+                            <p className="font-medium text-slate-gray">{product.sku}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Type</label>
+                            <Badge variant="outline" className="capitalize">
+                              {product.type || 'Not specified'}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Volume</label>
+                            <p className="font-medium text-slate-gray">{product.volume || 'Not specified'}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Status</label>
+                            <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                              {product.status || 'Active'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Production Information */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Factory className="w-5 h-5 text-avallen-green" />
+                          Production Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Production Model</label>
+                            <p className="font-medium text-slate-gray capitalize">
+                              {product.productionModel || 'Not specified'}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Annual Production</label>
+                            <p className="font-medium text-slate-gray">
+                              {product.annualProductionVolume ? 
+                                `${product.annualProductionVolume} ${product.productionUnit || 'units'}` : 
+                                'Not specified'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {product.description && (
+                          <div className="mt-4">
+                            <label className="text-sm font-medium text-gray-600">Description</label>
+                            <p className="mt-1 text-slate-gray">{product.description}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Quick Ingredients Preview */}
+                    {product.ingredients && Array.isArray(product.ingredients) && product.ingredients.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Droplets className="w-5 h-5 text-avallen-green" />
+                            Key Ingredients
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {product.ingredients.slice(0, 3).map((ingredient: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <span className="font-medium text-slate-gray">{ingredient.name}</span>
+                                <span className="text-sm text-gray-600">
+                                  {ingredient.amount} {ingredient.unit}
+                                </span>
+                              </div>
+                            ))}
+                            {product.ingredients.length > 3 && (
+                              <p className="text-sm text-gray-500 text-center pt-2">
+                                +{product.ingredients.length - 3} more ingredients
+                              </p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Ingredients Tab */}
+              <TabsContent value="ingredients" className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Scale className="w-5 h-5 text-avallen-green" />
-                      Production Information
+                      <ChefHat className="w-5 h-5 text-avallen-green" />
+                      Recipe & Ingredients
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Production Model</label>
-                        <p className="font-medium text-slate-gray capitalize">
-                          {product.productionModel || 'Not specified'}
-                        </p>
+                    {product.ingredients && Array.isArray(product.ingredients) && product.ingredients.length > 0 ? (
+                      <div className="space-y-4">
+                        {product.ingredients.map((ingredient: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <h4 className="font-semibold text-lg">{ingredient.name}</h4>
+                              <Badge variant="outline" className="capitalize">{ingredient.type}</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                              <div>
+                                <label className="text-gray-600">Amount</label>
+                                <p className="font-medium">{ingredient.amount} {ingredient.unit}</p>
+                              </div>
+                              {ingredient.origin && (
+                                <div>
+                                  <label className="text-gray-600">Origin</label>
+                                  <p className="font-medium">{ingredient.origin}</p>
+                                </div>
+                              )}
+                              {ingredient.supplier && (
+                                <div>
+                                  <label className="text-gray-600">Supplier</label>
+                                  <p className="font-medium">{ingredient.supplier}</p>
+                                </div>
+                              )}
+                              <div>
+                                <label className="text-gray-600">Organic</label>
+                                <p className="font-medium">{ingredient.organicCertified ? '✓ Yes' : '✗ No'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Annual Production</label>
-                        <p className="font-medium text-slate-gray">
-                          {product.annualProductionVolume ? 
-                            `${product.annualProductionVolume} ${product.productionUnit || 'units'}` : 
-                            'Not specified'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {product.description && (
-                      <div className="mt-4">
-                        <label className="text-sm font-medium text-gray-600">Description</label>
-                        <p className="mt-1 text-slate-gray">{product.description}</p>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <ChefHat className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>No ingredients information available</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
 
-                {/* Ingredients */}
-                {product.ingredients && Array.isArray(product.ingredients) && product.ingredients.length > 0 && (
+              {/* Packaging Tab */}
+              <TabsContent value="packaging" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Primary Container */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Droplets className="w-5 h-5 text-avallen-green" />
-                        Ingredients & Recipe
+                        <Package className="w-5 h-5 text-avallen-green" />
+                        Primary Container
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {product.ingredients.map((ingredient, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="font-medium text-slate-gray">{ingredient.name}</span>
-                            <span className="text-sm text-gray-600">
-                              {ingredient.amount} {ingredient.unit}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                    <CardContent className="space-y-4">
+                      {product.bottleMaterial && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Material</label>
+                          <p className="font-medium text-slate-gray capitalize">{product.bottleMaterial}</p>
+                        </div>
+                      )}
+                      {product.bottleWeight && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Weight</label>
+                          <p className="font-medium text-slate-gray">{product.bottleWeight} g</p>
+                        </div>
+                      )}
+                      {product.bottleRecycledContent && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Recycled Content</label>
+                          <p className="font-medium text-slate-gray">{product.bottleRecycledContent}%</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
-                )}
 
-                {/* Packaging Materials */}
+                  {/* Labels & Printing */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-avallen-green" />
+                        Labels & Printing
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {product.labelMaterial && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Label Material</label>
+                          <p className="font-medium text-slate-gray capitalize">{product.labelMaterial}</p>
+                        </div>
+                      )}
+                      {product.labelWeight && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Label Weight</label>
+                          <p className="font-medium text-slate-gray">{product.labelWeight} g</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Suppliers Tab */}
+              <TabsContent value="suppliers" className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Package className="w-5 h-5 text-avallen-green" />
-                      Packaging Materials
+                      <Truck className="w-5 h-5 text-avallen-green" />
+                      Linked Supplier Products
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {/* Bottle */}
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold text-slate-gray mb-3">Bottle/Container</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Material</label>
-                            <p className="font-medium text-slate-gray capitalize">
-                              {product.bottleMaterial || 'Not specified'}
-                            </p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Weight</label>
-                            <p className="font-medium text-slate-gray">
-                              {product.bottleWeight ? `${product.bottleWeight}g` : 'Not specified'}
-                            </p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Recycled Content</label>
-                            <p className="font-medium text-slate-gray">
-                              {product.bottleRecycledContent ? `${product.bottleRecycledContent}%` : 'Not specified'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Label */}
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold text-slate-gray mb-3">Label</h4>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Material</label>
-                            <p className="font-medium text-slate-gray capitalize">
-                              {product.labelMaterial || 'Not specified'}
-                            </p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Weight</label>
-                            <p className="font-medium text-slate-gray">
-                              {product.labelWeight ? `${product.labelWeight}g` : 'Not specified'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Closure */}
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold text-slate-gray mb-3">Closure</h4>
-                        {product.hasBuiltInClosure ? (
-                          <p className="text-slate-gray">Built-in closure (integrated with container)</p>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Material</label>
-                              <p className="font-medium text-slate-gray capitalize">
-                                {product.closureMaterial || 'Not specified'}
-                              </p>
+                    {supplierProducts && supplierProducts.length > 0 ? (
+                      <div className="space-y-4">
+                        {supplierProducts.map((supplierProduct: any) => (
+                          <div key={supplierProduct.id} className="border rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold">{supplierProduct.productName}</h4>
+                                <p className="text-sm text-gray-600">{supplierProduct.supplierName}</p>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                View Details
+                              </Button>
                             </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Weight</label>
-                              <p className="font-medium text-slate-gray">
-                                {product.closureWeight ? `${product.closureWeight}g` : 'Not specified'}
-                              </p>
+                            {supplierProduct.productDescription && (
+                              <p className="text-sm text-gray-700 mb-2">{supplierProduct.productDescription}</p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              {supplierProduct.sku && <span>SKU: {supplierProduct.sku}</span>}
+                              {supplierProduct.hasPrecalculatedLca && (
+                                <Badge variant="outline" className="text-green-600">
+                                  <Leaf className="w-3 h-3 mr-1" />
+                                  LCA Available
+                                </Badge>
+                              )}
                             </div>
                           </div>
-                        )}
+                        ))}
                       </div>
-                    </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Truck className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>No supplier products linked</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
+              </TabsContent>
 
-                {/* LCA Analysis */}
-                <LCACalculationCard product={product} />
-              </div>
-            </div>
+              {/* Certifications Tab */}
+              <TabsContent value="certifications" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Award className="w-5 h-5 text-avallen-green" />
+                      Certifications & Awards
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {product.certifications && Array.isArray(product.certifications) && product.certifications.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {product.certifications.map((cert: string, index: number) => (
+                          <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                            <Award className="w-5 h-5 text-avallen-green" />
+                            <span className="font-medium">{cert}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Award className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>No certifications recorded</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Impact Tab */}
+              <TabsContent value="impact" className="space-y-6">
+                <LCACalculationCard product={product as Product} />
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>
