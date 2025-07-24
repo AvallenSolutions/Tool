@@ -70,8 +70,9 @@ export default function GreenwashGuardian() {
         dmccSection: issue.dmccSection
       }));
 
-      const analysisData = {
-        overallRisk: result.status === 'compliant' ? 'low' : result.status === 'warning' ? 'medium' : 'high',
+      const analysisData: AnalysisResult = {
+        overallRisk: result.status === 'compliant' ? 'low' as const : 
+                     result.status === 'warning' ? 'medium' as const : 'high' as const,
         riskScore: result.score,
         findings,
         summary: result.recommendations.join('. ')
@@ -358,6 +359,7 @@ export default function GreenwashGuardian() {
             {/* Detailed Findings */}
             <div className="space-y-4">
               <h3 className="text-xl font-semibold">Detailed Findings</h3>
+              <pre className="text-xs bg-gray-100 p-2">{JSON.stringify(analysisResult.findings, null, 2)}</pre>
               {analysisResult.findings.map((finding, index) => (
                 <Card key={index} className={`bg-white border-l-4 ${
                   finding.riskLevel === 'red' ? 'border-l-red-500' : 
