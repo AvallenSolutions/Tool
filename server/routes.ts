@@ -40,18 +40,18 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
       })
     },
     {
-      pattern: /\b(?:climate[- ]positive|carbon[- ]positive)\b/gi,
-      severity: 'red',
-      riskLevel: 80,
-      dmccSection: 'Section 217 - Misleading Environmental Claims',
+      pattern: /([^.!?]*(?:climate[- ]positive|carbon[- ]positive)[^.!?]*[.!?])/gi,
+      severity: 'amber',
+      riskLevel: 70,
+      dmccSection: 'Be truthful and accurate',
       findingTemplate: (match: string) => ({
-        type: 'critical',
-        category: 'Ambition Calibration',
-        claim: match,
-        description: `The term "${match}" is not clearly defined or substantiated with specific metrics and third-party verification.`,
-        solution: 'Provide detailed evidence or third-party certification to substantiate the climate positive claim.',
-        violationRisk: 80,
-        dmccSection: 'Section 217 - Misleading Environmental Claims'
+        type: 'warning',
+        category: 'Ambition Calibration', 
+        claim: match.trim(),
+        description: `The term 'climate-positive' is not clearly defined or substantiated with specific metrics or third-party verification.`,
+        solution: `Provide detailed evidence or third-party certification to substantiate the 'climate-positive' claim.`,
+        violationRisk: 70,
+        dmccSection: 'Be truthful and accurate'
       })
     },
     {
@@ -115,10 +115,10 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
       })
     },
     {
-      pattern: /\b(?:avallen\s+)?(?:only\s+uses?|uses?\s+only)\s+[\d.]+L?\s+(?:of\s+)?water.*?(?:\d+%?-\d+%?|\d+%?)\s+less\s+than.*?(?:industry\s+average|average)/gi,
+      pattern: /([^.!?]*\b(?:only\s+uses?|uses?\s+only)\s+[\d.]+L?\s+(?:of\s+)?water[^.!?]*(?:\d+%?-\d+%?|\d+%?)\s+less\s+than[^.!?]*(?:industry\s+average|average)[^.!?]*[.!?])/gi,
       severity: 'green',
       riskLevel: 30,
-      dmccSection: 'Section 218 - Substantiation',
+      dmccSection: 'Be substantiated',
       findingTemplate: (match: string) => ({
         type: 'compliant',
         category: 'Water Usage Claims',
@@ -1727,7 +1727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (response.ok) {
             const html = await response.text();
-            const cheerio = require('cheerio');
+            const cheerio = await import('cheerio');
             const $ = cheerio.load(html);
             
             // Remove script and style elements
@@ -1754,10 +1754,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // For demo: if website analysis and content is still just a URL, add sample environmental claims
-      if (type === 'website' && analysisContent === content && content.includes('avallen')) {
-        analysisContent = "Avallen Spirits climate positive and carbon neutral apple brandy with sustainable production, eco-friendly packaging, and B Corp certification available on our website";
-        console.log(`Using sample environmental claims for demo analysis`);
+      // If website scraping failed and we only have URL, return error
+      if (type === 'website' && analysisContent === content && content.includes('.')) {
+        return res.status(400).json({ 
+          error: 'Unable to scrape website content. Please provide text content directly or try a different URL.' 
+        });
       }
       
       const result = await analyzeGreenwashCompliance(type, analysisContent);
