@@ -1639,11 +1639,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`Starting ${type} analysis for GreenwashGuardian`);
+      console.log(`Content to analyze: "${content}"`);
       
-      // For demo purposes, we'll create a comprehensive mock analysis
-      // In production, this would integrate with the Anthropic API and web scraping
       const result = await analyzeGreenwashCompliance(type, content);
 
+      console.log(`Analysis result:`, JSON.stringify(result, null, 2));
+      console.log(`Issues found: ${result.issues?.length || 0}`);
       console.log(`Successfully completed GreenwashGuardian analysis`);
       res.json(result);
     } catch (error) {

@@ -60,6 +60,10 @@ export default function GreenwashGuardian() {
       return response.json();
     },
     onSuccess: (result) => {
+      console.log('Backend result:', result);
+      console.log('Issues found:', result.issues);
+      console.log('Issues length:', result.issues?.length);
+      
       // Convert backend issues to frontend findings format
       const findings: ComplianceFinding[] = (result.issues || []).map((issue: any) => ({
         riskLevel: issue.type === 'critical' ? 'red' : issue.type === 'warning' ? 'amber' : 'green',
@@ -69,6 +73,9 @@ export default function GreenwashGuardian() {
         violationRisk: issue.violationRisk || (issue.type === 'critical' ? 80 : issue.type === 'warning' ? 50 : 20),
         dmccSection: issue.dmccSection
       }));
+      
+      console.log('Converted findings:', findings);
+      console.log('Findings length:', findings.length);
 
       const analysisData: AnalysisResult = {
         overallRisk: result.status === 'compliant' ? 'low' as const : 

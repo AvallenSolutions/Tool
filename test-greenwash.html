@@ -114,6 +114,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(analyzeContent, 1000);
         });
+        
+        // Debug function to see what browser gets vs curl
+        window.debugAnalysis = async function() {
+            const response = await fetch('/api/greenwash-guardian/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'text', content: 'climate positive' })
+            });
+            const result = await response.json();
+            console.log('Browser result:', result);
+            console.log('Issues:', result.issues);
+            console.log('Issues length:', result.issues?.length);
+            return result;
+        };
     </script>
 </body>
 </html>
