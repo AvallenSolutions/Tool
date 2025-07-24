@@ -18,7 +18,8 @@ import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
 import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
-import SupplierNetwork from "@/pages/SupplierNetwork";
+import SupplierNetwork from "@/pages/SupplierNetwork";  
+import SupplierOnboarding from "@/pages/supplier-onboarding";
 import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
 
@@ -45,6 +46,7 @@ function Router() {
           <Route path="/app/reports" component={Reports} />
 
           <Route path="/app/supplier-network" component={SupplierNetwork} />
+          <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
           <Route path="/app/lca" component={LCAPage} />
           <Route path="/app/settings" component={Settings} />
           <Route path="/app/admin" component={AdminDashboard} />
