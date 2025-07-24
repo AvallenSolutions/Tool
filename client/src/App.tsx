@@ -26,34 +26,27 @@ import TestRunner from "@/pages/TestRunner";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/app/dashboard" component={Dashboard} />
-          <Route path="/app/onboarding" component={Onboarding} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/app/dashboard" component={Dashboard} />
-          <Route path="/app/products" component={Products} />
-          <Route path="/app/products/create/enhanced" component={CreateEnhancedProduct} />
-          <Route path="/app/products/:id/enhanced" component={CreateEnhancedProduct} />
-          <Route path="/app/products/:id/edit" component={ProductEdit} />
-          <Route path="/app/products/:id" component={ProductDetail} />
-          <Route path="/app/reports" component={Reports} />
-
-          <Route path="/app/supplier-network" component={SupplierNetwork} />
-          <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
-          <Route path="/app/lca" component={LCAPage} />
-          <Route path="/app/settings" component={Settings} />
-          <Route path="/app/admin" component={AdminDashboard} />
-          <Route path="/app/test" component={TestRunner} />
-          <Route path="/app/onboarding" component={Onboarding} />
-        </>
-      )}
+      <Route path="/" component={isAuthenticated ? Home : Landing} />
+      <Route path="/app/dashboard" component={Dashboard} />
+      <Route path="/app/onboarding" component={Onboarding} />
+      <Route path="/app/products" component={Products} />
+      <Route path="/app/products/create/enhanced" component={CreateEnhancedProduct} />
+      <Route path="/app/products/:id/enhanced" component={CreateEnhancedProduct} />
+      <Route path="/app/products/:id/edit" component={ProductEdit} />
+      <Route path="/app/products/:id" component={ProductDetail} />
+      <Route path="/app/reports" component={Reports} />
+      <Route path="/app/supplier-network" component={SupplierNetwork} />
+      <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
+      <Route path="/app/lca" component={LCAPage} />
+      <Route path="/app/settings" component={Settings} />
+      <Route path="/app/admin" component={AdminDashboard} />
+      <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
       <Route component={NotFound} />
     </Switch>

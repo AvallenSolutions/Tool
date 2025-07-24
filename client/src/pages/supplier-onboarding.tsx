@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import AutoDataExtraction from "@/components/suppliers/AutoDataExtraction";
+import PDFUploadExtraction from "@/components/suppliers/PDFUploadExtraction";
 import VerificationWorkflow from "@/components/suppliers/VerificationWorkflow";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -224,6 +225,15 @@ export default function SupplierOnboarding() {
             {currentStep === 1 && (
               <div className="space-y-6">
                 <AutoDataExtraction 
+                  onDataExtracted={handleAutoDataExtracted}
+                  disabled={submitMutation.isPending}
+                />
+                
+                <div className="text-center text-gray-500 font-medium">
+                  — OR —
+                </div>
+                
+                <PDFUploadExtraction 
                   onDataExtracted={handleAutoDataExtracted}
                   disabled={submitMutation.isPending}
                 />

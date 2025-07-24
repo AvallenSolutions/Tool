@@ -12,6 +12,7 @@ import { extractUtilityData, analyzeDocument } from "./anthropic";
 import { lcaService, LCAJobManager } from "./lca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
+import { PDFExtractionService } from "./services/PDFExtractionService";
 import path from "path";
 import fs from "fs";
 
@@ -1407,6 +1408,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         error: 'Internal server error occurred during web scraping' 
+      });
+    }
+  });
+
+  // PDF Upload and Extraction Routes
+  app.post('/api/suppliers/upload-pdf', upload.single('pdf'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          error: 'PDF file is required' 
+        });
+      }
+
+      // Validate file type
+      if (req.file.mimetype !== 'application/pdf') {
+        // Clean up uploaded file
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ 
+          error: 'Only PDF files are supported' 
+        });
+      }
+
+      console.log(`Starting PDF extraction for file: ${req.file.originalname}`);
+      const result = await PDFExtractionService.extractProductDataFromPDF(req.file.path, req.file.originalname);
+
+      // Clean up uploaded file after processing
+      fs.unlinkSync(req.file.path);
+
+      if (result.success) {
+        console.log(`Successfully extracted ${result.extractedFields.length} fields from PDF: ${req.file.originalname}`);
+        res.json({
+          success: true,
+          extractedData: result.data,
+          extractedFields: result.extractedFields,
+          totalFields: result.totalFields,
+          documentType: result.documentType,
+          confidence: result.confidence,
+          extractionRate: `${Math.round((result.extractedFields.length / result.totalFields) * 100)}%`
+        });
+      } else {
+        console.log(`Failed to extract data from PDF: ${req.file.originalname} - ${result.error}`);
+        res.status(400).json({
+          success: false,
+          error: result.error,
+          extractedFields: result.extractedFields,
+          totalFields: result.totalFields
+        });
+      }
+    } catch (error) {
+      // Clean up file if it exists and there was an error
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
+      console.error('Error in upload-pdf endpoint:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred during PDF processing' 
       });
     }
   });
