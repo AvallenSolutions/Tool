@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
 import { 
   Shield, 
   AlertTriangle, 
@@ -158,8 +160,12 @@ export default function GreenwashGuardian() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-lightest-gray flex">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="GreenwashGuardian" />
+        <main className="flex-1 p-8">
+          <div className="max-w-4xl mx-auto">
         
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-12">
@@ -273,6 +279,8 @@ export default function GreenwashGuardian() {
           </div>
         )}
 
+          </div>
+        </main>
       </div>
     </div>
   );
