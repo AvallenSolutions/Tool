@@ -6,7 +6,7 @@ import Stripe from "stripe";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, companies, reports } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, companies, reports, users } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -16,6 +16,7 @@ import { lcaService, LCAJobManager } from "./lca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
+import { adminRouter } from "./routes/admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-11-20.acacia",
@@ -32,19 +33,40 @@ export function registerRoutes(app: Express): Server {
   app.use(passport.session());
 
   // Auth user endpoint - must come BEFORE greenwash guardian routes
-  app.get('/api/auth/user', (req, res) => {
+  app.get('/api/auth/user', async (req, res) => {
     try {
       if (!req.isAuthenticated() || !req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
       const user = req.user as any;
+      // Get user role from database
+      const userId = user.claims?.sub;
+      let userRole = 'user';
+      
+      if (userId) {
+        try {
+          const [dbUser] = await db
+            .select({ role: users.role })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+          
+          if (dbUser) {
+            userRole = dbUser.role;
+          }
+        } catch (error) {
+          console.error('Error fetching user role:', error);
+        }
+      }
+
       const userInfo = {
-        id: user.claims?.sub,
+        id: userId,
         email: user.claims?.email,
         firstName: user.claims?.first_name,
         lastName: user.claims?.last_name,
         profileImageUrl: user.claims?.profile_image_url,
+        role: userRole,
       };
       
       return res.json(userInfo);
@@ -263,6 +285,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       });
     }
   });
+
+  // Register admin routes
+  app.use('/api/admin', adminRouter);
 
   const server = createServer(app);
   

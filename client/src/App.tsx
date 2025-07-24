@@ -18,6 +18,10 @@ import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
 import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminDashboardMain from "@/pages/admin/AdminDashboard";
+import SupplierManagement from "@/pages/admin/SupplierManagement";
+import LCAApprovals from "@/pages/admin/LCAApprovals";
+import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierNetwork from "@/pages/SupplierNetwork";  
 import SupplierOnboarding from "@/pages/supplier-onboarding";
 import GreenwashGuardian from "@/pages/GreenwashGuardian";
@@ -88,7 +92,10 @@ function Router() {
       <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
       <Route path="/app/lca" component={LCAPage} />
       <Route path="/app/settings" component={Settings} />
-      <Route path="/app/admin" component={AdminDashboard} />
+      <Route path="/app/admin" component={AdminDashboardMain} />
+      <Route path="/app/admin/suppliers" component={SupplierManagement} />
+      <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
+      <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
       <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
       <Route component={NotFound} />

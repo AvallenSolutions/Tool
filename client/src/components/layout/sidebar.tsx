@@ -18,9 +18,11 @@ export default function Sidebar() {
     { path: "/app/reports", label: "Reports", icon: FileText },
     { path: "/app/greenwash-guardian", label: "GreenwashGuardian", icon: Shield },
     { path: "/app/supplier-network", label: "Supplier Network", icon: Building2 },
-    { path: "/app/supplier-onboarding", label: "Add Supplier Data", icon: UserPlus },
     { path: "/app/settings", label: "Settings", icon: Settings },
-    { path: "/app/admin", label: "Admin", icon: Users },
+    // Admin-only items
+    ...(user && user.role === 'admin' ? [
+      { path: "/app/admin", label: "Admin Dashboard", icon: Users },
+    ] : []),
     { path: "/app/test", label: "Test Runner", icon: TestTube },
   ];
 

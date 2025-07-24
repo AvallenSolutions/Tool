@@ -36,6 +36,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
+  role: varchar("role", { length: 50 }).notNull().default("user"), // 'user' or 'admin'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -388,6 +389,10 @@ export const reports = pgTable("reports", {
   enhancedPdfFilePath: varchar("enhanced_pdf_file_path"),
   enhancedReportStatus: varchar("enhanced_report_status").default("not_generated"), // not_generated, generating, completed, failed
   totalCarbonFootprint: decimal("total_carbon_footprint", { precision: 10, scale: 3 }),
+  
+  // Admin approval fields
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

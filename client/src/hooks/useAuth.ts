@@ -9,9 +9,12 @@ export function useAuth() {
       id: "dev-user",
       email: "demo@avallen.com",
       firstName: "Demo",
-      lastName: "User"
+      lastName: "User",
+      profileImageUrl: "",
+      role: "admin" // Set as admin for testing
     },
     isLoading: false,
     isAuthenticated: true,
+    isAdmin: true, // Set to true for development testing
   };
 }
