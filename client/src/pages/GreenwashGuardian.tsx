@@ -16,7 +16,9 @@ import {
   Share2,
   Loader2,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Share,
+  Download
 } from "lucide-react";
 
 // Original GreenwashGuardian interfaces
@@ -335,111 +337,216 @@ export default function GreenwashGuardian() {
 
         {/* Step 3: Analysis Results */}
         {currentStep === 3 && analysisResult && (
-          <div className="space-y-8">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Analysis Results</h1>
-              <p className="text-lg text-gray-600">DMCC Act 2024 compliance assessment for your content</p>
-            </div>
-
-            {/* Overall Risk Score */}
-            <Card className="bg-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold">Overall Risk Assessment</h3>
-                  <Badge className={getRiskColor(analysisResult.overallRisk)}>
-                    {analysisResult.overallRisk.charAt(0).toUpperCase() + analysisResult.overallRisk.slice(1)} Risk
-                  </Badge>
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Left Side - Analysis Results */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* DMCC Act Notice */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <h3 className="font-semibold text-blue-900">DMCC Act Now Active</h3>
                 </div>
-                
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Compliance Score</span>
-                    <span>{analysisResult.riskScore}%</span>
+                <p className="text-sm text-blue-800">
+                  The consumer protection provisions came into force on 6 April 2025. CMA can now fine up to 10% of global turnover for misleading environmental claims.
+                </p>
+              </div>
+
+              {/* Compliance Analysis Results Header */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">Compliance Analysis Results</h2>
+                      <p className="text-sm text-gray-600 mt-1">{websiteUrl || 'Content analysis'}</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                        <Share className="w-4 h-4" />
+                        <span>Share</span>
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex items-center space-x-2 bg-green-600 text-white hover:bg-green-700">
+                        <Download className="w-4 h-4" />
+                        <span>Download Report</span>
+                      </Button>
+                    </div>
                   </div>
-                  <Progress value={analysisResult.riskScore} className="h-2" />
                 </div>
-                
-                <p className="text-gray-600">{analysisResult.summary}</p>
-              </CardContent>
-            </Card>
 
-            {/* Detailed Findings */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Detailed Findings</h3>
-              {analysisResult.findings.map((finding, index) => (
-                <Card key={index} className={`bg-white border-l-4 ${
-                  finding.riskLevel === 'red' ? 'border-l-red-500' : 
-                  finding.riskLevel === 'amber' ? 'border-l-yellow-500' : 
-                  'border-l-green-500'
-                }`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <Badge className={`${
-                          finding.riskLevel === 'red' ? 'bg-red-100 text-red-800 border-red-200' : 
-                          finding.riskLevel === 'amber' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
-                          'bg-green-100 text-green-800 border-green-200'
-                        }`}>
-                          {finding.riskLevel === 'red' ? 'RED RISK' : 
-                           finding.riskLevel === 'amber' ? 'AMBER RISK' : 
-                           'GREEN RISK'}
-                        </Badge>
+                {/* Overall Risk Assessment */}
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Overall Risk Assessment</h3>
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-amber-600">MEDIUM RISK</div>
+                      <div className="text-lg text-amber-600">({analysisResult.riskScore}%)</div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-3 h-3 bg-green-500 rounded"></div>
+                        <span className="text-sm text-gray-600">Low Risk</span>
+                        <div className="w-3 h-3 bg-amber-500 rounded ml-4"></div>
+                        <span className="text-sm text-gray-600">Medium Risk</span>
+                        <div className="w-3 h-3 bg-red-500 rounded ml-4"></div>
+                        <span className="text-sm text-gray-600">High Risk</span>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500 mb-1">DMCC Violation Risk:</div>
-                        <div className="font-semibold text-sm">{finding.violationRisk}%</div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-amber-500 h-2 rounded-full" style={{width: `${analysisResult.riskScore}%`}}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Risk Breakdown */}
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">GREEN</span>
+                      </div>
+                      <div className="text-xs text-gray-600 mb-1">Compliant claims with proper substantiation</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {analysisResult.findings.filter(f => f.riskLevel === 'green').length}
                       </div>
                     </div>
                     
-                    <div className="mb-3">
-                      <div className="font-medium text-gray-900 mb-2">
-                        {finding.claim}
+                    <div className="text-center p-4 bg-amber-50 rounded-lg">
+                      <div className="w-8 h-8 bg-amber-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-semibold text-xs">AMBER</span>
                       </div>
-                      {finding.issue && (
-                        <div className="text-sm text-gray-600 mb-2">
-                          <span className="font-medium">Issue:</span> {finding.issue}
-                        </div>
-                      )}
+                      <div className="text-xs text-gray-600 mb-1">Requires clarification or additional evidence</div>
+                      <div className="text-2xl font-bold text-amber-600">
+                        {analysisResult.findings.filter(f => f.riskLevel === 'amber').length}
+                      </div>
                     </div>
                     
-                    {finding.suggestion && (
-                      <div className="mb-3">
-                        <div className="text-sm">
-                          <span className="font-medium text-green-700">Suggested Edit:</span>
-                          <span className="text-gray-700 ml-1">{finding.suggestion}</span>
+                    <div className="text-center p-4 bg-red-50 rounded-lg">
+                      <div className="w-8 h-8 bg-red-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">RED</span>
+                      </div>
+                      <div className="text-xs text-gray-600 mb-1">Potentially misleading claims requiring immediate attention</div>
+                      <div className="text-2xl font-bold text-red-600">
+                        {analysisResult.findings.filter(f => f.riskLevel === 'red').length}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detailed Findings */}
+                  <div className="space-y-4">
+                    {analysisResult.findings.map((finding, index) => (
+                      <div key={index} className={`border-l-4 bg-white rounded-r-lg shadow-sm border ${
+                        finding.riskLevel === 'red' ? 'border-l-red-500 border-red-100' : 
+                        finding.riskLevel === 'amber' ? 'border-l-amber-500 border-amber-100' : 
+                        'border-l-green-500 border-green-100'
+                      }`}>
+                        <div className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="outline" className={`${
+                                finding.riskLevel === 'red' ? 'text-red-700 border-red-300' : 
+                                finding.riskLevel === 'amber' ? 'text-amber-700 border-amber-300' : 
+                                'text-green-700 border-green-300'
+                              }`}>
+                                {finding.riskLevel === 'red' ? 'HIGH RISK' : 
+                                 finding.riskLevel === 'amber' ? 'MEDIUM RISK' : 
+                                 'LOW RISK'}
+                              </Badge>
+                              <span className="text-sm font-medium text-gray-900">{finding.claim}</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs text-gray-500">Violation Risk</div>
+                              <div className="font-semibold text-sm">{finding.violationRisk}%</div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-sm text-gray-700 mb-3">
+                            {finding.issue}
+                          </div>
+                          
+                          {finding.suggestion && (
+                            <div className="bg-gray-50 rounded p-3 mb-3">
+                              <div className="text-xs font-medium text-gray-600 mb-1">RECOMMENDED ACTION</div>
+                              <div className="text-sm text-gray-700">{finding.suggestion}</div>
+                            </div>
+                          )}
+                          
+                          {finding.dmccSection && (
+                            <div className="text-xs text-gray-500">
+                              <span className="font-medium">DMCC Reference:</span> {finding.dmccSection}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
-                    
-                    {finding.dmccSection && (
-                      <div className="text-xs text-gray-500">
-                        <span className="font-medium">DMCC Section:</span> {finding.dmccSection}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-between pt-8">
-              <Button 
-                variant="outline" 
-                onClick={handleBack}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </Button>
-              
-              <Button 
-                onClick={() => setCurrentStep(4)}
-                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
-              >
-                <span>Review & Download</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+            {/* Right Sidebar */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* DMCC 2024 Quick Reference */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="font-semibold text-gray-900 mb-4">DMCC 2024 Quick Reference</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-red-600 mb-1">Maximum Penalties</h4>
+                    <p className="text-xs text-gray-600">Up to 10% of global turnover for consumer protection breaches</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-600 mb-1">Enforcement Active</h4>
+                    <p className="text-xs text-gray-600">CMA can investigate and fine directly without court proceedings</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-green-600 mb-1">Green Claims Code</h4>
+                    <p className="text-xs text-gray-600">6 core principles: truthful, clear, substantiated, comparable, consider full lifecycle, meaningful</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Analysis */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="font-semibold text-gray-900 mb-4">Recent Analysis</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 text-sm">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                    <span className="text-gray-600">https://avallenspirits.com</span>
+                  </div>
+                  <div className="text-xs text-gray-500">Just now</div>
+                </div>
+              </div>
+
+              {/* Expert Review Call-to-Action */}
+              <div className="bg-green-50 rounded-lg border border-green-200 p-4">
+                <h3 className="font-semibold text-green-900 mb-2">Need Expert Review?</h3>
+                <p className="text-sm text-green-800 mb-3">Get professional compliance consulting from our sustainability experts.</p>
+                <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
+                  Contact Avallen Solutions
+                </Button>
+              </div>
             </div>
           </div>
+
+          <div className="lg:col-span-3 flex justify-between pt-8">
+            <Button 
+              variant="outline" 
+              onClick={handleBack}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </Button>
+            
+            <Button 
+              onClick={() => setCurrentStep(4)}
+              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+            >
+              <span>Review & Download</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+          </>
         )}
 
         {/* Step 4: Review & Download */}
