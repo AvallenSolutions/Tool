@@ -1,7 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
+import fs from "fs";
 import Stripe from "stripe";
+import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, companies, reports } from "@shared/schema";
@@ -267,15 +269,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
+      // Check if user is authenticated
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
       const userId = req.user.claims.sub;
       const user = await dbStorage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  // Login route
+  app.get('/api/login', (req, res, next) => {
+    const domains = process.env.REPLIT_DOMAINS!.split(",");
+    const domain = domains[0]; // Use first domain
+    const strategyName = `replitauth:${domain}`;
+    
+    (req as any).session.returnTo = req.query.returnTo || '/app';
+    
+    // Use passport authenticate with the correct strategy name
+    passport.authenticate(strategyName, {
+      scope: 'openid email profile offline_access'
+    })(req, res, next);
+  });
+
+  // Callback route
+  app.get('/api/callback', (req, res, next) => {
+    const domains = process.env.REPLIT_DOMAINS!.split(",");
+    const domain = domains[0]; // Use first domain  
+    const strategyName = `replitauth:${domain}`;
+    
+    passport.authenticate(strategyName, {
+      failureRedirect: '/',
+      successReturnToOrRedirect: '/app'
+    })(req, res, next);
+  });
+
+  // Logout route
+  app.get('/api/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ message: 'Logout failed' });
+      }
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+        }
+        res.redirect('/');
+      });
+    });
   });
 
   // Company routes
