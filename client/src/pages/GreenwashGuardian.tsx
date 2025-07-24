@@ -60,9 +60,6 @@ export default function GreenwashGuardian() {
       return response.json();
     },
     onSuccess: (result) => {
-      console.log('Raw backend result:', result);
-      console.log('Issues array:', result.issues);
-      
       // Convert backend issues to frontend findings format
       const findings: ComplianceFinding[] = (result.issues || []).map((issue: any) => ({
         riskLevel: issue.type === 'critical' ? 'red' : issue.type === 'warning' ? 'amber' : 'green',
@@ -72,8 +69,6 @@ export default function GreenwashGuardian() {
         violationRisk: issue.violationRisk || (issue.type === 'critical' ? 80 : issue.type === 'warning' ? 50 : 20),
         dmccSection: issue.dmccSection
       }));
-      
-      console.log('Converted findings:', findings);
 
       const analysisData: AnalysisResult = {
         overallRisk: result.status === 'compliant' ? 'low' as const : 
@@ -364,7 +359,6 @@ export default function GreenwashGuardian() {
             {/* Detailed Findings */}
             <div className="space-y-4">
               <h3 className="text-xl font-semibold">Detailed Findings</h3>
-              <pre className="text-xs bg-gray-100 p-2">{JSON.stringify(analysisResult.findings, null, 2)}</pre>
               {analysisResult.findings.map((finding, index) => (
                 <Card key={index} className={`bg-white border-l-4 ${
                   finding.riskLevel === 'red' ? 'border-l-red-500' : 

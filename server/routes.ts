@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import path from "path";
 import Stripe from "stripe";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -133,7 +134,7 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
     const matches = content.match(pattern.pattern);
     if (matches) {
       matches.forEach(match => {
-        const finding = pattern.findingTemplate(match);
+        const finding = pattern.findingTemplate(match, '');
         issues.push(finding);
         
         // Adjust score based on severity
@@ -1619,6 +1620,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Internal server error occurred during web scraping' 
       });
     }
+  });
+
+  // Serve test page for GreenwashGuardian verification
+  app.get('/test-greenwash', (req, res) => {
+    res.sendFile(path.resolve('./test-greenwash.html'));
   });
 
   // GreenwashGuardian API Routes
