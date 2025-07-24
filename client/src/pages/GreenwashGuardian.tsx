@@ -60,7 +60,7 @@ export default function GreenwashGuardian() {
       return response.json();
     },
     onSuccess: (result) => {
-      // Convert to original format with enhanced data
+      // Convert backend issues to frontend findings format
       const findings: ComplianceFinding[] = result.issues.map((issue: any) => ({
         riskLevel: issue.type === 'critical' ? 'red' : issue.type === 'warning' ? 'amber' : 'green',
         claim: issue.claim || issue.category,
@@ -70,12 +70,15 @@ export default function GreenwashGuardian() {
         dmccSection: issue.dmccSection
       }));
 
-      setAnalysisResult({
+      const analysisData = {
         overallRisk: result.status === 'compliant' ? 'low' : result.status === 'warning' ? 'medium' : 'high',
         riskScore: result.score,
         findings,
         summary: result.recommendations.join('. ')
-      });
+      };
+      
+      setAnalysisResult(analysisData);
+      setCurrentStep(3);
     }
   });
 
@@ -302,7 +305,6 @@ export default function GreenwashGuardian() {
                     : { type: 'text' as const, content: contentToAnalyze };
                   
                   analyzeMutation.mutate(analysisData);
-                  setCurrentStep(3);
                 }}
                 disabled={!contentToAnalyze && !websiteUrl}
                 className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
