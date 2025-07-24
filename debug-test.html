@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Simple Test Page</h1>
+    <script>
+        console.log("Script is running");
+        fetch('/api/company')
+            .then(r => r.json())
+            .then(data => console.log('API Response:', data))
+            .catch(e => console.error('API Error:', e));
+    </script>
+</body>
+</html>

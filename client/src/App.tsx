@@ -25,11 +25,7 @@ import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
+  const { isAuthenticated } = useAuth();
 
   return (
     <Switch>
