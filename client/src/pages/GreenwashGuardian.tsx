@@ -42,6 +42,8 @@ export default function GreenwashGuardian() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedContentType, setSelectedContentType] = useState<ContentType>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [contentToAnalyze, setContentToAnalyze] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
 
   const analyzeMutation = useMutation({
     mutationFn: async (data: { type: 'website' | 'text'; content: string }) => {
@@ -127,6 +129,8 @@ export default function GreenwashGuardian() {
 
   const handleContentTypeSelect = (type: ContentType) => {
     setSelectedContentType(type);
+    // Automatically advance to next step when a content type is selected
+    setCurrentStep(2);
   };
 
   const handleContinue = () => {
@@ -136,8 +140,8 @@ export default function GreenwashGuardian() {
   };
 
   const handleBack = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     }
   };
 
@@ -235,11 +239,56 @@ export default function GreenwashGuardian() {
               })}
             </div>
 
+            {/* Navigation removed - cards are directly clickable */}
+          </div>
+        )}
+
+        {/* Step 2: Content Input */}
+        {currentStep === 2 && (
+          <div className="space-y-8">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Analyze Your {contentTypes.find(t => t.id === selectedContentType)?.title}
+              </h1>
+              <p className="text-lg text-gray-600">
+                Paste your content below for DMCC Act 2024 compliance analysis
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Content to Analyze
+                </label>
+                <textarea
+                  placeholder={`Paste your ${contentTypes.find(t => t.id === selectedContentType)?.title.toLowerCase()} content here...`}
+                  value={contentToAnalyze}
+                  onChange={(e) => setContentToAnalyze(e.target.value)}
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+
+              {selectedContentType === 'website' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Or enter a website URL
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-between pt-8">
               <Button 
                 variant="outline" 
                 onClick={handleBack}
-                disabled={currentStep === 1}
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -247,24 +296,151 @@ export default function GreenwashGuardian() {
               </Button>
               
               <Button 
-                onClick={handleContinue}
-                disabled={!selectedContentType}
+                onClick={() => {
+                  const analysisData = selectedContentType === 'website' && websiteUrl 
+                    ? { type: 'website' as const, content: websiteUrl }
+                    : { type: 'text' as const, content: contentToAnalyze };
+                  
+                  analyzeMutation.mutate(analysisData);
+                  setCurrentStep(3);
+                }}
+                disabled={!contentToAnalyze && !websiteUrl}
                 className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
               >
-                <span>Continue</span>
+                {analyzeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Analyze Content</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Analysis Results */}
+        {currentStep === 3 && analysisResult && (
+          <div className="space-y-8">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Analysis Results</h1>
+              <p className="text-lg text-gray-600">DMCC Act 2024 compliance assessment for your content</p>
+            </div>
+
+            {/* Overall Risk Score */}
+            <Card className="bg-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold">Overall Risk Assessment</h3>
+                  <Badge className={getRiskColor(analysisResult.overallRisk)}>
+                    {analysisResult.overallRisk.charAt(0).toUpperCase() + analysisResult.overallRisk.slice(1)} Risk
+                  </Badge>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Compliance Score</span>
+                    <span>{analysisResult.riskScore}%</span>
+                  </div>
+                  <Progress value={analysisResult.riskScore} className="h-2" />
+                </div>
+                
+                <p className="text-gray-600">{analysisResult.summary}</p>
+              </CardContent>
+            </Card>
+
+            {/* Findings */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold">Detailed Findings</h3>
+              {analysisResult.findings.map((finding, index) => (
+                <Card key={index} className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className={`w-4 h-4 rounded-full mt-1 ${getFindingColor(finding.riskLevel)}`}></div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold">{finding.claim}</h4>
+                          <span className="text-sm text-gray-500">{finding.violationRisk}% risk</span>
+                        </div>
+                        {finding.issue && (
+                          <p className="text-gray-600 mb-2">{finding.issue}</p>
+                        )}
+                        {finding.suggestion && (
+                          <p className="text-green-700 bg-green-50 p-3 rounded-md text-sm">
+                            <strong>Suggestion:</strong> {finding.suggestion}
+                          </p>
+                        )}
+                        {finding.dmccSection && (
+                          <p className="text-xs text-gray-500 mt-2">DMCC Act Section: {finding.dmccSection}</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex justify-between pt-8">
+              <Button 
+                variant="outline" 
+                onClick={handleBack}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </Button>
+              
+              <Button 
+                onClick={() => setCurrentStep(4)}
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+              >
+                <span>Review & Download</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Analysis Results (placeholder for now) */}
-        {currentStep === 2 && (
+        {/* Step 4: Review & Download */}
+        {currentStep === 4 && (
           <div className="space-y-8">
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Analysis Complete</h1>
-              <p className="text-lg text-gray-600">Content type selected: {selectedContentType}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Review Complete</h1>
+              <p className="text-lg text-gray-600">Your compliance analysis is ready</p>
             </div>
+
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="p-6 text-center">
+                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-green-900 mb-2">Analysis Complete</h3>
+                <p className="text-green-700 mb-4">
+                  Your content has been analyzed against the DMCC Act 2024 requirements.
+                </p>
+                <div className="space-y-3">
+                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Download Compliance Report
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      setCurrentStep(1);
+                      setSelectedContentType(null);
+                      setContentToAnalyze('');
+                      setWebsiteUrl('');
+                      setAnalysisResult(null);
+                    }}
+                  >
+                    Start New Analysis
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="flex justify-between pt-8">
               <Button 
