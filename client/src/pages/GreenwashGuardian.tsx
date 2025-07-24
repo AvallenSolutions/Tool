@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,13 +17,10 @@ import {
   Globe, 
   FileText, 
   Zap,
-  Eye,
   Loader2,
-  ExternalLink,
-  Info
+  Info,
+  Eye
 } from "lucide-react";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
 
 interface ComplianceResult {
   score: number;
@@ -48,8 +44,7 @@ interface ComplianceIssue {
 }
 
 export default function GreenwashGuardian() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("website");
+  const [activeTab, setActiveTab] = useState("url");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [marketingText, setMarketingText] = useState("");
   const [complianceResult, setComplianceResult] = useState<ComplianceResult | null>(null);
@@ -73,41 +68,124 @@ export default function GreenwashGuardian() {
     }
   });
 
-  const handleWebsiteAnalysis = () => {
-    if (!websiteUrl.trim()) return;
-    analyzeMutation.mutate({ type: 'website', content: websiteUrl });
-  };
-
-  const handleTextAnalysis = () => {
-    if (!marketingText.trim()) return;
-    analyzeMutation.mutate({ type: 'text', content: marketingText });
+  const handleAnalysis = () => {
+    if (activeTab === "url" && websiteUrl.trim()) {
+      analyzeMutation.mutate({ type: 'website', content: websiteUrl });
+    } else if (activeTab === "text" && marketingText.trim()) {
+      analyzeMutation.mutate({ type: 'text', content: marketingText });
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'compliant': return 'text-green-600 bg-green-50 border-green-200';
-      case 'warning': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'non-compliant': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'compliant': return 'bg-green-500';
+      case 'warning': return 'bg-amber-500';
+      case 'non-compliant': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusText = (status: string) => {
     switch (status) {
-      case 'compliant': return <CheckCircle className="w-5 h-5" />;
-      case 'warning': return <AlertTriangle className="w-5 h-5" />;
-      case 'non-compliant': return <XCircle className="w-5 h-5" />;
-      default: return <Info className="w-5 h-5" />;
+      case 'compliant': return 'Compliant';
+      case 'warning': return 'Warning';
+      case 'non-compliant': return 'Non-Compliant';
+      default: return 'Unknown';
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <Shield className="w-12 h-12 text-blue-600 mr-3" />
+            <h1 className="text-4xl font-bold text-gray-900">GreenwashGuardian</h1>
+          </div>
+          <p className="text-lg text-gray-600">
+            DMCC Act 2024 Compliance Checker for Environmental Claims
+          </p>
+          <div className="mt-4 inline-flex items-center px-4 py-2 bg-blue-100 rounded-full">
+            <Info className="w-4 h-4 text-blue-600 mr-2" />
+            <span className="text-sm font-medium text-blue-800">UK Digital Markets, Competition and Consumers Act 2024</span>
+          </div>
+        </div>
+
+        {/* Main Analysis Card */}
+        <Card className="mb-8 shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-t-lg">
+            <CardTitle className="flex items-center text-xl">
+              <Eye className="w-6 h-6 mr-3" />
+              Environmental Claims Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="url" className="flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  Website URL
+                </TabsTrigger>
+                <TabsTrigger value="text" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Marketing Text
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="url" className="space-y-4">
+                <div className="space-y-3">
+                  <Label htmlFor="website-url" className="text-lg font-medium">Enter Website URL</Label>
+                  <Input
+                    id="website-url"
+                    placeholder="https://example.com/sustainable-products"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    className="text-lg py-3 px-4"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="text" className="space-y-4">
+                <div className="space-y-3">
+                  <Label htmlFor="marketing-text" className="text-lg font-medium">Enter Marketing Content</Label>
+                  <Textarea
+                    id="marketing-text"
+                    placeholder="Paste your marketing copy, product descriptions, or environmental claims here..."
+                    value={marketingText}
+                    onChange={(e) => setMarketingText(e.target.value)}
+                    rows={8}
+                    className="text-lg py-3 px-4 min-h-[200px]"
+                  />
+                </div>
+              </TabsContent>
+
+              <Button 
+                onClick={handleAnalysis}
+                disabled={analyzeMutation.isPending || 
+                  (activeTab === "url" && !websiteUrl.trim()) || 
+                  (activeTab === "text" && !marketingText.trim())}
+                className="w-full mt-6 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-4 text-lg font-semibold"
+              >
+                {analyzeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-3" />
+                    Analyzing Claims...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-5 h-5 mr-3" />
+                    Analyze for DMCC Compliance
+                  </>
+                )}
+              </Button>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* Results Section */}
+        {complianceResult && (
+          <div className="space-y-6">
             
             {/* Header */}
             <div className="flex items-center justify-between">
