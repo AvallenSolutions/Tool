@@ -20,6 +20,7 @@ import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
 import SupplierNetwork from "@/pages/SupplierNetwork";  
 import SupplierOnboarding from "@/pages/supplier-onboarding";
+import GreenwashGuardian from "@/pages/GreenwashGuardian";
 import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
 
@@ -41,6 +42,7 @@ function Router() {
       <Route path="/app/products/:id/edit" component={ProductEdit} />
       <Route path="/app/products/:id" component={ProductDetail} />
       <Route path="/app/reports" component={Reports} />
+      <Route path="/app/greenwash-guardian" component={GreenwashGuardian} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />
       <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
       <Route path="/app/lca" component={LCAPage} />

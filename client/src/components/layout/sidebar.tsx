@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Leaf, Building2, TestTube } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube } from "lucide-react";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
@@ -16,9 +16,10 @@ export default function Sidebar() {
     { path: "/app/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/app/products", label: "Products", icon: Package },
     { path: "/app/reports", label: "Reports", icon: FileText },
+    { path: "/app/greenwash-guardian", label: "GreenwashGuardian", icon: Shield },
     { path: "/app/supplier-network", label: "Supplier Network", icon: Building2 },
     { path: "/app/settings", label: "Settings", icon: Settings },
-    { path: "/app/admin", label: "Admin", icon: Shield },
+    { path: "/app/admin", label: "Admin", icon: Users },
     { path: "/app/test", label: "Test Runner", icon: TestTube },
   ];
 
@@ -65,16 +66,16 @@ export default function Sidebar() {
       <div className="p-4 border-t border-green-600">
         <div className="flex items-center space-x-3 mb-4">
           <Avatar className="w-10 h-10">
-            <AvatarImage src={user?.profileImageUrl} alt={user?.firstName} />
+            <AvatarImage src={user?.profileImageUrl || ''} alt={user?.firstName || 'User'} />
             <AvatarFallback className="bg-white text-[#209d50]">
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
+              {user?.firstName?.[0] || 'U'}{user?.lastName?.[0] || ''}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <p className="text-sm font-medium text-white">
-              {user?.firstName} {user?.lastName}
+              {user?.firstName || 'User'} {user?.lastName || ''}
             </p>
-            <p className="text-xs text-green-100">{user?.email}</p>
+            <p className="text-xs text-green-100">{user?.email || ''}</p>
           </div>
         </div>
         <Button

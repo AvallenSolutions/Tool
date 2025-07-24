@@ -13,6 +13,74 @@ import { lcaService, LCAJobManager } from "./lca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
+
+// GreenwashGuardian Analysis Function
+async function analyzeGreenwashCompliance(type: string, content: string) {
+  // Simulate comprehensive DMCC Act 2024 compliance analysis
+  const claimsPatterns = [
+    'eco-friendly', 'green', 'sustainable', 'carbon neutral', 'environmentally friendly',
+    'natural', 'organic', 'recyclable', 'biodegradable', 'clean energy'
+  ];
+  
+  const foundClaims = claimsPatterns.filter(pattern => 
+    content.toLowerCase().includes(pattern)
+  );
+
+  const issues = [];
+  const recommendations = [];
+  let score = 85; // Base score
+
+  // Analyze for vague claims
+  if (content.toLowerCase().includes('eco-friendly') || content.toLowerCase().includes('green')) {
+    issues.push({
+      type: 'warning' as const,
+      category: 'Vague Language',
+      description: 'Use of vague terms like "eco-friendly" or "green" without specific context',
+      dmccSection: 'Section 4.2 - Clear and Unambiguous Claims',
+      solution: 'Replace with specific, measurable environmental benefits (e.g., "reduces CO2 emissions by 30%")'
+    });
+    score -= 15;
+  }
+
+  // Check for substantiation indicators
+  const hasNumbers = /\d+%|\d+\s*(kg|g|tonnes?|liters?|ml)/.test(content);
+  const hasCertifications = /ISO|FSC|ENERGY STAR|certified|verified/i.test(content);
+  
+  if (!hasNumbers && !hasCertifications) {
+    issues.push({
+      type: 'critical' as const,
+      category: 'Lack of Substantiation',
+      description: 'Environmental claims lack quantitative data or third-party verification',
+      dmccSection: 'Section 4.6 - Substantiated Claims',
+      solution: 'Provide specific metrics, certifications, or third-party verified data to support claims'
+    });
+    score -= 25;
+  }
+
+  // Generate recommendations
+  recommendations.push(
+    'Include specific, measurable environmental benefits with clear baseline comparisons',
+    'Provide links to supporting evidence, certifications, or third-party verification',
+    'Use precise language instead of vague terms like "eco-friendly" or "sustainable"',
+    'Ensure claims cover the full product lifecycle, not just one aspect',
+    'Make supporting evidence easily accessible to consumers'
+  );
+
+  const status = score >= 80 ? 'compliant' : score >= 60 ? 'warning' : 'non-compliant';
+
+  return {
+    score: Math.max(0, score),
+    status,
+    issues,
+    recommendations,
+    analysisDetails: {
+      claimsFound: foundClaims,
+      substantiationLevel: hasNumbers || hasCertifications ? 'Moderate' : 'Low',
+      languageCompliance: issues.some(i => i.category === 'Vague Language') ? 'Needs Improvement' : 'Good',
+      evidencePresence: hasCertifications || hasNumbers || /evidence|proof|study|research/i.test(content)
+    }
+  };
+}
 import path from "path";
 import fs from "fs";
 
@@ -1408,6 +1476,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         error: 'Internal server error occurred during web scraping' 
+      });
+    }
+  });
+
+  // GreenwashGuardian API Routes
+  app.post('/api/greenwash-guardian/analyze', async (req, res) => {
+    try {
+      const { type, content } = req.body;
+
+      if (!type || !content || !['website', 'text'].includes(type)) {
+        return res.status(400).json({ 
+          error: 'Valid type (website or text) and content are required' 
+        });
+      }
+
+      console.log(`Starting ${type} analysis for GreenwashGuardian`);
+      
+      // For demo purposes, we'll create a comprehensive mock analysis
+      // In production, this would integrate with the Anthropic API and web scraping
+      const result = await analyzeGreenwashCompliance(type, content);
+
+      console.log(`Successfully completed GreenwashGuardian analysis`);
+      res.json(result);
+    } catch (error) {
+      console.error('Error in GreenwashGuardian analysis:', error);
+      res.status(500).json({ 
+        error: 'Internal server error occurred during analysis' 
       });
     }
   });
