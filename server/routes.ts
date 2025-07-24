@@ -25,17 +25,32 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
   // Detailed pattern analysis with specific extractions
   const analysisPatterns = [
     {
+      pattern: /\b(?:carbon[- ]neutral|net[- ]zero|zero[- ]emission)\b/gi,
+      severity: 'red',
+      riskLevel: 85,
+      dmccSection: 'Section 218 - Substantiation Required',
+      findingTemplate: (match: string) => ({
+        type: 'critical',
+        category: 'High-Impact Claims',
+        claim: match,
+        description: `"${match}" claims require comprehensive lifecycle analysis and third-party verification across entire value chain.`,
+        solution: 'Provide certified lifecycle assessment, offset verification, and scope 1, 2, and 3 emissions data.',
+        violationRisk: 85,
+        dmccSection: 'Section 218 - Substantiation Required'
+      })
+    },
+    {
       pattern: /\b(?:climate[- ]positive|carbon[- ]positive)\b/gi,
-      severity: 'amber',
-      riskLevel: 70,
+      severity: 'red',
+      riskLevel: 80,
       dmccSection: 'Section 217 - Misleading Environmental Claims',
       findingTemplate: (match: string) => ({
-        type: 'warning',
+        type: 'critical',
         category: 'Ambition Calibration',
         claim: match,
         description: `The term "${match}" is not clearly defined or substantiated with specific metrics and third-party verification.`,
         solution: 'Provide detailed evidence or third-party certification to substantiate the climate positive claim.',
-        violationRisk: 70,
+        violationRisk: 80,
         dmccSection: 'Section 217 - Misleading Environmental Claims'
       })
     },
@@ -100,21 +115,6 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
       })
     },
     {
-      pattern: /\b(?:carbon[- ]neutral|net[- ]zero|zero[- ]emission)\b/gi,
-      severity: 'red',
-      riskLevel: 85,
-      dmccSection: 'Section 218 - Substantiation Required',
-      findingTemplate: (match: string) => ({
-        type: 'critical',
-        category: 'High-Impact Claims',
-        claim: match,
-        description: `"${match}" claims require comprehensive lifecycle analysis and third-party verification across entire value chain.`,
-        solution: 'Provide certified lifecycle assessment, offset verification, and scope 1, 2, and 3 emissions data.',
-        violationRisk: 85,
-        dmccSection: 'Section 218 - Substantiation Required'
-      })
-    },
-    {
       pattern: /\b(?:avallen\s+)?(?:only\s+uses?|uses?\s+only)\s+[\d.]+L?\s+(?:of\s+)?water.*?(?:\d+%?-\d+%?|\d+%?)\s+less\s+than.*?(?:industry\s+average|average)/gi,
       severity: 'green',
       riskLevel: 30,
@@ -127,6 +127,21 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
         solution: 'Ensure the industry average data is up-to-date and available for verification.',
         violationRisk: 30,
         dmccSection: 'Be substantiated'
+      })
+    },
+    {
+      pattern: /\b(?:B\s*Corp|certified\s*B\s*Corp|(?:ISO|FSC|USDA|Energy\s*Star|Cradle\s*to\s*Cradle|LEED)\s*certif\w*)\b/gi,
+      severity: 'green',
+      riskLevel: 15,
+      dmccSection: 'Section 218 - Third-Party Verification',
+      findingTemplate: (match: string) => ({
+        type: 'compliant',
+        category: 'Third-Party Certification',
+        claim: match,
+        description: 'Third-party certifications provide independent verification of claims.',
+        solution: 'Ensure certification is current and relevant details are easily accessible.',
+        violationRisk: 15,
+        dmccSection: 'Section 218 - Third-Party Verification'
       })
     }
   ];
@@ -1741,7 +1756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For demo: if website analysis and content is still just a URL, add sample environmental claims
       if (type === 'website' && analysisContent === content && content.includes('avallen')) {
-        analysisContent = "Avallen Spirits climate positive apple brandy sustainable production eco-friendly frugal bottle revolutionary carbon footprint reduction";
+        analysisContent = "Avallen Spirits climate positive and carbon neutral apple brandy with sustainable production, eco-friendly packaging, and B Corp certification available on our website";
         console.log(`Using sample environmental claims for demo analysis`);
       }
       
