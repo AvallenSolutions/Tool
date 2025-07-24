@@ -31,6 +31,29 @@ export function registerRoutes(app: Express): Server {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Auth user endpoint - must come BEFORE greenwash guardian routes
+  app.get('/api/auth/user', (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const user = req.user as any;
+      const userInfo = {
+        id: user.claims?.sub,
+        email: user.claims?.email,
+        firstName: user.claims?.first_name,
+        lastName: user.claims?.last_name,
+        profileImageUrl: user.claims?.profile_image_url,
+      };
+      
+      return res.json(userInfo);
+    } catch (error) {
+      console.error('Auth endpoint error:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // GreenwashGuardian API Routes - AI-powered analysis
   app.post('/api/greenwash-guardian/analyze', async (req, res) => {
     try {
