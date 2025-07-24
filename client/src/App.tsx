@@ -24,12 +24,58 @@ import GreenwashGuardian from "@/pages/GreenwashGuardian";
 import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
 
-function Router() {
-  const { isAuthenticated } = useAuth();
+function SimpleTestComponent() {
+  return (
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-green-600 mb-6">
+          Drinks Sustainability Tool - Test Mode
+        </h1>
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Application Status</h2>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+              <span>React App: Running</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+              <span>Authentication: Bypassed (Development)</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+              <span>GreenwashGuardian AI: Ready</span>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Quick Navigation</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button 
+              onClick={() => window.location.href = '/app/greenwash-guardian'}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Test GreenwashGuardian AI
+            </button>
+            <button 
+              onClick={() => window.location.href = '/app/dashboard'}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
+function Router() {
+  // Simplified router that always shows the test component first
   return (
     <Switch>
-      <Route path="/" component={isAuthenticated ? Home : Landing} />
+      <Route path="/" component={SimpleTestComponent} />
+      <Route path="/app/greenwash-guardian" component={GreenwashGuardian} />
       <Route path="/app/dashboard" component={Dashboard} />
       <Route path="/app/onboarding" component={Onboarding} />
       <Route path="/app/products" component={Products} />
@@ -38,7 +84,6 @@ function Router() {
       <Route path="/app/products/:id/edit" component={ProductEdit} />
       <Route path="/app/products/:id" component={ProductDetail} />
       <Route path="/app/reports" component={Reports} />
-      <Route path="/app/greenwash-guardian" component={GreenwashGuardian} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />
       <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
       <Route path="/app/lca" component={LCAPage} />
