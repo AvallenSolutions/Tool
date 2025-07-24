@@ -353,32 +353,59 @@ export default function GreenwashGuardian() {
               </CardContent>
             </Card>
 
-            {/* Findings */}
+            {/* Detailed Findings */}
             <div className="space-y-4">
               <h3 className="text-xl font-semibold">Detailed Findings</h3>
               {analysisResult.findings.map((finding, index) => (
-                <Card key={index} className="bg-white">
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className={`w-4 h-4 rounded-full mt-1 ${getFindingColor(finding.riskLevel)}`}></div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold">{finding.claim}</h4>
-                          <span className="text-sm text-gray-500">{finding.violationRisk}% risk</span>
-                        </div>
-                        {finding.issue && (
-                          <p className="text-gray-600 mb-2">{finding.issue}</p>
-                        )}
-                        {finding.suggestion && (
-                          <p className="text-green-700 bg-green-50 p-3 rounded-md text-sm">
-                            <strong>Suggestion:</strong> {finding.suggestion}
-                          </p>
-                        )}
-                        {finding.dmccSection && (
-                          <p className="text-xs text-gray-500 mt-2">DMCC Act Section: {finding.dmccSection}</p>
-                        )}
+                <Card key={index} className={`bg-white border-l-4 ${
+                  finding.riskLevel === 'red' ? 'border-l-red-500' : 
+                  finding.riskLevel === 'amber' ? 'border-l-yellow-500' : 
+                  'border-l-green-500'
+                }`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Badge className={`${
+                          finding.riskLevel === 'red' ? 'bg-red-100 text-red-800 border-red-200' : 
+                          finding.riskLevel === 'amber' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
+                          'bg-green-100 text-green-800 border-green-200'
+                        }`}>
+                          {finding.riskLevel === 'red' ? 'RED RISK' : 
+                           finding.riskLevel === 'amber' ? 'AMBER RISK' : 
+                           'GREEN RISK'}
+                        </Badge>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500 mb-1">DMCC Violation Risk:</div>
+                        <div className="font-semibold text-sm">{finding.violationRisk}%</div>
                       </div>
                     </div>
+                    
+                    <div className="mb-3">
+                      <div className="font-medium text-gray-900 mb-2">
+                        {finding.claim}
+                      </div>
+                      {finding.issue && (
+                        <div className="text-sm text-gray-600 mb-2">
+                          <span className="font-medium">Issue:</span> {finding.issue}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {finding.suggestion && (
+                      <div className="mb-3">
+                        <div className="text-sm">
+                          <span className="font-medium text-green-700">Suggested Edit:</span>
+                          <span className="text-gray-700 ml-1">{finding.suggestion}</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {finding.dmccSection && (
+                      <div className="text-xs text-gray-500">
+                        <span className="font-medium">DMCC Section:</span> {finding.dmccSection}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
