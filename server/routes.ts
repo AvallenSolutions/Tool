@@ -14,70 +14,196 @@ import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
 
-// GreenwashGuardian Analysis Function
+// Enhanced GreenwashGuardian Analysis Function - DMCC Act 2024 Compliance
 async function analyzeGreenwashCompliance(type: string, content: string) {
-  // Simulate comprehensive DMCC Act 2024 compliance analysis
-  const claimsPatterns = [
-    'eco-friendly', 'green', 'sustainable', 'carbon neutral', 'environmentally friendly',
-    'natural', 'organic', 'recyclable', 'biodegradable', 'clean energy'
-  ];
-  
-  const foundClaims = claimsPatterns.filter(pattern => 
-    content.toLowerCase().includes(pattern)
-  );
-
   const issues = [];
-  const recommendations = [];
-  let score = 85; // Base score
-
-  // Analyze for vague claims
-  if (content.toLowerCase().includes('eco-friendly') || content.toLowerCase().includes('green')) {
-    issues.push({
-      type: 'warning' as const,
-      category: 'Vague Language',
-      description: 'Use of vague terms like "eco-friendly" or "green" without specific context',
-      dmccSection: 'Section 4.2 - Clear and Unambiguous Claims',
-      solution: 'Replace with specific, measurable environmental benefits (e.g., "reduces CO2 emissions by 30%")'
-    });
-    score -= 15;
-  }
-
-  // Check for substantiation indicators
-  const hasNumbers = /\d+%|\d+\s*(kg|g|tonnes?|liters?|ml)/.test(content);
-  const hasCertifications = /ISO|FSC|ENERGY STAR|certified|verified/i.test(content);
+  let baseScore = 75; // Start with moderate compliance
   
-  if (!hasNumbers && !hasCertifications) {
+  // Detailed pattern analysis with specific extractions
+  const analysisPatterns = [
+    {
+      pattern: /\b(?:climate[- ]positive|carbon[- ]positive)\b/gi,
+      severity: 'amber',
+      riskLevel: 70,
+      dmccSection: 'Section 217 - Misleading Environmental Claims',
+      findingTemplate: (match: string) => ({
+        type: 'warning',
+        category: 'Ambition Calibration',
+        claim: match,
+        description: `The term "${match}" is not clearly defined or substantiated with specific metrics and third-party verification.`,
+        solution: 'Provide detailed evidence or third-party certification to substantiate the climate positive claim.',
+        violationRisk: 70,
+        dmccSection: 'Section 217 - Misleading Environmental Claims'
+      })
+    },
+    {
+      pattern: /\b(?:donate|giving|donating)\s+(?:at\s+least\s+)?(\d+%?)\s+(?:of|to).*?(?:turnover|annually|organisations|charity|tree|environment)/gi,
+      severity: 'green',
+      riskLevel: 25,
+      dmccSection: 'Section 218 - Substantiation',
+      findingTemplate: (match: string, percentage: string) => ({
+        type: 'compliant',
+        category: 'Donation Claims',
+        claim: match,
+        description: 'This claim is specific and measurable.',
+        solution: 'Ensure documentation of donations is available for verification.',
+        violationRisk: 25,
+        dmccSection: 'Section 218 - Substantiation'
+      })
+    },
+    {
+      pattern: /\b(?:amazing|incredible|fantastic|revolutionary|groundbreaking)\s+(?:apple\s+trees?|sequester|carbon|environmental)/gi,
+      severity: 'amber',
+      riskLevel: 65,
+      dmccSection: 'Section 217 - Misleading Claims',
+      findingTemplate: (match: string) => ({
+        type: 'warning',
+        category: 'Superlative Claims',
+        claim: match,
+        description: 'The claim lacks specific data or third-party verification to support the carbon sequestration statement.',
+        solution: 'Provide lifecycle analysis data or third-party verification to support the carbon sequestration claim.',
+        violationRisk: 65,
+        dmccSection: 'Section 217 - Misleading Claims'
+      })
+    },
+    {
+      pattern: /\b(?:game[- ]changing|revolutionary|groundbreaking)\s+(?:fossil\s+fuel|water\s+footprint|carbon\s+footprint)/gi,
+      severity: 'red',
+      riskLevel: 80,
+      dmccSection: 'Section 217 - Misleading Claims',
+      findingTemplate: (match: string) => ({
+        type: 'critical',
+        category: 'Unsubstantiated Superlatives',
+        claim: match,
+        description: `The claim "${match}" is not clearly defined or substantiated with specific metrics.`,
+        solution: 'Provide specific data comparing footprint to industry standards with third-party verification.',
+        violationRisk: 80,
+        dmccSection: 'Section 217 - Misleading Claims'
+      })
+    },
+    {
+      pattern: /\b(?:eco[- ]friendly|green|sustainable|natural|clean)\b/gi,
+      severity: 'amber',
+      riskLevel: 55,
+      dmccSection: 'Section 216 - Vague Claims',
+      findingTemplate: (match: string) => ({
+        type: 'warning',
+        category: 'Vague Environmental Claims',
+        claim: match,
+        description: `The term "${match}" is vague and lacks specific environmental benefits or evidence.`,
+        solution: `Replace "${match}" with specific, measurable environmental benefits (e.g., "reduces CO2 emissions by 30%" or "made from 80% recycled materials").`,
+        violationRisk: 55,
+        dmccSection: 'Section 216 - Vague Claims'
+      })
+    },
+    {
+      pattern: /\b(?:carbon[- ]neutral|net[- ]zero|zero[- ]emission)\b/gi,
+      severity: 'red',
+      riskLevel: 85,
+      dmccSection: 'Section 218 - Substantiation Required',
+      findingTemplate: (match: string) => ({
+        type: 'critical',
+        category: 'High-Impact Claims',
+        claim: match,
+        description: `"${match}" claims require comprehensive lifecycle analysis and third-party verification across entire value chain.`,
+        solution: 'Provide certified lifecycle assessment, offset verification, and scope 1, 2, and 3 emissions data.',
+        violationRisk: 85,
+        dmccSection: 'Section 218 - Substantiation Required'
+      })
+    }
+  ];
+
+  // Process content and extract specific findings
+  analysisPatterns.forEach(pattern => {
+    const matches = content.match(pattern.pattern);
+    if (matches) {
+      matches.forEach(match => {
+        const finding = pattern.findingTemplate(match);
+        issues.push(finding);
+        
+        // Adjust score based on severity
+        switch (pattern.severity) {
+          case 'red':
+            baseScore -= 20;
+            break;
+          case 'amber':
+            baseScore -= 10;
+            break;
+          case 'green':
+            baseScore += 5;
+            break;
+        }
+      });
+    }
+  });
+
+  // Check for missing substantiation patterns
+  const hasQuantifiableData = /\d+%|\d+\s*(?:kg|g|tonnes?|liters?|ml|kWh|MWh)/i.test(content);
+  const hasCertifications = /ISO\s*\d+|FSC|ENERGY\s*STAR|B\s*Corp|certified|verified|audited/i.test(content);
+  const hasComparativeData = /compared\s+to|versus|vs\.|than\s+(?:standard|typical|average|conventional)/i.test(content);
+  
+  if (!hasQuantifiableData && (content.match(/\b(?:reduce|lower|less|decrease|improve|better|efficient)\b/gi) || []).length > 0) {
     issues.push({
-      type: 'critical' as const,
-      category: 'Lack of Substantiation',
-      description: 'Environmental claims lack quantitative data or third-party verification',
-      dmccSection: 'Section 4.6 - Substantiated Claims',
-      solution: 'Provide specific metrics, certifications, or third-party verified data to support claims'
+      type: 'warning',
+      category: 'Quantification Missing',
+      claim: 'Improvement claims without specific metrics',
+      description: 'Claims of improvement lack specific quantifiable metrics for verification.',
+      solution: 'Provide specific percentage improvements, baseline comparisons, and measurement methodology.',
+      violationRisk: 60,
+      dmccSection: 'Section 219 - Misleading Omissions'
     });
-    score -= 25;
+    baseScore -= 15;
   }
 
-  // Generate recommendations
-  recommendations.push(
-    'Include specific, measurable environmental benefits with clear baseline comparisons',
-    'Provide links to supporting evidence, certifications, or third-party verification',
-    'Use precise language instead of vague terms like "eco-friendly" or "sustainable"',
-    'Ensure claims cover the full product lifecycle, not just one aspect',
-    'Make supporting evidence easily accessible to consumers'
-  );
+  if (!hasCertifications && issues.length > 0) {
+    issues.push({
+      type: 'warning',
+      category: 'Third-Party Verification',
+      claim: 'Environmental claims lack independent verification',
+      description: 'No third-party certifications or independent verification mentioned.',
+      solution: 'Obtain relevant certifications (ISO 14001, FSC, B Corp) or independent audits to verify claims.',
+      violationRisk: 45,
+      dmccSection: 'Section 218 - Substantiation'
+    });
+    baseScore -= 10;
+  }
 
-  const status = score >= 80 ? 'compliant' : score >= 60 ? 'warning' : 'non-compliant';
+  // Generate specific recommendations based on content type and findings
+  const recommendations = [];
+  
+  if (type === 'website') {
+    recommendations.push(
+      'Ensure all environmental claims on homepage and product pages are consistent and substantiated',
+      'Provide dedicated "Sustainability Evidence" page with certifications and data',
+      'Include links to third-party verification reports and lifecycle assessments'
+    );
+  } else {
+    recommendations.push(
+      'Replace vague terms with specific, measurable environmental benefits',
+      'Include baseline comparisons and measurement methodologies',
+      'Provide access to supporting evidence and certifications'
+    );
+  }
+
+  if (issues.some(i => i.category.includes('Superlative') || i.category.includes('High-Impact'))) {
+    recommendations.push('Consider full lifecycle assessment certification for high-impact claims');
+  }
+
+  const finalScore = Math.max(0, Math.min(100, baseScore));
+  const status = finalScore >= 75 ? 'compliant' : finalScore >= 50 ? 'warning' : 'non-compliant';
 
   return {
-    score: Math.max(0, score),
+    score: finalScore,
     status,
     issues,
     recommendations,
     analysisDetails: {
-      claimsFound: foundClaims,
-      substantiationLevel: hasNumbers || hasCertifications ? 'Moderate' : 'Low',
-      languageCompliance: issues.some(i => i.category === 'Vague Language') ? 'Needs Improvement' : 'Good',
-      evidencePresence: hasCertifications || hasNumbers || /evidence|proof|study|research/i.test(content)
+      contentType: type,
+      totalClaims: issues.length,
+      highRiskIssues: issues.filter(i => i.violationRisk >= 70).length,
+      substantiationLevel: hasQuantifiableData && hasCertifications ? 'High' : 
+                         hasQuantifiableData || hasCertifications ? 'Moderate' : 'Low',
+      dmccCompliance: finalScore >= 75 ? 'Compliant' : finalScore >= 50 ? 'Needs Attention' : 'Non-Compliant'
     }
   };
 }

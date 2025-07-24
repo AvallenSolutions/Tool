@@ -60,13 +60,13 @@ export default function GreenwashGuardian() {
       return response.json();
     },
     onSuccess: (result) => {
-      // Convert to original format
+      // Convert to original format with enhanced data
       const findings: ComplianceFinding[] = result.issues.map((issue: any) => ({
         riskLevel: issue.type === 'critical' ? 'red' : issue.type === 'warning' ? 'amber' : 'green',
-        claim: issue.category,
+        claim: issue.claim || issue.category,
         issue: issue.description,
         suggestion: issue.solution,
-        violationRisk: issue.type === 'critical' ? 80 : issue.type === 'warning' ? 50 : 20,
+        violationRisk: issue.violationRisk || (issue.type === 'critical' ? 80 : issue.type === 'warning' ? 50 : 20),
         dmccSection: issue.dmccSection
       }));
 
@@ -74,7 +74,7 @@ export default function GreenwashGuardian() {
         overallRisk: result.status === 'compliant' ? 'low' : result.status === 'warning' ? 'medium' : 'high',
         riskScore: result.score,
         findings,
-        summary: result.recommendations.join(' ')
+        summary: result.recommendations.join('. ')
       });
     }
   });
