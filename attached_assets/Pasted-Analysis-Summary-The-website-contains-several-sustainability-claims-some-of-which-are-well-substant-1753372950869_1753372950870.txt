@@ -1,0 +1,38 @@
+Analysis Summary
+The website contains several sustainability claims, some of which are well-substantiated, while others require additional evidence or clarification to comply with the DMCC 2024 anti-greenwashing requirements. Specific attention should be given to providing third-party verification and detailed data for claims related to carbon footprint and climate positivity.
+
+Detailed Findings
+AMBER RISK: Avallen Calvados is a climate-positive spirit made from just three things: apples, water and time.
+DMCC Violation Risk: 70%
+Issue: The term 'climate-positive' is not clearly defined or substantiated with specific metrics or third-party verification.
+
+Suggested Edit: Provide detailed evidence or third-party certification to substantiate the 'climate-positive' claim.
+DMCC Section: Be truthful and accurate
+
+GREEN RISK: We donate at least 2% of our turnover annually to organisations that work to save our struggling bee populations.
+DMCC Violation Risk: 20%
+Issue: This claim is specific and measurable.
+
+Suggested Edit: Ensure documentation of donations is available for verification.
+DMCC Section: Be substantiated
+
+AMBER RISK: The amazing apple trees that provide apples for Avallen sequester more carbon than we emit in producing Avallen each year.
+DMCC Violation Risk: 60%
+Issue: The claim lacks specific data or third-party verification to support the carbon sequestration statement.
+
+Suggested Edit: Provide lifecycle analysis data or third-party verification to support the carbon sequestration claim.
+DMCC Section: Consider the full life cycle of the product/service
+
+RED RISK: The game changing Frugal Bottle that has 1/6 of the carbon footprint and 1/5 of the water footprint of a regular glass bottle.
+DMCC Violation Risk: 80%
+Issue: The claim lacks context and specific comparative data to substantiate the reduction percentages.
+
+Suggested Edit: Provide detailed comparative analysis and data to substantiate the reduction claims.
+DMCC Section: Only make fair and meaningful comparisons
+
+GREEN RISK: Avallen only uses 1.2L of water to make per bottle which is 70-95% less than the industry average.
+DMCC Violation Risk: 30%
+Issue: The claim is specific and provides a clear comparison.
+
+Suggested Edit: Ensure the industry average data is up-to-date and available for verification.
+DMCC Section: Be substantiated

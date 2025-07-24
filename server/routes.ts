@@ -52,33 +52,33 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
       })
     },
     {
-      pattern: /\b(?:amazing|incredible|fantastic|revolutionary|groundbreaking)\s+(?:apple\s+trees?|sequester|carbon|environmental)/gi,
+      pattern: /\b(?:the\s+)?(?:amazing|incredible|fantastic)\s+apple\s+trees?.*?(?:sequester|carbon).*?(?:each\s+year|annually)/gi,
       severity: 'amber',
-      riskLevel: 65,
+      riskLevel: 60,
       dmccSection: 'Section 217 - Misleading Claims',
       findingTemplate: (match: string) => ({
         type: 'warning',
         category: 'Superlative Claims',
-        claim: match,
+        claim: match.trim(),
         description: 'The claim lacks specific data or third-party verification to support the carbon sequestration statement.',
         solution: 'Provide lifecycle analysis data or third-party verification to support the carbon sequestration claim.',
-        violationRisk: 65,
-        dmccSection: 'Section 217 - Misleading Claims'
+        violationRisk: 60,
+        dmccSection: 'Consider the full life cycle of the product/service'
       })
     },
     {
-      pattern: /\b(?:game[- ]changing|revolutionary|groundbreaking)\s+(?:fossil\s+fuel|water\s+footprint|carbon\s+footprint)/gi,
+      pattern: /\b(?:the\s+)?(?:game[- ]?changing|revolutionary|groundbreaking)\s+(?:frugal\s+bottle|bottle).*?(?:carbon\s+footprint|water\s+footprint|glass\s+bottle)/gi,
       severity: 'red',
       riskLevel: 80,
       dmccSection: 'Section 217 - Misleading Claims',
       findingTemplate: (match: string) => ({
         type: 'critical',
         category: 'Unsubstantiated Superlatives',
-        claim: match,
-        description: `The claim "${match}" is not clearly defined or substantiated with specific metrics.`,
-        solution: 'Provide specific data comparing footprint to industry standards with third-party verification.',
+        claim: match.trim(),
+        description: 'The claim lacks context and specific comparative data to substantiate the reduction percentages.',
+        solution: 'Provide detailed comparative analysis and data to substantiate the reduction claims.',
         violationRisk: 80,
-        dmccSection: 'Section 217 - Misleading Claims'
+        dmccSection: 'Only make fair and meaningful comparisons'
       })
     },
     {
@@ -109,6 +109,21 @@ async function analyzeGreenwashCompliance(type: string, content: string) {
         solution: 'Provide certified lifecycle assessment, offset verification, and scope 1, 2, and 3 emissions data.',
         violationRisk: 85,
         dmccSection: 'Section 218 - Substantiation Required'
+      })
+    },
+    {
+      pattern: /\b(?:avallen\s+)?(?:only\s+uses?|uses?\s+only)\s+[\d.]+L?\s+(?:of\s+)?water.*?(?:\d+%?-\d+%?|\d+%?)\s+less\s+than.*?(?:industry\s+average|average)/gi,
+      severity: 'green',
+      riskLevel: 30,
+      dmccSection: 'Section 218 - Substantiation',
+      findingTemplate: (match: string) => ({
+        type: 'compliant',
+        category: 'Water Usage Claims',
+        claim: match.trim(),
+        description: 'The claim is specific and provides a clear comparison.',
+        solution: 'Ensure the industry average data is up-to-date and available for verification.',
+        violationRisk: 30,
+        dmccSection: 'Be substantiated'
       })
     }
   ];
