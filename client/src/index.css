@@ -75,6 +75,18 @@ body {
   font-family: 'Roboto Slab', serif;
 }
 
+/* Fix for transparent modals */
+[data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+[data-radix-dialog-content] {
+  background-color: white !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
 /* Dialog overlay and content styling */
 [data-radix-dialog-overlay] {
   background: rgba(0, 0, 0, 0.8) !important;
