@@ -25,6 +25,7 @@ import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
 import SupplierNetwork from "@/pages/SupplierNetwork";  
 import SupplierOnboarding from "@/pages/supplier-onboarding";
+import Suppliers from "@/pages/suppliers";
 import GreenwashGuardian from "@/pages/GreenwashGuardian";
 import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
@@ -91,6 +92,7 @@ function Router() {
       <Route path="/app/reports" component={Reports} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />
       <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
+      <Route path="/app/suppliers" component={Suppliers} />
       <Route path="/app/lca" component={LCAPage} />
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/admin" component={AdminDashboardMain} />

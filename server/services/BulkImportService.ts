@@ -331,17 +331,17 @@ export class BulkImportService {
         if (createResult) {
           if (createResult.isNewSupplier) {
             result.suppliersCreated++;
+            result.results.push({
+              type: 'supplier',
+              name: supplierData.companyName || supplierData.supplierName || 'Unknown Supplier',
+              source: link.url,
+              success: true
+            });
           }
           result.productsCreated++;
           result.results.push({
             type: 'product',
             name: productData.productName || link.title,
-            source: link.url,
-            success: true
-          });
-          result.results.push({
-            type: 'product',
-            name: productData.productName,
             source: link.url,
             success: true
           });

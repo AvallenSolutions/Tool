@@ -388,7 +388,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
                       onClick={() => window.location.href = '/app/suppliers'}
                       className="bg-green-600 hover:bg-green-700"
                     >
-                      View Created Suppliers & Products
+                      View Suppliers ({bulkImportResult.suppliersCreated} suppliers, {bulkImportResult.productsCreated} products)
                     </Button>
                   )}
                 </div>
