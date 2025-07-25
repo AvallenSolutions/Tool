@@ -317,7 +317,12 @@ export default function SupplierOnboarding() {
             {/* Step 2: Manual Form */}
             {currentStep === 2 && (
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={(e) => {
+                  console.log('🔥 Form onSubmit event triggered!');
+                  console.log('🔥 Form errors before validation:', form.formState.errors);
+                  console.log('🔥 Form values:', form.getValues());
+                  form.handleSubmit(onSubmit)(e);
+                }} className="space-y-6">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
