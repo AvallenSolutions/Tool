@@ -85,8 +85,39 @@ export default function SupplierOnboarding() {
 
   const submitMutation = useMutation({
     mutationFn: async (data: SupplierProductForm) => {
-      const response = await apiRequest("POST", "/api/supplier-products", data);
-      return response.json();
+      // If we have auto-extracted data with supplier info, use enhanced endpoint
+      if (autoExtractedData?.supplierData) {
+        const response = await apiRequest("POST", "/api/supplier-products/enhanced", {
+          supplierData: autoExtractedData.supplierData,
+          productData: {
+            productName: data.productName,
+            description: data.description,
+            materialType: data.materialType,
+            weight: data.weight,
+            weightUnit: data.weightUnit,
+            capacity: data.capacity,
+            capacityUnit: data.capacityUnit,
+            dimensions: data.height || data.width || data.depth ? {
+              height: data.height,
+              width: data.width,
+              depth: data.depth,
+              unit: data.dimensionUnit
+            } : undefined,
+            recycledContent: data.recycledContent,
+            color: data.color,
+            sku: data.sku,
+            price: data.unitPrice,
+            currency: data.currency,
+            certifications: data.certifications
+          },
+          selectedImages: autoExtractedData.selectedImages || []
+        });
+        return response.json();
+      } else {
+        // Use regular endpoint if no supplier data
+        const response = await apiRequest("POST", "/api/supplier-products", data);
+        return response.json();
+      }
     },
     onSuccess: (response) => {
       const productData = response.data || response;
@@ -121,47 +152,50 @@ export default function SupplierOnboarding() {
   });
 
   const handleAutoDataExtracted = (extractedData: any) => {
-    // Map extracted data to form fields
+    // Handle both supplier and product data
+    const productData = extractedData.productData;
+    const supplierData = extractedData.supplierData;
+    // Map extracted product data to form fields
     const mappedData: Partial<SupplierProductForm> = {};
 
-    if (extractedData.productName) {
-      mappedData.productName = extractedData.productName;
+    if (productData?.productName) {
+      mappedData.productName = productData.productName;
     }
-    if (extractedData.description) {
-      mappedData.description = extractedData.description;
+    if (productData?.description) {
+      mappedData.description = productData.description;
     }
-    if (extractedData.materialType) {
-      mappedData.materialType = extractedData.materialType;
+    if (productData?.materialType) {
+      mappedData.materialType = productData.materialType;
     }
-    if (extractedData.weight) {
-      mappedData.weight = extractedData.weight;
-      mappedData.weightUnit = extractedData.weightUnit || 'g';
+    if (productData?.weight) {
+      mappedData.weight = productData.weight;
+      mappedData.weightUnit = productData.weightUnit || 'g';
     }
-    if (extractedData.capacity) {
-      mappedData.capacity = extractedData.capacity;
-      mappedData.capacityUnit = extractedData.capacityUnit || 'ml';
+    if (productData?.capacity) {
+      mappedData.capacity = productData.capacity;
+      mappedData.capacityUnit = productData.capacityUnit || 'ml';
     }
-    if (extractedData.dimensions) {
-      if (extractedData.dimensions.height) mappedData.height = extractedData.dimensions.height;
-      if (extractedData.dimensions.width) mappedData.width = extractedData.dimensions.width;
-      if (extractedData.dimensions.depth) mappedData.depth = extractedData.dimensions.depth;
-      if (extractedData.dimensions.unit) mappedData.dimensionUnit = extractedData.dimensions.unit;
+    if (productData?.dimensions) {
+      if (productData.dimensions.height) mappedData.height = productData.dimensions.height;
+      if (productData.dimensions.width) mappedData.width = productData.dimensions.width;
+      if (productData.dimensions.depth) mappedData.depth = productData.dimensions.depth;
+      if (productData.dimensions.unit) mappedData.dimensionUnit = productData.dimensions.unit;
     }
-    if (extractedData.recycledContent) {
-      mappedData.recycledContent = extractedData.recycledContent;
+    if (productData?.recycledContent) {
+      mappedData.recycledContent = productData.recycledContent;
     }
-    if (extractedData.certifications) {
-      mappedData.certifications = extractedData.certifications;
+    if (productData?.certifications) {
+      mappedData.certifications = productData.certifications;
     }
-    if (extractedData.sku) {
-      mappedData.sku = extractedData.sku;
+    if (productData?.sku) {
+      mappedData.sku = productData.sku;
     }
-    if (extractedData.color) {
-      mappedData.color = extractedData.color;
+    if (productData?.color) {
+      mappedData.color = productData.color;
     }
-    if (extractedData.price) {
-      mappedData.unitPrice = extractedData.price;
-      mappedData.currency = extractedData.currency || 'USD';
+    if (productData?.price) {
+      mappedData.unitPrice = productData.price;
+      mappedData.currency = productData.currency || 'USD';
     }
 
     // Set the form values

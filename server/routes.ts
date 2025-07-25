@@ -337,7 +337,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         console.log(`Successfully extracted ${result.extractedFields.length} fields from ${url}`);
         res.json({
           success: true,
-          extractedData: result.data,
+          productData: result.productData,
+          supplierData: result.supplierData,
           extractedFields: result.extractedFields,
           totalFields: result.totalFields,
           extractionRate: `${Math.round((result.extractedFields.length / result.totalFields) * 100)}%`,
@@ -397,6 +398,51 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // Serve uploaded images statically
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // Enhanced Supplier Product Creation with Deduplication
+  app.post('/api/supplier-products/enhanced', async (req, res) => {
+    try {
+      const { supplierData, productData, selectedImages } = req.body;
+
+      if (!supplierData && !productData) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Either supplier data or product data is required' 
+        });
+      }
+
+      // Import the service
+      const { SupplierProductService } = await import('./services/SupplierProductService');
+
+      const result = await SupplierProductService.createSupplierProduct({
+        supplierData: supplierData || {},
+        productData: productData || {},
+        selectedImages: selectedImages || []
+      });
+
+      console.log(`${result.isNewSupplier ? 'Created new' : 'Used existing'} supplier: ${result.supplierId}`);
+      console.log(`Created product: ${result.productId}`);
+
+      res.json({
+        success: true,
+        data: {
+          supplierId: result.supplierId,
+          productId: result.productId,
+          isNewSupplier: result.isNewSupplier,
+          message: result.isNewSupplier 
+            ? 'New supplier and product created successfully'
+            : 'Product added to existing supplier'
+        }
+      });
+
+    } catch (error) {
+      console.error('Error in enhanced supplier-products creation:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred during supplier product creation' 
+      });
+    }
+  });
 
   // Register admin routes
   app.use('/api/admin', adminRouter);

@@ -1,5 +1,17 @@
 import * as cheerio from 'cheerio';
 
+export interface ExtractedSupplierData {
+  companyName?: string;
+  supplierType?: string;
+  description?: string;
+  address?: string;
+  website?: string;
+  email?: string;
+  confidence?: {
+    [key: string]: number; // 0-1 confidence score for each extracted field
+  };
+}
+
 export interface ExtractedProductData {
   productName?: string;
   description?: string;
@@ -29,7 +41,8 @@ export interface ExtractedProductData {
 
 export interface ScrapingResult {
   success: boolean;
-  data?: ExtractedProductData;
+  productData?: ExtractedProductData;
+  supplierData?: ExtractedSupplierData;
   error?: string;
   extractedFields: string[];
   totalFields: number;
@@ -40,8 +53,9 @@ export class WebScrapingService {
   private static readonly TIMEOUT = 10000; // 10 seconds
   private static readonly MAX_CONTENT_LENGTH = 5 * 1024 * 1024; // 5MB
 
-  // Common patterns for product attributes
+  // Common patterns for product and supplier attributes
   private static readonly PATTERNS = {
+    // Product patterns
     weight: [
       /weight[:\s]*(\d+(?:\.\d+)?)\s*(g|kg|grams?|kilograms?|lbs?|pounds?)/i,
       /(\d+(?:\.\d+)?)\s*(g|kg|grams?|kilograms?|lbs?|pounds?)\s*weight/i,
@@ -71,6 +85,28 @@ export class WebScrapingService {
     certifications: [
       /(?:certified|certification)[:\s]*([a-zA-Z0-9\s,]+?)(?:\.|$)/i,
       /(?:iso|fsc|organic|fair\s*trade|bpa[- ]free|food[- ]grade)/i
+    ],
+    
+    // Supplier patterns
+    companyName: [
+      /<title[^>]*>([^<]+?)(?:\s*[-|]|\s*$)/i,
+      /(?:company|corporation|corp\.?|ltd\.?|llc|inc\.?)[:\s]*([^<>\n]+)/i,
+      /(?:about\s+)?([^<>\n]{5,50})(?:\s*[-|]\s*(?:home|welcome|official|website))/i
+    ],
+    email: [
+      /(?:email|contact|e-mail)[:\s]*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i,
+      /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g
+    ],
+    phone: [
+      /(?:phone|tel|telephone)[:\s]*([+]?[\d\s\-\(\)\.]{10,})/i,
+      /([+]?[\d\s\-\(\)\.]{10,})/g
+    ],
+    address: [
+      /(?:address|location)[:\s]*([^<>\n]{10,100})/i,
+      /(\d+[^<>\n]{5,80}(?:street|st\.?|avenue|ave\.?|road|rd\.?|lane|ln\.?|drive|dr\.?))/i
+    ],
+    supplierType: [
+      /(?:manufacturer|producer|supplier|distributor|packaging|bottle|label|closure|ingredient)/i
     ]
   };
 
@@ -115,33 +151,41 @@ export class WebScrapingService {
       const html = await response.text();
       const $ = cheerio.load(html);
       
-      // Extract data using multiple strategies
-      const extractedData = this.extractProductAttributes($);
+      // Extract both product and supplier data
+      const extractedProductData = this.extractProductAttributes($);
+      const extractedSupplierData = this.extractSupplierAttributes($, url);
       
       // Extract product images
       const images = this.extractProductImages($, url);
       if (images.length > 0) {
-        extractedData.productImage = images[0]; // Primary image
+        extractedProductData.productImage = images[0]; // Primary image
         if (images.length > 1) {
-          extractedData.additionalImages = images.slice(1, 5); // Up to 4 additional images
+          extractedProductData.additionalImages = images.slice(1, 5); // Up to 4 additional images
         }
       }
       
       // Calculate confidence and success metrics
-      const extractedFields = Object.keys(extractedData).filter(key => 
-        extractedData[key as keyof ExtractedProductData] !== undefined && 
+      const productFields = Object.keys(extractedProductData).filter(key => 
+        extractedProductData[key as keyof ExtractedProductData] !== undefined && 
         key !== 'confidence'
       );
       
-      const totalPossibleFields = Object.keys(this.PATTERNS).length + 4; // +4 for name, description, sku, productImage
+      const supplierFields = Object.keys(extractedSupplierData).filter(key => 
+        extractedSupplierData[key as keyof ExtractedSupplierData] !== undefined && 
+        key !== 'confidence'
+      );
+      
+      const totalExtractedFields = [...productFields, ...supplierFields.map(f => `supplier_${f}`)];
+      const totalPossibleFields = 20; // Approximate total of all possible fields
 
       return {
-        success: extractedFields.length > 0,
-        data: extractedFields.length > 0 ? extractedData : undefined,
-        extractedFields,
+        success: totalExtractedFields.length > 0,
+        productData: productFields.length > 0 ? extractedProductData : undefined,
+        supplierData: supplierFields.length > 0 ? extractedSupplierData : undefined,
+        extractedFields: totalExtractedFields,
         totalFields: totalPossibleFields,
         images,
-        error: extractedFields.length === 0 ? 'No product data could be extracted from the provided URL' : undefined
+        error: totalExtractedFields.length === 0 ? 'No product or supplier data could be extracted from the provided URL' : undefined
       };
 
     } catch (error) {
@@ -324,6 +368,118 @@ export class WebScrapingService {
           data.sku = skuText;
           data.confidence!.sku = 0.7;
           break;
+        }
+      }
+    }
+
+    return data;
+  }
+
+  private static extractSupplierAttributes($: cheerio.CheerioAPI, url: string): ExtractedSupplierData {
+    const data: ExtractedSupplierData = {
+      confidence: {}
+    };
+
+    // Get all text content for pattern matching
+    const fullText = $('body').text().toLowerCase();
+    
+    // Extract company name from title, header, or meta
+    const title = $('title').text().trim();
+    const companyMeta = $('meta[property="og:site_name"]').attr('content') || 
+                       $('meta[name="author"]').attr('content');
+    
+    // Parse company name from title (remove common suffixes)
+    if (companyMeta) {
+      data.companyName = companyMeta;
+      data.confidence!.companyName = 0.9;
+    } else if (title) {
+      // Extract company name from title, removing common patterns
+      const cleanTitle = title
+        .replace(/\s*[-|]\s*(home|welcome|official|website|products).*$/i, '')
+        .replace(/\s*[-|]\s*.*$/, '')
+        .trim();
+      if (cleanTitle.length > 2 && cleanTitle.length < 50) {
+        data.companyName = cleanTitle;
+        data.confidence!.companyName = 0.7;
+      }
+    }
+
+    // Extract from domain if no company name found
+    if (!data.companyName) {
+      try {
+        const domain = new URL(url).hostname.replace('www.', '');
+        const domainParts = domain.split('.');
+        if (domainParts.length > 0) {
+          data.companyName = domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
+          data.confidence!.companyName = 0.5;
+        }
+      } catch (e) {
+        // Ignore URL parsing errors
+      }
+    }
+
+    // Set website from URL
+    data.website = url;
+    data.confidence!.website = 1.0;
+
+    // Extract email addresses
+    const emailMatches = fullText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+    if (emailMatches && emailMatches.length > 0) {
+      // Filter out common non-contact emails
+      const contactEmail = emailMatches.find(email => 
+        !email.includes('noreply') && 
+        !email.includes('no-reply') &&
+        !email.includes('donotreply') &&
+        (email.includes('info') || email.includes('contact') || email.includes('sales') || email.includes('hello'))
+      ) || emailMatches[0];
+      
+      data.email = contactEmail;
+      data.confidence!.email = contactEmail.includes('info') || contactEmail.includes('contact') ? 0.8 : 0.6;
+    }
+
+    // Extract address from contact sections
+    const contactSections = $('.contact, .address, .location, [class*="contact"], [class*="address"]');
+    contactSections.each((_, element) => {
+      const text = $(element).text();
+      const addressMatch = text.match(/(\d+[^<>\n]{10,80}(?:street|st\.?|avenue|ave\.?|road|rd\.?|lane|ln\.?|drive|dr\.?))/i);
+      if (addressMatch && !data.address) {
+        data.address = addressMatch[1].trim();
+        data.confidence!.address = 0.7;
+      }
+    });
+
+    // Extract supplier type from content analysis
+    const supplierTypes = [
+      { keywords: ['bottle', 'bottles', 'glass', 'container'], type: 'Bottle Producer' },
+      { keywords: ['label', 'labels', 'printing', 'design'], type: 'Label Maker' },
+      { keywords: ['closure', 'closures', 'cap', 'caps', 'cork'], type: 'Closure Producer' },
+      { keywords: ['packaging', 'box', 'boxes', 'carton'], type: 'Packaging Supplier' },
+      { keywords: ['ingredient', 'ingredients', 'flavor', 'essence'], type: 'Ingredient Supplier' },
+      { keywords: ['distillery', 'distilling', 'production', 'manufacturing'], type: 'Contract Manufacturer' },
+      { keywords: ['supplier', 'wholesale', 'distributor'], type: 'General Supplier' }
+    ];
+
+    for (const typeInfo of supplierTypes) {
+      const hasKeyword = typeInfo.keywords.some(keyword => fullText.includes(keyword));
+      if (hasKeyword) {
+        data.supplierType = typeInfo.type;
+        data.confidence!.supplierType = 0.7;
+        break;
+      }
+    }
+
+    // Extract description from meta description or about sections
+    const metaDescription = $('meta[name="description"]').attr('content');
+    if (metaDescription) {
+      data.description = metaDescription.substring(0, 300);
+      data.confidence!.description = 0.8;
+    } else {
+      const aboutSections = $('.about, .description, .company, [class*="about"], [class*="company"]');
+      if (aboutSections.length > 0) {
+        const aboutText = aboutSections.first().text().trim().substring(0, 300);
+        if (aboutText.length > 20) {
+          data.description = aboutText;
+          data.confidence!.description = 0.6;
         }
       }
     }

@@ -26,6 +26,18 @@ import {
   Plus
 } from "lucide-react";
 
+interface ExtractedSupplierData {
+  companyName?: string;
+  supplierType?: string;
+  description?: string;
+  address?: string;
+  website?: string;
+  email?: string;
+  confidence?: {
+    [key: string]: number;
+  };
+}
+
 interface ExtractedProductData {
   productName?: string;
   description?: string;
@@ -54,15 +66,23 @@ interface ExtractedProductData {
   };
 }
 
+interface ExtractedData {
+  productData?: ExtractedProductData;
+  supplierData?: ExtractedSupplierData;
+  selectedImages?: string[];
+}
+
 interface AutoDataExtractionProps {
-  onDataExtracted: (data: ExtractedProductData) => void;
+  onDataExtracted: (data: ExtractedData) => void;
   disabled?: boolean;
 }
 
 export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled = false }: AutoDataExtractionProps) {
   const [url, setUrl] = useState("");
-  const [extractedData, setExtractedData] = useState<ExtractedProductData | null>(null);
-  const [editableData, setEditableData] = useState<ExtractedProductData | null>(null);
+  const [extractedProductData, setExtractedProductData] = useState<ExtractedProductData | null>(null);
+  const [extractedSupplierData, setExtractedSupplierData] = useState<ExtractedSupplierData | null>(null);
+  const [editableProductData, setEditableProductData] = useState<ExtractedProductData | null>(null);
+  const [editableSupplierData, setEditableSupplierData] = useState<ExtractedSupplierData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [extractionStats, setExtractionStats] = useState<{
     extractedFields: string[];
@@ -81,8 +101,10 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
     },
     onSuccess: (result) => {
       if (result.success) {
-        setExtractedData(result.extractedData);
-        setEditableData(result.extractedData);
+        setExtractedProductData(result.productData || null);
+        setExtractedSupplierData(result.supplierData || null);
+        setEditableProductData(result.productData || null);
+        setEditableSupplierData(result.supplierData || null);
         setExtractionStats({
           extractedFields: result.extractedFields,
           totalFields: result.totalFields,
@@ -100,18 +122,26 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
   };
 
   const handleApplyData = () => {
-    if (editableData) {
-      // Include selected images in the data
-      const dataWithImages = {
-        ...editableData,
-        selectedImages,
-        productImage: selectedImages[0], // Primary image is first selected
-        additionalImages: selectedImages.slice(1) // Rest are additional
+    if (editableProductData || editableSupplierData) {
+      // Combine both product and supplier data
+      const combinedData: ExtractedData = {
+        productData: editableProductData ? {
+          ...editableProductData,
+          selectedImages,
+          productImage: selectedImages[0], // Primary image is first selected
+          additionalImages: selectedImages.slice(1) // Rest are additional
+        } : undefined,
+        supplierData: editableSupplierData,
+        selectedImages
       };
-      onDataExtracted(dataWithImages);
+      
+      onDataExtracted(combinedData);
+      
       // Clear the extraction state after applying
-      setExtractedData(null);
-      setEditableData(null);
+      setExtractedProductData(null);
+      setExtractedSupplierData(null);
+      setEditableProductData(null);
+      setEditableSupplierData(null);
       setExtractionStats(null);
       setExtractedImages([]);
       setSelectedImages([]);
@@ -125,7 +155,8 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
   };
 
   const handleCancelEdit = () => {
-    setEditableData(extractedData); // Reset to original data
+    setEditableProductData(extractedProductData); // Reset to original data
+    setEditableSupplierData(extractedSupplierData);
     setIsEditing(false);
   };
 
@@ -135,8 +166,10 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
 
   const handleReset = () => {
     setUrl("");
-    setExtractedData(null);
-    setEditableData(null);
+    setExtractedProductData(null);
+    setExtractedSupplierData(null);
+    setEditableProductData(null);
+    setEditableSupplierData(null);
     setExtractionStats(null);
     setExtractedImages([]);
     setSelectedImages([]);
@@ -168,17 +201,23 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
     });
   };
 
-  const updateEditableField = (field: keyof ExtractedProductData, value: any) => {
-    if (editableData) {
-      setEditableData({ ...editableData, [field]: value });
+  const updateEditableProductField = (field: keyof ExtractedProductData, value: any) => {
+    if (editableProductData) {
+      setEditableProductData({ ...editableProductData, [field]: value });
     }
   };
 
-  const renderEditableField = (label: string, field: keyof ExtractedProductData, type: 'text' | 'number' | 'textarea' = 'text') => {
-    const value = editableData?.[field];
+  const updateEditableSupplierField = (field: keyof ExtractedSupplierData, value: any) => {
+    if (editableSupplierData) {
+      setEditableSupplierData({ ...editableSupplierData, [field]: value });
+    }
+  };
+
+  const renderEditableProductField = (label: string, field: keyof ExtractedProductData, type: 'text' | 'number' | 'textarea' = 'text') => {
+    const value = editableProductData?.[field];
     if (value === undefined && !isEditing) return null;
 
-    const confidence = extractedData?.confidence?.[field as string];
+    const confidence = extractedProductData?.confidence?.[field as string];
     const confidenceColor = confidence ? (confidence > 0.7 ? 'text-green-600' : confidence > 0.5 ? 'text-yellow-600' : 'text-red-600') : '';
 
     return (
