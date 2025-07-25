@@ -133,24 +133,12 @@ export default function SupplierOnboarding() {
       const productData = response.data || response;
       setSavedProductId(productData.id);
       
-      // Check if we have images from auto-extraction (handle both old and new field names)
-      const hasImages = autoExtractedData?.selectedImages?.length > 0 || 
-                       autoExtractedData?.productData?.photos?.length > 0 ||
-                       autoExtractedData?.productData?.additionalImages?.length > 0;
-      
-      if (!hasImages) {
-        setShowImageUpload(true);
-        toast({
-          title: "Product Saved Successfully",
-          description: "Your product has been saved. You can now upload images if needed.",
-        });
-      } else {
-        toast({
-          title: "Product Submitted Successfully",
-          description: "Your product has been added to our supplier network for review.",
-        });
-        setCurrentStep(3);
-      }
+      // Since this is imported data that has been reviewed, save directly to supplier/product lists
+      toast({
+        title: "Supplier & Product Added Successfully",
+        description: "The supplier and product have been added to your network and are ready to use.",
+      });
+      setCurrentStep(3);
     },
     onError: (error) => {
       toast({
@@ -642,13 +630,7 @@ export default function SupplierOnboarding() {
                       <Button 
                         type="submit"
                         disabled={submitMutation.isPending}
-                        className="bg-avallen-green hover:bg-green-600 text-white"
-                        onClick={() => {
-                          console.log('🔴 Submit button clicked!');
-                          console.log('🔴 Form errors:', form.formState.errors);
-                          console.log('🔴 Form values:', form.getValues());
-                          console.log('🔴 Form is valid:', form.formState.isValid);
-                        }}
+                        className="bg-avallen-green hover:bg-green-600 text-white min-w-[140px] opacity-100 visible"
                       >
                         {submitMutation.isPending ? (
                           <>
@@ -714,10 +696,10 @@ export default function SupplierOnboarding() {
                 <CardContent className="text-center py-12">
                   <CheckCircle className="w-16 h-16 text-avallen-green mx-auto mb-4" />
                   <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                    Product Submitted Successfully!
+                    Supplier & Product Added Successfully!
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Your product information has been submitted for review and will be added to our verified supplier network once approved.
+                    The supplier and product have been added to your network and are now available for use in your sustainability assessments.
                   </p>
                   <Button 
                     onClick={() => {
