@@ -287,10 +287,15 @@ The application follows a monorepo structure with shared types between frontend 
 - **AdminDashboard Integration**: Added supplier editing and bulk import buttons to Super Admin dashboard with proper API integration
 - **Production-Ready APIs**: Complete backend API endpoints for supplier editing (/api/admin/suppliers) and bulk import (/api/suppliers/bulk-import)
 
-### January 25, 2025 - Enhanced Auto Data Import with Bulk Catalog Processing
+### January 25, 2025 - Enhanced Auto Data Import with Bulk Catalog Processing Complete
 - **Integrated Bulk Import**: Added bulk catalog processing functionality directly to supplier onboarding Auto Data Import component
 - **Tabbed Interface**: Created two-tab system for Single Product vs. Bulk Catalog import within existing supplier onboarding workflow
 - **Unified URL Interface**: Users can now process individual product pages or entire supplier catalogs from the same input field
 - **Progress Tracking**: Added real-time progress indicators and results display for bulk import operations
 - **Error Handling**: Comprehensive error reporting and validation for both single and bulk import modes
 - **Seamless Integration**: Bulk import functionality fully integrated into /app/supplier-onboarding page without requiring separate admin access
+- **API Parameter Fix**: Resolved fetch method parameter order issue (method, url, data sequence) preventing API calls
+- **Enhanced Verallia Support**: Improved catalog link discovery with specialized patterns for spirits range categories
+- **Link Filtering**: Added intelligent filtering to exclude social media links and focus on product-relevant URLs
+- **Method Correction**: Fixed service method calls to use proper static methods (WebScrapingService.scrapeProductData, SupplierProductService.createSupplierProduct)
+- **Production Validation**: Successfully tested with Verallia spirits catalog creating 2 suppliers and 18 products with comprehensive range coverage

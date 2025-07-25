@@ -107,60 +107,135 @@ export class BulkImportService {
   private async discoverVeralliaLinks($: cheerio.CheerioAPI, baseUrl: string): Promise<ProductLink[]> {
     const links: ProductLink[] = [];
 
-    // Look for product cards, links, and PDF downloads
-    const productSelectors = [
-      '.product-card a',
-      '.bottle-item a',
-      '.product-link',
-      'a[href*="/bottle"]',
-      'a[href*="/product"]',
-      'a[href*=".pdf"]'
-    ];
+    console.log('Analyzing Verallia spirits range page structure...');
+    console.log(`- Total links on page: ${$('a').length}`);
+    console.log(`- Total images on page: ${$('img').length}`);
 
-    productSelectors.forEach(selector => {
-      $(selector).each((_, element) => {
-        const href = $(element).attr('href');
-        const title = $(element).text().trim() || $(element).attr('title') || 'Unknown Product';
-
-        if (href) {
-          const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
-          
-          if (href.endsWith('.pdf')) {
-            // PDF link - add to existing product or create new one
-            const existingLink = links.find(l => l.title === title);
-            if (existingLink) {
-              existingLink.pdfUrl = fullUrl;
-            } else {
-              links.push({ url: fullUrl, title, pdfUrl: fullUrl });
-            }
-          } else {
-            // Product page link
-            const existingLink = links.find(l => l.url === fullUrl);
-            if (!existingLink) {
-              links.push({ url: fullUrl, title });
-            }
-          }
-        }
-      });
-    });
-
-    // Additional PDF discovery in the page
-    $('a[href$=".pdf"]').each((_, element) => {
+    // Debug: Show sample of all links found
+    const allHrefs: string[] = [];
+    $('a').each((_, element) => {
       const href = $(element).attr('href');
-      const title = $(element).text().trim() || 'Product Specification';
+      if (href) allHrefs.push(href);
+    });
+    console.log('Sample of all links found:', allHrefs.slice(0, 10));
+
+    // For Verallia, try different approach - look for any links that could be products
+    const allLinks: string[] = [];
+    
+    // First pass: Look for explicit product patterns
+    $('a').each((_, element) => {
+      const href = $(element).attr('href');
+      const text = $(element).text().trim().toLowerCase();
+      const title = $(element).attr('title')?.toLowerCase() || '';
       
-      if (href) {
-        const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
-        const existingLink = links.find(l => l.title.includes(title) || title.includes(l.title));
-        if (existingLink && !existingLink.pdfUrl) {
-          existingLink.pdfUrl = fullUrl;
-        } else if (!existingLink) {
-          links.push({ url: fullUrl, title, pdfUrl: fullUrl });
+      if (href && href.trim()) {
+        // Verallia-specific patterns - look for category pages and products
+        if (href.includes('.pdf') ||
+            href.includes('bottle') ||
+            href.includes('glass') ||
+            href.includes('spirits') ||
+            href.includes('product') ||
+            href.includes('catalogue') ||
+            href.includes('standardrange') ||
+            href.includes('handled') ||
+            href.includes('dump') ||
+            href.includes('decanter') ||
+            href.includes('wp-content/uploads') ||
+            text.includes('bottle') ||
+            text.includes('glass') ||
+            text.includes('spirits') ||
+            text.includes('pdf') ||
+            text.includes('download') ||
+            text.includes('view') ||
+            text.includes('range') ||
+            text.includes('handled') ||
+            text.includes('dump') ||
+            text.includes('decanter') ||
+            title.includes('bottle') ||
+            title.includes('glass') ||
+            title.includes('product') ||
+            title.includes('range')) {
+          allLinks.push(href);
         }
       }
     });
 
-    return links.filter(link => link.url && link.title);
+    console.log(`Found ${allLinks.length} potentially relevant links`);
+    
+    // If still no links, be even more permissive
+    if (allLinks.length === 0) {
+      console.log('No specific links found, trying broader search...');
+      $('a[href*="wp-content"], a[href*=".pdf"], a[href*="catalogue"]').each((_, element) => {
+        const href = $(element).attr('href');
+        if (href && href.trim()) {
+          allLinks.push(href);
+        }
+      });
+      console.log(`Broader search found ${allLinks.length} links`);
+    }
+
+    // Filter out unwanted links (Instagram, external sites, etc.)
+    const filteredLinks = allLinks.filter(href => {
+      // Skip social media and non-product links
+      return !href.includes('instagram.com') && 
+             !href.includes('facebook.com') && 
+             !href.includes('twitter.com') && 
+             !href.includes('linkedin.com') &&
+             !href.includes('mailto:') &&
+             !href.includes('tel:') &&
+             !href.includes('#') &&
+             href !== '/catalogue/' && // Skip generic catalogue link
+             href.length > 10; // Skip very short links
+    });
+
+    console.log(`After filtering: ${filteredLinks.length} relevant links`);
+
+    // Process filtered links
+    filteredLinks.forEach(href => {
+      try {
+        const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
+        const linkElement = $(`a[href="${href}"]`).first();
+        const title = linkElement.text().trim() || linkElement.attr('title') || `Product from ${href}`;
+        
+        if (!links.some(l => l.url === fullUrl)) {
+          links.push({
+            url: fullUrl,
+            title: title,
+            type: href.includes('.pdf') ? 'pdf' : 'product'
+          });
+        }
+      } catch (error) {
+        console.warn(`Skipping invalid URL: ${href}`);
+      }
+    });
+
+    // Look for any PDF documents specifically
+    $('a[href$=".pdf"], a[href*=".pdf"]').each((_, element) => {
+      const href = $(element).attr('href');
+      if (href) {
+        try {
+          const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
+          const title = $(element).text().trim() || 'Product Specification PDF';
+          
+          if (!links.some(l => l.url === fullUrl)) {
+            links.push({
+              url: fullUrl,
+              title: title,
+              type: 'pdf'
+            });
+          }
+        } catch (error) {
+          console.warn(`Skipping invalid PDF URL: ${href}`);
+        }
+      }
+    });
+
+    console.log(`Final result: ${links.length} product links discovered`);
+    links.slice(0, 5).forEach((link, i) => {
+      console.log(`  ${i + 1}. [${link.type}] ${link.title} - ${link.url}`);
+    });
+
+    return links;
   }
 
   private async discoverGenericLinks($: cheerio.CheerioAPI, baseUrl: string): Promise<ProductLink[]> {
@@ -216,7 +291,7 @@ export class BulkImportService {
       // If we don't have data from PDF, try web scraping
       if (!productData || !supplierData) {
         try {
-          const scrapedData = await this.webScrapingService.scrapeProductData(link.url);
+          const scrapedData = await WebScrapingService.scrapeProductData(link.url);
           if (scrapedData.success) {
             productData = productData || scrapedData.productData;
             supplierData = supplierData || scrapedData.supplierData;
@@ -247,24 +322,23 @@ export class BulkImportService {
 
       // Create supplier and product
       if (supplierData && productData) {
-        const createResult = await this.supplierProductService.createSupplierProduct({
+        const createResult = await SupplierProductService.createSupplierProduct({
           supplierData,
           productData,
           selectedImages: []
         });
 
-        if (createResult.success) {
-          if (createResult.data.isNewSupplier) {
+        if (createResult) {
+          if (createResult.isNewSupplier) {
             result.suppliersCreated++;
-            result.results.push({
-              type: 'supplier',
-              name: supplierData.companyName,
-              source: link.url,
-              success: true
-            });
           }
-
           result.productsCreated++;
+          result.results.push({
+            type: 'product',
+            name: productData.productName || link.title,
+            source: link.url,
+            success: true
+          });
           result.results.push({
             type: 'product',
             name: productData.productName,
