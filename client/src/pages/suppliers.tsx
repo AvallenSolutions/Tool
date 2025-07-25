@@ -29,7 +29,7 @@ export default function Suppliers() {
     supplierType: '',
   });
 
-  const { data: suppliers = [], isLoading: suppliersLoading } = useQuery({
+  const { data: suppliers, isLoading: suppliersLoading } = useQuery({
     queryKey: ["/api/suppliers"],
     retry: false,
   });
@@ -230,13 +230,13 @@ export default function Suppliers() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          {getStatusIcon(supplier.verification_status || supplier.status)}
+                          {getStatusIcon(supplier.status)}
                           <div>
-                            <CardTitle className="text-slate-gray">{supplier.supplier_name || supplier.name}</CardTitle>
-                            <p className="text-sm text-gray-500">{supplier.contact_email || supplier.email}</p>
+                            <CardTitle className="text-slate-gray">{supplier.name}</CardTitle>
+                            <p className="text-sm text-gray-500">{supplier.email}</p>
                           </div>
                         </div>
-                        {getStatusBadge(supplier.verification_status || supplier.status)}
+                        {getStatusBadge(supplier.status)}
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -251,7 +251,7 @@ export default function Suppliers() {
                         </div>
                         <div>
                           <Label className="text-sm text-gray-600">Supplier Type</Label>
-                          <p className="font-medium text-slate-gray capitalize">{supplier.supplier_category?.replace('_', ' ') || supplier.supplierType?.replace('_', ' ') || 'Not specified'}</p>
+                          <p className="font-medium text-slate-gray capitalize">{supplier.supplierType?.replace('_', ' ') || 'Not specified'}</p>
                         </div>
                       </div>
                       
