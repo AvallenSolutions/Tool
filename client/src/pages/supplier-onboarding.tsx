@@ -201,6 +201,9 @@ export default function SupplierOnboarding() {
   };
 
   const onSubmit = (data: SupplierProductForm) => {
+    console.log('📝 Form onSubmit called with:', data);
+    console.log('📝 Form errors:', form.formState.errors);
+    console.log('📝 Form is valid:', form.formState.isValid);
     submitMutation.mutate(data);
   };
 
@@ -635,6 +638,12 @@ export default function SupplierOnboarding() {
                         type="submit"
                         disabled={submitMutation.isPending}
                         className="bg-avallen-green hover:bg-green-600 text-white"
+                        onClick={() => {
+                          console.log('🔴 Submit button clicked!');
+                          console.log('🔴 Form errors:', form.formState.errors);
+                          console.log('🔴 Form values:', form.getValues());
+                          console.log('🔴 Form is valid:', form.formState.isValid);
+                        }}
                       >
                         {submitMutation.isPending ? (
                           <>
