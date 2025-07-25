@@ -17,6 +17,8 @@ import { lcaService, LCAJobManager } from "./lca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
+import { SupplierProductService } from "./services/SupplierProductService";
+import { bulkImportService } from "./services/BulkImportService";
 import path from "path";
 import fs from "fs";
 import { adminRouter } from "./routes/admin";
@@ -441,6 +443,86 @@ Be precise and quote actual text from the content, not generic terms.`;
         success: false,
         error: 'Internal server error occurred during supplier product creation' 
       });
+    }
+  });
+
+  // Bulk Import API Endpoints (Admin only)
+  app.post("/api/admin/bulk-import/url", async (req, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'URL is required' });
+      }
+
+      // Start the bulk import job
+      const jobId = await bulkImportService.startUrlImport(url);
+      
+      res.json({ 
+        success: true, 
+        jobId,
+        message: 'Bulk import started. Check status for progress.' 
+      });
+    } catch (error) {
+      console.error('Bulk URL import error:', error);
+      res.status(500).json({ error: 'Failed to start bulk import' });
+    }
+  });
+
+  app.post("/api/admin/bulk-import/pdf", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'PDF file is required' });
+      }
+
+      // Validate file type
+      if (req.file.mimetype !== 'application/pdf') {
+        return res.status(400).json({ error: 'Only PDF files are allowed' });
+      }
+
+      // Start the bulk import job
+      const jobId = await bulkImportService.startPdfImport(req.file.path);
+      
+      res.json({ 
+        success: true, 
+        jobId,
+        message: 'Bulk PDF import started. Check status for progress.' 
+      });
+    } catch (error) {
+      console.error('Bulk PDF import error:', error);
+      res.status(500).json({ error: 'Failed to start bulk PDF import' });
+    }
+  });
+
+  app.get("/api/admin/bulk-import/status/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const status = bulkImportService.getJobStatus(jobId);
+      
+      if (!status) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+      
+      res.json(status);
+    } catch (error) {
+      console.error('Get job status error:', error);
+      res.status(500).json({ error: 'Failed to get job status' });
+    }
+  });
+
+  app.get("/api/admin/bulk-import/results/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const result = bulkImportService.getJobResult(jobId);
+      
+      if (!result) {
+        return res.status(404).json({ error: 'Results not found or job not completed' });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Get job results error:', error);
+      res.status(500).json({ error: 'Failed to get job results' });
     }
   });
 

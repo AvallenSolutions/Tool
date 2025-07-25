@@ -29,6 +29,7 @@ import {
   ShoppingCart
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import BulkImportButton from "@/components/admin/BulkImportButton";
 
 // Form schemas
 const supplierFormSchema = z.object({
@@ -161,6 +162,7 @@ export default function AdminSupplierDashboard() {
           <p className="text-muted-foreground">Manage verified suppliers and their product catalogs</p>
         </div>
         <div className="flex gap-2">
+          <BulkImportButton />
           <CreateSupplierDialog 
             onSubmit={(data) => createSupplierMutation.mutate(data)}
             isLoading={createSupplierMutation.isPending}
