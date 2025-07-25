@@ -85,9 +85,14 @@ export default function SupplierOnboarding() {
 
   const submitMutation = useMutation({
     mutationFn: async (data: SupplierProductForm) => {
+      console.log('🚀 Form submission starting with data:', data);
+      console.log('🚀 Auto extracted data available:', autoExtractedData);
+      
       // If we have auto-extracted data with supplier info, use enhanced endpoint
       if (autoExtractedData?.supplierData) {
-        const response = await apiRequest("POST", "/api/supplier-products/enhanced", {
+        console.log('🎯 Using enhanced endpoint with supplier data');
+        
+        const enhancedPayload = {
           supplierData: autoExtractedData.supplierData,
           productData: {
             productName: data.productName,
@@ -111,9 +116,14 @@ export default function SupplierOnboarding() {
             certifications: data.certifications
           },
           selectedImages: autoExtractedData.selectedImages || []
-        });
+        };
+        
+        console.log('📦 Enhanced API payload:', enhancedPayload);
+        
+        const response = await apiRequest("POST", "/api/supplier-products/enhanced", enhancedPayload);
         return response.json();
       } else {
+        console.log('🎯 Using regular endpoint (no supplier data)');
         // Use regular endpoint if no supplier data
         const response = await apiRequest("POST", "/api/supplier-products", data);
         return response.json();
