@@ -20,6 +20,8 @@ export interface ExtractedProductData {
   price?: number;
   currency?: string;
   sku?: string;
+  productImage?: string; // URL to the main product image
+  additionalImages?: string[]; // URLs to additional product images
   confidence?: {
     [key: string]: number; // 0-1 confidence score for each extracted field
   };
@@ -31,6 +33,7 @@ export interface ScrapingResult {
   error?: string;
   extractedFields: string[];
   totalFields: number;
+  images?: string[]; // All found product images
 }
 
 export class WebScrapingService {
@@ -115,19 +118,29 @@ export class WebScrapingService {
       // Extract data using multiple strategies
       const extractedData = this.extractProductAttributes($);
       
+      // Extract product images
+      const images = this.extractProductImages($, url);
+      if (images.length > 0) {
+        extractedData.productImage = images[0]; // Primary image
+        if (images.length > 1) {
+          extractedData.additionalImages = images.slice(1, 5); // Up to 4 additional images
+        }
+      }
+      
       // Calculate confidence and success metrics
       const extractedFields = Object.keys(extractedData).filter(key => 
         extractedData[key as keyof ExtractedProductData] !== undefined && 
         key !== 'confidence'
       );
       
-      const totalPossibleFields = Object.keys(this.PATTERNS).length + 3; // +3 for name, description, sku
+      const totalPossibleFields = Object.keys(this.PATTERNS).length + 4; // +4 for name, description, sku, productImage
 
       return {
         success: extractedFields.length > 0,
         data: extractedFields.length > 0 ? extractedData : undefined,
         extractedFields,
         totalFields: totalPossibleFields,
+        images,
         error: extractedFields.length === 0 ? 'No product data could be extracted from the provided URL' : undefined
       };
 
@@ -316,6 +329,123 @@ export class WebScrapingService {
     }
 
     return data;
+  }
+
+  private static extractProductImages($: cheerio.CheerioAPI, baseUrl: string): string[] {
+    const images: string[] = [];
+    const imageSelectors = [
+      'img[src]',  // All images with src attribute
+      'img[data-src]', // Lazy loaded images
+      'img[class*="product"]',
+      'img[class*="main"]',
+      'img[id*="product"]',
+      '.product-image img',
+      '.product-photo img',
+      '.main-image img',
+      '[class*="gallery"] img',
+      '[class*="slideshow"] img',
+      '[class*="hero"] img',
+      'picture img',
+      'figure img',
+      'meta[property="og:image"]',
+      'meta[name="twitter:image"]'
+    ];
+
+    // Extract images from various selectors
+    imageSelectors.forEach(selector => {
+      if (selector.startsWith('meta')) {
+        const metaImage = $(selector).attr('content');
+        if (metaImage) {
+          images.push(this.resolveImageUrl(metaImage, baseUrl));
+        }
+      } else {
+        $(selector).each((_, element) => {
+          const imgElement = $(element);
+          const imgSrc = imgElement.attr('src') || 
+                        imgElement.attr('data-src') || 
+                        imgElement.attr('data-lazy') ||
+                        imgElement.attr('data-original') ||
+                        imgElement.attr('data-lazy-src');
+          if (imgSrc) {
+            images.push(this.resolveImageUrl(imgSrc, baseUrl));
+          }
+        });
+      }
+    });
+
+    // Also try to find images from CSS background-image properties
+    $('[style*="background-image"]').each((_, element) => {
+      const style = $(element).attr('style');
+      if (style) {
+        const bgMatch = style.match(/background-image:\s*url\(['"]?([^'"]+)['"]?\)/);
+        if (bgMatch && bgMatch[1]) {
+          images.push(this.resolveImageUrl(bgMatch[1], baseUrl));
+        }
+      }
+    });
+
+    // Filter out invalid images and duplicates
+    const validImages = images
+      .filter(img => img && img.length > 0)
+      .filter(img => this.isValidImageUrl(img))
+      .filter((img, index, arr) => arr.indexOf(img) === index) // Remove duplicates
+      .slice(0, 10); // Limit to 10 images
+
+    console.log(`Image extraction debug for ${baseUrl}:`);
+    console.log(`- Found ${images.length} total images`);
+    console.log(`- Valid images after filtering: ${validImages.length}`);
+    console.log(`- Sample images:`, images.slice(0, 3));
+
+    return validImages;
+  }
+
+  private static resolveImageUrl(imageSrc: string, baseUrl: string): string {
+    try {
+      if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) {
+        return imageSrc;
+      }
+      
+      const base = new URL(baseUrl);
+      if (imageSrc.startsWith('//')) {
+        return base.protocol + imageSrc;
+      }
+      
+      if (imageSrc.startsWith('/')) {
+        return base.origin + imageSrc;
+      }
+      
+      return new URL(imageSrc, baseUrl).href;
+    } catch (error) {
+      console.warn('Failed to resolve image URL:', imageSrc, error);
+      return imageSrc;
+    }
+  }
+
+  private static isValidImageUrl(url: string): boolean {
+    try {
+      const parsedUrl = new URL(url);
+      const pathname = parsedUrl.pathname.toLowerCase();
+      
+      // Check for common image extensions
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+      const hasImageExtension = imageExtensions.some(ext => pathname.endsWith(ext));
+      
+      // Check for image-like patterns in URL
+      const hasImagePattern = pathname.includes('image') || 
+                             pathname.includes('photo') || 
+                             pathname.includes('product') ||
+                             url.includes('image') ||
+                             url.includes('photo');
+      
+      // Exclude obvious non-product images
+      const excludePatterns = ['logo', 'icon', 'favicon', 'avatar', 'thumbnail'];
+      const hasExcludePattern = excludePatterns.some(pattern => 
+        url.toLowerCase().includes(pattern));
+      
+      return (hasImageExtension || hasImagePattern) && !hasExcludePattern;
+    } catch (error) {
+      return false;
+    }
   }
 
   private static normalizeUnit(unit: string): string {

@@ -307,7 +307,8 @@ Be precise and quote actual text from the content, not generic terms.`;
           extractedData: result.data,
           extractedFields: result.extractedFields,
           totalFields: result.totalFields,
-          extractionRate: `${Math.round((result.extractedFields.length / result.totalFields) * 100)}%`
+          extractionRate: `${Math.round((result.extractedFields.length / result.totalFields) * 100)}%`,
+          images: result.images || []
         });
       } else {
         console.log(`Failed to extract data from ${url}: ${result.error}`);

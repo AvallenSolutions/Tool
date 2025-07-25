@@ -2,9 +2,12 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Globe, 
@@ -13,7 +16,11 @@ import {
   AlertCircle, 
   Info,
   ExternalLink,
-  Download
+  Download,
+  Edit3,
+  Image,
+  Save,
+  X
 } from "lucide-react";
 
 interface ExtractedProductData {
@@ -36,6 +43,8 @@ interface ExtractedProductData {
   price?: number;
   currency?: string;
   sku?: string;
+  productImage?: string;
+  additionalImages?: string[];
   confidence?: {
     [key: string]: number;
   };
@@ -49,11 +58,14 @@ interface AutoDataExtractionProps {
 export default function AutoDataExtraction({ onDataExtracted, disabled = false }: AutoDataExtractionProps) {
   const [url, setUrl] = useState("");
   const [extractedData, setExtractedData] = useState<ExtractedProductData | null>(null);
+  const [editableData, setEditableData] = useState<ExtractedProductData | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [extractionStats, setExtractionStats] = useState<{
     extractedFields: string[];
     totalFields: number;
     extractionRate: string;
   } | null>(null);
+  const [extractedImages, setExtractedImages] = useState<string[]>([]);
 
   const scrapeMutation = useMutation({
     mutationFn: async (productUrl: string) => {
@@ -65,11 +77,13 @@ export default function AutoDataExtraction({ onDataExtracted, disabled = false }
     onSuccess: (result) => {
       if (result.success) {
         setExtractedData(result.extractedData);
+        setEditableData(result.extractedData);
         setExtractionStats({
           extractedFields: result.extractedFields,
           totalFields: result.totalFields,
           extractionRate: result.extractionRate
         });
+        setExtractedImages(result.images || []);
       }
     }
   });
@@ -80,13 +94,75 @@ export default function AutoDataExtraction({ onDataExtracted, disabled = false }
   };
 
   const handleApplyData = () => {
-    if (extractedData) {
-      onDataExtracted(extractedData);
+    if (editableData) {
+      onDataExtracted(editableData);
       // Clear the extraction state after applying
       setExtractedData(null);
+      setEditableData(null);
       setExtractionStats(null);
+      setExtractedImages([]);
       setUrl("");
+      setIsEditing(false);
     }
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditableData(extractedData); // Reset to original data
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = () => {
+    setIsEditing(false);
+  };
+
+  const updateEditableField = (field: keyof ExtractedProductData, value: any) => {
+    if (editableData) {
+      setEditableData({ ...editableData, [field]: value });
+    }
+  };
+
+  const renderEditableField = (label: string, field: keyof ExtractedProductData, type: 'text' | 'number' | 'textarea' = 'text') => {
+    const value = editableData?.[field];
+    if (value === undefined && !isEditing) return null;
+
+    const confidence = extractedData?.confidence?.[field as string];
+    const confidenceColor = confidence ? (confidence > 0.7 ? 'text-green-600' : confidence > 0.5 ? 'text-yellow-600' : 'text-red-600') : '';
+
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">{label}</Label>
+          {confidence && (
+            <Badge variant="outline" className={`text-xs ${confidenceColor}`}>
+              {Math.round(confidence * 100)}% confidence
+            </Badge>
+          )}
+        </div>
+        {isEditing ? (
+          type === 'textarea' ? (
+            <Textarea
+              value={value?.toString() || ''}
+              onChange={(e) => updateEditableField(field, e.target.value)}
+              className="min-h-[60px]"
+            />
+          ) : (
+            <Input
+              type={type}
+              value={value?.toString() || ''}
+              onChange={(e) => updateEditableField(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
+            />
+          )
+        ) : (
+          <div className="p-2 bg-gray-50 rounded text-sm">
+            {value?.toString() || 'Not extracted'}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleReset = () => {

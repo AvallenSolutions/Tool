@@ -22,6 +22,7 @@ import AdminDashboardMain from "@/pages/admin/AdminDashboard";
 import SupplierManagement from "@/pages/admin/SupplierManagement";
 import LCAApprovals from "@/pages/admin/LCAApprovals";
 import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
+import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
 import SupplierNetwork from "@/pages/SupplierNetwork";  
 import SupplierOnboarding from "@/pages/supplier-onboarding";
 import GreenwashGuardian from "@/pages/GreenwashGuardian";
@@ -96,6 +97,7 @@ function Router() {
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
+      <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />
       <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
       <Route component={NotFound} />
