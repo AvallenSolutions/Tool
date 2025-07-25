@@ -125,8 +125,7 @@ export default function SupplierOnboarding() {
       
       // Check if we have images from auto-extraction
       const hasImages = autoExtractedData?.selectedImages?.length > 0 || 
-                       autoExtractedData?.productImage || 
-                       autoExtractedData?.additionalImages?.length > 0;
+                       autoExtractedData?.productData?.photos?.length > 0;
       
       if (!hasImages) {
         setShowImageUpload(true);
@@ -155,47 +154,21 @@ export default function SupplierOnboarding() {
     // Handle both supplier and product data
     const productData = extractedData.productData;
     const supplierData = extractedData.supplierData;
-    // Map extracted product data to form fields
+    // Map extracted product data to form fields using new field names
     const mappedData: Partial<SupplierProductForm> = {};
 
-    if (productData?.productName) {
-      mappedData.productName = productData.productName;
+    if (productData?.name) {
+      mappedData.productName = productData.name;
     }
-    if (productData?.description) {
-      mappedData.description = productData.description;
-    }
-    if (productData?.materialType) {
-      mappedData.materialType = productData.materialType;
+    if (productData?.material) {
+      mappedData.materialType = productData.material;
     }
     if (productData?.weight) {
       mappedData.weight = productData.weight;
       mappedData.weightUnit = productData.weightUnit || 'g';
     }
-    if (productData?.capacity) {
-      mappedData.capacity = productData.capacity;
-      mappedData.capacityUnit = productData.capacityUnit || 'ml';
-    }
-    if (productData?.dimensions) {
-      if (productData.dimensions.height) mappedData.height = productData.dimensions.height;
-      if (productData.dimensions.width) mappedData.width = productData.dimensions.width;
-      if (productData.dimensions.depth) mappedData.depth = productData.dimensions.depth;
-      if (productData.dimensions.unit) mappedData.dimensionUnit = productData.dimensions.unit;
-    }
     if (productData?.recycledContent) {
       mappedData.recycledContent = productData.recycledContent;
-    }
-    if (productData?.certifications) {
-      mappedData.certifications = productData.certifications;
-    }
-    if (productData?.sku) {
-      mappedData.sku = productData.sku;
-    }
-    if (productData?.color) {
-      mappedData.color = productData.color;
-    }
-    if (productData?.price) {
-      mappedData.unitPrice = productData.price;
-      mappedData.currency = productData.currency || 'USD';
     }
 
     // Set the form values

@@ -2,38 +2,23 @@ import * as cheerio from 'cheerio';
 
 export interface ExtractedSupplierData {
   companyName?: string;
-  supplierType?: string;
-  description?: string;
+  type?: string; // Changed from supplierType to type for consistency
   address?: string;
   website?: string;
-  email?: string;
+  contactEmail?: string; // Changed from email to contactEmail for clarity
   confidence?: {
     [key: string]: number; // 0-1 confidence score for each extracted field
   };
 }
 
 export interface ExtractedProductData {
-  productName?: string;
-  description?: string;
-  materialType?: string;
+  name?: string; // Changed from productName to name for consistency
+  photos?: string[]; // Changed to photos array, limit to 5
+  type?: string; // Product type/category
+  material?: string; // Changed from materialType to material
   weight?: number;
   weightUnit?: string;
-  dimensions?: {
-    height?: number;
-    width?: number;
-    depth?: number;
-    unit?: string;
-  };
-  recycledContent?: number;
-  capacity?: number;
-  capacityUnit?: string;
-  color?: string;
-  certifications?: string[];
-  price?: number;
-  currency?: string;
-  sku?: string;
-  productImage?: string; // URL to the main product image
-  additionalImages?: string[]; // URLs to additional product images
+  recycledContent?: number; // Keep as is - relevant field
   confidence?: {
     [key: string]: number; // 0-1 confidence score for each extracted field
   };
@@ -155,13 +140,10 @@ export class WebScrapingService {
       const extractedProductData = this.extractProductAttributes($);
       const extractedSupplierData = this.extractSupplierAttributes($, url);
       
-      // Extract product images
+      // Extract product images (limit to 5)
       const images = this.extractProductImages($, url);
       if (images.length > 0) {
-        extractedProductData.productImage = images[0]; // Primary image
-        if (images.length > 1) {
-          extractedProductData.additionalImages = images.slice(1, 5); // Up to 4 additional images
-        }
+        extractedProductData.photos = images.slice(0, 5); // Up to 5 photos total
       }
       
       // Calculate confidence and success metrics
@@ -235,26 +217,14 @@ export class WebScrapingService {
                            $('meta[name="product:name"]').attr('content');
     
     if (productNameMeta) {
-      data.productName = productNameMeta;
-      data.confidence!.productName = 0.9;
+      data.name = productNameMeta;
+      data.confidence!.name = 0.9;
     } else if (h1) {
-      data.productName = h1;
-      data.confidence!.productName = 0.8;
+      data.name = h1;
+      data.confidence!.name = 0.8;
     } else if (title) {
-      data.productName = title;
-      data.confidence!.productName = 0.6;
-    }
-
-    // Extract description
-    if (metaDescription) {
-      data.description = metaDescription;
-      data.confidence!.description = 0.8;
-    } else {
-      const descriptionEl = $('.description, .product-description, .summary').first();
-      if (descriptionEl.length) {
-        data.description = descriptionEl.text().trim().substring(0, 500);
-        data.confidence!.description = 0.7;
-      }
+      data.name = title;
+      data.confidence!.name = 0.6;
     }
 
     // Extract weight
@@ -268,61 +238,21 @@ export class WebScrapingService {
       }
     }
 
-    // Extract capacity/volume
-    for (const pattern of this.PATTERNS.capacity) {
-      const match = fullText.match(pattern);
-      if (match) {
-        data.capacity = parseFloat(match[1]);
-        data.capacityUnit = this.normalizeUnit(match[2]);
-        data.confidence!.capacity = 0.8;
-        break;
-      }
-    }
-
     // Extract material
     for (const pattern of this.PATTERNS.material) {
       const match = fullText.match(pattern);
       if (match) {
         if (match[1]) {
-          data.materialType = match[1].trim();
-          data.confidence!.materialType = 0.7;
+          data.material = match[1].trim();
+          data.confidence!.material = 0.7;
         } else {
           // Direct material match
           const materials = ['glass', 'plastic', 'aluminum', 'steel', 'wood', 'ceramic', 'metal', 'paper', 'cardboard'];
           const foundMaterial = materials.find(mat => fullText.includes(mat));
           if (foundMaterial) {
-            data.materialType = foundMaterial;
-            data.confidence!.materialType = 0.6;
+            data.material = foundMaterial;
+            data.confidence!.material = 0.6;
           }
-        }
-        break;
-      }
-    }
-
-    // Extract dimensions
-    for (const pattern of this.PATTERNS.dimensions) {
-      const match = fullText.match(pattern);
-      if (match) {
-        if (match.length >= 5) {
-          // Full dimensions
-          data.dimensions = {
-            height: parseFloat(match[1]),
-            width: parseFloat(match[2]),
-            depth: parseFloat(match[3]),
-            unit: this.normalizeUnit(match[4])
-          };
-          data.confidence!.dimensions = 0.8;
-        } else {
-          // Single dimension
-          if (!data.dimensions) data.dimensions = {};
-          if (pattern.source.includes('height')) {
-            data.dimensions.height = parseFloat(match[1]);
-            data.dimensions.unit = this.normalizeUnit(match[2]);
-          } else if (pattern.source.includes('width')) {
-            data.dimensions.width = parseFloat(match[1]);
-            data.dimensions.unit = this.normalizeUnit(match[2]);
-          }
-          data.confidence!.dimensions = 0.6;
         }
         break;
       }
@@ -338,37 +268,21 @@ export class WebScrapingService {
       }
     }
 
-    // Extract certifications
-    const certifications: string[] = [];
-    const certPatterns = ['iso', 'fsc', 'organic', 'fair trade', 'bpa free', 'food grade'];
-    for (const cert of certPatterns) {
-      if (fullText.includes(cert)) {
-        certifications.push(cert.replace(/\b\w/g, l => l.toUpperCase()));
-      }
-    }
-    if (certifications.length > 0) {
-      data.certifications = certifications;
-      data.confidence!.certifications = 0.6;
-    }
-
-    // Extract SKU from various locations
-    const skuSelectors = [
-      '[data-sku]',
-      '.sku',
-      '.product-sku',
-      '.item-number',
-      '[class*="sku"]'
+    // Extract product type/category from page context
+    const typeIndicators = [
+      { keywords: ['bottle', 'bottles'], type: 'Bottle' },
+      { keywords: ['label', 'labels'], type: 'Label' },
+      { keywords: ['closure', 'closures', 'cap', 'caps'], type: 'Closure' },
+      { keywords: ['box', 'boxes', 'packaging'], type: 'Packaging' },
+      { keywords: ['ingredient', 'ingredients'], type: 'Ingredient' },
+      { keywords: ['equipment', 'machinery'], type: 'Equipment' }
     ];
-    
-    for (const selector of skuSelectors) {
-      const skuEl = $(selector);
-      if (skuEl.length) {
-        const skuText = skuEl.text().trim() || skuEl.attr('data-sku') || '';
-        if (skuText) {
-          data.sku = skuText;
-          data.confidence!.sku = 0.7;
-          break;
-        }
+
+    for (const indicator of typeIndicators) {
+      if (indicator.keywords.some(keyword => fullText.includes(keyword))) {
+        data.type = indicator.type;
+        data.confidence!.type = 0.7;
+        break;
       }
     }
 
@@ -433,8 +347,8 @@ export class WebScrapingService {
         (email.includes('info') || email.includes('contact') || email.includes('sales') || email.includes('hello'))
       ) || emailMatches[0];
       
-      data.email = contactEmail;
-      data.confidence!.email = contactEmail.includes('info') || contactEmail.includes('contact') ? 0.8 : 0.6;
+      data.contactEmail = contactEmail;
+      data.confidence!.contactEmail = contactEmail.includes('info') || contactEmail.includes('contact') ? 0.8 : 0.6;
     }
 
     // Extract address from contact sections
@@ -459,28 +373,11 @@ export class WebScrapingService {
       { keywords: ['supplier', 'wholesale', 'distributor'], type: 'General Supplier' }
     ];
 
-    for (const typeInfo of supplierTypes) {
-      const hasKeyword = typeInfo.keywords.some(keyword => fullText.includes(keyword));
-      if (hasKeyword) {
-        data.supplierType = typeInfo.type;
-        data.confidence!.supplierType = 0.7;
+    for (const supplierType of supplierTypes) {
+      if (supplierType.keywords.some(keyword => fullText.includes(keyword))) {
+        data.type = supplierType.type;
+        data.confidence!.type = 0.7;
         break;
-      }
-    }
-
-    // Extract description from meta description or about sections
-    const metaDescription = $('meta[name="description"]').attr('content');
-    if (metaDescription) {
-      data.description = metaDescription.substring(0, 300);
-      data.confidence!.description = 0.8;
-    } else {
-      const aboutSections = $('.about, .description, .company, [class*="about"], [class*="company"]');
-      if (aboutSections.length > 0) {
-        const aboutText = aboutSections.first().text().trim().substring(0, 300);
-        if (aboutText.length > 20) {
-          data.description = aboutText;
-          data.confidence!.description = 0.6;
-        }
       }
     }
 

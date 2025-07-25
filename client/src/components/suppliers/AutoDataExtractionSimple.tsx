@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
+import EditableDataPreview from "./EditableDataPreview";
 import { 
   Globe, 
   Loader2, 
@@ -23,39 +24,23 @@ import {
 
 interface ExtractedSupplierData {
   companyName?: string;
-  supplierType?: string;
-  description?: string;
+  type?: string; // Changed from supplierType
   address?: string;
   website?: string;
-  email?: string;
+  contactEmail?: string; // Changed from email
   confidence?: {
     [key: string]: number;
   };
 }
 
 interface ExtractedProductData {
-  productName?: string;
-  description?: string;
-  materialType?: string;
+  name?: string; // Changed from productName
+  photos?: string[]; // Changed to photos array
+  type?: string; // Product type
+  material?: string; // Changed from materialType
   weight?: number;
   weightUnit?: string;
-  dimensions?: {
-    height?: number;
-    width?: number;
-    depth?: number;
-    unit?: string;
-  };
   recycledContent?: number;
-  capacity?: number;
-  capacityUnit?: string;
-  color?: string;
-  certifications?: string[];
-  price?: number;
-  currency?: string;
-  sku?: string;
-  productImage?: string;
-  additionalImages?: string[];
-  selectedImages?: string[];
   confidence?: {
     [key: string]: number;
   };
@@ -85,6 +70,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [bulkImportResult, setBulkImportResult] = useState<BulkImportResult | null>(null);
   const [activeTab, setActiveTab] = useState("single");
+  const [showPreview, setShowPreview] = useState(false);
 
   const scrapeMutation = useMutation({
     mutationFn: async (productUrl: string) => {
@@ -101,6 +87,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
           selectedImages: result.images || []
         };
         setExtractedData(data);
+        setShowPreview(true);
       }
     }
   });
@@ -129,20 +116,41 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
     bulkImportMutation.mutate(url.trim());
   };
 
-  const handleApplyData = () => {
-    if (extractedData) {
-      onDataExtracted(extractedData);
-      // Clear state after applying
-      setExtractedData(null);
-      setUrl("");
-      scrapeMutation.reset();
-    }
+  const handlePreviewApprove = (approvedData: any) => {
+    // Convert approved data back to ExtractedData format
+    const convertedData: ExtractedData = {
+      supplierData: {
+        companyName: approvedData.companyName,
+        type: approvedData.type,
+        address: approvedData.address,
+        website: approvedData.website,
+        contactEmail: approvedData.contactEmail,
+      },
+      productData: {
+        name: approvedData.name,
+        type: approvedData.productType,
+        material: approvedData.material,
+        weight: approvedData.weight,
+        weightUnit: approvedData.weightUnit,
+        recycledContent: approvedData.recycledContent,
+        photos: approvedData.selectedPhotos,
+      },
+      selectedImages: approvedData.selectedPhotos
+    };
+    
+    onDataExtracted(convertedData);
+    handleReset();
+  };
+
+  const handlePreviewCancel = () => {
+    setShowPreview(false);
   };
 
   const handleReset = () => {
     setUrl("");
     setExtractedData(null);
     setBulkImportResult(null);
+    setShowPreview(false);
     scrapeMutation.reset();
     bulkImportMutation.reset();
   };
@@ -169,7 +177,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
           </TabsList>
 
           <TabsContent value="single" className="space-y-4">
-            {!extractedData && (
+            {!showPreview && (
               <>
                 <div className="flex gap-2">
                   <Input
@@ -217,71 +225,12 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
               </Alert>
             )}
 
-            {extractedData && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="text-sm">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Data extracted successfully
-                  </Badge>
-                </div>
-
-                {extractedData.supplierData && (
-                  <div className="bg-white p-3 rounded border">
-                    <Label className="text-sm font-medium mb-2 block">Supplier Information</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs font-medium">Company</Label>
-                        <div className="text-sm">{extractedData.supplierData.companyName || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs font-medium">Type</Label>
-                        <div className="text-sm">{extractedData.supplierData.supplierType || 'N/A'}</div>
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs font-medium">Description</Label>
-                        <div className="text-sm">{extractedData.supplierData.description?.substring(0, 100) || 'N/A'}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {extractedData.productData && (
-                  <div className="bg-white p-3 rounded border">
-                    <Label className="text-sm font-medium mb-2 block">Product Information</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs font-medium">Product Name</Label>
-                        <div className="text-sm">{extractedData.productData.productName || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs font-medium">Material</Label>
-                        <div className="text-sm">{extractedData.productData.materialType || 'N/A'}</div>
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs font-medium">Description</Label>
-                        <div className="text-sm">{extractedData.productData.description?.substring(0, 100) || 'N/A'}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    onClick={handleApplyData}
-                    className="bg-green-600 hover:bg-green-700 text-white flex-1"
-                  >
-                    Apply Extracted Data
-                  </Button>
-                  <Button
-                    onClick={handleReset}
-                    variant="outline"
-                    className="text-gray-600"
-                  >
-                    Reset
-                  </Button>
-                </div>
-              </div>
+            {showPreview && extractedData && (
+              <EditableDataPreview
+                extractedData={extractedData}
+                onApprove={handlePreviewApprove}
+                onCancel={handlePreviewCancel}
+              />
             )}
           </TabsContent>
 
