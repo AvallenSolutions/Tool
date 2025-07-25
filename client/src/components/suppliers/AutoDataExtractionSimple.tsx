@@ -88,7 +88,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
 
   const scrapeMutation = useMutation({
     mutationFn: async (productUrl: string) => {
-      const response = await apiRequest("/api/suppliers/scrape-product", 'POST', {
+      const response = await apiRequest('POST', "/api/suppliers/scrape-product", {
         url: productUrl
       });
       return response;
@@ -107,7 +107,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
 
   const bulkImportMutation = useMutation({
     mutationFn: async (catalogUrl: string) => {
-      const response = await apiRequest("/api/suppliers/bulk-import", 'POST', { catalogUrl });
+      const response = await apiRequest('POST', "/api/suppliers/bulk-import", { catalogUrl });
       return response;
     },
     onSuccess: (data) => {
