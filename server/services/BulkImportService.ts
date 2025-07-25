@@ -1,346 +1,383 @@
-import { spawn } from 'child_process';
-import path from 'path';
-import fs from 'fs/promises';
-import { SimpleJobQueue } from './SimpleJobQueue';
+import { WebScrapingService } from './WebScrapingService';
+import { PDFExtractionService } from './PDFExtractionService';
+import { SupplierProductService } from './SupplierProductService';
+import * as cheerio from 'cheerio';
 
-export interface BulkImportJob {
-  id: string;
-  type: 'url' | 'pdf';
-  source: string; // URL or file path
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  result?: BulkImportResult;
-  error?: string;
-  createdAt: Date;
-  completedAt?: Date;
+interface BulkImportResult {
+  suppliersCreated: number;
+  productsCreated: number;
+  pdfsProcessed: number;
+  linksScraped: number;
+  errors: string[];
+  results: Array<{
+    type: 'supplier' | 'product';
+    name: string;
+    source: string;
+    success: boolean;
+    error?: string;
+  }>;
 }
 
-export interface BulkImportResult {
-  success: boolean;
-  supplierData: any;
-  productsData: any[];
-  totalProducts: number;
-  error?: string;
+interface ProductLink {
+  url: string;
+  title: string;
+  pdfUrl?: string;
 }
 
-export interface ExtractedSupplierData {
-  companyName: string;
-  supplierType?: string;
-  description?: string;
-  address?: string;
-  website?: string;
-  email?: string;
-  phone?: string;
-}
-
-export interface ExtractedProductData {
-  productName: string;
-  description?: string;
-  materialType?: string;
-  weight?: number;
-  weightUnit?: string;
-  dimensions?: {
-    height?: number;
-    width?: number;
-    depth?: number;
-    diameter?: number;
-    unit?: string;
-  };
-  recycledContent?: number;
-  capacity?: number;
-  capacityUnit?: string;
-  color?: string;
-  certifications?: string[];
-  price?: number;
-  currency?: string;
-  sku?: string;
-  productImage?: string;
-  additionalImages?: string[];
-  sourceUrl?: string;
-}
-
-class BulkImportService {
-  private jobs: Map<string, BulkImportJob> = new Map();
-  private jobQueue: SimpleJobQueue;
+export class BulkImportService {
+  private webScrapingService: WebScrapingService;
+  private pdfExtractionService: PDFExtractionService;
+  private supplierProductService: SupplierProductService;
 
   constructor() {
-    this.jobQueue = new SimpleJobQueue();
+    this.webScrapingService = new WebScrapingService();
+    this.pdfExtractionService = new PDFExtractionService();
+    this.supplierProductService = new SupplierProductService();
   }
 
-  async startUrlImport(url: string): Promise<string> {
-    const jobId = this.generateJobId();
-    
-    const job: BulkImportJob = {
-      id: jobId,
-      type: 'url',
-      source: url,
-      status: 'pending',
-      progress: 0,
-      createdAt: new Date()
+  async processCatalogPage(catalogUrl: string): Promise<BulkImportResult> {
+    const result: BulkImportResult = {
+      suppliersCreated: 0,
+      productsCreated: 0,
+      pdfsProcessed: 0,
+      linksScraped: 0,
+      errors: [],
+      results: []
     };
-
-    this.jobs.set(jobId, job);
-
-    // Add to job queue
-    this.jobQueue.addJob(jobId, async () => {
-      await this.processUrlImport(jobId, url);
-    });
-
-    return jobId;
-  }
-
-  async startPdfImport(filePath: string): Promise<string> {
-    const jobId = this.generateJobId();
-    
-    const job: BulkImportJob = {
-      id: jobId,
-      type: 'pdf',
-      source: filePath,
-      status: 'pending',
-      progress: 0,
-      createdAt: new Date()
-    };
-
-    this.jobs.set(jobId, job);
-
-    // Add to job queue
-    this.jobQueue.addJob(jobId, async () => {
-      await this.processPdfImport(jobId, filePath);
-    });
-
-    return jobId;
-  }
-
-  private async processUrlImport(jobId: string, url: string): Promise<void> {
-    const job = this.jobs.get(jobId);
-    if (!job) return;
 
     try {
-      job.status = 'processing';
-      job.progress = 10;
-
-      const pythonScript = path.join(process.cwd(), 'server', 'python_services', 'simple_web_crawler.py');
+      console.log(`Starting bulk import from: ${catalogUrl}`);
       
-      const result = await this.runPythonScript(pythonScript, [url]);
+      // Step 1: Discover product links from catalog page
+      const productLinks = await this.discoverProductLinks(catalogUrl);
+      result.linksScraped = productLinks.length;
       
-      job.progress = 90;
+      console.log(`Found ${productLinks.length} product links`);
 
-      if (result.success) {
-        job.result = {
-          success: true,
-          supplierData: result.supplierData,
-          productsData: result.productsData || [],
-          totalProducts: result.totalProducts || 0
-        };
-        job.status = 'completed';
-        job.progress = 100;
-      } else {
-        throw new Error(result.error || 'URL import failed');
+      // Step 2: Process each product link
+      for (const link of productLinks) {
+        try {
+          await this.processProductLink(link, result);
+        } catch (error) {
+          const errorMessage = `Failed to process ${link.url}: ${error.message}`;
+          result.errors.push(errorMessage);
+          console.error(errorMessage);
+        }
       }
 
+      console.log(`Bulk import completed: ${result.suppliersCreated} suppliers, ${result.productsCreated} products`);
+      return result;
+
     } catch (error) {
-      job.status = 'failed';
-      job.error = error instanceof Error ? error.message : 'Unknown error';
-      job.progress = 0;
-    } finally {
-      job.completedAt = new Date();
+      result.errors.push(`Catalog processing failed: ${error.message}`);
+      throw error;
     }
   }
 
-  private async processPdfImport(jobId: string, filePath: string): Promise<void> {
-    const job = this.jobs.get(jobId);
-    if (!job) return;
-
+  private async discoverProductLinks(catalogUrl: string): Promise<ProductLink[]> {
     try {
-      job.status = 'processing';
-      job.progress = 10;
-
-      // Verify file exists
-      await fs.access(filePath);
-
-      const pythonScript = path.join(process.cwd(), 'server', 'python_services', 'bulk_pdf_extractor.py');
-      
-      const result = await this.runPythonScript(pythonScript, [filePath]);
-      
-      job.progress = 90;
-
-      if (result.success) {
-        job.result = {
-          success: true,
-          supplierData: result.supplierData,
-          productsData: result.productsData || [],
-          totalProducts: result.totalProducts || 0
-        };
-        job.status = 'completed';
-        job.progress = 100;
-      } else {
-        throw new Error(result.error || 'PDF import failed');
-      }
-
-    } catch (error) {
-      job.status = 'failed';
-      job.error = error instanceof Error ? error.message : 'Unknown error';
-      job.progress = 0;
-    } finally {
-      job.completedAt = new Date();
-      
-      // Clean up uploaded file on completion/failure
-      try {
-        await fs.unlink(filePath);
-      } catch (cleanupError) {
-        console.warn('Failed to clean up uploaded file:', filePath);
-      }
-    }
-  }
-
-  private async runPythonScript(scriptPath: string, args: string[]): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const pythonProcess = spawn('python3', [scriptPath, ...args]);
-      
-      let stdout = '';
-      let stderr = '';
-
-      pythonProcess.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      pythonProcess.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      pythonProcess.on('close', (code) => {
-        if (code === 0) {
-          try {
-            const result = JSON.parse(stdout);
-            resolve(result);
-          } catch (parseError) {
-            reject(new Error(`Failed to parse Python script output: ${parseError}`));
-          }
-        } else {
-          reject(new Error(`Python script failed with code ${code}: ${stderr}`));
+      const response = await fetch(catalogUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
       });
 
-      pythonProcess.on('error', (error) => {
-        reject(new Error(`Failed to start Python script: ${error.message}`));
-      });
-
-      // Set timeout for long-running processes
-      setTimeout(() => {
-        pythonProcess.kill();
-        reject(new Error('Python script timed out after 5 minutes'));
-      }, 5 * 60 * 1000); // 5 minutes
-    });
-  }
-
-  getJob(jobId: string): BulkImportJob | undefined {
-    return this.jobs.get(jobId);
-  }
-
-  getJobStatus(jobId: string): { status: string; progress: number; error?: string } | null {
-    const job = this.jobs.get(jobId);
-    if (!job) return null;
-
-    return {
-      status: job.status,
-      progress: job.progress,
-      error: job.error
-    };
-  }
-
-  getJobResult(jobId: string): BulkImportResult | null {
-    const job = this.jobs.get(jobId);
-    if (!job || job.status !== 'completed' || !job.result) return null;
-
-    return job.result;
-  }
-
-  // Clean up old jobs (older than 24 hours)
-  cleanupOldJobs(): void {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
-    
-    for (const [jobId, job] of this.jobs.entries()) {
-      if (job.createdAt < cutoff) {
-        this.jobs.delete(jobId);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      const links: ProductLink[] = [];
+
+      // Verallia-specific selectors (can be extended for other sites)
+      if (catalogUrl.includes('verallia.com')) {
+        links.push(...await this.discoverVeralliaLinks($, catalogUrl));
+      } else {
+        // Generic product link discovery
+        links.push(...await this.discoverGenericLinks($, catalogUrl));
+      }
+
+      return links;
+    } catch (error) {
+      throw new Error(`Failed to fetch catalog page: ${error.message}`);
     }
   }
 
-  private generateJobId(): string {
-    return 'bulk-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-  }
+  private async discoverVeralliaLinks($: cheerio.CheerioAPI, baseUrl: string): Promise<ProductLink[]> {
+    const links: ProductLink[] = [];
 
-  // Validation helpers
-  validateSupplierData(data: any): ExtractedSupplierData | null {
-    if (!data || typeof data !== 'object') return null;
+    console.log('Analyzing Verallia spirits range page structure...');
+    console.log(`- Total links on page: ${$('a').length}`);
+    console.log(`- Total images on page: ${$('img').length}`);
+
+    // Debug: Show sample of all links found
+    const allHrefs: string[] = [];
+    $('a').each((_, element) => {
+      const href = $(element).attr('href');
+      if (href) allHrefs.push(href);
+    });
+    console.log('Sample of all links found:', allHrefs.slice(0, 10));
+
+    // For Verallia, try different approach - look for any links that could be products
+    const allLinks: string[] = [];
     
-    // Require at least company name
-    if (!data.companyName || typeof data.companyName !== 'string') return null;
+    // First pass: Look for explicit product patterns
+    $('a').each((_, element) => {
+      const href = $(element).attr('href');
+      const text = $(element).text().trim().toLowerCase();
+      const title = $(element).attr('title')?.toLowerCase() || '';
+      
+      if (href && href.trim()) {
+        // Verallia-specific patterns - look for category pages and products
+        if (href.includes('.pdf') ||
+            href.includes('bottle') ||
+            href.includes('glass') ||
+            href.includes('spirits') ||
+            href.includes('product') ||
+            href.includes('catalogue') ||
+            href.includes('standardrange') ||
+            href.includes('handled') ||
+            href.includes('dump') ||
+            href.includes('decanter') ||
+            href.includes('wp-content/uploads') ||
+            text.includes('bottle') ||
+            text.includes('glass') ||
+            text.includes('spirits') ||
+            text.includes('pdf') ||
+            text.includes('download') ||
+            text.includes('view') ||
+            text.includes('range') ||
+            text.includes('handled') ||
+            text.includes('dump') ||
+            text.includes('decanter') ||
+            title.includes('bottle') ||
+            title.includes('glass') ||
+            title.includes('product') ||
+            title.includes('range')) {
+          allLinks.push(href);
+        }
+      }
+    });
 
-    return {
-      companyName: data.companyName.trim(),
-      supplierType: data.supplierType || 'Packaging',
-      description: data.description || undefined,
-      address: data.address || undefined,
-      website: data.website || undefined,
-      email: data.email || undefined,
-      phone: data.phone || undefined
-    };
+    console.log(`Found ${allLinks.length} potentially relevant links`);
+    
+    // If still no links, be even more permissive
+    if (allLinks.length === 0) {
+      console.log('No specific links found, trying broader search...');
+      $('a[href*="wp-content"], a[href*=".pdf"], a[href*="catalogue"]').each((_, element) => {
+        const href = $(element).attr('href');
+        if (href && href.trim()) {
+          allLinks.push(href);
+        }
+      });
+      console.log(`Broader search found ${allLinks.length} links`);
+    }
+
+    // Filter out unwanted links (Instagram, external sites, etc.)
+    const filteredLinks = allLinks.filter(href => {
+      // Skip social media and non-product links
+      return !href.includes('instagram.com') && 
+             !href.includes('facebook.com') && 
+             !href.includes('twitter.com') && 
+             !href.includes('linkedin.com') &&
+             !href.includes('mailto:') &&
+             !href.includes('tel:') &&
+             !href.includes('#') &&
+             href !== '/catalogue/' && // Skip generic catalogue link
+             href.length > 10; // Skip very short links
+    });
+
+    console.log(`After filtering: ${filteredLinks.length} relevant links`);
+
+    // Process filtered links
+    filteredLinks.forEach(href => {
+      try {
+        const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
+        const linkElement = $(`a[href="${href}"]`).first();
+        const title = linkElement.text().trim() || linkElement.attr('title') || `Product from ${href}`;
+        
+        if (!links.some(l => l.url === fullUrl)) {
+          links.push({
+            url: fullUrl,
+            title: title,
+            type: href.includes('.pdf') ? 'pdf' : 'product'
+          });
+        }
+      } catch (error) {
+        console.warn(`Skipping invalid URL: ${href}`);
+      }
+    });
+
+    // Look for any PDF documents specifically
+    $('a[href$=".pdf"], a[href*=".pdf"]').each((_, element) => {
+      const href = $(element).attr('href');
+      if (href) {
+        try {
+          const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
+          const title = $(element).text().trim() || 'Product Specification PDF';
+          
+          if (!links.some(l => l.url === fullUrl)) {
+            links.push({
+              url: fullUrl,
+              title: title,
+              type: 'pdf'
+            });
+          }
+        } catch (error) {
+          console.warn(`Skipping invalid PDF URL: ${href}`);
+        }
+      }
+    });
+
+    console.log(`Final result: ${links.length} product links discovered`);
+    links.slice(0, 5).forEach((link, i) => {
+      console.log(`  ${i + 1}. [${link.type}] ${link.title} - ${link.url}`);
+    });
+
+    return links;
   }
 
-  validateProductData(data: any): ExtractedProductData | null {
-    if (!data || typeof data !== 'object') return null;
+  private async discoverGenericLinks($: cheerio.CheerioAPI, baseUrl: string): Promise<ProductLink[]> {
+    const links: ProductLink[] = [];
     
-    // Require at least product name
-    if (!data.productName || typeof data.productName !== 'string') return null;
+    // Generic selectors for product discovery
+    const genericSelectors = [
+      'a[href*="product"]',
+      'a[href*="item"]',
+      'a[href*="bottle"]',
+      'a[href*="glass"]',
+      '.product a',
+      '.item a'
+    ];
 
-    const product: ExtractedProductData = {
-      productName: data.productName.trim(),
-      description: data.description || undefined,
-      materialType: data.materialType || undefined,
-      weight: typeof data.weight === 'number' ? data.weight : undefined,
-      weightUnit: data.weightUnit || undefined,
-      capacity: typeof data.capacity === 'number' ? data.capacity : undefined,
-      capacityUnit: data.capacityUnit || undefined,
-      color: data.color || undefined,
-      sku: data.sku || undefined,
-      productImage: data.productImage || undefined,
-      sourceUrl: data.sourceUrl || undefined
-    };
+    genericSelectors.forEach(selector => {
+      $(selector).each((_, element) => {
+        const href = $(element).attr('href');
+        const title = $(element).text().trim() || $(element).attr('title') || 'Unknown Product';
 
-    // Handle dimensions
-    if (data.dimensions && typeof data.dimensions === 'object') {
-      product.dimensions = {
-        height: typeof data.dimensions.height === 'number' ? data.dimensions.height : undefined,
-        width: typeof data.dimensions.width === 'number' ? data.dimensions.width : undefined,
-        depth: typeof data.dimensions.depth === 'number' ? data.dimensions.depth : undefined,
-        diameter: typeof data.dimensions.diameter === 'number' ? data.dimensions.diameter : undefined,
-        unit: data.dimensions.unit || 'mm'
-      };
+        if (href && !href.startsWith('#') && !href.startsWith('mailto:')) {
+          const fullUrl = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
+          
+          if (!links.find(l => l.url === fullUrl)) {
+            links.push({ url: fullUrl, title });
+          }
+        }
+      });
+    });
+
+    return links;
+  }
+
+  private async processProductLink(link: ProductLink, result: BulkImportResult): Promise<void> {
+    try {
+      let productData: any = null;
+      let supplierData: any = null;
+
+      // If we have a PDF, extract from PDF first
+      if (link.pdfUrl) {
+        try {
+          const pdfData = await this.pdfExtractionService.extractProductDataFromUrl(link.pdfUrl);
+          if (pdfData.success) {
+            productData = pdfData.extractedData.productData;
+            supplierData = pdfData.extractedData.supplierData;
+            result.pdfsProcessed++;
+          }
+        } catch (error) {
+          console.warn(`PDF extraction failed for ${link.pdfUrl}: ${error.message}`);
+        }
+      }
+
+      // If we don't have data from PDF, try web scraping
+      if (!productData || !supplierData) {
+        try {
+          const scrapedData = await WebScrapingService.scrapeProductData(link.url);
+          if (scrapedData.success) {
+            productData = productData || scrapedData.productData;
+            supplierData = supplierData || scrapedData.supplierData;
+          }
+        } catch (error) {
+          console.warn(`Web scraping failed for ${link.url}: ${error.message}`);
+        }
+      }
+
+      // If we still don't have data, create minimal data from link
+      if (!productData && !supplierData) {
+        const domain = new URL(link.url).hostname;
+        const companyName = this.extractCompanyNameFromDomain(domain);
+        
+        supplierData = {
+          companyName,
+          supplierType: 'Bottle Producer',
+          website: `https://${domain}`,
+          description: `Supplier discovered from ${domain}`
+        };
+
+        productData = {
+          productName: link.title,
+          description: `Product discovered from ${link.url}`,
+          materialType: 'Glass'
+        };
+      }
+
+      // Create supplier and product
+      if (supplierData && productData) {
+        const createResult = await SupplierProductService.createSupplierProduct({
+          supplierData,
+          productData,
+          selectedImages: []
+        });
+
+        if (createResult) {
+          if (createResult.isNewSupplier) {
+            result.suppliersCreated++;
+            result.results.push({
+              type: 'supplier',
+              name: supplierData.companyName || supplierData.supplierName || 'Unknown Supplier',
+              source: link.url,
+              success: true
+            });
+          }
+          result.productsCreated++;
+          result.results.push({
+            type: 'product',
+            name: productData.productName || link.title,
+            source: link.url,
+            success: true
+          });
+        } else {
+          throw new Error(createResult.error || 'Failed to create supplier/product');
+        }
+      } else {
+        throw new Error('No product or supplier data could be extracted');
+      }
+
+    } catch (error) {
+      result.results.push({
+        type: 'product',
+        name: link.title,
+        source: link.url,
+        success: false,
+        error: error.message
+      });
+      throw error;
     }
+  }
 
-    // Handle recycled content
-    if (typeof data.recycledContent === 'number') {
-      product.recycledContent = Math.max(0, Math.min(100, data.recycledContent));
-    }
+  private extractCompanyNameFromDomain(domain: string): string {
+    // Remove common prefixes and suffixes
+    let name = domain
+      .replace(/^www\./, '')
+      .replace(/\.(com|co\.uk|net|org|eu)$/, '')
+      .split('.')[0];
 
-    // Handle additional images
-    if (Array.isArray(data.additionalImages)) {
-      product.additionalImages = data.additionalImages.filter(img => typeof img === 'string');
-    }
+    // Capitalize first letter
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
 
-    // Handle certifications
-    if (Array.isArray(data.certifications)) {
-      product.certifications = data.certifications.filter(cert => typeof cert === 'string');
-    }
-
-    return product;
+  // Method to handle specific catalog types
+  async processSpecificCatalog(catalogUrl: string, catalogType?: 'verallia' | 'generic'): Promise<BulkImportResult> {
+    // This can be extended to handle specific catalog formats
+    return this.processCatalogPage(catalogUrl);
   }
 }
-
-export const bulkImportService = new BulkImportService();
-
-// Clean up old jobs every hour
-setInterval(() => {
-  bulkImportService.cleanupOldJobs();
-}, 60 * 60 * 1000);

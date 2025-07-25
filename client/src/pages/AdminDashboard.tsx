@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
+import SupplierEditDialog from '@/components/admin/SupplierEditDialog';
+import BulkImportDialog from '@/components/admin/BulkImportDialog';
 
 const supplierCategories = [
   { value: 'bottle_producer', label: 'Bottle Producer' },
@@ -28,6 +30,8 @@ const supplierCategories = [
 export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [selectedSupplierForEdit, setSelectedSupplierForEdit] = useState(null);
   const [newSupplier, setNewSupplier] = useState({
     supplierName: '',
     supplierCategory: '',
@@ -41,6 +45,11 @@ export default function AdminDashboard() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch suppliers for management
+  const { data: suppliersData, isLoading: suppliersLoading } = useQuery({
+    queryKey: ['/api/admin/suppliers'],
+  });
 
   // Mock data for Phase 2 development - will be replaced with real API calls
   const mockStats = {
@@ -156,13 +165,18 @@ export default function AdminDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-gray-600 mt-2">Manage the verified supplier network</p>
             </div>
-            <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Verified Supplier
-            </Button>
-          </DialogTrigger>
+            <div className="flex gap-2">
+              <Button onClick={() => setIsBulkImportOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Package className="w-4 h-4 mr-2" />
+                Bulk Import
+              </Button>
+              <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-green-600 hover:bg-green-700">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Verified Supplier
+                  </Button>
+                </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add Verified Supplier</DialogTitle>
@@ -274,7 +288,8 @@ export default function AdminDashboard() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+            </div>
+          </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -374,18 +389,49 @@ export default function AdminDashboard() {
         <TabsContent value="suppliers" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>All Suppliers</CardTitle>
+              <CardTitle>All Suppliers ({suppliersData?.data?.length || 0})</CardTitle>
               <CardDescription>Manage and verify suppliers in the network</CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert>
-                <Users className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Phase 2 Implementation:</strong> Full supplier management interface is under development. 
-                  API integration with the supplier data capture system will enable complete CRUD operations, 
-                  verification workflows, and real-time data synchronization.
-                </AlertDescription>
-              </Alert>
+              {suppliersLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                  Loading suppliers...
+                </div>
+              ) : suppliersData?.data?.length > 0 ? (
+                <div className="space-y-4">
+                  {suppliersData.data.map((supplier: any) => (
+                    <div key={supplier.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">{supplier.supplierName}</h3>
+                          {getStatusBadge(supplier.verificationStatus)}
+                          {getSubmissionBadge(supplier.submittedBy)}
+                        </div>
+                        <p className="text-sm text-gray-600">{supplier.supplierCategory}</p>
+                        <p className="text-xs text-gray-500">Created: {new Date(supplier.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedSupplierForEdit(supplier)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <Building2 className="h-4 w-4" />
+                  <AlertDescription>
+                    No suppliers found. Use the "Add Verified Supplier" button or "Bulk Import" to add suppliers to the network.
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -428,6 +474,18 @@ export default function AdminDashboard() {
           </Tabs>
         </main>
       </div>
+
+      {/* Dialogs */}
+      <SupplierEditDialog
+        supplier={selectedSupplierForEdit}
+        isOpen={!!selectedSupplierForEdit}
+        onClose={() => setSelectedSupplierForEdit(null)}
+      />
+      
+      <BulkImportDialog
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+      />
     </div>
   );
 }

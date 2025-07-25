@@ -7,11 +7,9 @@ import {
   FileText, 
   Globe,
   Upload,
-  AlertCircle,
-  Download
+  AlertCircle
 } from "lucide-react";
 import { useLocation } from "wouter";
-import BulkImportButton from "@/components/admin/BulkImportButton";
 
 export default function SupplierDataAdmin() {
   const [, navigate] = useLocation();
@@ -45,7 +43,7 @@ export default function SupplierDataAdmin() {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -104,36 +102,6 @@ export default function SupplierDataAdmin() {
             >
               Go to Supplier Management
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Bulk Import Card */}
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Bulk Supplier Import
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Import multiple suppliers and products from URLs or PDF catalogs using AI-powered extraction.
-            </p>
-            <div className="space-y-2 text-sm text-muted-foreground mb-4">
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                <span>Crawl supplier websites for bulk product import</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                <span>Process PDF catalogs with AI extraction</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                <span>Create multiple suppliers and products simultaneously</span>
-              </div>
-            </div>
-            <BulkImportButton />
           </CardContent>
         </Card>
       </div>

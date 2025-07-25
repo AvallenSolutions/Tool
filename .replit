@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "web", "postgresql-16", "python-3.11"]
+modules = ["nodejs-20", "web", "postgresql-16"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["alsa-lib", "glib", "glibcLocales", "gtk3", "jq", "xcodebuild", "zlib"]
+packages = ["jq", "glib", "gtk3", "alsa-lib"]
 
 [deployment]
 deploymentTarget = "autoscale"

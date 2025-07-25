@@ -17,11 +17,9 @@ import { lcaService, LCAJobManager } from "./lca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
-import { SupplierProductService } from "./services/SupplierProductService";
-import { bulkImportService } from "./services/BulkImportService";
-import path from "path";
-import fs from "fs";
 import { adminRouter } from "./routes/admin";
+import { SupplierProductService } from "./services/SupplierProductService";
+import { BulkImportService } from "./services/BulkImportService";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-11-20.acacia",
@@ -446,83 +444,128 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Bulk Import API Endpoints (Admin only)
-  app.post("/api/admin/bulk-import/url", async (req, res) => {
+  // Bulk Import endpoint for advanced multi-page scraping
+  app.post('/api/suppliers/bulk-import', async (req, res) => {
     try {
-      const { url } = req.body;
-      
-      if (!url || typeof url !== 'string') {
-        return res.status(400).json({ error: 'URL is required' });
+      const { catalogUrl } = req.body;
+
+      if (!catalogUrl || typeof catalogUrl !== 'string') {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Catalog URL is required and must be a string' 
+        });
       }
 
-      // Start the bulk import job
-      const jobId = await bulkImportService.startUrlImport(url);
+      console.log(`Starting bulk import from catalog: ${catalogUrl}`);
       
-      res.json({ 
-        success: true, 
-        jobId,
-        message: 'Bulk import started. Check status for progress.' 
+      const bulkImportService = new BulkImportService();
+      const result = await bulkImportService.processCatalogPage(catalogUrl);
+
+      console.log(`Bulk import completed: ${result.suppliersCreated} suppliers, ${result.productsCreated} products, ${result.errors.length} errors`);
+
+      res.json({
+        success: true,
+        ...result
       });
+
     } catch (error) {
-      console.error('Bulk URL import error:', error);
-      res.status(500).json({ error: 'Failed to start bulk import' });
-    }
-  });
-
-  app.post("/api/admin/bulk-import/pdf", upload.single('file'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'PDF file is required' });
-      }
-
-      // Validate file type
-      if (req.file.mimetype !== 'application/pdf') {
-        return res.status(400).json({ error: 'Only PDF files are allowed' });
-      }
-
-      // Start the bulk import job
-      const jobId = await bulkImportService.startPdfImport(req.file.path);
-      
-      res.json({ 
-        success: true, 
-        jobId,
-        message: 'Bulk PDF import started. Check status for progress.' 
+      console.error('Error in bulk-import endpoint:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred during bulk import',
+        suppliersCreated: 0,
+        productsCreated: 0,
+        pdfsProcessed: 0,
+        linksScraped: 0,
+        errors: [error.message],
+        results: []
       });
-    } catch (error) {
-      console.error('Bulk PDF import error:', error);
-      res.status(500).json({ error: 'Failed to start bulk PDF import' });
     }
   });
 
-  app.get("/api/admin/bulk-import/status/:jobId", async (req, res) => {
+  // Supplier editing endpoints for Super Admin
+  app.put('/api/admin/suppliers/:id', async (req, res) => {
     try {
-      const { jobId } = req.params;
-      const status = bulkImportService.getJobStatus(jobId);
-      
-      if (!status) {
-        return res.status(404).json({ error: 'Job not found' });
+      const { id } = req.params;
+      const updateData = req.body;
+
+      if (!id) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Supplier ID is required' 
+        });
       }
-      
-      res.json(status);
+
+      console.log(`Updating supplier: ${id} with data:`, updateData);
+
+      // Update supplier in database
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const updatedSupplier = await db
+        .update(verifiedSuppliers)
+        .set({ 
+          ...updateData,
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(verifiedSuppliers.id, id))
+        .returning();
+
+      if (updatedSupplier.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          error: 'Supplier not found' 
+        });
+      }
+
+      console.log(`Successfully updated supplier: ${id}`);
+
+      res.json({
+        success: true,
+        data: updatedSupplier[0],
+        message: 'Supplier updated successfully'
+      });
+
     } catch (error) {
-      console.error('Get job status error:', error);
-      res.status(500).json({ error: 'Failed to get job status' });
+      console.error('Error updating supplier:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred while updating supplier' 
+      });
     }
   });
 
-  app.get("/api/admin/bulk-import/results/:jobId", async (req, res) => {
+  // Get all suppliers for admin management
+  app.get('/api/admin/suppliers', async (req, res) => {
     try {
-      const { jobId } = req.params;
-      const result = bulkImportService.getJobResult(jobId);
-      
-      if (!result) {
-        return res.status(404).json({ error: 'Results not found or job not completed' });
-      }
-      
-      res.json(result);
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const suppliers = await db.select().from(verifiedSuppliers);
+
+      res.json({
+        success: true,
+        data: suppliers
+      });
+
     } catch (error) {
-      console.error('Get job results error:', error);
-      res.status(500).json({ error: 'Failed to get job results' });
+      console.error('Error fetching suppliers:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred while fetching suppliers' 
+      });
+    }
+  });
+
+  // Public suppliers route (for supplier onboarding page)
+  app.get('/api/suppliers', async (req, res) => {
+    try {
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const suppliers = await db.select().from(verifiedSuppliers);
+
+      res.json(suppliers);
+
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      res.status(500).json({ 
+        error: 'Internal server error occurred while fetching suppliers' 
+      });
     }
   });
 
