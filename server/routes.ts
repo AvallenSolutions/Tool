@@ -553,6 +553,22 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Public suppliers route (for supplier onboarding page)
+  app.get('/api/suppliers', async (req, res) => {
+    try {
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const suppliers = await db.select().from(verifiedSuppliers);
+
+      res.json(suppliers);
+
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      res.status(500).json({ 
+        error: 'Internal server error occurred while fetching suppliers' 
+      });
+    }
+  });
+
   // Register admin routes
   app.use('/api/admin', adminRouter);
 

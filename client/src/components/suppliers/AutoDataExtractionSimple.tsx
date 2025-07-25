@@ -348,7 +348,29 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
                   </div>
                 </div>
 
-                {bulkImportResult.errors.length > 0 && (
+                {/* Show detailed results */}
+                {bulkImportResult.results && bulkImportResult.results.length > 0 && (
+                  <div className="bg-white p-4 rounded border">
+                    <h4 className="font-semibold mb-3">Created Products:</h4>
+                    <div className="max-h-48 overflow-y-auto space-y-2">
+                      {bulkImportResult.results
+                        .filter(r => r.success)
+                        .map((result, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">{result.name}</div>
+                              <div className="text-xs text-gray-600 truncate">{result.source}</div>
+                            </div>
+                            <div className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
+                              {result.type}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {bulkImportResult.errors && bulkImportResult.errors.length > 0 && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
@@ -361,6 +383,14 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
                   <Button onClick={() => setBulkImportResult(null)} variant="outline">
                     Clear Results
                   </Button>
+                  {bulkImportResult.productsCreated > 0 && (
+                    <Button 
+                      onClick={() => window.location.href = '/app/suppliers'}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      View Created Suppliers & Products
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
