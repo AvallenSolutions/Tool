@@ -234,14 +234,14 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
           type === 'textarea' ? (
             <Textarea
               value={value?.toString() || ''}
-              onChange={(e) => updateEditableField(field, e.target.value)}
+              onChange={(e) => updateEditableProductField(field, e.target.value)}
               className="min-h-[60px]"
             />
           ) : (
             <Input
               type={type}
               value={value?.toString() || ''}
-              onChange={(e) => updateEditableField(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
+              onChange={(e) => updateEditableProductField(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
             />
           )
         ) : (
@@ -262,7 +262,7 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!extractedData && (
+        {!extractedProductData && !extractedSupplierData && (
           <>
             <div className="flex gap-2">
               <Input
@@ -311,7 +311,7 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
           </Alert>
         )}
 
-        {extractedData && extractionStats && (
+        {(extractedProductData || extractedSupplierData) && extractionStats && (
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <Badge variant="secondary" className="text-sm">

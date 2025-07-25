@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import AutoDataExtractionEnhanced from "@/components/suppliers/AutoDataExtractionEnhanced";
+import AutoDataExtractionSimple from "@/components/suppliers/AutoDataExtractionSimple";
 import PDFUploadExtraction from "@/components/suppliers/PDFUploadExtraction";
 import VerificationWorkflow from "@/components/suppliers/VerificationWorkflow";
 import ImageUpload from "@/components/suppliers/ImageUpload";
@@ -293,7 +293,7 @@ export default function SupplierOnboarding() {
             {/* Step 1: Auto Data Extraction */}
             {currentStep === 1 && (
               <div className="space-y-6">
-                <AutoDataExtractionEnhanced 
+                <AutoDataExtractionSimple 
                   onDataExtracted={handleAutoDataExtracted}
                   disabled={submitMutation.isPending}
                 />
