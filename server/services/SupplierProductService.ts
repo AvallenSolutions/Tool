@@ -21,6 +21,11 @@ export class SupplierProductService {
     isNewSupplier: boolean;
   }> {
     const { supplierData, productData, selectedImages } = data;
+    
+    console.log('🏭 SupplierProductService.createSupplierProduct called with:');
+    console.log('supplierData:', JSON.stringify(supplierData, null, 2));
+    console.log('productData:', JSON.stringify(productData, null, 2));
+    console.log('selectedImages:', selectedImages);
 
     // Step 1: Find or create supplier
     let supplier = null;

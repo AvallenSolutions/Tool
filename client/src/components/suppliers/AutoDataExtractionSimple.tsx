@@ -117,6 +117,8 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
   };
 
   const handlePreviewApprove = (approvedData: any) => {
+    console.log('📥 AutoDataExtractionSimple handlePreviewApprove called with:', approvedData);
+    
     // Convert approved data back to ExtractedData format - service now handles both new and old field names
     const convertedData: ExtractedData = {
       supplierData: {
@@ -137,6 +139,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
       selectedImages: approvedData.selectedPhotos
     };
     
+    console.log('📤 Converted data being passed to onDataExtracted:', convertedData);
     onDataExtracted(convertedData);
     handleReset();
   };

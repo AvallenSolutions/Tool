@@ -404,6 +404,11 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       const { supplierData, productData, selectedImages } = req.body;
 
+      console.log('🔍 Enhanced endpoint received data:');
+      console.log('supplierData:', JSON.stringify(supplierData, null, 2));
+      console.log('productData:', JSON.stringify(productData, null, 2));
+      console.log('selectedImages:', selectedImages);
+
       if (!supplierData && !productData) {
         return res.status(400).json({ 
           success: false,

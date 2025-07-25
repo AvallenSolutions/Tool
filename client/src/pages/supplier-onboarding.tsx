@@ -152,6 +152,8 @@ export default function SupplierOnboarding() {
   });
 
   const handleAutoDataExtracted = (extractedData: any) => {
+    console.log('🏪 Supplier onboarding handleAutoDataExtracted called with:', extractedData);
+    
     // Handle both supplier and product data
     const productData = extractedData.productData;
     const supplierData = extractedData.supplierData;
@@ -171,6 +173,8 @@ export default function SupplierOnboarding() {
     if (productData?.recycledContent) {
       mappedData.recycledContent = productData.recycledContent;
     }
+
+    console.log('📝 Mapped form data:', mappedData);
 
     // Set the form values
     Object.entries(mappedData).forEach(([key, value]) => {
