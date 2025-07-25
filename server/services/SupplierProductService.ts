@@ -62,8 +62,9 @@ export class SupplierProductService {
         contactEmail: supplierData.email || supplierData.contactEmail,
         description: supplierData.description,
         location: this.extractLocationFromAddress(supplierData.address),
-        submittedBy: 'CLIENT' as const,
-        verificationStatus: 'client_provided' as const,
+        submittedBy: 'ADMIN' as const,
+        verificationStatus: 'verified' as const,
+        isVerified: true,
         submittedByUserId: null, // Could be set from session
         submittedByCompanyId: null // Could be set from session
       };
@@ -99,7 +100,9 @@ export class SupplierProductService {
       currency: productData.currency,
       certifications: productData.certifications || [],
       imageUrls: selectedImages || productData.photos || productData.additionalImages || [],
-      hasPrecalculatedLca: false
+      hasPrecalculatedLca: false,
+      submittedBy: 'ADMIN' as const,
+      isVerified: true
     };
 
     const [createdProduct] = await db

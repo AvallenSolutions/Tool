@@ -630,7 +630,8 @@ export default function SupplierOnboarding() {
                       <Button 
                         type="submit"
                         disabled={submitMutation.isPending}
-                        className="bg-avallen-green hover:bg-green-600 text-white min-w-[140px] opacity-100 visible"
+                        className="bg-avallen-green hover:bg-green-600 text-white min-w-[140px]"
+                        style={{ opacity: 1, visibility: 'visible', display: 'inline-flex' }}
                       >
                         {submitMutation.isPending ? (
                           <>
