@@ -123,9 +123,10 @@ export default function SupplierOnboarding() {
       const productData = response.data || response;
       setSavedProductId(productData.id);
       
-      // Check if we have images from auto-extraction
+      // Check if we have images from auto-extraction (handle both old and new field names)
       const hasImages = autoExtractedData?.selectedImages?.length > 0 || 
-                       autoExtractedData?.productData?.photos?.length > 0;
+                       autoExtractedData?.productData?.photos?.length > 0 ||
+                       autoExtractedData?.productData?.additionalImages?.length > 0;
       
       if (!hasImages) {
         setShowImageUpload(true);
@@ -154,14 +155,14 @@ export default function SupplierOnboarding() {
     // Handle both supplier and product data
     const productData = extractedData.productData;
     const supplierData = extractedData.supplierData;
-    // Map extracted product data to form fields using new field names
+    // Map extracted product data to form fields - handle both old and new field names
     const mappedData: Partial<SupplierProductForm> = {};
 
-    if (productData?.name) {
-      mappedData.productName = productData.name;
+    if (productData?.name || productData?.productName) {
+      mappedData.productName = productData.name || productData.productName;
     }
-    if (productData?.material) {
-      mappedData.materialType = productData.material;
+    if (productData?.material || productData?.materialType) {
+      mappedData.materialType = productData.material || productData.materialType;
     }
     if (productData?.weight) {
       mappedData.weight = productData.weight;

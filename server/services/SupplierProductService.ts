@@ -52,9 +52,9 @@ export class SupplierProductService {
     if (!supplier) {
       const newSupplierData = {
         supplierName: supplierData.companyName || 'Unknown Supplier',
-        supplierCategory: this.mapSupplierType(supplierData.supplierType),
+        supplierCategory: this.mapSupplierType(supplierData.supplierType || supplierData.type),
         website: supplierData.website,
-        contactEmail: supplierData.email,
+        contactEmail: supplierData.email || supplierData.contactEmail,
         description: supplierData.description,
         location: this.extractLocationFromAddress(supplierData.address),
         submittedBy: 'CLIENT' as const,
@@ -73,11 +73,12 @@ export class SupplierProductService {
     }
 
     // Step 2: Create supplier product
+    // Handle both old and new field name formats
     const productCreationData = {
       supplierId: supplier.id,
-      productName: productData.productName || 'Unnamed Product',
+      productName: productData.productName || productData.name || 'Unnamed Product',
       description: productData.description,
-      materialType: productData.materialType,
+      materialType: productData.materialType || productData.material,
       weight: productData.weight,
       weightUnit: productData.weightUnit,
       capacity: productData.capacity,
@@ -92,7 +93,7 @@ export class SupplierProductService {
       unitPrice: productData.price,
       currency: productData.currency,
       certifications: productData.certifications || [],
-      imageUrls: selectedImages || [],
+      imageUrls: selectedImages || productData.photos || productData.additionalImages || [],
       hasPrecalculatedLca: false
     };
 

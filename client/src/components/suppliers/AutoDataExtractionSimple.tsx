@@ -117,7 +117,7 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
   };
 
   const handlePreviewApprove = (approvedData: any) => {
-    // Convert approved data back to ExtractedData format
+    // Convert approved data back to ExtractedData format - service now handles both new and old field names
     const convertedData: ExtractedData = {
       supplierData: {
         companyName: approvedData.companyName,
@@ -128,7 +128,6 @@ export default function AutoDataExtractionSimple({ onDataExtracted, disabled = f
       },
       productData: {
         name: approvedData.name,
-        type: approvedData.productType,
         material: approvedData.material,
         weight: approvedData.weight,
         weightUnit: approvedData.weightUnit,
