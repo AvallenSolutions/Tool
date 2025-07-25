@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import path from "path";
 import fs from "fs";
@@ -16,6 +17,8 @@ import { lcaService, LCAJobManager } from "./lca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
+import path from "path";
+import fs from "fs";
 import { adminRouter } from "./routes/admin";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -24,6 +27,36 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 
 // Configure multer for file uploads
 const upload = multer({ dest: 'uploads/' });
+
+// Configure multer for image uploads specifically
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), 'uploads/images');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const imageUpload = multer({ 
+  storage: imageStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 5 // Max 5 files
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
 
 export function registerRoutes(app: Express): Server {
   // Authentication routes
@@ -327,6 +360,43 @@ Be precise and quote actual text from the content, not generic terms.`;
       });
     }
   });
+
+  // Image Upload Routes
+  app.post('/api/suppliers/upload-images', imageUpload.array('images', 5), async (req, res) => {
+    try {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'No images uploaded' 
+        });
+      }
+
+      console.log(`Processing ${req.files.length} uploaded images`);
+      
+      const imageUrls: string[] = [];
+      for (const file of req.files) {
+        // Generate public URL for the image
+        const imageUrl = `/uploads/images/${file.filename}`;
+        imageUrls.push(imageUrl);
+        console.log(`Image saved: ${imageUrl}`);
+      }
+
+      res.json({
+        success: true,
+        message: `${imageUrls.length} images uploaded successfully`,
+        imageUrls: imageUrls
+      });
+    } catch (error) {
+      console.error('Error in upload-images endpoint:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred during image upload' 
+      });
+    }
+  });
+
+  // Serve uploaded images statically
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Register admin routes
   app.use('/api/admin', adminRouter);

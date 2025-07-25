@@ -389,7 +389,7 @@ export class WebScrapingService {
       .filter(img => img && img.length > 0)
       .filter(img => this.isValidImageUrl(img))
       .filter((img, index, arr) => arr.indexOf(img) === index) // Remove duplicates
-      .slice(0, 10); // Limit to 10 images
+      .slice(0, 5); // Limit to 5 images
 
     console.log(`Image extraction debug for ${baseUrl}:`);
     console.log(`- Found ${images.length} total images`);

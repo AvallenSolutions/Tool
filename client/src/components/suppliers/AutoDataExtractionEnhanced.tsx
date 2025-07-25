@@ -20,7 +20,10 @@ import {
   Edit3,
   Image,
   Save,
-  X
+  X,
+  Trash2,
+  ArrowUp,
+  Plus
 } from "lucide-react";
 
 interface ExtractedProductData {
@@ -45,6 +48,7 @@ interface ExtractedProductData {
   sku?: string;
   productImage?: string;
   additionalImages?: string[];
+  selectedImages?: string[]; // Images selected by user after filtering
   confidence?: {
     [key: string]: number;
   };
@@ -66,6 +70,7 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
     extractionRate: string;
   } | null>(null);
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
   const scrapeMutation = useMutation({
     mutationFn: async (productUrl: string) => {
@@ -84,6 +89,7 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
           extractionRate: result.extractionRate
         });
         setExtractedImages(result.images || []);
+        setSelectedImages(result.images || []);
       }
     }
   });
@@ -95,12 +101,20 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
 
   const handleApplyData = () => {
     if (editableData) {
-      onDataExtracted(editableData);
+      // Include selected images in the data
+      const dataWithImages = {
+        ...editableData,
+        selectedImages,
+        productImage: selectedImages[0], // Primary image is first selected
+        additionalImages: selectedImages.slice(1) // Rest are additional
+      };
+      onDataExtracted(dataWithImages);
       // Clear the extraction state after applying
       setExtractedData(null);
       setEditableData(null);
       setExtractionStats(null);
       setExtractedImages([]);
+      setSelectedImages([]);
       setUrl("");
       setIsEditing(false);
     }
@@ -125,8 +139,33 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
     setEditableData(null);
     setExtractionStats(null);
     setExtractedImages([]);
+    setSelectedImages([]);
     setIsEditing(false);
     scrapeMutation.reset();
+  };
+
+  const toggleImageSelection = (imageUrl: string) => {
+    setSelectedImages(prev => 
+      prev.includes(imageUrl) 
+        ? prev.filter(img => img !== imageUrl)
+        : [...prev, imageUrl]
+    );
+  };
+
+  const removeImage = (imageUrl: string) => {
+    setSelectedImages(prev => prev.filter(img => img !== imageUrl));
+  };
+
+  const moveImageUp = (imageUrl: string) => {
+    setSelectedImages(prev => {
+      const index = prev.indexOf(imageUrl);
+      if (index > 0) {
+        const newOrder = [...prev];
+        [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+        return newOrder;
+      }
+      return prev;
+    });
   };
 
   const updateEditableField = (field: keyof ExtractedProductData, value: any) => {
@@ -266,31 +305,102 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
             {extractedImages.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Image className="w-4 h-4" />
-                    Extracted Product Images
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Image className="w-4 h-4" />
+                      Extracted Product Images
+                      <Badge variant="outline">{extractedImages.length} found</Badge>
+                    </div>
+                    <Badge variant={selectedImages.length > 0 ? "default" : "secondary"}>
+                      {selectedImages.length} selected
+                    </Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {extractedImages.map((imageUrl, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={imageUrl}
-                          alt={`Product image ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        {index === 0 && (
-                          <Badge className="absolute top-1 left-1 text-xs bg-blue-600">
-                            Primary
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
+                <CardContent className="space-y-4">
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      Click images to select/deselect them. Selected images will be saved with the product. 
+                      Use the controls to reorder or remove images.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {extractedImages.map((imageUrl, index) => {
+                      const isSelected = selectedImages.includes(imageUrl);
+                      const selectedIndex = selectedImages.indexOf(imageUrl);
+                      
+                      return (
+                        <div key={index} className="relative group">
+                          <div 
+                            className={`relative border-2 rounded-lg overflow-hidden cursor-pointer transition-all ${
+                              isSelected 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                            onClick={() => toggleImageSelection(imageUrl)}
+                          >
+                            <img
+                              src={imageUrl}
+                              alt={`Product image ${index + 1}`}
+                              className="w-full h-32 object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                            
+                            {isSelected && (
+                              <>
+                                <div className="absolute inset-0 bg-blue-500 bg-opacity-20" />
+                                <Badge className="absolute top-1 left-1 text-xs bg-blue-600">
+                                  {selectedIndex === 0 ? 'Primary' : `#${selectedIndex + 1}`}
+                                </Badge>
+                                <CheckCircle className="absolute top-1 right-1 text-blue-600 bg-white rounded-full" size={20} />
+                              </>
+                            )}
+                          </div>
+                          
+                          {isSelected && (
+                            <div className="flex justify-center gap-1 mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moveImageUp(imageUrl);
+                                }}
+                                disabled={selectedIndex === 0}
+                                className="px-2"
+                              >
+                                <ArrowUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeImage(imageUrl);
+                                }}
+                                className="px-2 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+                  
+                  {selectedImages.length === 0 && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No images selected. The product will be saved without images. 
+                        You can upload custom images after saving the product.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             )}

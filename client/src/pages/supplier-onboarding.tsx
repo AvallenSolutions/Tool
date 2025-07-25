@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import AutoDataExtractionEnhanced from "@/components/suppliers/AutoDataExtractionEnhanced";
 import PDFUploadExtraction from "@/components/suppliers/PDFUploadExtraction";
 import VerificationWorkflow from "@/components/suppliers/VerificationWorkflow";
+import ImageUpload from "@/components/suppliers/ImageUpload";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { 
@@ -71,6 +72,8 @@ export default function SupplierOnboarding() {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [autoExtractedData, setAutoExtractedData] = useState<any>(null);
+  const [savedProductId, setSavedProductId] = useState<string | null>(null);
+  const [showImageUpload, setShowImageUpload] = useState(false);
 
   const form = useForm<SupplierProductForm>({
     resolver: zodResolver(supplierProductSchema),
@@ -85,14 +88,28 @@ export default function SupplierOnboarding() {
       const response = await apiRequest("POST", "/api/supplier-products", data);
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Product Submitted Successfully",
-        description: "Your product information has been submitted for review.",
-      });
-      form.reset();
-      setCurrentStep(1);
-      setAutoExtractedData(null);
+    onSuccess: (response) => {
+      const productData = response.data || response;
+      setSavedProductId(productData.id);
+      
+      // Check if we have images from auto-extraction
+      const hasImages = autoExtractedData?.selectedImages?.length > 0 || 
+                       autoExtractedData?.productImage || 
+                       autoExtractedData?.additionalImages?.length > 0;
+      
+      if (!hasImages) {
+        setShowImageUpload(true);
+        toast({
+          title: "Product Saved Successfully",
+          description: "Your product has been saved. You can now upload images if needed.",
+        });
+      } else {
+        toast({
+          title: "Product Submitted Successfully",
+          description: "Your product has been added to our supplier network for review.",
+        });
+        setCurrentStep(3);
+      }
     },
     onError: (error) => {
       toast({
@@ -163,6 +180,24 @@ export default function SupplierOnboarding() {
 
   const onSubmit = (data: SupplierProductForm) => {
     submitMutation.mutate(data);
+  };
+
+  const handleImagesUploaded = (imageUrls: string[]) => {
+    toast({
+      title: "Images Uploaded Successfully",
+      description: `${imageUrls.length} image${imageUrls.length !== 1 ? 's' : ''} have been added to your product.`,
+    });
+    setShowImageUpload(false);
+    setCurrentStep(3); // Move to completion step
+  };
+
+  const skipImageUpload = () => {
+    toast({
+      title: "Product Submitted",
+      description: "Your product has been submitted without images. You can add images later if needed.",
+    });
+    setShowImageUpload(false);
+    setCurrentStep(3);
   };
 
   const progress = ((currentStep - 1) / 2) * 100;
@@ -595,6 +630,73 @@ export default function SupplierOnboarding() {
                   </div>
                 </form>
               </Form>
+            )}
+
+            {/* Image Upload Step - Show when product is saved but no images */}
+            {showImageUpload && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-avallen-green" />
+                      Add Product Images
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-4">
+                      <p className="text-gray-600">
+                        Your product has been saved successfully! Since no suitable images were found during data extraction, 
+                        you can upload your own product images here.
+                      </p>
+                    </div>
+                    
+                    <ImageUpload 
+                      onImagesUploaded={handleImagesUploaded}
+                      maxImages={5}
+                      disabled={false}
+                    />
+                    
+                    <div className="flex justify-between mt-6">
+                      <Button 
+                        variant="outline"
+                        onClick={skipImageUpload}
+                      >
+                        Skip Images
+                      </Button>
+                      <p className="text-sm text-gray-500 self-center">
+                        You can add images later if needed
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Step 3: Success */}
+            {currentStep === 3 && (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <CheckCircle className="w-16 h-16 text-avallen-green mx-auto mb-4" />
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+                    Product Submitted Successfully!
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Your product information has been submitted for review and will be added to our verified supplier network once approved.
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setCurrentStep(1);
+                      setAutoExtractedData(null);
+                      setSavedProductId(null);
+                      setShowImageUpload(false);
+                      form.reset();
+                    }}
+                    className="bg-avallen-green hover:bg-green-600 text-white"
+                  >
+                    Submit Another Product
+                  </Button>
+                </CardContent>
+              </Card>
             )}
           </div>
         </main>
