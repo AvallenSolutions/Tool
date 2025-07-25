@@ -45,10 +45,12 @@ export default function SupplierManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
 
-  const { data: suppliers, isLoading } = useQuery<SupplierWithDetails[]>({
+  const { data: supplierResponse, isLoading } = useQuery<{success: boolean, data: SupplierWithDetails[]}>({
     queryKey: ['/api/admin/suppliers'],
     refetchInterval: 30000,
   });
+
+  const suppliers = supplierResponse?.data || [];
 
   const verifySupplierMutation = useMutation({
     mutationFn: (supplierId: number) => 
