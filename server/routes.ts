@@ -286,6 +286,47 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Web Scraping Routes
+  app.post('/api/suppliers/scrape-product', async (req, res) => {
+    try {
+      const { url } = req.body;
+
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ 
+          error: 'URL is required and must be a string' 
+        });
+      }
+
+      console.log(`Starting web scraping for URL: ${url}`);
+      const result = await WebScrapingService.scrapeProductData(url);
+
+      if (result.success) {
+        console.log(`Successfully extracted ${result.extractedFields.length} fields from ${url}`);
+        res.json({
+          success: true,
+          extractedData: result.data,
+          extractedFields: result.extractedFields,
+          totalFields: result.totalFields,
+          extractionRate: `${Math.round((result.extractedFields.length / result.totalFields) * 100)}%`
+        });
+      } else {
+        console.log(`Failed to extract data from ${url}: ${result.error}`);
+        res.status(400).json({
+          success: false,
+          error: result.error,
+          extractedFields: result.extractedFields,
+          totalFields: result.totalFields
+        });
+      }
+    } catch (error) {
+      console.error('Error in scrape-product endpoint:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred during web scraping' 
+      });
+    }
+  });
+
   // Register admin routes
   app.use('/api/admin', adminRouter);
 

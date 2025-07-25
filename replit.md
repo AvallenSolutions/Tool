@@ -261,3 +261,7 @@ The application follows a monorepo structure with shared types between frontend 
 - **Database Preparation**: Database now ready for real-world supplier data import with clean slate
 - **Data Integrity**: Properly handled foreign key constraints during cleanup to maintain database integrity
 - **Ready for Production**: Platform prepared for actual supplier onboarding and verification workflows with real companies
+- **Web Scraping Fix**: Resolved URL import error by restoring missing scraping endpoint to main routes.ts file
+- **JSON Response Fixed**: Eliminated "Unexpected token '<', '<!DOCTYPE'" error that was caused by missing API endpoint returning HTML instead of JSON
+- **Import Issue Resolved**: Fixed async import syntax error and duplicate import declarations in routes configuration
+- **Functionality Verified**: Confirmed web scraping endpoint working correctly with proper JSON response structure and data extraction
