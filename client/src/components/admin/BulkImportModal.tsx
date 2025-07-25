@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -116,13 +116,13 @@ export default function BulkImportModal({ open, onOpenChange }: BulkImportModalP
   });
 
   // Update import results when they arrive
-  useState(() => {
+  useEffect(() => {
     if (results && !importResults) {
       setImportResults(results);
       setEditedSupplier(results.supplierData);
       setEditedProducts(results.productsData || []);
     }
-  }, [results]);
+  }, [results, importResults]);
 
   // Save bulk import mutation
   const saveBulkImportMutation = useMutation({
