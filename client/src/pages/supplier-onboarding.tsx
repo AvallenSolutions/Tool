@@ -627,10 +627,19 @@ export default function SupplierOnboarding() {
                         <Save className="w-4 h-4 mr-2" />
                         Save Draft
                       </Button>
-                      <Button 
+                      <button 
                         type="submit"
                         disabled={submitMutation.isPending}
-                        className="bg-avallen-green hover:bg-green-600 text-white min-w-[140px] btn-always-visible"
+                        className="bg-avallen-green hover:bg-green-600 text-white min-w-[140px] px-4 py-2 rounded font-medium flex items-center justify-center"
+                        style={{
+                          opacity: 1,
+                          visibility: 'visible',
+                          display: 'inline-flex',
+                          backgroundColor: '#209d50',
+                          color: 'white',
+                          border: 'none',
+                          minWidth: '140px'
+                        }}
                       >
                         {submitMutation.isPending ? (
                           <>
@@ -643,7 +652,7 @@ export default function SupplierOnboarding() {
                             <ArrowRight className="w-4 h-4 ml-2" />
                           </>
                         )}
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </form>

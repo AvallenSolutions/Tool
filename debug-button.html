@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Button Debug Test</title>
+    <style>
+        .btn-always-visible {
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: inline-flex !important;
+            pointer-events: auto !important;
+        }
+        .test-button {
+            background-color: #209d50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            min-width: 140px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Visibility Test</h1>
+    <button class="test-button btn-always-visible">
+        Submit for Review
+    </button>
+    <p>If you can see this button clearly, the CSS is working.</p>
+</body>
+</html>
