@@ -574,6 +574,55 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Supplier Products API for Supplier Network
+  app.get('/api/supplier-products', async (req, res) => {
+    try {
+      const { category, search } = req.query;
+      const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
+      const { eq, and } = await import('drizzle-orm');
+      
+      let query = db
+        .select({
+          id: supplierProducts.id,
+          supplierId: supplierProducts.supplierId,
+          productName: supplierProducts.productName,
+          productDescription: supplierProducts.productDescription,
+          sku: supplierProducts.sku,
+          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+          lcaDataJson: supplierProducts.lcaDataJson,
+          productAttributes: supplierProducts.productAttributes,
+          basePrice: supplierProducts.basePrice,
+          currency: supplierProducts.currency,
+          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+          leadTimeDays: supplierProducts.leadTimeDays,
+          certifications: supplierProducts.certifications,
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory
+        })
+        .from(supplierProducts)
+        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+        .where(and(
+          eq(supplierProducts.isVerified, true),
+          eq(verifiedSuppliers.isVerified, true)
+        ));
+        
+      if (category) {
+        query = query.where(and(
+          eq(supplierProducts.isVerified, true),
+          eq(verifiedSuppliers.isVerified, true),
+          eq(verifiedSuppliers.supplierCategory, category)
+        ));
+      }
+      
+      const products = await query;
+      console.log(`✅ Found ${products.length} verified supplier products`);
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching supplier products:", error);
+      res.status(500).json({ message: "Failed to fetch supplier products" });
+    }
+  });
+
   // Register admin routes
   app.use('/api/admin', adminRouter);
 
