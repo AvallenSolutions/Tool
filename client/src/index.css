@@ -118,7 +118,8 @@ body {
 .btn-always-visible {
   opacity: 1 !important;
   visibility: visible !important;
-  display: flex !important;
+  display: inline-flex !important;
+  pointer-events: auto !important;
 }
 
 /* Custom Tour Styles */

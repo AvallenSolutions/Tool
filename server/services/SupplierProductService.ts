@@ -63,8 +63,8 @@ export class SupplierProductService {
         description: supplierData.description,
         location: this.extractLocationFromAddress(supplierData.address),
         submittedBy: 'ADMIN' as const,
-        verificationStatus: 'verified' as const,
-        isVerified: true,
+        verificationStatus: 'pending_review' as const,
+        isVerified: false,
         submittedByUserId: null, // Could be set from session
         submittedByCompanyId: null // Could be set from session
       };
