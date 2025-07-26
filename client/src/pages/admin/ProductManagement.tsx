@@ -61,7 +61,7 @@ export default function ProductManagement() {
   // Edit product mutation
   const editProductMutation = useMutation({
     mutationFn: (data: { id: string; productData: Partial<SupplierProduct> }) => 
-      apiRequest(`/api/admin/supplier-products/${data.id}`, 'PUT', data.productData),
+      apiRequest('/api/admin/supplier-products/' + data.id, 'PUT', data.productData),
     onSuccess: () => {
       toast({
         title: "Product Updated",
@@ -83,7 +83,7 @@ export default function ProductManagement() {
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: (productId: string) => 
-      apiRequest(`/api/supplier-products/${productId}`, 'DELETE'),
+      apiRequest('/api/supplier-products/' + productId, 'DELETE'),
     onSuccess: () => {
       toast({
         title: "Product Deleted",
@@ -297,7 +297,7 @@ export default function ProductManagement() {
       {/* View Product Dialog */}
       {selectedProduct && (
         <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl bg-white border border-gray-200 shadow-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
@@ -385,7 +385,7 @@ export default function ProductManagement() {
       {/* Edit Product Dialog */}
       {editingProduct && (
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
             <DialogHeader>
               <DialogTitle>Edit Product</DialogTitle>
             </DialogHeader>
@@ -483,7 +483,7 @@ export default function ProductManagement() {
       {/* Delete Product Dialog */}
       {deletingProduct && (
         <Dialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
-          <DialogContent>
+          <DialogContent className="bg-white border border-gray-200 shadow-lg">
             <DialogHeader>
               <DialogTitle>Delete Product</DialogTitle>
             </DialogHeader>

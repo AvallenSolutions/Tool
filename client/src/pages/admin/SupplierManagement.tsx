@@ -106,7 +106,7 @@ export default function SupplierManagement() {
   // Delete supplier mutation
   const deleteSupplierMutation = useMutation({
     mutationFn: (supplierId: number) => 
-      apiRequest(`/api/admin/suppliers/${supplierId}`, 'DELETE'),
+      apiRequest('/api/admin/suppliers/' + supplierId, 'DELETE'),
     onSuccess: () => {
       toast({
         title: "Supplier Deleted",
@@ -445,7 +445,7 @@ export default function SupplierManagement() {
     {/* Edit Supplier Dialog */}
     {editingSupplier && (
       <Dialog open={!!editingSupplier} onOpenChange={() => setEditingSupplier(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
           <DialogHeader>
             <DialogTitle>Edit Supplier</DialogTitle>
           </DialogHeader>
@@ -548,7 +548,7 @@ export default function SupplierManagement() {
     {/* Delete Supplier Dialog */}
     {deletingSupplier && (
       <Dialog open={!!deletingSupplier} onOpenChange={() => setDeletingSupplier(null)}>
-        <DialogContent>
+        <DialogContent className="bg-white border border-gray-200 shadow-lg">
           <DialogHeader>
             <DialogTitle>Delete Supplier</DialogTitle>
           </DialogHeader>
