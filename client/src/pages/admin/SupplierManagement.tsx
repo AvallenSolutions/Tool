@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -20,7 +22,10 @@ import {
   Globe,
   MapPin,
   User,
-  Calendar
+  Calendar,
+  Edit,
+  Trash2,
+  Plus
 } from "lucide-react";
 
 interface SupplierWithDetails {
@@ -44,6 +49,8 @@ export default function SupplierManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierWithDetails | null>(null);
+  const [editingSupplier, setEditingSupplier] = useState<SupplierWithDetails | null>(null);
+  const [deletingSupplier, setDeletingSupplier] = useState<SupplierWithDetails | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
 
@@ -70,6 +77,50 @@ export default function SupplierManagement() {
       toast({
         title: "Verification Failed",
         description: error.message || "Failed to verify supplier.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Edit supplier mutation
+  const editSupplierMutation = useMutation({
+    mutationFn: (data: { id: number; supplierData: Partial<SupplierWithDetails> }) => 
+      apiRequest(`/api/admin/suppliers/${data.id}`, 'PUT', data.supplierData),
+    onSuccess: () => {
+      toast({
+        title: "Supplier Updated",
+        description: "Supplier information has been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/suppliers'] });
+      setEditingSupplier(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update supplier.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete supplier mutation
+  const deleteSupplierMutation = useMutation({
+    mutationFn: (supplierId: number) => 
+      apiRequest(`/api/admin/suppliers/${supplierId}`, 'DELETE'),
+    onSuccess: () => {
+      toast({
+        title: "Supplier Deleted",
+        description: "Supplier and all associated products have been removed.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/suppliers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supplier-products'] });
+      setDeletingSupplier(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete supplier.",
         variant: "destructive",
       });
     },
@@ -133,15 +184,16 @@ export default function SupplierManagement() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header 
-          title="Supplier Management" 
-          subtitle="Review and verify supplier data submissions"
-        />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <div className="space-y-6">
+    <>
+      <div className="flex h-screen bg-lightest-gray">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header 
+            title="Supplier Management" 
+            subtitle="Review and verify supplier data submissions"
+          />
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -334,6 +386,24 @@ export default function SupplierManagement() {
                       )}
                     </DialogContent>
                   </Dialog>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingSupplier(supplier)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeletingSupplier(supplier)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
 
                   {supplier.verificationStatus === 'pending_review' && (
                     <Button
@@ -371,5 +441,138 @@ export default function SupplierManagement() {
         </main>
       </div>
     </div>
+
+    {/* Edit Supplier Dialog */}
+    {editingSupplier && (
+      <Dialog open={!!editingSupplier} onOpenChange={() => setEditingSupplier(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Supplier</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Supplier Name</Label>
+                <Input
+                  value={editingSupplier.supplierName}
+                  onChange={(e) => setEditingSupplier({
+                    ...editingSupplier,
+                    supplierName: e.target.value
+                  })}
+                />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select 
+                  value={editingSupplier.supplierCategory} 
+                  onValueChange={(value) => setEditingSupplier({
+                    ...editingSupplier,
+                    supplierCategory: value
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bottle_producer">Bottle Producer</SelectItem>
+                    <SelectItem value="cap_closure_producer">Cap & Closure Producer</SelectItem>
+                    <SelectItem value="label_producer">Label Producer</SelectItem>
+                    <SelectItem value="ingredient_supplier">Ingredient Supplier</SelectItem>
+                    <SelectItem value="packaging_supplier">Packaging Supplier</SelectItem>
+                    <SelectItem value="contract_distillery">Contract Distillery</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={editingSupplier.description || ''}
+                onChange={(e) => setEditingSupplier({
+                  ...editingSupplier,
+                  description: e.target.value
+                })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Website</Label>
+                <Input
+                  value={editingSupplier.website || ''}
+                  onChange={(e) => setEditingSupplier({
+                    ...editingSupplier,
+                    website: e.target.value
+                  })}
+                />
+              </div>
+              <div>
+                <Label>Contact Email</Label>
+                <Input
+                  value={editingSupplier.contactEmail || ''}
+                  onChange={(e) => setEditingSupplier({
+                    ...editingSupplier,
+                    contactEmail: e.target.value
+                  })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Country</Label>
+              <Input
+                value={editingSupplier.addressCountry || ''}
+                onChange={(e) => setEditingSupplier({
+                  ...editingSupplier,
+                  addressCountry: e.target.value
+                })}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingSupplier(null)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => editSupplierMutation.mutate({
+                  id: editingSupplier.id,
+                  supplierData: editingSupplier
+                })}
+                disabled={editSupplierMutation.isPending}
+              >
+                {editSupplierMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )}
+
+    {/* Delete Supplier Dialog */}
+    {deletingSupplier && (
+      <Dialog open={!!deletingSupplier} onOpenChange={() => setDeletingSupplier(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Supplier</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>
+              Are you sure you want to delete <strong>{deletingSupplier.supplierName}</strong>? 
+              This action cannot be undone and will also remove all associated products.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeletingSupplier(null)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => deleteSupplierMutation.mutate(deletingSupplier.id)}
+                disabled={deleteSupplierMutation.isPending}
+              >
+                {deleteSupplierMutation.isPending ? 'Deleting...' : 'Delete Supplier'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )}
+    </>
   );
 }

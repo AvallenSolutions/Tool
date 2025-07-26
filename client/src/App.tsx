@@ -20,6 +20,7 @@ import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminDashboardMain from "@/pages/admin/AdminDashboard";
 import SupplierManagement from "@/pages/admin/SupplierManagement";
+import ProductManagement from "@/pages/admin/ProductManagement";
 import LCAApprovals from "@/pages/admin/LCAApprovals";
 import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
@@ -101,6 +102,7 @@ function Router() {
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/admin" component={AdminDashboardMain} />
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
+      <Route path="/app/admin/products" component={ProductManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
       <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />

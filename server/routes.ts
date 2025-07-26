@@ -538,6 +538,87 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Get all supplier products for admin management  
+  app.get('/api/admin/supplier-products', async (req, res) => {
+    try {
+      const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const products = await db
+        .select({
+          id: supplierProducts.id,
+          supplierId: supplierProducts.supplierId,
+          productName: supplierProducts.productName,
+          productDescription: supplierProducts.productDescription,
+          sku: supplierProducts.sku,
+          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+          lcaDataJson: supplierProducts.lcaDataJson,
+          productAttributes: supplierProducts.productAttributes,
+          basePrice: supplierProducts.basePrice,
+          currency: supplierProducts.currency,
+          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+          leadTimeDays: supplierProducts.leadTimeDays,
+          certifications: supplierProducts.certifications,
+          isVerified: supplierProducts.isVerified,
+          createdAt: supplierProducts.createdAt,
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory
+        })
+        .from(supplierProducts)
+        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id));
+      
+      console.log(`✅ Found ${products.length} supplier products for admin management`);
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching admin supplier products:", error);
+      res.status(500).json({ message: "Failed to fetch supplier products" });
+    }
+  });
+
+  // Edit supplier product endpoint
+  app.put('/api/admin/supplier-products/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      console.log(`Updating supplier product: ${id} with data:`, updateData);
+
+      const { supplierProducts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const updatedProduct = await db
+        .update(supplierProducts)
+        .set({ 
+          ...updateData,
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(supplierProducts.id, id))
+        .returning();
+
+      if (updatedProduct.length === 0) {
+        return res.status(404).json({ 
+          success: false,
+          error: 'Product not found' 
+        });
+      }
+
+      console.log(`Successfully updated supplier product: ${id}`);
+
+      res.json({
+        success: true,
+        data: updatedProduct[0],
+        message: 'Product updated successfully'
+      });
+
+    } catch (error) {
+      console.error('Error updating supplier product:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred while updating product' 
+      });
+    }
+  });
+
   // Get all suppliers for admin management
   app.get('/api/admin/suppliers', async (req, res) => {
     try {
