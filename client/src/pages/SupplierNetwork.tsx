@@ -81,80 +81,34 @@ export default function SupplierNetwork() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Mock data for Phase 3 development - represents both verified and client-provided suppliers
-  const mockSuppliers: Supplier[] = [
-    {
-      id: 1,
-      supplierName: 'EcoGlass Solutions',
-      supplierCategory: 'bottle_producer',
-      website: 'https://ecoglass.com',
-      contactEmail: 'info@ecoglass.com',
-      description: 'Leading producer of sustainable glass bottles for the drinks industry',
-      location: 'Bristol, UK',
-      verificationStatus: 'verified',
-      submittedBy: 'ADMIN',
-      isVerified: true,
-      createdAt: '2025-01-15',
+  // Fetch real data from API
+  const { data: suppliers, isLoading: suppliersLoading, error: suppliersError } = useQuery({
+    queryKey: ['/api/suppliers'],
+    queryFn: async () => {
+      const response = await fetch('/api/suppliers', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to load suppliers');
+      return response.json();
     },
-    {
-      id: 2,
-      supplierName: 'Green Cap Manufacturing',
-      supplierCategory: 'cap_closure_producer',
-      website: 'https://greencaps.co.uk',
-      contactEmail: 'sales@greencaps.co.uk',
-      description: 'Recyclable bottle caps and closures made from sustainable materials',
-      location: 'Manchester, UK',
-      verificationStatus: 'verified',
-      submittedBy: 'ADMIN',
-      isVerified: true,
-      createdAt: '2025-01-12',
-    },
-    {
-      id: 3,
-      supplierName: 'Regional Packaging Ltd',
-      supplierCategory: 'packaging_supplier',
-      contactEmail: 'contact@regionalpackaging.com',
-      description: 'Local packaging supplier for secondary packaging needs',
-      location: 'Edinburgh, UK',
-      verificationStatus: 'client_provided',
-      submittedBy: 'CLIENT',
-      isVerified: false,
-      createdAt: '2025-01-20',
-    }
-  ];
+  });
 
-  const mockProducts: SupplierProduct[] = [
-    {
-      id: 1,
-      supplierId: 1,
-      productName: 'Premium Clear Glass Bottle 750ml',
-      productDescription: 'High-quality clear glass bottle with optimized weight distribution',
-      sku: 'ECO-750-CLR',
-      hasPrecalculatedLca: true,
-      supplierName: 'EcoGlass Solutions',
-      supplierCategory: 'bottle_producer',
+  const { data: products, isLoading: productsLoading, error: productsError } = useQuery({
+    queryKey: ['/api/supplier-products'],
+    queryFn: async () => {
+      const response = await fetch('/api/supplier-products', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to load supplier products');
+      return response.json();
     },
-    {
-      id: 2,
-      supplierId: 2,
-      productName: 'Cork-Style Synthetic Cap',
-      productDescription: 'Recyclable synthetic cap with cork appearance',
-      sku: 'GC-CORK-28',
-      hasPrecalculatedLca: true,
-      supplierName: 'Green Cap Manufacturing',
-      supplierCategory: 'cap_closure_producer',
-    },
-  ];
+  });
 
-  const filteredSuppliers = mockSuppliers.filter(supplier => {
+  const filteredSuppliers = (suppliers || []).filter((supplier: any) => {
     const matchesSearch = supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          supplier.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || selectedCategory === 'none' || supplier.supplierCategory === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const verifiedSuppliers = filteredSuppliers.filter(s => s.verificationStatus === 'verified');
-  const clientSuppliers = filteredSuppliers.filter(s => s.verificationStatus === 'client_provided');
+  const verifiedSuppliers = filteredSuppliers.filter((s: any) => s.verificationStatus === 'verified');
+  const clientSuppliers = filteredSuppliers.filter((s: any) => s.verificationStatus === 'client_provided');
 
   const handleAddSupplier = () => {
     if (!newSupplier.supplierName || !newSupplier.supplierCategory || newSupplier.supplierCategory === 'none') {
@@ -621,7 +575,7 @@ export default function SupplierNetwork() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mockProducts.map((product) => (
+                {(products || []).map((product: any) => (
                   <Card key={product.id} className="border-gray-200">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
