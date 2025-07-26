@@ -562,7 +562,11 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.get('/api/suppliers', async (req, res) => {
     try {
       const { verifiedSuppliers } = await import('@shared/schema');
-      const suppliers = await db.select().from(verifiedSuppliers);
+      const { eq } = await import('drizzle-orm');
+      const suppliers = await db
+        .select()
+        .from(verifiedSuppliers)
+        .where(eq(verifiedSuppliers.isVerified, true));
 
       res.json(suppliers);
 
@@ -571,6 +575,150 @@ Be precise and quote actual text from the content, not generic terms.`;
       res.status(500).json({ 
         error: 'Internal server error occurred while fetching suppliers' 
       });
+    }
+  });
+
+  // Get single supplier product
+  app.get('/api/supplier-products/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const product = await db
+        .select({
+          id: supplierProducts.id,
+          supplierId: supplierProducts.supplierId,
+          productName: supplierProducts.productName,
+          productDescription: supplierProducts.productDescription,
+          sku: supplierProducts.sku,
+          materialType: supplierProducts.materialType,
+          weight: supplierProducts.weight,
+          weightUnit: supplierProducts.weightUnit,
+          recycledContent: supplierProducts.recycledContent,
+          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+          photos: supplierProducts.photos,
+          category: supplierProducts.category,
+          certifications: supplierProducts.certifications,
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory,
+          isVerified: supplierProducts.isVerified,
+          createdAt: supplierProducts.createdAt
+        })
+        .from(supplierProducts)
+        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+        .where(eq(supplierProducts.id, id))
+        .limit(1);
+
+      if (product.length === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      res.json(product[0]);
+    } catch (error) {
+      console.error('❌ Error fetching supplier product:', error);
+      res.status(500).json({ error: 'Failed to fetch supplier product' });
+    }
+  });
+
+  // Get single supplier
+  app.get('/api/suppliers/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const supplier = await db
+        .select()
+        .from(verifiedSuppliers)
+        .where(eq(verifiedSuppliers.id, id))
+        .limit(1);
+
+      if (supplier.length === 0) {
+        return res.status(404).json({ error: 'Supplier not found' });
+      }
+
+      res.json(supplier[0]);
+    } catch (error) {
+      console.error('❌ Error fetching supplier:', error);
+      res.status(500).json({ error: 'Failed to fetch supplier' });
+    }
+  });
+
+  // Update supplier
+  app.put('/api/suppliers/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const result = await db
+        .update(verifiedSuppliers)
+        .set(updateData)
+        .where(eq(verifiedSuppliers.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'Supplier not found' });
+      }
+
+      res.json(result[0]);
+    } catch (error) {
+      console.error('❌ Error updating supplier:', error);
+      res.status(500).json({ error: 'Failed to update supplier' });
+    }
+  });
+
+  // Delete supplier
+  app.delete('/api/suppliers/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      // First delete all products from this supplier
+      await db
+        .delete(supplierProducts)
+        .where(eq(supplierProducts.supplierId, id));
+      
+      // Then delete the supplier
+      const result = await db
+        .delete(verifiedSuppliers)
+        .where(eq(verifiedSuppliers.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'Supplier not found' });
+      }
+
+      res.json({ message: 'Supplier deleted successfully' });
+    } catch (error) {
+      console.error('❌ Error deleting supplier:', error);
+      res.status(500).json({ error: 'Failed to delete supplier' });
+    }
+  });
+
+  // Delete supplier product
+  app.delete('/api/supplier-products/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { supplierProducts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const result = await db
+        .delete(supplierProducts)
+        .where(eq(supplierProducts.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+      console.error('❌ Error deleting supplier product:', error);
+      res.status(500).json({ error: 'Failed to delete supplier product' });
     }
   });
 
@@ -605,6 +753,15 @@ Be precise and quote actual text from the content, not generic terms.`;
           eq(supplierProducts.isVerified, true),
           eq(verifiedSuppliers.isVerified, true)
         ));
+        
+      if (req.query.supplier) {
+        const { and: andOp } = await import('drizzle-orm');
+        query = query.where(andOp(
+          eq(supplierProducts.isVerified, true),
+          eq(verifiedSuppliers.isVerified, true),
+          eq(supplierProducts.supplierId, req.query.supplier as string)
+        ));
+      }
         
       if (category) {
         query = query.where(and(

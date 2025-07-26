@@ -9,7 +9,7 @@ import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
-import ProductDetail from "@/pages/product-detail";
+import ProductDetailOld from "@/pages/product-detail";
 import ProductEdit from "@/pages/product-edit";
 import CreateEnhancedProduct from "@/pages/CreateEnhancedProduct";
 import Reports from "@/pages/reports";
@@ -23,7 +23,9 @@ import SupplierManagement from "@/pages/admin/SupplierManagement";
 import LCAApprovals from "@/pages/admin/LCAApprovals";
 import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
-import SupplierNetwork from "@/pages/SupplierNetwork";  
+import SupplierNetwork from "@/pages/SupplierNetwork";
+import SupplierDetail from "@/pages/SupplierDetail";
+import ProductDetail from "@/pages/ProductDetail";
 import SupplierOnboarding from "@/pages/supplier-onboarding";
 import Suppliers from "@/pages/suppliers";
 import GreenwashGuardian from "@/pages/GreenwashGuardian";
@@ -88,9 +90,11 @@ function Router() {
       <Route path="/app/products/create/enhanced" component={CreateEnhancedProduct} />
       <Route path="/app/products/:id/enhanced" component={CreateEnhancedProduct} />
       <Route path="/app/products/:id/edit" component={ProductEdit} />
-      <Route path="/app/products/:id" component={ProductDetail} />
+      <Route path="/app/products/:id" component={ProductDetailOld} />
       <Route path="/app/reports" component={Reports} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />
+      <Route path="/app/supplier-network/supplier/:id" component={SupplierDetail} />
+      <Route path="/app/supplier-network/product/:id" component={ProductDetail} />
       <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
       <Route path="/app/suppliers" component={Suppliers} />
       <Route path="/app/lca" component={LCAPage} />

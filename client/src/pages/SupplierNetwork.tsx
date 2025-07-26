@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
@@ -61,6 +62,7 @@ export default function SupplierNetwork() {
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [, setLocation] = useLocation();
   const [newSupplier, setNewSupplier] = useState({
     supplierName: '',
     supplierCategory: 'none',
@@ -444,7 +446,11 @@ export default function SupplierNetwork() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {verifiedSuppliers.map((supplier) => (
-                      <Card key={supplier.id} className="border-green-200">
+                      <Card 
+                        key={supplier.id} 
+                        className="border-green-200 cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => setLocation(`/app/supplier-network/supplier/${supplier.id}`)}
+                      >
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
                             <div>
