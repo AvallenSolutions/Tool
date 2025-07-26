@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
 import { 
   Building2, 
   UserPlus, 
@@ -15,17 +17,25 @@ export default function SupplierDataAdmin() {
   const [, navigate] = useLocation();
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Supplier Data Management</h1>
-          <p className="text-muted-foreground">
-            Admin tools for managing supplier data and onboarding processes
-          </p>
-        </div>
-        <Badge variant="secondary">Admin Only</Badge>
-      </div>
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header 
+          title="Supplier Data Management" 
+          subtitle="Admin tools for managing supplier data and onboarding processes"
+        />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Supplier Data Management</h1>
+                <p className="text-muted-foreground">
+                  Admin tools for managing supplier data and onboarding processes
+                </p>
+              </div>
+              <Badge variant="secondary">Admin Only</Badge>
+            </div>
 
       {/* Admin Notice */}
       <Card className="border-orange-200 bg-orange-50">
@@ -183,6 +193,9 @@ export default function SupplierDataAdmin() {
           </div>
         </CardContent>
       </Card>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
