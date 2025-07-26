@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Loader2, Plus, Search, Filter, Building2, Package, CheckCircle, 
   Clock, Globe, Mail, MapPin, Star, ShieldCheck, Users, FileText,
-  ExternalLink, Trash2, Edit
+  ExternalLink, ChevronDown, ChevronRight, X, AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -63,8 +63,7 @@ export default function SupplierNetwork() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [, setLocation] = useLocation();
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [deletingSupplier, setDeletingSupplier] = useState<Supplier | null>(null);
+
   const [newSupplier, setNewSupplier] = useState({
     supplierName: '',
     supplierCategory: 'none',
@@ -85,50 +84,7 @@ export default function SupplierNetwork() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Edit supplier mutation
-  const editSupplierMutation = useMutation({
-    mutationFn: async (data: { id: number; supplierData: Partial<Supplier> }) => {
-      return apiRequest(`/api/suppliers/${data.id}`, 'PUT', data.supplierData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/suppliers'] });
-      setEditingSupplier(null);
-      toast({
-        title: "Supplier Updated",
-        description: "Supplier information has been successfully updated.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Update Failed",
-        description: error?.message || "Failed to update supplier.",
-        variant: "destructive",
-      });
-    },
-  });
 
-  // Delete supplier mutation
-  const deleteSupplierMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/suppliers/${id}`, 'DELETE');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/suppliers'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/supplier-products'] });
-      setDeletingSupplier(null);
-      toast({
-        title: "Supplier Deleted",
-        description: "Supplier and all associated products have been removed.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Delete Failed",
-        description: error?.message || "Failed to delete supplier.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Fetch real data from API
   const { data: suppliers, isLoading: suppliersLoading, error: suppliersError } = useQuery({
@@ -508,26 +464,6 @@ export default function SupplierNetwork() {
                             </div>
                             <div className="flex items-center gap-2">
                               {getStatusBadge(supplier)}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingSupplier(supplier);
-                                }}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeletingSupplier(supplier);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
                             </div>
                           </div>
                         </CardHeader>
@@ -734,12 +670,8 @@ export default function SupplierNetwork() {
                           </div>
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm">
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Remove
+                              <Plus className="w-4 h-4 mr-1" />
+                              Add to Network
                             </Button>
                           </div>
                         </div>
@@ -753,101 +685,7 @@ export default function SupplierNetwork() {
         </TabsContent>
           </Tabs>
 
-          {/* Edit Supplier Dialog */}
-          {editingSupplier && (
-            <Dialog open={!!editingSupplier} onOpenChange={() => setEditingSupplier(null)}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Supplier</DialogTitle>
-                  <DialogDescription>
-                    Update supplier information
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Supplier Name</Label>
-                    <Input
-                      value={editingSupplier.supplierName}
-                      onChange={(e) => setEditingSupplier({
-                        ...editingSupplier,
-                        supplierName: e.target.value
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Description</Label>
-                    <Textarea
-                      value={editingSupplier.description || ''}
-                      onChange={(e) => setEditingSupplier({
-                        ...editingSupplier,
-                        description: e.target.value
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Website</Label>
-                    <Input
-                      value={editingSupplier.website || ''}
-                      onChange={(e) => setEditingSupplier({
-                        ...editingSupplier,
-                        website: e.target.value
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Contact Email</Label>
-                    <Input
-                      value={editingSupplier.contactEmail || ''}
-                      onChange={(e) => setEditingSupplier({
-                        ...editingSupplier,
-                        contactEmail: e.target.value
-                      })}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setEditingSupplier(null)}>
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={() => editSupplierMutation.mutate({
-                        id: editingSupplier.id,
-                        supplierData: editingSupplier
-                      })}
-                      disabled={editSupplierMutation.isPending}
-                    >
-                      {editSupplierMutation.isPending ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
 
-          {/* Delete Supplier Dialog */}
-          {deletingSupplier && (
-            <Dialog open={!!deletingSupplier} onOpenChange={() => setDeletingSupplier(null)}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Delete Supplier</DialogTitle>
-                  <DialogDescription>
-                    Are you sure you want to delete "{deletingSupplier.supplierName}"? This action cannot be undone and will also remove all associated products.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setDeletingSupplier(null)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="destructive"
-                    onClick={() => deleteSupplierMutation.mutate(deletingSupplier.id)}
-                    disabled={deleteSupplierMutation.isPending}
-                  >
-                    {deleteSupplierMutation.isPending ? 'Deleting...' : 'Delete Supplier'}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
         </main>
       </div>
     </div>

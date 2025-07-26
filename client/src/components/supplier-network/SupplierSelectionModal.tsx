@@ -94,13 +94,19 @@ export default function SupplierSelectionModal({
   // Fetch real supplier products from API
   const { data: supplierProducts = [], isLoading } = useQuery({
     queryKey: ['/api/supplier-products', category],
+    queryFn: async () => {
+      const response = await fetch(`/api/supplier-products?category=${category}`, { 
+        credentials: 'include' 
+      });
+      if (!response.ok) throw new Error('Failed to load supplier products');
+      return response.json();
+    },
     enabled: isOpen
   });
 
   // Filter products based on search term
   const filteredProducers = supplierProducts.filter((product: any) => 
     product.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
