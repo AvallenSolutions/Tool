@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,20 +38,28 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Platform Analytics</h1>
-          <Badge variant="outline">Loading...</Badge>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex h-screen bg-lightest-gray">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header title="Platform Analytics" subtitle="Loading platform metrics..." />
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold tracking-tight">Platform Analytics</h1>
+                <Badge variant="outline">Loading...</Badge>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {[...Array(4)].map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-8 bg-gray-200 rounded"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -67,14 +77,22 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Platform Analytics</h1>
-        <Badge variant="outline">
-          Last updated: {analytics ? new Date(analytics.lastUpdated).toLocaleTimeString() : 'Never'}
-        </Badge>
-      </div>
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header 
+          title="Platform Analytics" 
+          subtitle="Real-time metrics and platform overview"
+        />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold tracking-tight">Platform Analytics</h1>
+              <Badge variant="outline">
+                Last updated: {analytics ? new Date(analytics.lastUpdated).toLocaleTimeString() : 'Never'}
+              </Badge>
+            </div>
 
       {/* Analytics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -282,6 +300,9 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+          </div>
+        </main>
       </div>
     </div>
   );

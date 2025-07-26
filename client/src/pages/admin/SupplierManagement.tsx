@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -131,19 +133,27 @@ export default function SupplierManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Supplier Management</h1>
-          <p className="text-muted-foreground">
-            Review and verify supplier data submissions
-          </p>
-        </div>
-        <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
-          {pendingCount} pending review
-        </Badge>
-      </div>
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header 
+          title="Supplier Management" 
+          subtitle="Review and verify supplier data submissions"
+        />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Supplier Management</h1>
+                <p className="text-muted-foreground">
+                  Review and verify supplier data submissions
+                </p>
+              </div>
+              <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
+                {pendingCount} pending review
+              </Badge>
+            </div>
 
       {/* Filters */}
       <Card>
@@ -356,6 +366,9 @@ export default function SupplierManagement() {
             </CardContent>
           </Card>
         )}
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
