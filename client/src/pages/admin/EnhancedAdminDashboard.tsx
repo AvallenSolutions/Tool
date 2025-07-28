@@ -77,7 +77,7 @@ export default function EnhancedAdminDashboard() {
       description: '3 suppliers pending verification review',
       priority: 'high',
       createdAt: '2025-01-28T10:00:00Z',
-      actionUrl: '/app/admin'
+      actionUrl: '/app/admin/suppliers'
     },
     {
       id: '2',
@@ -86,7 +86,7 @@ export default function EnhancedAdminDashboard() {
       description: '5 new products require review',
       priority: 'medium',
       createdAt: '2025-01-28T09:30:00Z',
-      actionUrl: '/app/admin'
+      actionUrl: '/app/admin/products'
     },
     {
       id: '3',
@@ -95,7 +95,7 @@ export default function EnhancedAdminDashboard() {
       description: '2 LCA reports awaiting approval',
       priority: 'high',
       createdAt: '2025-01-28T08:45:00Z',
-      actionUrl: '/app/admin'
+      actionUrl: '/app/admin/lca-approvals'
     }
   ];
 
@@ -323,7 +323,7 @@ export default function EnhancedAdminDashboard() {
                     <CardTitle>Quick Actions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid gap-3 md:grid-cols-4">
+                    <div className="grid gap-3 md:grid-cols-3">
                       <Button 
                         variant="outline" 
                         onClick={() => navigate('/app/admin/supplier-data')}
@@ -347,14 +347,6 @@ export default function EnhancedAdminDashboard() {
                       >
                         <FileCheck className="w-4 h-4" />
                         LCA Approvals
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => navigate('/app/supplier-onboarding')}
-                        className="flex items-center gap-2"
-                      >
-                        <UserCheck className="w-4 h-4" />
-                        Add Supplier
                       </Button>
                     </div>
                   </CardContent>

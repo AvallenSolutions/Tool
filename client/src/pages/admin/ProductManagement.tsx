@@ -21,7 +21,8 @@ import {
   Calendar,
   Building2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from "lucide-react";
 
 interface SupplierProduct {
@@ -159,9 +160,18 @@ export default function ProductManagement() {
                     Manage all supplier products and their verification status
                   </p>
                 </div>
-                <Badge variant="secondary">
-                  {products.length} total products
-                </Badge>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    onClick={() => window.location.href = '/app/create-enhanced-product'}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Product
+                  </Button>
+                  <Badge variant="secondary">
+                    {products.length} total products
+                  </Badge>
+                </div>
               </div>
 
               {/* Filters */}

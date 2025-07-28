@@ -202,9 +202,18 @@ export default function SupplierManagement() {
                   Review and verify supplier data submissions
                 </p>
               </div>
-              <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
-                {pendingCount} pending review
-              </Badge>
+              <div className="flex items-center gap-3">
+                <Button 
+                  onClick={() => window.location.href = '/app/supplier-onboarding'}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Supplier
+                </Button>
+                <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
+                  {pendingCount} pending review
+                </Badge>
+              </div>
             </div>
 
       {/* Filters */}
