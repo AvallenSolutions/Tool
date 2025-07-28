@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Plus
 } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface SupplierProduct {
   id: string;
@@ -48,6 +49,7 @@ interface SupplierProduct {
 export default function ProductManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   const [selectedProduct, setSelectedProduct] = useState<SupplierProduct | null>(null);
   const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<SupplierProduct | null>(null);
@@ -162,7 +164,7 @@ export default function ProductManagement() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Button 
-                    onClick={() => window.location.href = '/app/create-enhanced-product'}
+                    onClick={() => navigate('/app/product-registration')}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />

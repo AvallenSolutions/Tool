@@ -27,6 +27,7 @@ import {
   Trash2,
   Plus
 } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface SupplierWithDetails {
   id: number;
@@ -48,6 +49,7 @@ interface SupplierWithDetails {
 export default function SupplierManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierWithDetails | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<SupplierWithDetails | null>(null);
   const [deletingSupplier, setDeletingSupplier] = useState<SupplierWithDetails | null>(null);
@@ -204,7 +206,7 @@ export default function SupplierManagement() {
               </div>
               <div className="flex items-center gap-3">
                 <Button 
-                  onClick={() => window.location.href = '/app/supplier-onboarding'}
+                  onClick={() => navigate('/app/supplier-registration')}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
