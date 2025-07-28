@@ -3,7 +3,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useLocation, useRoute } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import OptimizedProductForm from '@/components/products/OptimizedProductForm';
+import EnhancedProductForm from '@/components/products/EnhancedProductForm';
 import { LoadingTimerPopup } from '@/components/ui/loading-timer-popup';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -245,10 +245,11 @@ export default function CreateEnhancedProduct() {
         </div>
       </div>
 
-      <OptimizedProductForm
+      <EnhancedProductForm
         initialData={existingProduct}
         onSubmit={handleSubmit}
         isEditing={Boolean(isEditMode)}
+        isSubmitting={createProductMutation.isPending}
       />
       
       {/* Loading Timer Popup */}
