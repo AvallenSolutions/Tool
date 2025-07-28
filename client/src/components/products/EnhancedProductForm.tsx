@@ -446,7 +446,34 @@ export default function EnhancedProductForm({
                         />
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name={`ingredients.${index}.type`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Ingredient Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="grain">Grain</SelectItem>
+                                  <SelectItem value="fruit">Fruit</SelectItem>
+                                  <SelectItem value="botanical">Botanical</SelectItem>
+                                  <SelectItem value="additive">Additive</SelectItem>
+                                  <SelectItem value="water">Water</SelectItem>
+                                  <SelectItem value="yeast">Yeast</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
                         <FormField
                           control={form.control}
                           name={`ingredients.${index}.origin`}
@@ -477,23 +504,47 @@ export default function EnhancedProductForm({
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <FormField
-                          control={form.control}
-                          name={`ingredients.${index}.organic`}
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormLabel>Organic certified</FormLabel>
-                            </FormItem>
-                          )}
-                        />
+                        <div className="flex items-center gap-4">
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.organic`}
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormLabel>Organic certified</FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <SupplierSelectionModal
+                            inputType="ingredient"
+                            onSelect={(supplier) => {
+                              // Auto-fill this specific ingredient with supplier data
+                              const productAttrs = supplier.productAttributes || {};
+                              form.setValue(`ingredients.${index}.name`, supplier.productName || '');
+                              form.setValue(`ingredients.${index}.origin`, productAttrs.origin_country || '');
+                              form.setValue(`ingredients.${index}.supplier`, supplier.supplierName || '');
+                              form.setValue(`ingredients.${index}.organic`, productAttrs.organic_certified || false);
+                              if (productAttrs.typical_usage_per_unit) {
+                                form.setValue(`ingredients.${index}.amount`, productAttrs.typical_usage_per_unit);
+                              }
+                            }}
+                            onManualEntry={() => {}}
+                            selectedProduct={null}
+                          >
+                            <Button type="button" variant="ghost" size="sm">
+                              <Search className="w-3 h-3 mr-1" />
+                              Select Supplier
+                            </Button>
+                          </SupplierSelectionModal>
+                        </div>
                         
-                        {index > 0 && (
+                        {form.watch('ingredients').length > 1 && (
                           <Button 
                             type="button" 
                             variant="outline" 
@@ -511,20 +562,29 @@ export default function EnhancedProductForm({
                     </div>
                   ))}
                   
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      const currentIngredients = form.getValues('ingredients');
-                      form.setValue('ingredients', [
-                        ...currentIngredients, 
-                        { name: '', amount: 0, unit: 'kg', type: '', origin: '', organic: false, supplier: '' }
-                      ]);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Manual Ingredient
-                  </Button>
+                  {form.watch('ingredients').length < 50 && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        const currentIngredients = form.getValues('ingredients');
+                        form.setValue('ingredients', [
+                          ...currentIngredients, 
+                          { name: '', amount: 0, unit: 'kg', type: '', origin: '', organic: false, supplier: '' }
+                        ]);
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Manual Ingredient ({form.watch('ingredients').length}/50)
+                    </Button>
+                  )}
+                  
+                  {form.watch('ingredients').length >= 50 && (
+                    <div className="text-center py-4 bg-gray-50 rounded-lg">
+                      <p className="text-muted-foreground">Maximum of 50 ingredients reached</p>
+                      <p className="text-sm text-muted-foreground mt-1">Remove an ingredient to add new ones</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
