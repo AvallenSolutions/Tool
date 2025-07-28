@@ -47,6 +47,7 @@ const enhancedProductSchema = z.object({
       recyclability: z.string().optional(),
       color: z.string().optional(),
       thickness: z.number().optional(),
+      origin: z.string().optional(),
     }),
     labeling: z.object({
       labelMaterial: z.string().optional(),
@@ -54,6 +55,7 @@ const enhancedProductSchema = z.object({
       printingMethod: z.string().optional(),
       inkType: z.string().optional(),
       labelSize: z.string().optional(),
+      origin: z.string().optional(),
     }),
     closure: z.object({
       closureType: z.string().optional(),
@@ -61,6 +63,7 @@ const enhancedProductSchema = z.object({
       weight: z.number().optional(),
       hasLiner: z.boolean().default(false),
       linerMaterial: z.string().optional(),
+      origin: z.string().optional(),
     }),
     secondaryPackaging: z.object({
       hasSecondaryPackaging: z.boolean().default(false),
@@ -68,6 +71,7 @@ const enhancedProductSchema = z.object({
       boxWeight: z.number().optional(),
       fillerMaterial: z.string().optional(),
       fillerWeight: z.number().optional(),
+      origin: z.string().optional(),
     }),
   }),
   
@@ -76,6 +80,8 @@ const enhancedProductSchema = z.object({
     productionModel: z.string().min(1, "Production model is required"),
     annualProductionVolume: z.number().min(0, "Production volume must be positive"),
     productionUnit: z.string().default('units'),
+    facilityLocation: z.string().optional(),
+    facilityAddress: z.string().optional(),
     energyConsumption: z.object({
       electricityKwh: z.number().optional(),
       gasM3: z.number().optional(),
@@ -166,15 +172,17 @@ export default function EnhancedProductForm({
       status: 'active',
       ingredients: [{ name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '' }],
       packaging: {
-        primaryContainer: { material: '', weight: 0, recycledContent: 0, recyclability: '', color: '', thickness: 0 },
-        labeling: { labelMaterial: '', labelWeight: 0, printingMethod: '', inkType: '', labelSize: 0 },
-        closure: { closureType: '', material: '', weight: 0, hasLiner: false, linerMaterial: '' },
-        secondaryPackaging: { hasSecondaryPackaging: false, boxMaterial: '', boxWeight: 0, fillerMaterial: '', fillerWeight: 0 },
+        primaryContainer: { material: '', weight: 0, recycledContent: 0, recyclability: '', color: '', thickness: 0, origin: '' },
+        labeling: { labelMaterial: '', labelWeight: 0, printingMethod: '', inkType: '', labelSize: 0, origin: '' },
+        closure: { closureType: '', material: '', weight: 0, hasLiner: false, linerMaterial: '', origin: '' },
+        secondaryPackaging: { hasSecondaryPackaging: false, boxMaterial: '', boxWeight: 0, fillerMaterial: '', fillerWeight: 0, origin: '' },
       },
       production: {
         productionModel: '',
         annualProductionVolume: 0,
         productionUnit: 'units',
+        facilityLocation: '',
+        facilityAddress: '',
         energyConsumption: { electricityKwh: 0, gasM3: 0, steamKg: 0, fuelLiters: 0, renewableEnergyPercent: 0 },
         waterUsage: { processWaterLiters: 0, cleaningWaterLiters: 0, coolingWaterLiters: 0, wasteWaterTreatment: '' },
         wasteGeneration: { organicWasteKg: 0, packagingWasteKg: 0, hazardousWasteKg: 0, wasteRecycledPercent: 0 },
@@ -354,23 +362,35 @@ export default function EnhancedProductForm({
                   <SupplierSelectionModal
                     inputType="ingredient"
                     onSelect={(supplier) => {
-                      // Auto-fill ingredient data from supplier product
+                      // Auto-fill ingredient data from supplier product in FIRST empty slot
                       const currentIngredients = form.getValues('ingredients');
+                      
+                      // Find first empty ingredient slot (name is empty)
+                      const firstEmptyIndex = currentIngredients.findIndex(ing => !ing.name);
                       
                       // Extract data from supplier product structure
                       const productAttrs = supplier.productAttributes || {};
                       const lcaData = supplier.lcaDataJson || {};
+                      const supplierAddr = supplier.supplierAddress || {};
                       
                       const newIngredient = {
                         name: supplier.productName || '',
                         amount: productAttrs.typical_usage_per_unit || productAttrs.weight || 0,
                         unit: productAttrs.usage_unit || productAttrs.unit || 'kg',
                         type: productAttrs.ingredient_type || productAttrs.type || '',
-                        origin: productAttrs.origin_country || '',
+                        origin: `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || productAttrs.origin_country || '',
                         organic: productAttrs.organic_certified || false,
                         supplier: supplier.supplierName || '',
+                        supplierAddress: supplierAddr
                       };
-                      form.setValue('ingredients', [...currentIngredients, newIngredient]);
+                      
+                      if (firstEmptyIndex !== -1) {
+                        // Fill first empty slot
+                        form.setValue(`ingredients.${firstEmptyIndex}`, newIngredient);
+                      } else {
+                        // Add new ingredient if no empty slots
+                        form.setValue('ingredients', [...currentIngredients, newIngredient]);
+                      }
                       setSelectedIngredientSuppliers([...selectedIngredientSuppliers, supplier]);
                     }}
                     onManualEntry={() => {
@@ -634,10 +654,12 @@ export default function EnhancedProductForm({
                               const productAttrs = supplier.productAttributes || {};
                               const lcaData = supplier.lcaDataJson || {};
                               
+                              const supplierAddr = supplier.supplierAddress || {};
                               form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
                               form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams || 0);
                               form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
                               form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
+                              form.setValue('packaging.primaryContainer.origin', `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '');
                             }}
                             onManualEntry={() => {
                               setSelectedPackagingSupplier(null);
@@ -666,10 +688,12 @@ export default function EnhancedProductForm({
                           const productAttrs = supplier.productAttributes || {};
                           const lcaData = supplier.lcaDataJson || {};
                           
+                          const supplierAddr = supplier.supplierAddress || {};
                           form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
                           form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams || 0);
                           form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
                           form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
+                          form.setValue('packaging.primaryContainer.origin', `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '');
                         }}
                         onManualEntry={() => {
                           setSelectedPackagingSupplier(null);
@@ -769,6 +793,20 @@ export default function EnhancedProductForm({
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.origin"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Origin Location</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Paris, France" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
 
@@ -781,9 +819,11 @@ export default function EnhancedProductForm({
                       onSelect={(supplier) => {
                         // Auto-fill label data from supplier product
                         const productAttrs = supplier.productAttributes || {};
-                        form.setValue('packaging.labels.material', productAttrs.material || '');
-                        form.setValue('packaging.labels.weight', productAttrs.weight || 0);
-                        form.setValue('packaging.labels.printingMethod', productAttrs.printing_method || '');
+                        const supplierAddr = supplier.supplierAddress || {};
+                        form.setValue('packaging.labeling.labelMaterial', productAttrs.material || '');
+                        form.setValue('packaging.labeling.labelWeight', productAttrs.weight || 0);
+                        form.setValue('packaging.labeling.printingMethod', productAttrs.printing_method || '');
+                        form.setValue('packaging.labeling.origin', `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '');
                       }}
                       onManualEntry={() => {}}
                       selectedProduct={null}
@@ -914,6 +954,20 @@ export default function EnhancedProductForm({
                       </FormItem>
                     )}
                   />
+                  
+                  <FormField
+                    control={form.control}
+                    name="packaging.labeling.origin"
+                    render={({ field }) => (
+                      <FormItem className="md:w-1/2">
+                        <FormLabel>Origin Location</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Milan, Italy" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 {/* Closure System */}
@@ -957,6 +1011,20 @@ export default function EnhancedProductForm({
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.closure.origin"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Origin Location</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Porto, Portugal" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
 
@@ -969,9 +1037,11 @@ export default function EnhancedProductForm({
                       onSelect={(supplier) => {
                         // Auto-fill secondary packaging data from supplier product
                         const productAttrs = supplier.productAttributes || {};
-                        form.setValue('packaging.secondary.hasSecondaryPackaging', true);
-                        form.setValue('packaging.secondary.material', productAttrs.material || '');
-                        form.setValue('packaging.secondary.weight', productAttrs.weight || 0);
+                        const supplierAddr = supplier.supplierAddress || {};
+                        form.setValue('packaging.secondaryPackaging.hasSecondaryPackaging', true);
+                        form.setValue('packaging.secondaryPackaging.boxMaterial', productAttrs.material || '');
+                        form.setValue('packaging.secondaryPackaging.boxWeight', productAttrs.weight || 0);
+                        form.setValue('packaging.secondaryPackaging.origin', `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '');
                       }}
                       onManualEntry={() => {}}
                       selectedProduct={null}
@@ -1091,6 +1161,20 @@ export default function EnhancedProductForm({
                                   {...field} 
                                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="packaging.secondaryPackaging.origin"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Origin Location</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Berlin, Germany" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1241,6 +1325,42 @@ export default function EnhancedProductForm({
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Production Location Details */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Production Location Details</h4>
+                  <p className="text-sm text-gray-600">Required for transportation distance calculations and fuel emission estimates</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.facilityLocation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Production Facility Location *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Edinburgh, Scotland, UK" {...field} />
+                          </FormControl>
+                          <FormDescription>City, Country for transportation calculations</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="production.facilityAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Facility Address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Full address for precise location" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Energy Consumption */}

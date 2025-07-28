@@ -111,7 +111,7 @@ export default function SupplierSelectionModal({
   const { data: supplierProducts = [], isLoading: loadingProducts } = useQuery({
     queryKey: ['/api/supplier-products', selectedSupplier?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/supplier-products?supplierId=${selectedSupplier.id}`, { 
+      const response = await fetch(`/api/supplier-products?supplier=${selectedSupplier.id}`, { 
         credentials: 'include' 
       });
       if (!response.ok) throw new Error('Failed to load supplier products');
@@ -138,7 +138,18 @@ export default function SupplierSelectionModal({
   };
 
   const handleProductSelect = (product: any) => {
-    onSelect(product);
+    // Include supplier address data for transportation calculations
+    const productWithSupplierData = {
+      ...product,
+      supplierAddress: {
+        street: selectedSupplier?.addressStreet,
+        city: selectedSupplier?.addressCity,
+        country: selectedSupplier?.addressCountry,
+        latitude: selectedSupplier?.latitude,
+        longitude: selectedSupplier?.longitude
+      }
+    };
+    onSelect(productWithSupplierData);
     setIsOpen(false);
     resetModal();
   };
