@@ -4,11 +4,11 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
-import ClientProductForm from '@/components/products/ClientProductForm';
+import OptimizedProductForm from '@/components/products/OptimizedProductForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
 import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers } from 'lucide-react';
 import { useLocation } from 'wouter';
 
@@ -34,7 +34,7 @@ export default function ProductsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
-  const [showCreateForm, setShowCreateForm] = useState(false);
+
 
   const { data: products = [], isLoading } = useQuery<ClientProduct[]>({
     queryKey: ['/api/products'],
@@ -94,25 +94,14 @@ export default function ProductsPage() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      style={{ backgroundColor: '#209d50', borderColor: '#209d50' }}
-                      className="hover:bg-green-600 text-white font-medium px-6 py-2 shadow-md border-2"
-                    >
-                      <Package className="w-4 h-4 mr-2" />
-                      Create Product
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="!max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'white', color: 'black' }}>
-                    <DialogHeader>
-                      <DialogTitle>Create New Product</DialogTitle>
-                    </DialogHeader>
-                    <div className="max-h-[75vh] overflow-y-auto pr-2">
-                      <ClientProductForm onSuccess={handleCreateSuccess} />
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button 
+                  onClick={() => navigate('/app/products/create/enhanced')}
+                  style={{ backgroundColor: '#209d50', borderColor: '#209d50' }}
+                  className="hover:bg-green-600 text-white font-medium px-6 py-2 shadow-md border-2"
+                >
+                  <Package className="w-4 h-4 mr-2" />
+                  Create Product
+                </Button>
               </div>
             </div>
           </div>
@@ -150,24 +139,13 @@ export default function ProductsPage() {
                   <p className="text-gray-500 mb-6 max-w-md mx-auto">
                     Create your first product by selecting supplier components like bottles, ingredients, labels, and packaging to build a complete environmental impact profile.
                   </p>
-                  <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        className="bg-avallen-green hover:bg-avallen-green-light text-white"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Your First Product
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="!max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'white', color: 'black' }}>
-                      <DialogHeader>
-                        <DialogTitle>Create New Product</DialogTitle>
-                      </DialogHeader>
-                      <div className="max-h-[75vh] overflow-y-auto pr-2">
-                        <ClientProductForm onSuccess={handleCreateSuccess} />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    onClick={() => navigate('/app/products/create/enhanced')}
+                    className="bg-avallen-green hover:bg-avallen-green-light text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Product
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
