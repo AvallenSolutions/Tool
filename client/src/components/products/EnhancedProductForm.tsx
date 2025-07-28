@@ -346,15 +346,20 @@ export default function EnhancedProductForm({
                   <SupplierSelectionModal
                     inputType="ingredient"
                     onSelect={(supplier) => {
-                      // Auto-fill ingredient data from supplier
+                      // Auto-fill ingredient data from supplier product
                       const currentIngredients = form.getValues('ingredients');
+                      
+                      // Extract data from supplier product structure
+                      const productAttrs = supplier.productAttributes || {};
+                      const lcaData = supplier.lcaDataJson || {};
+                      
                       const newIngredient = {
                         name: supplier.productName || '',
-                        amount: 0,
-                        unit: supplier.unit || 'kg',
-                        type: supplier.category || '',
-                        origin: supplier.location || '',
-                        organic: supplier.organic || false,
+                        amount: productAttrs.typical_usage_per_unit || 0,
+                        unit: productAttrs.usage_unit || 'kg',
+                        type: productAttrs.ingredient_type || '',
+                        origin: productAttrs.origin_country || '',
+                        organic: productAttrs.organic_certified || false,
                         supplier: supplier.supplierName || '',
                       };
                       form.setValue('ingredients', [...currentIngredients, newIngredient]);
@@ -558,9 +563,13 @@ export default function EnhancedProductForm({
                             onSelect={(supplier) => {
                               setSelectedPackagingSupplier(supplier);
                               // Auto-fill packaging data from supplier product
-                              form.setValue('packaging.primaryContainer.material', supplier.material || '');
-                              form.setValue('packaging.primaryContainer.weight', supplier.weight || 0);
-                              form.setValue('packaging.primaryContainer.recycledContent', supplier.recycledContent || 0);
+                              const productAttrs = supplier.productAttributes || {};
+                              const lcaData = supplier.lcaDataJson || {};
+                              
+                              form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
+                              form.setValue('packaging.primaryContainer.weight', productAttrs.weight_grams || 0);
+                              form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycled_content_percent || 0);
+                              form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
                             }}
                             onManualEntry={() => {
                               setSelectedPackagingSupplier(null);
@@ -586,9 +595,13 @@ export default function EnhancedProductForm({
                         onSelect={(supplier) => {
                           setSelectedPackagingSupplier(supplier);
                           // Auto-fill packaging data from supplier product
-                          form.setValue('packaging.primaryContainer.material', supplier.material || '');
-                          form.setValue('packaging.primaryContainer.weight', supplier.weight || 0);
-                          form.setValue('packaging.primaryContainer.recycledContent', supplier.recycledContent || 0);
+                          const productAttrs = supplier.productAttributes || {};
+                          const lcaData = supplier.lcaDataJson || {};
+                          
+                          form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
+                          form.setValue('packaging.primaryContainer.weight', productAttrs.weight_grams || 0);
+                          form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycled_content_percent || 0);
+                          form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
                         }}
                         onManualEntry={() => {
                           setSelectedPackagingSupplier(null);
@@ -771,8 +784,16 @@ export default function EnhancedProductForm({
                             onSelect={(supplier) => {
                               setSelectedProductionSupplier(supplier);
                               // Auto-fill production data from supplier product
-                              form.setValue('production.productionModel', supplier.productionModel || 'contract');
-                              form.setValue('production.annualProductionVolume', supplier.capacity || 0);
+                              const productAttrs = supplier.productAttributes || {};
+                              const lcaData = supplier.lcaDataJson || {};
+                              
+                              form.setValue('production.productionModel', 'contract');
+                              form.setValue('production.annualProductionVolume', productAttrs.annual_capacity || 0);
+                              
+                              // Auto-fill energy data if available
+                              if (lcaData.energy_consumption) {
+                                form.setValue('production.energyConsumption.electricityKwh', lcaData.energy_consumption);
+                              }
                             }}
                             onManualEntry={() => {
                               setSelectedProductionSupplier(null);
@@ -798,8 +819,16 @@ export default function EnhancedProductForm({
                         onSelect={(supplier) => {
                           setSelectedProductionSupplier(supplier);
                           // Auto-fill production data from supplier product
-                          form.setValue('production.productionModel', supplier.productionModel || 'contract');
-                          form.setValue('production.annualProductionVolume', supplier.capacity || 0);
+                          const productAttrs = supplier.productAttributes || {};
+                          const lcaData = supplier.lcaDataJson || {};
+                          
+                          form.setValue('production.productionModel', 'contract');
+                          form.setValue('production.annualProductionVolume', productAttrs.annual_capacity || 0);
+                          
+                          // Auto-fill energy data if available
+                          if (lcaData.energy_consumption) {
+                            form.setValue('production.energyConsumption.electricityKwh', lcaData.energy_consumption);
+                          }
                         }}
                         onManualEntry={() => {
                           setSelectedProductionSupplier(null);
