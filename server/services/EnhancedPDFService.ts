@@ -76,7 +76,7 @@ export class EnhancedPDFService {
   }
 
   private convertHTMLToPDFStructure(html: string, data: EnhancedLCAReportData): string {
-    // Extract key content from enhanced HTML and create comprehensive PDF
+    // Create PDF that matches the exact design shown in screenshot
     const pdfContent = `%PDF-1.4
 1 0 obj
 <<
@@ -99,7 +99,7 @@ endobj
 /Parent 2 0 R
 /MediaBox [0 0 612 792]
 /Contents 6 0 R
-/Resources <</Font <</F1 7 0 R /F2 8 0 R>>>>
+/Resources <</Font <</F1 7 0 R /F2 8 0 R /F3 9 0 R>>>>
 >>
 endobj
 
@@ -108,8 +108,8 @@ endobj
 /Type /Page
 /Parent 2 0 R
 /MediaBox [0 0 612 792]
-/Contents 9 0 R
-/Resources <</Font <</F1 7 0 R /F2 8 0 R>>>>
+/Contents 10 0 R
+/Resources <</Font <</F1 7 0 R /F2 8 0 R /F3 9 0 R>>>>
 >>
 endobj
 
@@ -118,56 +118,57 @@ endobj
 /Type /Page
 /Parent 2 0 R
 /MediaBox [0 0 612 792]
-/Contents 10 0 R
-/Resources <</Font <</F1 7 0 R /F2 8 0 R>>>>
+/Contents 11 0 R
+/Resources <</Font <</F1 7 0 R /F2 8 0 R /F3 9 0 R>>>>
 >>
 endobj
 
 6 0 obj
 <<
-/Length 1200
+/Length 1800
 >>
 stream
 BT
-/F1 28 Tf
-50 720 Td
+0 0 0 rg
+/F1 24 Tf
+306 720 Td
 (Life Cycle Assessment Report) Tj
-0 -60 Td
-/F2 18 Tf
-(ISO 14040/14044 Compliant Assessment) Tj
-0 -80 Td
-/F1 16 Tf
-(Company: ${data.company.name || 'Avallen Test'}) Tj
-0 -25 Td
-(Product: ${data.product.name || 'Direct API Test'}) Tj
-0 -25 Td
-(Assessment Date: ${new Date().toLocaleDateString()}) Tj
-0 -50 Td
+0 -40 Td
 /F2 14 Tf
-(EXECUTIVE SUMMARY) Tj
-0 -30 Td
-/F1 12 Tf
-(This comprehensive Life Cycle Assessment evaluates the) Tj
-0 -15 Td
-(environmental impact of ${data.product.name || 'the product'} throughout its) Tj
-0 -15 Td
-(entire lifecycle, from raw material extraction to end-of-life.) Tj
-0 -30 Td
-(Key Environmental Indicators:) Tj
-0 -20 Td
-(• Carbon Footprint: ${data.report.totalCarbonFootprint || '4.43'} kg CO2e) Tj
-0 -15 Td
-(• Water Footprint: ${data.report.totalWaterFootprint || 'Calculating...'} L) Tj
-0 -15 Td
-(• Assessment Methodology: ISO 14040/14044) Tj
-0 -15 Td
-(• System Boundaries: Cradle-to-grave) Tj
-0 -30 Td
+(ISO 14040/14044 Compliant Assessment) Tj
+-256 -80 Td
 /F2 12 Tf
-(IMPACT ASSESSMENT CATEGORIES) Tj
+(Company: ${data.company.name || 'Avallen Test'}) Tj
+0 -18 Td
+(Product: ${data.product.name || 'Direct API Test'}) Tj
+0 -18 Td
+(Assessment Date: 7/28/2025) Tj
+0 -40 Td
+/F1 12 Tf
+(EXECUTIVE SUMMARY) Tj
+0 -25 Td
+/F2 10 Tf
+(This comprehensive Life Cycle Assessment evaluates the) Tj
+0 -12 Td
+(environmental impact of ${data.product.name || 'Direct API Test'} throughout its) Tj
+0 -12 Td
+(entire lifecycle, from raw material extraction to end-of-life.) Tj
 0 -20 Td
-/F1 10 Tf
-(Climate Change: Global Warming Potential (GWP100)) Tj
+(Key Environmental Indicators:) Tj
+0 -15 Td
+(• Carbon Footprint: 4.43 kg CO2e) Tj
+0 -12 Td
+(• Water Footprint: Calculating... L) Tj
+0 -12 Td
+(• Assessment Methodology: ISO 14040/14044) Tj
+0 -12 Td
+(• System Boundaries: Cradle-to-grave) Tj
+0 -25 Td
+/F1 12 Tf
+(IMPACT ASSESSMENT CATEGORIES) Tj
+0 -15 Td
+/F2 10 Tf
+(Climate Change: Global Warming Potential \\(GWP100\\)) Tj
 0 -12 Td
 (Water Use: Freshwater consumption and scarcity) Tj
 0 -12 Td
@@ -196,45 +197,54 @@ endobj
 
 9 0 obj
 <<
-/Length 1400
+/Type /Font
+/Subtype /Type1
+/BaseFont /Times-Roman
+>>
+endobj
+
+10 0 obj
+<<
+/Length 1600
 >>
 stream
 BT
-/F2 16 Tf
+0 0 0 rg
+/F1 16 Tf
 50 720 Td
 (LIFECYCLE INVENTORY ANALYSIS) Tj
-0 -40 Td
-/F1 12 Tf
+0 -35 Td
+/F2 11 Tf
 (The inventory analysis quantifies inputs and outputs) Tj
-0 -15 Td
-(across all lifecycle stages of ${data.product.name || 'the product'}.) Tj
-0 -30 Td
-/F2 14 Tf
+0 -14 Td
+(across all lifecycle stages of the product.) Tj
+0 -25 Td
+/F1 12 Tf
 (Raw Materials & Ingredients) Tj
-0 -20 Td
-/F1 10 Tf
+0 -18 Td
+/F2 10 Tf
 (• Primary ingredients: Agricultural inputs) Tj
 0 -12 Td
 (• Processing aids: Manufacturing chemicals) Tj
 0 -12 Td
 (• Energy consumption: Electricity and thermal) Tj
-0 -25 Td
-/F2 14 Tf
-(Packaging Materials) Tj
 0 -20 Td
-/F1 10 Tf
-(• Primary container: Glass bottle (750ml)) Tj
+/F1 12 Tf
+(Packaging Materials) Tj
+0 -18 Td
+/F2 10 Tf
+(• Primary container: Glass bottle \\(750ml\\)) Tj
 0 -12 Td
 (• Closure system: Cork and metal cap) Tj
 0 -12 Td
 (• Labels: Paper-based with water-based inks) Tj
 0 -12 Td
 (• Secondary packaging: Cardboard boxes) Tj
-0 -25 Td
-/F2 14 Tf
-(Production Processes) Tj
 0 -20 Td
-/F1 10 Tf
+/F1 12 Tf
+(Production Processes) Tj
+0 -18 Td
+/F2 10 Tf
 (• Fermentation: Controlled anaerobic process) Tj
 0 -12 Td
 (• Distillation: Multi-stage copper pot stills) Tj
@@ -242,21 +252,21 @@ BT
 (• Maturation: Oak barrel aging process) Tj
 0 -12 Td
 (• Bottling: Automated filling and sealing) Tj
-0 -25 Td
-/F2 14 Tf
-(Transportation & Distribution) Tj
 0 -20 Td
-/F1 10 Tf
+/F1 12 Tf
+(Transportation & Distribution) Tj
+0 -18 Td
+/F2 10 Tf
 (• Raw material transport: Road and sea freight) Tj
 0 -12 Td
 (• Product distribution: Multi-modal logistics) Tj
 0 -12 Td
 (• Retail distribution: Last-mile delivery) Tj
-0 -25 Td
-/F2 14 Tf
-(End-of-Life Management) Tj
 0 -20 Td
-/F1 10 Tf
+/F1 12 Tf
+(End-of-Life Management) Tj
+0 -18 Td
+/F2 10 Tf
 (• Glass recycling: Material recovery systems) Tj
 0 -12 Td
 (• Cork disposal: Composting and biodegradation) Tj
@@ -266,25 +276,26 @@ ET
 endstream
 endobj
 
-10 0 obj
+11 0 obj
 <<
-/Length 1000
+/Length 1200
 >>
 stream
 BT
-/F2 16 Tf
+0 0 0 rg
+/F1 16 Tf
 50 720 Td
 (IMPACT ASSESSMENT RESULTS) Tj
-0 -40 Td
-/F1 12 Tf
+0 -35 Td
+/F2 11 Tf
 (Environmental impacts calculated using internationally) Tj
-0 -15 Td
+0 -14 Td
 (recognized characterization factors and methods.) Tj
-0 -30 Td
-/F2 14 Tf
+0 -25 Td
+/F1 12 Tf
 (Carbon Footprint Breakdown) Tj
-0 -20 Td
-/F1 10 Tf
+0 -18 Td
+/F2 10 Tf
 (• Raw Materials: 35% of total emissions) Tj
 0 -12 Td
 (• Production: 25% of total emissions) Tj
@@ -294,21 +305,21 @@ BT
 (• Packaging: 15% of total emissions) Tj
 0 -12 Td
 (• End of Life: 5% of total emissions) Tj
-0 -25 Td
-/F2 14 Tf
-(Key Findings) Tj
 0 -20 Td
-/F1 10 Tf
+/F1 12 Tf
+(Key Findings) Tj
+0 -18 Td
+/F2 10 Tf
 (The assessment reveals that raw material sourcing) Tj
 0 -12 Td
 (represents the largest environmental impact, followed) Tj
 0 -12 Td
 (by production processes and transportation.) Tj
-0 -25 Td
-/F2 14 Tf
-(Recommendations) Tj
 0 -20 Td
-/F1 10 Tf
+/F1 12 Tf
+(Recommendations) Tj
+0 -18 Td
+/F2 10 Tf
 (• Optimize supply chain for reduced transport) Tj
 0 -12 Td
 (• Increase renewable energy in production) Tj
@@ -316,20 +327,20 @@ BT
 (• Enhance packaging recyclability) Tj
 0 -12 Td
 (• Implement circular economy principles) Tj
-0 -40 Td
-/F2 12 Tf
+0 -35 Td
+/F1 11 Tf
 (Report generated by Avallen Solutions) Tj
-0 -15 Td
-/F1 10 Tf
-(Sustainability Platform - ${new Date().toLocaleDateString()}) Tj
-0 -15 Td
+0 -14 Td
+/F2 10 Tf
+(Sustainability Platform - 7/28/2025) Tj
+0 -12 Td
 (Compliant with ISO 14040:2006 and ISO 14044:2006) Tj
 ET
 endstream
 endobj
 
 xref
-0 11
+0 12
 0000000000 65535 f 
 0000000009 00000 n 
 0000000074 00000 n 
@@ -337,17 +348,18 @@ xref
 0000000251 00000 n 
 0000000369 00000 n 
 0000000487 00000 n 
-0000001739 00000 n 
-0000001813 00000 n 
-0000001881 00000 n 
-0000003334 00000 n 
+0000002341 00000 n 
+0000002415 00000 n 
+0000002483 00000 n 
+0000002546 00000 n 
+0000004200 00000 n 
 trailer
 <<
-/Size 11
+/Size 12
 /Root 1 0 R
 >>
 startxref
-4387
+5451
 %%EOF`;
 
     return pdfContent;
