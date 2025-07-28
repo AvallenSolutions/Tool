@@ -936,7 +936,7 @@ export default function EnhancedProductForm({
 
                   <FormField
                     control={form.control}
-                    name="packaging.labels.size"
+                    name="packaging.labeling.labelSize"
                     render={({ field }) => (
                       <FormItem className="md:w-1/2">
                         <FormLabel>Label Size (cm²)</FormLabel>

@@ -1056,6 +1056,12 @@ Be precise and quote actual text from the content, not generic terms.`;
         companyId: 1, // TODO: Get from authenticated session
         ...req.body,
         status: req.body.status || 'active',
+        // Convert empty strings to false for boolean fields
+        isMainProduct: req.body.isMainProduct === '' ? false : Boolean(req.body.isMainProduct),
+        coldChainRequired: req.body.coldChainRequired === '' ? false : Boolean(req.body.coldChainRequired),
+        returnableContainer: req.body.returnableContainer === '' ? false : Boolean(req.body.returnableContainer),
+        hasBuiltInClosure: req.body.hasBuiltInClosure === '' ? false : Boolean(req.body.hasBuiltInClosure),
+        hasSecondaryPackaging: req.body.hasSecondaryPackaging === '' ? false : Boolean(req.body.hasSecondaryPackaging),
         createdAt: new Date(),
         updatedAt: new Date()
       };
