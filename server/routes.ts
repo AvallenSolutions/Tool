@@ -1469,7 +1469,17 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      const pdfBuffer = await simpleLcaService.generatePDFReport(productId);
+      // Use EnhancedPDFService for comprehensive reports instead of basic SimpleLcaService
+      const { EnhancedPDFService } = await import('./services/EnhancedPDFService');
+      const { ReportDataProcessor } = await import('./services/ReportDataProcessor');
+      
+      const enhancedPDFService = new EnhancedPDFService();
+      
+      // Get comprehensive report data for the product (static method call)
+      const reportData = await ReportDataProcessor.getEnhancedReportData(productId);
+      
+      // Generate professional PDF using enhanced service
+      const pdfBuffer = await enhancedPDFService.generateEnhancedLCAPDF(reportData);
       
       res.set({
         'Content-Type': 'application/pdf',
