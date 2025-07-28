@@ -18,7 +18,7 @@ import Settings from "@/pages/settings";
 import Onboarding from "@/pages/onboarding";
 import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
-import AdminDashboardMain from "@/pages/admin/AdminDashboard";
+import AdminDashboardMain from "@/pages/admin/EnhancedAdminDashboard";
 import SupplierManagement from "@/pages/admin/SupplierManagement";
 import ProductManagement from "@/pages/admin/ProductManagement";
 import LCAApprovals from "@/pages/admin/LCAApprovals";

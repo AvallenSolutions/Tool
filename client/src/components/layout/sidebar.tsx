@@ -22,9 +22,6 @@ export default function Sidebar() {
     // Admin-only items
     ...(user && user.role === 'admin' ? [
       { path: "/app/admin", label: "Admin Dashboard", icon: Users },
-      { path: "/app/admin/suppliers", label: "Supplier Management", icon: Building2 },
-      { path: "/app/admin/products", label: "Product Management", icon: Package },
-      { path: "/app/admin/supplier-data", label: "Supplier Data", icon: UserPlus },
     ] : []),
     { path: "/app/test", label: "Test Runner", icon: TestTube },
   ];
