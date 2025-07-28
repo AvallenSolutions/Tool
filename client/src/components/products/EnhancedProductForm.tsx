@@ -324,6 +324,33 @@ export default function EnhancedProductForm({
                   )}
                 />
 
+                {/* Pack Shot Upload */}
+                <div className="space-y-4">
+                  <FormLabel>Product Images (Pack Shots)</FormLabel>
+                  <p className="text-sm text-gray-600">Upload up to 3 product images. Maximum 10MB each.</p>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      max={3}
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 3) {
+                          alert('Maximum 3 images allowed');
+                          return;
+                        }
+                        // Handle file upload logic here
+                        console.log('Files selected:', files);
+                      }}
+                      className="w-full"
+                    />
+                    <div className="text-center text-sm text-gray-500 mt-2">
+                      Drag and drop images here, or click to select
+                    </div>
+                  </div>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="isMainProduct"
@@ -718,6 +745,20 @@ export default function EnhancedProductForm({
                 <div className="space-y-4">
                   <h4 className="font-medium">Primary Container</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Container Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 750ml Burgundy Bottle" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
                     <FormField
                       control={form.control}
                       name="packaging.primaryContainer.material"

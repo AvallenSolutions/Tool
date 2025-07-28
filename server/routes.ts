@@ -1077,16 +1077,68 @@ Be precise and quote actual text from the content, not generic terms.`;
 
       const productData = {
         companyId: 1, // TODO: Get from authenticated session
-        ...req.body,
+        // Basic fields
+        name: req.body.name,
+        sku: req.body.sku,
+        type: req.body.type,
+        volume: req.body.volume,
+        description: req.body.description,
         status: req.body.status || 'active',
-        // Convert all boolean fields properly
+        
+        // Production fields from nested objects
+        productionModel: req.body.production?.productionModel,
+        annualProductionVolume: req.body.production?.annualProductionVolume,
+        productionUnit: req.body.production?.productionUnit || 'bottles',
+        
+        // Extract packaging data from nested structure
+        bottleMaterial: req.body.packaging?.primaryContainer?.material || req.body.bottleMaterial,
+        bottleWeight: req.body.packaging?.primaryContainer?.weight || req.body.bottleWeight,
+        bottleRecycledContent: req.body.packaging?.primaryContainer?.recycledContent || req.body.bottleRecycledContent,
+        bottleColor: req.body.packaging?.primaryContainer?.color || req.body.bottleColor,
+        
+        // Closure data
+        closureType: req.body.packaging?.closure?.closureType || req.body.closureType,
+        closureMaterial: req.body.packaging?.closure?.material || req.body.closureMaterial,
+        closureWeight: req.body.packaging?.closure?.weight || req.body.closureWeight,
+        
+        // Label data
+        labelMaterial: req.body.packaging?.labeling?.labelMaterial || req.body.labelMaterial,
+        labelWeight: req.body.packaging?.labeling?.labelWeight || req.body.labelWeight,
+        labelPrintingMethod: req.body.packaging?.labeling?.printingMethod || req.body.labelPrintingMethod,
+        labelInkType: req.body.packaging?.labeling?.inkType || req.body.labelInkType,
+        labelSize: req.body.packaging?.labeling?.labelSize || req.body.labelSize,
+        
+        // Secondary packaging
+        hasSecondaryPackaging: convertBoolean(req.body.packaging?.secondaryPackaging?.hasSecondaryPackaging || req.body.hasSecondaryPackaging),
+        boxMaterial: req.body.packaging?.secondaryPackaging?.boxMaterial || req.body.boxMaterial,
+        boxWeight: req.body.packaging?.secondaryPackaging?.boxWeight || req.body.boxWeight,
+        
+        // Production process data
+        electricityKwh: req.body.production?.energyConsumption?.electricityKwh || req.body.electricityKwh,
+        renewableEnergyPercent: req.body.production?.energyConsumption?.renewableEnergyPercent || req.body.renewableEnergyPercent,
+        processWaterLiters: req.body.production?.waterUsage?.processWaterLiters || req.body.processWaterLiters,
+        cleaningWaterLiters: req.body.production?.waterUsage?.cleaningWaterLiters || req.body.cleaningWaterLiters,
+        
+        // Distribution data
+        averageTransportDistance: req.body.distribution?.averageTransportDistance || req.body.averageTransportDistance,
+        primaryTransportMode: req.body.distribution?.primaryTransportMode || req.body.primaryTransportMode,
+        distributionCenters: req.body.distribution?.distributionCenters || req.body.distributionCenters,
+        coldChainRequired: convertBoolean(req.body.distribution?.coldChainRequired || req.body.coldChainRequired),
+        packagingEfficiency: req.body.distribution?.packagingEfficiency || req.body.packagingEfficiency,
+        
+        // End of life data
+        returnableContainer: convertBoolean(req.body.endOfLife?.returnableContainer || req.body.returnableContainer),
+        recyclingRate: req.body.endOfLife?.recyclingRate || req.body.recyclingRate,
+        disposalMethod: req.body.endOfLife?.disposalMethod || req.body.disposalMethod,
+        consumerEducation: req.body.endOfLife?.consumerEducation || req.body.consumerEducation,
+        
+        // Other fields with proper conversion
+        ingredients: req.body.ingredients,
+        certifications: req.body.certifications,
         isMainProduct: convertBoolean(req.body.isMainProduct),
         hasBuiltInClosure: convertBoolean(req.body.hasBuiltInClosure),
-        hasSecondaryPackaging: convertBoolean(req.body.hasSecondaryPackaging),
         wasteWaterTreatment: convertBoolean(req.body.wasteWaterTreatment),
-        coldChainRequired: convertBoolean(req.body.coldChainRequired),
-        returnableContainer: convertBoolean(req.body.returnableContainer),
-        // consumerEducation is now a text field, no conversion needed
+        
         createdAt: new Date(),
         updatedAt: new Date()
       };
