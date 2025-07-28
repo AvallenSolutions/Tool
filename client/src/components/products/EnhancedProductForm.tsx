@@ -207,7 +207,12 @@ export default function EnhancedProductForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full" onKeyDown={(e) => {
+        // Prevent form submission on Enter key unless we're on the last tab
+        if (e.key === 'Enter' && activeTab !== 'endoflife') {
+          e.preventDefault();
+        }
+      }}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
