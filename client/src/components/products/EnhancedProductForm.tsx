@@ -54,7 +54,7 @@ const enhancedProductSchema = z.object({
       labelWeight: z.number().optional(),
       printingMethod: z.string().optional(),
       inkType: z.string().optional(),
-      labelSize: z.string().optional(),
+      labelSize: z.number().optional(),
       origin: z.string().optional(),
     }),
     closure: z.object({
@@ -838,7 +838,7 @@ export default function EnhancedProductForm({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="packaging.labels.material"
+                      name="packaging.labeling.labelMaterial"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Label Material</FormLabel>
@@ -863,7 +863,7 @@ export default function EnhancedProductForm({
                     
                     <FormField
                       control={form.control}
-                      name="packaging.labels.weight"
+                      name="packaging.labeling.labelWeight"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Label Weight (g)</FormLabel>
@@ -885,7 +885,7 @@ export default function EnhancedProductForm({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="packaging.labels.printingMethod"
+                      name="packaging.labeling.printingMethod"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Printing Method</FormLabel>
@@ -910,7 +910,7 @@ export default function EnhancedProductForm({
                     
                     <FormField
                       control={form.control}
-                      name="packaging.labels.inkType"
+                      name="packaging.labeling.inkType"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Ink Type</FormLabel>
@@ -1055,7 +1055,7 @@ export default function EnhancedProductForm({
 
                   <FormField
                     control={form.control}
-                    name="packaging.secondary.hasSecondaryPackaging"
+                    name="packaging.secondaryPackaging.hasSecondaryPackaging"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                         <FormControl>
@@ -1074,12 +1074,12 @@ export default function EnhancedProductForm({
                     )}
                   />
 
-                  {form.watch('packaging.secondary.hasSecondaryPackaging') && (
+                  {form.watch('packaging.secondaryPackaging.hasSecondaryPackaging') && (
                     <div className="space-y-4 pl-6 border-l-2 border-gray-200">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name="packaging.secondary.material"
+                          name="packaging.secondaryPackaging.boxMaterial"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Box/Case Material</FormLabel>
@@ -1104,7 +1104,7 @@ export default function EnhancedProductForm({
                         
                         <FormField
                           control={form.control}
-                          name="packaging.secondary.weight"
+                          name="packaging.secondaryPackaging.boxWeight"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Box Weight (g)</FormLabel>
@@ -1125,7 +1125,7 @@ export default function EnhancedProductForm({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name="packaging.secondary.fillerMaterial"
+                          name="packaging.secondaryPackaging.fillerMaterial"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Filler Material</FormLabel>
@@ -1150,7 +1150,7 @@ export default function EnhancedProductForm({
                         
                         <FormField
                           control={form.control}
-                          name="packaging.secondary.fillerWeight"
+                          name="packaging.secondaryPackaging.fillerWeight"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Filler Weight (g)</FormLabel>
@@ -1774,7 +1774,7 @@ export default function EnhancedProductForm({
                 <Button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="bg-avallen-green hover:bg-avallen-green-light"
+                  className="bg-[#209d50] hover:bg-[#1a8442] text-white"
                 >
                   {isSubmitting ? (
                     <>
