@@ -1053,10 +1053,11 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       const { products } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
-      const db = await getDb();
+      const { db } = await import('./db');
       const companyId = req.session?.user?.companyId || 1; // Fallback for development
       
       const results = await db.select().from(products).where(eq(products.companyId, companyId));
+      console.log('Products fetched:', results.length, 'for company', companyId);
       res.json(results);
     } catch (error) {
       console.error('Error fetching products:', error);
