@@ -104,7 +104,7 @@ export default function ProductsPage() {
                       Create Product
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="!max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="!max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'white', color: 'black' }}>
                     <DialogHeader>
                       <DialogTitle>Create New Product</DialogTitle>
                     </DialogHeader>
@@ -159,7 +159,7 @@ export default function ProductsPage() {
                         Create Your First Product
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="!max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="!max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'white', color: 'black' }}>
                       <DialogHeader>
                         <DialogTitle>Create New Product</DialogTitle>
                       </DialogHeader>
