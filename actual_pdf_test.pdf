@@ -1,0 +1,95 @@
+%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+
+4 0 obj
+<<
+/Length 800
+>>
+stream
+BT
+/F1 24 Tf
+50 750 Td
+(Life Cycle Assessment Report) Tj
+0 -40 Td
+/F1 14 Tf
+(Company: Avallen Test) Tj
+0 -20 Td
+(Product: Direct API Test) Tj
+0 -40 Td
+(Assessment Summary:) Tj
+0 -20 Td
+/F1 12 Tf
+(Carbon Footprint: 4.43 kg CO2e) Tj
+0 -20 Td
+(Water Footprint: Calculating... L) Tj
+0 -20 Td
+(Report Generated: 7/28/2025) Tj
+0 -40 Td
+(This is a comprehensive LCA assessment) Tj
+0 -20 Td
+(following ISO 14040/14044 standards.) Tj
+0 -40 Td
+(Environmental Impact Breakdown:) Tj
+0 -20 Td
+(" Raw Materials: Calculating impact...) Tj
+0 -20 Td
+(" Production: Calculating impact...) Tj
+0 -20 Td
+(" Transportation: Calculating impact...) Tj
+0 -20 Td
+(" End of Life: Calculating impact...) Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000074 00000 n 
+0000000120 00000 n 
+0000000274 00000 n 
+0000001126 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+1197
+%%EOF

@@ -141,16 +141,15 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      // Temporarily downloading as HTML until PDF generation is restored
-      a.download = `LCA_Report_${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+      a.download = `LCA_Report_${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Report Downloaded",
-        description: "Your comprehensive LCA report has been downloaded successfully.",
+        title: "PDF Downloaded",
+        description: "Your LCA report has been downloaded successfully.",
       });
     },
     onError: (error) => {
