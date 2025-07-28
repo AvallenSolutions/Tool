@@ -362,6 +362,43 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // LCA Document Upload Route
+  app.post('/api/upload-lca-document', imageUpload.single('lcaDocument'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'No LCA document uploaded' 
+        });
+      }
+
+      // Validate file type (PDF, DOC, DOCX)
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Invalid file type. Only PDF, DOC, and DOCX files are allowed.' 
+        });
+      }
+
+      // Generate public URL for the document
+      const documentPath = `/uploads/images/${req.file.filename}`;
+      
+      res.json({
+        success: true,
+        documentPath: documentPath,
+        originalName: req.file.originalname,
+        size: req.file.size
+      });
+    } catch (error) {
+      console.error('Error uploading LCA document:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal server error occurred during file upload' 
+      });
+    }
+  });
+
   // Image Upload Routes
   app.post('/api/suppliers/upload-images', imageUpload.array('images', 5), async (req, res) => {
     try {
@@ -920,20 +957,10 @@ Be precise and quote actual text from the content, not generic terms.`;
       const query = db
         .select({
           id: supplierProducts.id,
-          name: supplierProducts.name,
+          name: supplierProducts.productName,
           sku: supplierProducts.sku,
-          type: supplierProducts.type,
-          material: supplierProducts.material,
-          weight: supplierProducts.weight,
-          recycledContent: supplierProducts.recycledContent,
-          description: supplierProducts.description,
-          co2Emissions: supplierProducts.co2Emissions,
-          lcaDocumentUrl: supplierProducts.lcaDocumentUrl,
-          certifications: supplierProducts.certifications,
-          unit: supplierProducts.unit,
-          measurement: supplierProducts.measurement,
-          volume: supplierProducts.volume,
-          imageUrls: supplierProducts.imageUrls,
+          description: supplierProducts.productDescription,
+          productAttributes: supplierProducts.productAttributes,
           supplierId: supplierProducts.supplierId,
           supplierName: verifiedSuppliers.supplierName,
           supplierCategory: verifiedSuppliers.supplierCategory,
@@ -974,23 +1001,25 @@ Be precise and quote actual text from the content, not generic terms.`;
       const { supplierProducts } = await import('@shared/schema');
       
       const productData = {
-        name: req.body.name,
+        productName: req.body.name,
+        productDescription: req.body.description || null,
         sku: req.body.sku || `SKU-${Date.now()}`,
-        type: req.body.type,
-        material: req.body.material || null,
-        weight: req.body.weight || null,
-        recycledContent: req.body.recycledContent || null,
-        description: req.body.description || null,
-        co2Emissions: req.body.co2Emissions || null,
-        lcaDocumentUrl: req.body.lcaDocumentUrl || null,
-        certifications: req.body.certifications || null,
-        unit: req.body.unit || null,
-        measurement: req.body.measurement || null,
-        volume: req.body.volume || null,
-        imageUrls: req.body.imageUrls || [],
         supplierId: req.body.supplierId,
         submittedBy: 'CLIENT',
-        isVerified: true // Auto-approve for now
+        isVerified: true, // Auto-approve for now
+        productAttributes: {
+          type: req.body.type,
+          material: req.body.material || null,
+          weight: req.body.weight || null,
+          recycledContent: req.body.recycledContent || null,
+          co2Emissions: req.body.co2Emissions || null,
+          lcaDocumentPath: req.body.lcaDocumentPath || null,
+          certifications: req.body.certifications || null,
+          unit: req.body.unit || null,
+          measurement: req.body.measurement || null,
+          volume: req.body.volume || null,
+          imageUrls: req.body.imageUrls || []
+        }
       };
 
       const [newProduct] = await db

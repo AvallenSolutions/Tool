@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Save, Loader2, Upload, Package } from 'lucide-react';
+import { Save, Loader2, Upload, Package, FileText, X, Check } from 'lucide-react';
 
 // Dynamic product schema based on supplier category
 const createProductSchema = (supplierCategory: string) => {
@@ -21,7 +21,7 @@ const createProductSchema = (supplierCategory: string) => {
     supplierId: z.string().min(1, "Supplier selection is required"),
     description: z.string().optional(),
     co2Emissions: z.number().min(0, "CO2 emissions must be positive").optional(),
-    lcaDocumentUrl: z.string().url("Must be valid URL").optional().or(z.literal("")),
+    lcaDocumentPath: z.string().optional(),
     certifications: z.string().optional(),
   });
 
@@ -83,6 +83,8 @@ export default function OptimizedProductForm() {
   const queryClient = useQueryClient();
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedDocument, setUploadedDocument] = useState<{path: string, name: string} | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Fetch verified suppliers
   const { data: suppliers = [], isLoading: suppliersLoading } = useQuery<Supplier[]>({
@@ -99,7 +101,7 @@ export default function OptimizedProductForm() {
       supplierId: '',
       description: '',
       co2Emissions: undefined,
-      lcaDocumentUrl: '',
+      lcaDocumentPath: '',
       certifications: '',
       type: '',
       material: '',
@@ -146,7 +148,7 @@ export default function OptimizedProductForm() {
       name: '',
       description: '',
       co2Emissions: undefined,
-      lcaDocumentUrl: '',
+      lcaDocumentPath: '',
       certifications: '',
       type: '',
       material: '',
@@ -156,6 +158,52 @@ export default function OptimizedProductForm() {
       unit: '',
       measurement: undefined,
     });
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('lcaDocument', file);
+
+      const response = await fetch('/api/upload-lca-document', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setUploadedDocument({
+          path: result.documentPath,
+          name: result.originalName
+        });
+        form.setValue('lcaDocumentPath', result.documentPath);
+        toast({
+          title: "Success",
+          description: "LCA document uploaded successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to upload document",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload LCA document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeUploadedDocument = () => {
+    setUploadedDocument(null);
+    form.setValue('lcaDocumentPath', '');
   };
 
   const handleSubmit = (data: any) => {
@@ -375,12 +423,62 @@ export default function OptimizedProductForm() {
 
             <FormField
               control={form.control}
-              name="lcaDocumentUrl"
+              name="lcaDocumentPath"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>LCA Document URL</FormLabel>
+                  <FormLabel>LCA Document Upload</FormLabel>
                   <FormControl>
-                    <Input type="url" placeholder="https://..." {...field} />
+                    <div className="space-y-2">
+                      {!uploadedDocument ? (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                          <FileText className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm text-gray-600 mb-2">Upload LCA document (PDF, DOC, DOCX)</p>
+                          <Input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleFileUpload(file);
+                              }
+                            }}
+                            disabled={isUploading}
+                            className="hidden"
+                            id="lca-upload"
+                          />
+                          <Label 
+                            htmlFor="lca-upload" 
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-md cursor-pointer hover:bg-blue-100"
+                          >
+                            {isUploading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-4 h-4" />
+                                Choose File
+                              </>
+                            )}
+                          </Label>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <Check className="w-5 h-5 text-green-600" />
+                          <span className="text-sm text-green-800 flex-1">{uploadedDocument.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={removeUploadedDocument}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
