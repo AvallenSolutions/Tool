@@ -1103,6 +1103,48 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // GET individual product endpoint
+  app.get('/api/products/:id', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { db } = await import('./db');
+      const productId = parseInt(req.params.id);
+      
+      const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+      
+      if (product.length === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      res.json(product[0]);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      res.status(500).json({ error: 'Failed to fetch product' });
+    }
+  });
+
+  // DELETE product endpoint
+  app.delete('/api/products/:id', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { db } = await import('./db');
+      const productId = parseInt(req.params.id);
+      
+      const deletedProduct = await db.delete(products).where(eq(products.id, productId)).returning();
+      
+      if (deletedProduct.length === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      res.json({ message: 'Product deleted successfully', id: productId });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      res.status(500).json({ error: 'Failed to delete product' });
+    }
+  });
+
   // Update existing product endpoint
   app.patch('/api/products/:id', async (req, res) => {
     try {
