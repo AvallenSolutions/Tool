@@ -180,7 +180,7 @@ export const products = pgTable("products", {
   returnableContainer: boolean("returnable_container").default(false),
   recyclingRate: decimal("recycling_rate", { precision: 5, scale: 2 }),
   disposalMethod: varchar("disposal_method"), // recycling, landfill, incineration, composting
-  consumerEducation: boolean("consumer_education").default(false),
+  consumerEducation: text("consumer_education"),
   
   // Certifications
   certifications: jsonb("certifications").$type<string[]>(),

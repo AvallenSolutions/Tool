@@ -1052,16 +1052,24 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       const { products } = await import('@shared/schema');
       
+      // Helper function to convert boolean fields
+      const convertBoolean = (value: any) => {
+        if (value === '' || value === null || value === undefined) return false;
+        return Boolean(value);
+      };
+
       const productData = {
         companyId: 1, // TODO: Get from authenticated session
         ...req.body,
         status: req.body.status || 'active',
-        // Convert empty strings to false for boolean fields
-        isMainProduct: req.body.isMainProduct === '' ? false : Boolean(req.body.isMainProduct),
-        coldChainRequired: req.body.coldChainRequired === '' ? false : Boolean(req.body.coldChainRequired),
-        returnableContainer: req.body.returnableContainer === '' ? false : Boolean(req.body.returnableContainer),
-        hasBuiltInClosure: req.body.hasBuiltInClosure === '' ? false : Boolean(req.body.hasBuiltInClosure),
-        hasSecondaryPackaging: req.body.hasSecondaryPackaging === '' ? false : Boolean(req.body.hasSecondaryPackaging),
+        // Convert all boolean fields properly
+        isMainProduct: convertBoolean(req.body.isMainProduct),
+        hasBuiltInClosure: convertBoolean(req.body.hasBuiltInClosure),
+        hasSecondaryPackaging: convertBoolean(req.body.hasSecondaryPackaging),
+        wasteWaterTreatment: convertBoolean(req.body.wasteWaterTreatment),
+        coldChainRequired: convertBoolean(req.body.coldChainRequired),
+        returnableContainer: convertBoolean(req.body.returnableContainer),
+        // consumerEducation is now a text field, no conversion needed
         createdAt: new Date(),
         updatedAt: new Date()
       };
