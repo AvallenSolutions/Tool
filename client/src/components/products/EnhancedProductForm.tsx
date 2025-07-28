@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search } from 'lucide-react';
+import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
+import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2 } from 'lucide-react';
 
 // Enhanced Product Schema with all 8 tabs
 const enhancedProductSchema = z.object({
@@ -145,11 +145,9 @@ export default function EnhancedProductForm({
   isSubmitting = false 
 }: EnhancedProductFormProps) {
   const [activeTab, setActiveTab] = useState('basic');
-
-  // Fetch supplier products for selection
-  const { data: supplierProducts = [] } = useQuery({
-    queryKey: ['/api/supplier-products'],
-  });
+  const [selectedIngredientSuppliers, setSelectedIngredientSuppliers] = useState<any[]>([]);
+  const [selectedPackagingSupplier, setSelectedPackagingSupplier] = useState<any>(null);
+  const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
 
   const form = useForm<EnhancedProductFormData>({
     resolver: zodResolver(enhancedProductSchema),
@@ -339,6 +337,46 @@ export default function EnhancedProductForm({
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Supplier Selection for Ingredients */}
+                <div className="p-4 bg-blue-50 rounded-lg mb-4">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Search className="w-4 h-4" />
+                    Select from Verified Ingredient Suppliers
+                  </h4>
+                  <SupplierSelectionModal
+                    inputType="ingredient"
+                    onSelect={(supplier) => {
+                      // Auto-fill ingredient data from supplier
+                      const currentIngredients = form.getValues('ingredients');
+                      const newIngredient = {
+                        name: supplier.productName || '',
+                        amount: 0,
+                        unit: supplier.unit || 'kg',
+                        type: supplier.category || '',
+                        origin: supplier.location || '',
+                        organic: supplier.organic || false,
+                        supplier: supplier.supplierName || '',
+                      };
+                      form.setValue('ingredients', [...currentIngredients, newIngredient]);
+                      setSelectedIngredientSuppliers([...selectedIngredientSuppliers, supplier]);
+                    }}
+                    onManualEntry={() => {
+                      // Add blank ingredient for manual entry
+                      const currentIngredients = form.getValues('ingredients');
+                      form.setValue('ingredients', [
+                        ...currentIngredients, 
+                        { name: '', amount: 0, unit: 'kg', type: '', origin: '', organic: false, supplier: '' }
+                      ]);
+                    }}
+                    selectedProduct={null}
+                  >
+                    <Button type="button" variant="outline">
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Add Ingredient from Supplier
+                    </Button>
+                  </SupplierSelectionModal>
+                </div>
+
                 <div className="space-y-4">
                   {form.watch('ingredients').map((_, index) => (
                     <div key={index} className="border rounded-lg p-4 space-y-4">
@@ -420,9 +458,25 @@ export default function EnhancedProductForm({
                         
                         <FormField
                           control={form.control}
+                          name={`ingredients.${index}.supplier`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Supplier</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Supplier name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <FormField
+                          control={form.control}
                           name={`ingredients.${index}.organic`}
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                               <FormControl>
                                 <Checkbox
                                   checked={field.value}
@@ -433,6 +487,21 @@ export default function EnhancedProductForm({
                             </FormItem>
                           )}
                         />
+                        
+                        {index > 0 && (
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              const currentIngredients = form.getValues('ingredients');
+                              form.setValue('ingredients', currentIngredients.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Remove
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -448,7 +517,8 @@ export default function EnhancedProductForm({
                       ]);
                     }}
                   >
-                    Add Ingredient
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Manual Ingredient
                   </Button>
                 </div>
               </CardContent>
@@ -465,32 +535,73 @@ export default function EnhancedProductForm({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Supplier Product Selection for Packaging */}
+                {/* Supplier Selection for Packaging */}
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
                     <Search className="w-4 h-4" />
-                    Select from Verified Suppliers
+                    Select from Verified Packaging Suppliers
                   </h4>
-                  <Select onValueChange={(value) => {
-                    const selectedProduct = supplierProducts.find((p: any) => p.id === parseInt(value));
-                    if (selectedProduct) {
-                      // Auto-fill packaging data from supplier product
-                      form.setValue('packaging.primaryContainer.material', selectedProduct.material || '');
-                      form.setValue('packaging.primaryContainer.weight', selectedProduct.weight || 0);
-                      form.setValue('packaging.primaryContainer.recycledContent', selectedProduct.recycledContent || 0);
-                    }
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose supplier packaging component" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supplierProducts.filter((p: any) => p.category === 'packaging').map((product: any) => (
-                        <SelectItem key={product.id} value={product.id.toString()}>
-                          {product.productName} - {product.supplierName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  
+                  {selectedPackagingSupplier ? (
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-green-800">{selectedPackagingSupplier.supplierName}</h4>
+                            <p className="text-sm text-green-600">{selectedPackagingSupplier.productName}</p>
+                            <Badge className="mt-2 bg-green-100 text-green-800">
+                              Selected Packaging
+                            </Badge>
+                          </div>
+                          <SupplierSelectionModal
+                            inputType="bottle"
+                            onSelect={(supplier) => {
+                              setSelectedPackagingSupplier(supplier);
+                              // Auto-fill packaging data from supplier product
+                              form.setValue('packaging.primaryContainer.material', supplier.material || '');
+                              form.setValue('packaging.primaryContainer.weight', supplier.weight || 0);
+                              form.setValue('packaging.primaryContainer.recycledContent', supplier.recycledContent || 0);
+                            }}
+                            onManualEntry={() => {
+                              setSelectedPackagingSupplier(null);
+                            }}
+                            selectedProduct={selectedPackagingSupplier}
+                          >
+                            <Button type="button" variant="outline" size="sm">
+                              Change Selection
+                            </Button>
+                          </SupplierSelectionModal>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                      <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Packaging Selected</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Choose packaging components from our verified supplier network
+                      </p>
+                      <SupplierSelectionModal
+                        inputType="bottle"
+                        onSelect={(supplier) => {
+                          setSelectedPackagingSupplier(supplier);
+                          // Auto-fill packaging data from supplier product
+                          form.setValue('packaging.primaryContainer.material', supplier.material || '');
+                          form.setValue('packaging.primaryContainer.weight', supplier.weight || 0);
+                          form.setValue('packaging.primaryContainer.recycledContent', supplier.recycledContent || 0);
+                        }}
+                        onManualEntry={() => {
+                          setSelectedPackagingSupplier(null);
+                        }}
+                        selectedProduct={null}
+                      >
+                        <Button type="button">
+                          <Search className="h-4 w-4 mr-2" />
+                          Browse Packaging Suppliers
+                        </Button>
+                      </SupplierSelectionModal>
+                    </div>
+                  )}
                 </div>
 
                 {/* Primary Container */}
@@ -637,31 +748,71 @@ export default function EnhancedProductForm({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Supplier Product Selection for Production */}
+                {/* Supplier Selection for Production */}
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
                     <Search className="w-4 h-4" />
                     Select Production Partner
                   </h4>
-                  <Select onValueChange={(value) => {
-                    const selectedProduct = supplierProducts.find((p: any) => p.id === parseInt(value));
-                    if (selectedProduct) {
-                      // Auto-fill production data from supplier product
-                      form.setValue('production.productionModel', selectedProduct.productionModel || '');
-                      form.setValue('production.annualProductionVolume', selectedProduct.capacity || 0);
-                    }
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose production partner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supplierProducts.filter((p: any) => p.category === 'production').map((product: any) => (
-                        <SelectItem key={product.id} value={product.id.toString()}>
-                          {product.productName} - {product.supplierName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  
+                  {selectedProductionSupplier ? (
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-green-800">{selectedProductionSupplier.supplierName}</h4>
+                            <p className="text-sm text-green-600">{selectedProductionSupplier.location}</p>
+                            <Badge className="mt-2 bg-green-100 text-green-800">
+                              Selected Producer
+                            </Badge>
+                          </div>
+                          <SupplierSelectionModal
+                            inputType="contract"
+                            onSelect={(supplier) => {
+                              setSelectedProductionSupplier(supplier);
+                              // Auto-fill production data from supplier product
+                              form.setValue('production.productionModel', supplier.productionModel || 'contract');
+                              form.setValue('production.annualProductionVolume', supplier.capacity || 0);
+                            }}
+                            onManualEntry={() => {
+                              setSelectedProductionSupplier(null);
+                            }}
+                            selectedProduct={selectedProductionSupplier}
+                          >
+                            <Button type="button" variant="outline" size="sm">
+                              Change Selection
+                            </Button>
+                          </SupplierSelectionModal>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                      <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Producer Selected</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Choose a verified producer from our network
+                      </p>
+                      <SupplierSelectionModal
+                        inputType="contract"
+                        onSelect={(supplier) => {
+                          setSelectedProductionSupplier(supplier);
+                          // Auto-fill production data from supplier product
+                          form.setValue('production.productionModel', supplier.productionModel || 'contract');
+                          form.setValue('production.annualProductionVolume', supplier.capacity || 0);
+                        }}
+                        onManualEntry={() => {
+                          setSelectedProductionSupplier(null);
+                        }}
+                        selectedProduct={null}
+                      >
+                        <Button type="button">
+                          <Search className="h-4 w-4 mr-2" />
+                          Browse Verified Producers
+                        </Button>
+                      </SupplierSelectionModal>
+                    </div>
+                  )}
                 </div>
 
                 {/* Production Model */}
