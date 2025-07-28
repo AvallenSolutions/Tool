@@ -119,6 +119,7 @@ export const products = pgTable("products", {
   }>>(),
   
   // Packaging - Primary Container
+  bottleName: varchar("bottle_name"), // Container name like "Frugal Bottle", "750ml Burgundy Bottle"
   bottleMaterial: varchar("bottle_material"), // glass, aluminum, pet, hdpe, paperboard, tetrapack, bag-in-box
   bottleWeight: decimal("bottle_weight", { precision: 10, scale: 3 }),
   bottleRecycledContent: decimal("bottle_recycled_content", { precision: 5, scale: 2 }),

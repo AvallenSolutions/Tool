@@ -1060,6 +1060,26 @@ export default function EnhancedProductForm({
                     
                     <FormField
                       control={form.control}
+                      name="packaging.closure.weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Closure Weight (g)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="2.5" 
+                              step="0.1"
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
                       name="packaging.closure.origin"
                       render={({ field }) => (
                         <FormItem>

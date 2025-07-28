@@ -436,8 +436,8 @@ export default function ProductDetail() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-600">Container Type</label>
-                        <p className="font-medium text-slate-gray">Primary Container</p>
+                        <label className="text-sm font-medium text-gray-600">Container Name</label>
+                        <p className="font-medium text-slate-gray">{product.bottleName || 'Primary Container'}</p>
                       </div>
                       {product.bottleMaterial && (
                         <div>

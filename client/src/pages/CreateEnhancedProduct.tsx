@@ -157,6 +157,7 @@ export default function CreateEnhancedProduct() {
       ingredients: data.ingredients,
       
       // Packaging - Primary Container
+      bottleName: data.packaging.primaryContainer.name,
       bottleMaterial: data.packaging.primaryContainer.material,
       bottleWeight: data.packaging.primaryContainer.weight,
       bottleRecycledContent: data.packaging.primaryContainer.recycledContent,
