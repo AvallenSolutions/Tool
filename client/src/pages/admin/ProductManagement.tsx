@@ -220,6 +220,17 @@ export default function ProductManagement() {
                               <span>{product.supplierCategory.replace('_', ' ')}</span>
                             </div>
                             
+                            {/* Display key product attributes */}
+                            {product.productAttributes && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs">
+                                  {product.productAttributes.material && `${product.productAttributes.material} | `}
+                                  {product.productAttributes.weight && `${product.productAttributes.weight}${product.productAttributes.weightUnit || 'g'} | `}
+                                  {product.productAttributes.recycledContent !== undefined && `${product.productAttributes.recycledContent}% recycled`}
+                                </span>
+                              </div>
+                            )}
+                            
                             {product.sku && (
                               <div className="flex items-center gap-2">
                                 <span className="font-mono">SKU: {product.sku}</span>
@@ -360,6 +371,35 @@ export default function ProductManagement() {
                 </div>
               )}
 
+              {/* Product Attributes */}
+              {selectedProduct.productAttributes && (
+                <div>
+                  <label className="text-sm font-medium">Product Specifications</label>
+                  <div className="mt-2 grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                    {selectedProduct.productAttributes.material && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">Material</span>
+                        <p className="text-sm font-medium">{selectedProduct.productAttributes.material}</p>
+                      </div>
+                    )}
+                    {selectedProduct.productAttributes.weight && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">Weight</span>
+                        <p className="text-sm font-medium">
+                          {selectedProduct.productAttributes.weight}{selectedProduct.productAttributes.weightUnit || 'g'}
+                        </p>
+                      </div>
+                    )}
+                    {selectedProduct.productAttributes.recycledContent !== undefined && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">Recycled Content</span>
+                        <p className="text-sm font-medium">{selectedProduct.productAttributes.recycledContent}%</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {selectedProduct.certifications && selectedProduct.certifications.length > 0 && (
                 <div>
                   <label className="text-sm font-medium">Certifications</label>
@@ -458,6 +498,54 @@ export default function ProductManagement() {
                       leadTimeDays: parseInt(e.target.value) || undefined
                     })}
                   />
+                </div>
+              </div>
+              
+              {/* Product Attributes */}
+              <div>
+                <Label>Product Specifications</Label>
+                <div className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
+                  <div>
+                    <Label className="text-xs">Material</Label>
+                    <Input
+                      value={editingProduct.productAttributes?.material || ''}
+                      onChange={(e) => setEditingProduct({
+                        ...editingProduct,
+                        productAttributes: {
+                          ...editingProduct.productAttributes,
+                          material: e.target.value
+                        }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Weight (g)</Label>
+                    <Input
+                      type="number"
+                      value={editingProduct.productAttributes?.weight || ''}
+                      onChange={(e) => setEditingProduct({
+                        ...editingProduct,
+                        productAttributes: {
+                          ...editingProduct.productAttributes,
+                          weight: parseFloat(e.target.value) || null
+                        }
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Recycled Content (%)</Label>
+                    <Input
+                      type="number"
+                      value={editingProduct.productAttributes?.recycledContent || ''}
+                      onChange={(e) => setEditingProduct({
+                        ...editingProduct,
+                        productAttributes: {
+                          ...editingProduct.productAttributes,
+                          recycledContent: parseFloat(e.target.value) || null
+                        }
+                      })}
+                    />
+                  </div>
                 </div>
               </div>
               

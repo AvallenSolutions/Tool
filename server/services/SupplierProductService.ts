@@ -57,10 +57,10 @@ export class SupplierProductService {
     if (!supplier) {
       const newSupplierData = {
         supplierName: supplierData.companyName || 'Unknown Supplier',
-        supplierCategory: this.mapSupplierType(supplierData.supplierType || supplierData.type),
+        supplierCategory: this.mapSupplierType(supplierData.type),
         website: supplierData.website,
-        contactEmail: supplierData.email || supplierData.contactEmail,
-        description: supplierData.description,
+        contactEmail: supplierData.contactEmail,
+        description: null, // Not available from scraped data
         location: this.extractLocationFromAddress(supplierData.address),
         submittedBy: 'ADMIN' as const,
         verificationStatus: 'pending_review' as const,
@@ -79,27 +79,27 @@ export class SupplierProductService {
     }
 
     // Step 2: Create supplier product
-    // Handle both old and new field name formats
-    const productCreationData = {
-      supplierId: supplier.id,
-      productName: productData.productName || productData.name || 'Unnamed Product',
-      description: productData.description,
-      materialType: productData.materialType || productData.material,
+    // Store extracted data in productAttributes JSONB field
+    const productAttributes = {
+      material: productData.material,
       weight: productData.weight,
       weightUnit: productData.weightUnit,
-      capacity: productData.capacity,
-      capacityUnit: productData.capacityUnit,
-      height: productData.dimensions?.height,
-      width: productData.dimensions?.width,
-      depth: productData.dimensions?.depth,
-      dimensionUnit: productData.dimensions?.unit,
       recycledContent: productData.recycledContent,
-      color: productData.color,
-      sku: productData.sku,
-      unitPrice: productData.price,
-      currency: productData.currency,
-      certifications: productData.certifications || [],
-      imageUrls: selectedImages || productData.photos || productData.additionalImages || [],
+      type: productData.type,
+      confidence: productData.confidence || {}
+    };
+
+    const productCreationData = {
+      supplierId: supplier.id,
+      productName: productData.name || 'Unnamed Product',
+      productDescription: null, // Not available from scraped data
+      sku: null, // Not available from scraped data
+      productAttributes: productAttributes,
+      basePrice: null, // Not available from scraped data
+      currency: 'USD',
+      minimumOrderQuantity: null,
+      leadTimeDays: null,
+      certifications: [],
       hasPrecalculatedLca: false,
       submittedBy: 'ADMIN' as const,
       isVerified: true

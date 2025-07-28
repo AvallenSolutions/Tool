@@ -11,7 +11,7 @@ import {
   Weight, Ruler, Recycle, Award, Info
 } from 'lucide-react';
 
-export default function ProductDetail() {
+function ProductDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
 
@@ -145,121 +145,92 @@ export default function ProductDetail() {
                 <CardContent className="space-y-4">
                   {product.productDescription && (
                     <div>
-                      <h4 className="font-semibold mb-2 flex items-center">
-                        <Info className="w-4 h-4 mr-2" />
-                        Description
-                      </h4>
-                      <p className="text-gray-700">{product.productDescription}</p>
+                      <label className="text-sm font-medium text-gray-600">Description</label>
+                      <p className="text-gray-800">{product.productDescription}</p>
                     </div>
                   )}
 
                   {product.sku && (
                     <div>
-                      <span className="font-semibold">SKU:</span> {product.sku}
+                      <label className="text-sm font-medium text-gray-600">SKU</label>
+                      <p className="font-mono text-sm">{product.sku}</p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
 
-              {/* Specifications */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Specifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {product.materialType && (
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">Material:</span>
-                        <span>{product.materialType}</span>
-                      </div>
-                    )}
-
-                    {product.weight && (
-                      <div className="flex items-center gap-2">
-                        <Weight className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">Weight:</span>
-                        <span>{product.weight}{product.weightUnit || 'g'}</span>
-                      </div>
-                    )}
-
-                    {product.dimensions && (
-                      <div className="flex items-center gap-2">
-                        <Ruler className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">Dimensions:</span>
-                        <span>{product.dimensions}</span>
-                      </div>
-                    )}
-
-                    {(product.recycledContent || product.recycledContent === 0) && (
-                      <div className="flex items-center gap-2">
-                        <Recycle className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">Recycled Content:</span>
-                        <span>{product.recycledContent}%</span>
-                      </div>
-                    )}
-
-                    {product.category && (
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">Category:</span>
-                        <span className="capitalize">{product.category}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Certifications */}
-              {product.certifications && product.certifications.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Award className="w-5 h-5" />
-                      Certifications
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {product.certifications.map((cert: string, index: number) => (
-                        <Badge key={index} variant="outline">{cert}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Supplier Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5" />
-                    Supplier Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <span className="font-medium">Company:</span> {product.supplierName}
-                  </div>
-                  
-                  {product.supplierCategory && (
+                  {/* Product Specifications */}
+                  {product.productAttributes && (
                     <div>
-                      <span className="font-medium">Category:</span>{' '}
-                      <span className="capitalize">{product.supplierCategory.replace('_', ' ')}</span>
+                      <label className="text-sm font-medium text-gray-600 mb-3 block">Product Specifications</label>
+                      <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                        {product.productAttributes.material && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">Material</span>
+                            <p className="font-medium text-lg">{product.productAttributes.material}</p>
+                          </div>
+                        )}
+                        {product.productAttributes.weight && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">Weight</span>
+                            <p className="font-medium text-lg">
+                              {product.productAttributes.weight}{product.productAttributes.weightUnit || 'g'}
+                            </p>
+                          </div>
+                        )}
+                        {product.productAttributes.recycledContent !== undefined && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">Recycled Content</span>
+                            <p className="font-medium text-lg">{product.productAttributes.recycledContent}%</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {product.productAttributes.type && (
+                        <div className="mt-4">
+                          <span className="text-xs font-medium text-gray-500">Product Type</span>
+                          <p className="font-medium">{product.productAttributes.type}</p>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setLocation(`/app/supplier-network/supplier/${product.supplierId}`)}
-                    >
-                      <Building2 className="w-4 h-4 mr-2" />
-                      View Supplier Details
-                    </Button>
-                  </div>
+                  {/* Pricing & Availability */}
+                  {(product.basePrice || product.minimumOrderQuantity || product.leadTimeDays) && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-3 block">Pricing & Availability</label>
+                      <div className="grid grid-cols-3 gap-4">
+                        {product.basePrice && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">Base Price</span>
+                            <p className="font-medium">{product.basePrice} {product.currency || 'USD'}</p>
+                          </div>
+                        )}
+                        {product.minimumOrderQuantity && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">Minimum Order</span>
+                            <p className="font-medium">{product.minimumOrderQuantity} units</p>
+                          </div>
+                        )}
+                        {product.leadTimeDays && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">Lead Time</span>
+                            <p className="font-medium">{product.leadTimeDays} days</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certifications */}
+                  {product.certifications && product.certifications.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-3 block">Certifications</label>
+                      <div className="flex flex-wrap gap-2">
+                        {product.certifications.map((cert: string, index: number) => (
+                          <Badge key={index} variant="outline">{cert}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -269,3 +240,5 @@ export default function ProductDetail() {
     </div>
   );
 }
+
+export default ProductDetail;
