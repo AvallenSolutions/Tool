@@ -134,15 +134,19 @@ type EnhancedProductFormData = z.infer<typeof enhancedProductSchema>;
 interface EnhancedProductFormProps {
   initialData?: Partial<EnhancedProductFormData>;
   onSubmit: (data: EnhancedProductFormData) => void;
+  onSaveDraft?: (data: EnhancedProductFormData) => void;
   isEditing?: boolean;
   isSubmitting?: boolean;
+  isDraftSaving?: boolean;
 }
 
 export default function EnhancedProductForm({ 
   initialData, 
   onSubmit, 
+  onSaveDraft,
   isEditing = false, 
-  isSubmitting = false 
+  isSubmitting = false,
+  isDraftSaving = false
 }: EnhancedProductFormProps) {
   const [activeTab, setActiveTab] = useState('basic');
   const [selectedIngredientSuppliers, setSelectedIngredientSuppliers] = useState<any[]>([]);
@@ -188,16 +192,20 @@ export default function EnhancedProductForm({
     onSubmit(data);
   };
 
+  const handleSaveDraft = () => {
+    const currentData = form.getValues();
+    onSaveDraft?.(currentData);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
             <TabsTrigger value="ingredients" className="text-xs">Ingredients</TabsTrigger>
             <TabsTrigger value="packaging" className="text-xs">Packaging</TabsTrigger>
             <TabsTrigger value="production" className="text-xs">Production</TabsTrigger>
-            <TabsTrigger value="environmental" className="text-xs">Environmental</TabsTrigger>
             <TabsTrigger value="certifications" className="text-xs">Certifications</TabsTrigger>
             <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
             <TabsTrigger value="endoflife" className="text-xs">End of Life</TabsTrigger>
@@ -1328,102 +1336,7 @@ export default function EnhancedProductForm({
             </Card>
           </TabsContent>
 
-          {/* Environmental Impact Tab */}
-          <TabsContent value="environmental" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Leaf className="w-5 h-5 text-avallen-green" />
-                  Environmental Impact Assessment
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="environmentalImpact.co2Emissions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CO2 Emissions (kg CO2e)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="2.5" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="environmentalImpact.waterFootprint"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Water Footprint (L)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="15.2" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="environmentalImpact.calculationMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>LCA Calculation Method</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select calculation method" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="cradle-to-gate">Cradle-to-Gate</SelectItem>
-                          <SelectItem value="cradle-to-grave">Cradle-to-Grave</SelectItem>
-                          <SelectItem value="gate-to-gate">Gate-to-Gate</SelectItem>
-                          <SelectItem value="cradle-to-cradle">Cradle-to-Cradle</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="environmentalImpact.biodiversityImpact"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Biodiversity Impact Assessment</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe the biodiversity impact assessment results..." 
-                          rows={3}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Certifications & Awards Tab */}
           <TabsContent value="certifications" className="space-y-6">
@@ -1686,16 +1599,38 @@ export default function EnhancedProductForm({
           {/* Submit Button */}
           <div className="flex justify-between pt-6">
             <div className="text-sm text-gray-500">
-              Tab {activeTab === 'basic' ? '1' : activeTab === 'ingredients' ? '2' : '3'} of 8
+              Tab {activeTab === 'basic' ? '1' : activeTab === 'ingredients' ? '2' : activeTab === 'packaging' ? '3' : activeTab === 'production' ? '4' : activeTab === 'certifications' ? '5' : activeTab === 'distribution' ? '6' : '7'} of 7
             </div>
             
             <div className="flex gap-3">
+              {onSaveDraft && (
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  disabled={isDraftSaving}
+                  className="text-gray-600 border-gray-300"
+                >
+                  {isDraftSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving Draft...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save as Draft
+                    </>
+                  )}
+                </Button>
+              )}
+              
               {activeTab !== 'basic' && (
                 <Button 
                   type="button" 
                   variant="outline"
                   onClick={() => {
-                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'environmental', 'certifications', 'distribution', 'endoflife'];
+                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'certifications', 'distribution', 'endoflife'];
                     const currentIndex = tabs.indexOf(activeTab);
                     if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1]);
                   }}
@@ -1708,7 +1643,7 @@ export default function EnhancedProductForm({
                 <Button 
                   type="button"
                   onClick={() => {
-                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'environmental', 'certifications', 'distribution', 'endoflife'];
+                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'certifications', 'distribution', 'endoflife'];
                     const currentIndex = tabs.indexOf(activeTab);
                     if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1]);
                   }}
