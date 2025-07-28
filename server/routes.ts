@@ -1479,14 +1479,15 @@ Be precise and quote actual text from the content, not generic terms.`;
       const reportData = await ReportDataProcessor.getEnhancedReportData(productId);
       
       // Generate professional PDF using enhanced service
-      const pdfBuffer = await enhancedPDFService.generateEnhancedLCAPDF(reportData);
+      const reportBuffer = await enhancedPDFService.generateEnhancedLCAPDF(reportData);
       
+      // Temporarily serving as HTML until PDF generation libraries are restored
       res.set({
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="LCA_Report_Product_${productId}.pdf"`
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="LCA_Report_Product_${productId}.html"`
       });
       
-      res.send(pdfBuffer);
+      res.send(reportBuffer);
     } catch (error) {
       console.error('Error generating PDF report:', error);
       res.status(500).json({ 
