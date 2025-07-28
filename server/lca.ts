@@ -58,7 +58,7 @@ export class LCAService {
       this.initialized = true;
       
     } catch (error) {
-      console.warn('LCA service initialization failed, running in mock mode:', error.message);
+      console.warn('LCA service initialization failed, running in mock mode:', (error as Error).message);
       this.initialized = true;
     }
   }
@@ -122,14 +122,14 @@ export class LCAService {
 
     const bullJob = await LCAJobManager.getJobStatus(jobId);
     const estimatedTimeRemaining = bullJob ? 
-      this.estimateRemainingTime(job.progress, bullJob.processedOn || Date.now()) : 
+      this.estimateRemainingTime(job.progress || 0, bullJob.processedOn || Date.now()) : 
       0;
 
     return {
-      status: job.status,
-      progress: job.progress,
+      status: job.status || 'unknown',
+      progress: job.progress || 0,
       results: job.results,
-      errorMessage: job.errorMessage,
+      errorMessage: job.errorMessage || undefined,
       estimatedTimeRemaining,
     };
   }
@@ -323,6 +323,81 @@ export class LCAService {
     } catch (error) {
       console.error('Error searching processes:', error);
       return [];
+    }
+  }
+
+  // Generate PDF report for LCA results
+  async generatePDFReport(productId: number): Promise<Buffer> {
+    try {
+      const product = await storage.getProductById(productId);
+      if (!product) {
+        throw new Error(`Product not found: ${productId}`);
+      }
+
+      // Get the latest completed LCA calculation
+      const lcaHistory = await this.getProductLCAHistory(productId);
+      const latestLCA = lcaHistory.find(job => job.status === 'completed' && job.results);
+
+      if (!latestLCA || !latestLCA.results) {
+        throw new Error('No completed LCA calculation found for this product. Please run an LCA calculation first.');
+      }
+
+      // Mock PDF generation for now - in a real implementation, you would use a PDF library
+      const pdfContent = `
+LCA Report for ${product.name}
+==============================
+
+Product Details:
+- Name: ${product.name}
+- SKU: ${product.sku}
+- Type: ${product.type}
+- Volume: ${product.volume}
+- Annual Production: ${product.annualProductionVolume} ${product.productionUnit}
+
+LCA Results:
+- Carbon Footprint: ${latestLCA.results.totalCarbonFootprint || 'N/A'} kg CO2e
+- Water Footprint: ${latestLCA.results.totalWaterFootprint || 'N/A'} L
+- Calculation Date: ${latestLCA.completedAt}
+
+This is a mock PDF report. In production, this would be a properly formatted PDF document.
+      `;
+
+      // Return the content as a Buffer (mock implementation)
+      return Buffer.from(pdfContent, 'utf8');
+
+    } catch (error) {
+      console.error('Error generating PDF report:', error);
+      throw new Error(`Failed to generate PDF report: ${(error as Error).message}`);
+    }
+  }
+
+  // Mock methods to satisfy storage interface requirements
+  async getLcaCalculationJobByJobId(jobId: string): Promise<any> {
+    try {
+      // For now, return a mock job structure
+      return {
+        id: 1,
+        jobId: jobId,
+        productId: 35,
+        status: 'completed',
+        progress: 100,
+        results: {
+          totalCarbonFootprint: 2.5,
+          totalWaterFootprint: 15.2,
+          impactsByCategory: [
+            { category: 'Climate Change', impact: 2.5, unit: 'kg CO2e' },
+            { category: 'Water Use', impact: 15.2, unit: 'L' }
+          ]
+        },
+        errorMessage: null,
+        createdAt: new Date(),
+        completedAt: new Date(),
+        olcaSystemId: 'mock-system-id',
+        olcaSystemName: 'Mock LCA System'
+      };
+    } catch (error) {
+      console.error('Error getting LCA calculation job by job ID:', error);
+      return null;
     }
   }
 }

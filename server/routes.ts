@@ -1297,6 +1297,195 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Register admin routes
   app.use('/api/admin', adminRouter);
 
+  // ================== LCA ENDPOINTS ==================
+
+  // Create LCA for a specific product
+  app.post('/api/products/:id/lca', async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ 
+          error: 'Invalid product ID',
+          details: 'Product ID must be a valid number'
+        });
+      }
+
+      const result = await lcaService.calculateProductLCA(productId, req.body.options);
+      
+      res.json({
+        success: true,
+        jobId: result.jobId,
+        estimatedDuration: result.estimatedDuration,
+        message: 'LCA calculation started successfully'
+      });
+    } catch (error) {
+      console.error('Error creating LCA:', error);
+      res.status(500).json({ 
+        error: 'LCA Calculation Failed',
+        details: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Get LCA service status
+  app.get('/api/lca/status', async (req, res) => {
+    try {
+      const status = await lcaService.getServiceStatus();
+      res.json(status);
+    } catch (error) {
+      console.error('Error getting LCA service status:', error);
+      res.status(500).json({ 
+        error: 'Failed to get LCA service status',
+        details: error.message
+      });
+    }
+  });
+
+  // Start LCA calculation for a product
+  app.post('/api/lca/calculate/:productId', async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ 
+          error: 'Invalid product ID',
+          details: 'Product ID must be a valid number'
+        });
+      }
+
+      const result = await lcaService.calculateProductLCA(productId, req.body.options);
+      res.json(result);
+    } catch (error) {
+      console.error('Error starting LCA calculation:', error);
+      res.status(500).json({ 
+        error: 'Failed to start LCA calculation',
+        details: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Get LCA calculation status
+  app.get('/api/lca/calculation/:jobId', async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const status = await lcaService.getCalculationStatus(jobId);
+      res.json(status);
+    } catch (error) {
+      console.error('Error getting LCA calculation status:', error);
+      res.status(500).json({ 
+        error: 'Failed to get calculation status',
+        details: error.message
+      });
+    }
+  });
+
+  // Cancel LCA calculation
+  app.delete('/api/lca/calculation/:jobId', async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const success = await lcaService.cancelCalculation(jobId);
+      res.json({ success });
+    } catch (error) {
+      console.error('Error cancelling LCA calculation:', error);
+      res.status(500).json({ 
+        error: 'Failed to cancel calculation',
+        details: error.message
+      });
+    }
+  });
+
+  // Get LCA history for a product
+  app.get('/api/lca/product/:productId/history', async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ 
+          error: 'Invalid product ID',
+          details: 'Product ID must be a valid number'
+        });
+      }
+
+      const history = await lcaService.getProductLCAHistory(productId);
+      res.json(history);
+    } catch (error) {
+      console.error('Error getting LCA history:', error);
+      res.status(500).json({ 
+        error: 'Failed to get LCA history',
+        details: error.message
+      });
+    }
+  });
+
+  // Validate product for LCA
+  app.get('/api/lca/product/:productId/validate', async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ 
+          error: 'Invalid product ID',
+          details: 'Product ID must be a valid number'
+        });
+      }
+
+      const validation = await lcaService.validateProductForLCA(productId);
+      res.json(validation);
+    } catch (error) {
+      console.error('Error validating product for LCA:', error);
+      res.status(500).json({ 
+        error: 'Failed to validate product',
+        details: error.message
+      });
+    }
+  });
+
+  // Get available impact methods
+  app.get('/api/lca/impact-methods', async (req, res) => {
+    try {
+      const methods = await lcaService.getAvailableImpactMethods();
+      res.json(methods);
+    } catch (error) {
+      console.error('Error getting impact methods:', error);
+      res.status(500).json({ 
+        error: 'Failed to get impact methods',
+        details: error.message
+      });
+    }
+  });
+
+  // Download LCA PDF report
+  app.get('/api/lca/product/:productId/download-pdf', async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ 
+          error: 'Invalid product ID',
+          details: 'Product ID must be a valid number'
+        });
+      }
+
+      const pdfBuffer = await lcaService.generatePDFReport(productId);
+      
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="LCA_Report_Product_${productId}.pdf"`
+      });
+      
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Error generating PDF report:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate PDF report',
+        details: error.message
+      });
+    }
+  });
+
   const server = createServer(app);
   
   return server;
