@@ -15,6 +15,7 @@ function getSupplierCategoryFromInputType(inputType: string): string {
     case 'bottle': return 'bottle_producer';
     case 'closure': return 'closure_producer';
     case 'label': return 'label_maker';
+    case 'secondary': return 'packaging_supplier';
     case 'contract': return 'contract_distillery';
     default: return 'ingredient_supplier';
   }

@@ -575,7 +575,7 @@ export default function EnhancedProductForm({
                       }}
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Manual Ingredient ({form.watch('ingredients').length}/50)
+                      Add Ingredient ({form.watch('ingredients').length}/50)
                     </Button>
                   )}
                   
