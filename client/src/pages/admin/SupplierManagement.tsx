@@ -65,7 +65,7 @@ export default function SupplierManagement() {
 
   const verifySupplierMutation = useMutation({
     mutationFn: (supplierId: number) => 
-      apiRequest(`/api/admin/suppliers/${supplierId}/verify`, 'PUT'),
+      apiRequest('PUT', `/api/admin/suppliers/${supplierId}/verify`),
     onSuccess: () => {
       toast({
         title: "Supplier Verified",
@@ -87,7 +87,7 @@ export default function SupplierManagement() {
   // Edit supplier mutation
   const editSupplierMutation = useMutation({
     mutationFn: (data: { id: number; supplierData: Partial<SupplierWithDetails> }) => 
-      apiRequest(`/api/admin/suppliers/${data.id}`, 'PUT', data.supplierData),
+      apiRequest('PUT', `/api/admin/suppliers/${data.id}`, data.supplierData),
     onSuccess: () => {
       toast({
         title: "Supplier Updated",
@@ -108,7 +108,7 @@ export default function SupplierManagement() {
   // Delete supplier mutation
   const deleteSupplierMutation = useMutation({
     mutationFn: (supplierId: number) => 
-      apiRequest('/api/admin/suppliers/' + supplierId, 'DELETE'),
+      apiRequest('DELETE', '/api/admin/suppliers/' + supplierId),
     onSuccess: () => {
       toast({
         title: "Supplier Deleted",

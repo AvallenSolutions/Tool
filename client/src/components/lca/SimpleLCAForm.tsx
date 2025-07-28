@@ -120,7 +120,7 @@ export default function SimpleLCAForm({ productId, existingData, onComplete, cla
         status: 'complete',
       };
       
-      return apiRequest('/api/lca-questionnaires', 'POST', lcaData);
+      return apiRequest('POST', '/api/lca-questionnaires', lcaData);
     },
     onSuccess: () => {
       toast({

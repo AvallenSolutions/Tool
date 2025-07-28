@@ -76,7 +76,7 @@ export default function SupplierRegistration() {
 
   const createSupplierMutation = useMutation({
     mutationFn: (data: SupplierRegistrationForm) => 
-      apiRequest('/api/verified-suppliers', 'POST', {
+      apiRequest('POST', '/api/verified-suppliers', {
         ...data,
         verificationStatus: 'pending_review'
       }),

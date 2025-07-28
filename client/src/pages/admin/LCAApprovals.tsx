@@ -40,7 +40,7 @@ export default function LCAApprovals() {
 
   const approveReportMutation = useMutation({
     mutationFn: (reportId: number) => 
-      apiRequest(`/api/admin/reports/${reportId}/approve`, 'PUT'),
+      apiRequest('PUT', `/api/admin/reports/${reportId}/approve`),
     onSuccess: () => {
       toast({
         title: "Report Approved",

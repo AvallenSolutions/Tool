@@ -86,7 +86,7 @@ export default function ProductManagement() {
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: (productId: string) => 
-      apiRequest('/api/supplier-products/' + productId, 'DELETE'),
+      apiRequest('DELETE', '/api/supplier-products/' + productId),
     onSuccess: () => {
       toast({
         title: "Product Deleted",
