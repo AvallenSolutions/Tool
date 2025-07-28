@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search } from 'lucide-react';
 
 // Enhanced Product Schema with all 8 tabs
 const enhancedProductSchema = z.object({
@@ -143,6 +145,11 @@ export default function EnhancedProductForm({
   isSubmitting = false 
 }: EnhancedProductFormProps) {
   const [activeTab, setActiveTab] = useState('basic');
+
+  // Fetch supplier products for selection
+  const { data: supplierProducts = [] } = useQuery({
+    queryKey: ['/api/supplier-products'],
+  });
 
   const form = useForm<EnhancedProductFormData>({
     resolver: zodResolver(enhancedProductSchema),
@@ -448,7 +455,708 @@ export default function EnhancedProductForm({
             </Card>
           </TabsContent>
 
-          {/* Additional tabs will be added here - this is a comprehensive start */}
+          {/* Packaging Tab */}
+          <TabsContent value="packaging" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Box className="w-5 h-5 text-avallen-green" />
+                  Packaging Specifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Supplier Product Selection for Packaging */}
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Search className="w-4 h-4" />
+                    Select from Verified Suppliers
+                  </h4>
+                  <Select onValueChange={(value) => {
+                    const selectedProduct = supplierProducts.find((p: any) => p.id === parseInt(value));
+                    if (selectedProduct) {
+                      // Auto-fill packaging data from supplier product
+                      form.setValue('packaging.primaryContainer.material', selectedProduct.material || '');
+                      form.setValue('packaging.primaryContainer.weight', selectedProduct.weight || 0);
+                      form.setValue('packaging.primaryContainer.recycledContent', selectedProduct.recycledContent || 0);
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose supplier packaging component" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supplierProducts.filter((p: any) => p.category === 'packaging').map((product: any) => (
+                        <SelectItem key={product.id} value={product.id.toString()}>
+                          {product.productName} - {product.supplierName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Primary Container */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Primary Container</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.material"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Material *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="glass">Glass</SelectItem>
+                              <SelectItem value="plastic">Plastic</SelectItem>
+                              <SelectItem value="aluminum">Aluminum</SelectItem>
+                              <SelectItem value="steel">Steel</SelectItem>
+                              <SelectItem value="cardboard">Cardboard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Weight (g) *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="500" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.recycledContent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recycled Content (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="30" 
+                              min="0" 
+                              max="100"
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.color"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Color</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Clear, Green, Amber" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Closure System */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Closure System</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.closure.closureType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Closure Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select closure type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="cork">Cork</SelectItem>
+                              <SelectItem value="screw-cap">Screw Cap</SelectItem>
+                              <SelectItem value="crown-cap">Crown Cap</SelectItem>
+                              <SelectItem value="swing-top">Swing Top</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.closure.material"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Closure Material</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Natural cork, Aluminum, Plastic" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Production Tab */}
+          <TabsContent value="production" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Factory className="w-5 h-5 text-avallen-green" />
+                  Production Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Supplier Product Selection for Production */}
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Search className="w-4 h-4" />
+                    Select Production Partner
+                  </h4>
+                  <Select onValueChange={(value) => {
+                    const selectedProduct = supplierProducts.find((p: any) => p.id === parseInt(value));
+                    if (selectedProduct) {
+                      // Auto-fill production data from supplier product
+                      form.setValue('production.productionModel', selectedProduct.productionModel || '');
+                      form.setValue('production.annualProductionVolume', selectedProduct.capacity || 0);
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose production partner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supplierProducts.filter((p: any) => p.category === 'production').map((product: any) => (
+                        <SelectItem key={product.id} value={product.id.toString()}>
+                          {product.productName} - {product.supplierName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Production Model */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="production.productionModel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Production Model *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select production model" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="in-house">In-house Production</SelectItem>
+                            <SelectItem value="contract">Contract Manufacturing</SelectItem>
+                            <SelectItem value="co-packing">Co-packing</SelectItem>
+                            <SelectItem value="hybrid">Hybrid Model</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="production.annualProductionVolume"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Annual Production Volume *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="10000" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Energy Consumption */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Energy Consumption</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.energyConsumption.electricityKwh"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Electricity (kWh)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="1000" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="production.energyConsumption.renewableEnergyPercent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Renewable Energy (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="50" 
+                              min="0" 
+                              max="100"
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Water Usage */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Water Usage</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.waterUsage.processWaterLiters"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Process Water (L)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="500" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="production.waterUsage.cleaningWaterLiters"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cleaning Water (L)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="200" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Environmental Impact Tab */}
+          <TabsContent value="environmental" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Leaf className="w-5 h-5 text-avallen-green" />
+                  Environmental Impact Assessment
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="environmentalImpact.co2Emissions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CO2 Emissions (kg CO2e)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01"
+                            placeholder="2.5" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="environmentalImpact.waterFootprint"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Water Footprint (L)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01"
+                            placeholder="15.2" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="environmentalImpact.calculationMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LCA Calculation Method</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select calculation method" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="cradle-to-gate">Cradle-to-Gate</SelectItem>
+                          <SelectItem value="cradle-to-grave">Cradle-to-Grave</SelectItem>
+                          <SelectItem value="gate-to-gate">Gate-to-Gate</SelectItem>
+                          <SelectItem value="cradle-to-cradle">Cradle-to-Cradle</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="environmentalImpact.biodiversityImpact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Biodiversity Impact Assessment</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe the biodiversity impact assessment results..." 
+                          rows={3}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Certifications & Awards Tab */}
+          <TabsContent value="certifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-avallen-green" />
+                  Certifications & Awards
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Certifications</h4>
+                  <div className="space-y-2">
+                    {['Organic', 'Fairtrade', 'B-Corp', 'Carbon Neutral', 'ISO 14001', 'LEED Certified', 'EU Eco-label'].map((cert) => (
+                      <FormField
+                        key={cert}
+                        control={form.control}
+                        name="certifications"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(cert)}
+                                onCheckedChange={(checked) => {
+                                  const current = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...current, cert]);
+                                  } else {
+                                    field.onChange(current.filter((c: string) => c !== cert));
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal">{cert}</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-medium">Awards</h4>
+                  <FormField
+                    control={form.control}
+                    name="awards"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>List any awards or recognitions</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Enter awards separated by commas (e.g., Best Sustainable Product 2024, Green Business Award 2023)" 
+                            rows={3}
+                            {...field} 
+                            onChange={(e) => field.onChange(e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
+                            value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Distribution Tab */}
+          <TabsContent value="distribution" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-avallen-green" />
+                  Distribution & Logistics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="distribution.averageTransportDistance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Average Transport Distance (km)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="500" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="distribution.primaryTransportMode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Primary Transport Mode</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select transport mode" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="road">Road Transport</SelectItem>
+                            <SelectItem value="rail">Rail Transport</SelectItem>
+                            <SelectItem value="sea">Sea Transport</SelectItem>
+                            <SelectItem value="air">Air Transport</SelectItem>
+                            <SelectItem value="multimodal">Multimodal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="distribution.distributionCenters"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Distribution Centers</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="3" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="distribution.coldChainRequired"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Cold chain required</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* End of Life Tab */}
+          <TabsContent value="endoflife" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Recycle className="w-5 h-5 text-avallen-green" />
+                  End of Life Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="endOfLife.recyclingRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recycling Rate (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="85" 
+                            min="0" 
+                            max="100"
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="endOfLife.returnableContainer"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Returnable container system</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="endOfLife.disposalMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Primary Disposal Method</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select disposal method" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="recycling">Recycling</SelectItem>
+                          <SelectItem value="composting">Composting</SelectItem>
+                          <SelectItem value="energy-recovery">Energy Recovery</SelectItem>
+                          <SelectItem value="landfill">Landfill</SelectItem>
+                          <SelectItem value="reuse">Reuse</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="endOfLife.consumerEducation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Consumer Education Initiatives</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe your consumer education programs for proper disposal..." 
+                          rows={3}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
           
           {/* Submit Button */}
           <div className="flex justify-between pt-6">
