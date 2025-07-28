@@ -355,9 +355,9 @@ export default function EnhancedProductForm({
                       
                       const newIngredient = {
                         name: supplier.productName || '',
-                        amount: productAttrs.typical_usage_per_unit || 0,
-                        unit: productAttrs.usage_unit || 'kg',
-                        type: productAttrs.ingredient_type || '',
+                        amount: productAttrs.typical_usage_per_unit || productAttrs.weight || 0,
+                        unit: productAttrs.usage_unit || productAttrs.unit || 'kg',
+                        type: productAttrs.ingredient_type || productAttrs.type || '',
                         origin: productAttrs.origin_country || '',
                         organic: productAttrs.organic_certified || false,
                         supplier: supplier.supplierName || '',
@@ -567,8 +567,8 @@ export default function EnhancedProductForm({
                               const lcaData = supplier.lcaDataJson || {};
                               
                               form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
-                              form.setValue('packaging.primaryContainer.weight', productAttrs.weight_grams || 0);
-                              form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycled_content_percent || 0);
+                              form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams || 0);
+                              form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
                               form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
                             }}
                             onManualEntry={() => {
@@ -599,8 +599,8 @@ export default function EnhancedProductForm({
                           const lcaData = supplier.lcaDataJson || {};
                           
                           form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
-                          form.setValue('packaging.primaryContainer.weight', productAttrs.weight_grams || 0);
-                          form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycled_content_percent || 0);
+                          form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams || 0);
+                          form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
                           form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
                         }}
                         onManualEntry={() => {
