@@ -264,36 +264,97 @@ export class SimpleLCAService {
         throw new Error('No completed LCA calculation found for this product. Please run an LCA calculation first.');
       }
 
-      // Generate simple text-based PDF content
-      const pdfContent = `
-LCA Report for ${product.name}
-==============================
-
-Product Details:
-- Name: ${product.name}
-- SKU: ${product.sku}
-- Type: ${product.type}
-- Volume: ${product.volume}
-- Annual Production: ${product.annualProductionVolume} ${product.productionUnit}
-
-LCA Results:
-- Carbon Footprint: ${latestLCA.results.totalCarbonFootprint || 'N/A'} kg CO2e
-- Water Footprint: ${latestLCA.results.totalWaterFootprint || 'N/A'} L
-- Calculation Date: ${latestLCA.completedAt}
-
-Impact Categories:
-${latestLCA.results.impactsByCategory?.map((impact: any) => 
-  `- ${impact.category}: ${impact.impact} ${impact.unit}`
-).join('\n') || 'No detailed impacts available'}
-
-Generated on: ${new Date().toISOString()}
-      `;
-
-      return Buffer.from(pdfContent, 'utf8');
+      // Create a proper PDF using basic PDF structure
+      const pdfContent = this.generateSimplePDF(product, latestLCA);
+      return Buffer.from(pdfContent, 'binary');
     } catch (error) {
       console.error('Error generating PDF report:', error);
       throw new Error(`Failed to generate PDF report: ${(error as Error).message}`);
     }
+  }
+
+  // Generate simple PDF content with basic PDF structure
+  private generateSimplePDF(product: any, latestLCA: any): string {
+    const productName = product.name || 'Unknown Product';
+    const carbonFootprint = latestLCA.results?.totalCarbonFootprint || 'N/A';
+    const waterFootprint = latestLCA.results?.totalWaterFootprint || 'N/A';
+    const calculationDate = latestLCA.completedAt || new Date().toISOString();
+    
+    // Basic PDF structure with binary content
+    return `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Resources <<
+/Font <<
+/F1 4 0 R
+>>
+>>
+/Contents 5 0 R
+>>
+endobj
+
+4 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+5 0 obj
+<<
+/Length 500
+>>
+stream
+BT
+/F1 16 Tf
+50 750 Td
+(LCA Report for ${productName}) Tj
+0 -30 Td
+/F1 12 Tf
+(Carbon Footprint: ${carbonFootprint} kg CO2e) Tj
+0 -20 Td
+(Water Footprint: ${waterFootprint} L) Tj
+0 -20 Td
+(Generated: ${new Date(calculationDate).toLocaleDateString()}) Tj
+ET
+endstream
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000010 00000 n 
+0000000079 00000 n 
+0000000173 00000 n 
+0000000301 00000 n 
+0000000380 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+735
+%%EOF`;
   }
 
   // Estimate calculation duration based on product complexity

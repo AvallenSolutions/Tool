@@ -322,7 +322,7 @@ export default function ProductDetail() {
                             <label className="text-sm font-medium text-gray-600">Annual Production</label>
                             <p className="font-medium text-slate-gray">
                               {product.annualProductionVolume ? 
-                                `${product.annualProductionVolume} ${product.productionUnit || 'units'}` : 
+                                `${Number(product.annualProductionVolume).toLocaleString()} ${product.productionUnit || 'units'}` : 
                                 'Not specified'
                               }
                             </p>
@@ -435,6 +435,10 @@ export default function ProductDetail() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Container Type</label>
+                        <p className="font-medium text-slate-gray">Primary Container</p>
+                      </div>
                       {product.bottleMaterial && (
                         <div>
                           <label className="text-sm font-medium text-gray-600">Material</label>
@@ -476,6 +480,78 @@ export default function ProductDetail() {
                           <label className="text-sm font-medium text-gray-600">Label Weight</label>
                           <p className="font-medium text-slate-gray">{product.labelWeight} g</p>
                         </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Stopper/Closure */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-avallen-green" />
+                        Stopper/Closure
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {product.closureType && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Type</label>
+                          <p className="font-medium text-slate-gray capitalize">{product.closureType}</p>
+                        </div>
+                      )}
+                      {product.closureMaterial && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Material</label>
+                          <p className="font-medium text-slate-gray capitalize">{product.closureMaterial}</p>
+                        </div>
+                      )}
+                      {product.closureWeight && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Weight</label>
+                          <p className="font-medium text-slate-gray">{product.closureWeight} g</p>
+                        </div>
+                      )}
+                      {!product.closureType && !product.closureMaterial && !product.closureWeight && (
+                        <p className="text-sm text-gray-500">No closure information recorded</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Secondary Packaging */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-avallen-green" />
+                        Secondary Packaging
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {product.hasSecondaryPackaging && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Has Secondary Packaging</label>
+                          <p className="font-medium text-slate-gray">Yes</p>
+                        </div>
+                      )}
+                      {product.boxMaterial && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Box Material</label>
+                          <p className="font-medium text-slate-gray capitalize">{product.boxMaterial}</p>
+                        </div>
+                      )}
+                      {product.boxWeight && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Box Weight</label>
+                          <p className="font-medium text-slate-gray">{product.boxWeight} g</p>
+                        </div>
+                      )}
+                      {product.fillerMaterial && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Filler Material</label>
+                          <p className="font-medium text-slate-gray capitalize">{product.fillerMaterial}</p>
+                        </div>
+                      )}
+                      {!product.hasSecondaryPackaging && !product.boxMaterial && !product.boxWeight && (
+                        <p className="text-sm text-gray-500">No secondary packaging recorded</p>
                       )}
                     </CardContent>
                   </Card>

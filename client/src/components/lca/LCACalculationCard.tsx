@@ -70,7 +70,7 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
   });
 
   // Fetch product validation with proper error handling
-  const { data: validation = { valid: true, errors: [], warnings: [] } } = useQuery({
+  const { data: validation } = useQuery({
     queryKey: ["/api/lca/product", product.id, "validate"],
     enabled: true,
     retry: false,
@@ -80,6 +80,9 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
       errorMessage: false
     }
   });
+
+  // Provide safe default validation object
+  const safeValidation = validation || { valid: true, errors: [], warnings: [] };
 
   // Start LCA calculation
   const startCalculationMutation = useMutation({
@@ -125,9 +128,6 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
     mutationFn: async (productId: number) => {
       const response = await fetch(`/api/lca/product/${productId}/download-pdf`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/pdf',
-        },
       });
       
       if (!response.ok) {
@@ -234,15 +234,15 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Validation Status */}
-        {validation && (
+        {safeValidation && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Settings className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium">Product Validation</span>
             </div>
-            {validation.errors?.length > 0 && (
+            {safeValidation.errors?.length > 0 && (
               <div className="space-y-1">
-                {validation.errors.map((error: string, index: number) => (
+                {safeValidation.errors.map((error: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 text-sm text-red-600">
                     <XCircle className="w-3 h-3" />
                     {error}
@@ -250,9 +250,9 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
                 ))}
               </div>
             )}
-            {validation.warnings?.length > 0 && (
+            {safeValidation.warnings?.length > 0 && (
               <div className="space-y-1">
-                {validation.warnings.map((warning: string, index: number) => (
+                {safeValidation.warnings.map((warning: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 text-sm text-yellow-600">
                     <AlertCircle className="w-3 h-3" />
                     {warning}
@@ -382,7 +382,7 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
           <div className="flex gap-2">
             <Button
               onClick={handleStartCalculation}
-              disabled={startCalculationMutation.isPending || !validation?.valid}
+              disabled={startCalculationMutation.isPending || !safeValidation?.valid}
               className="flex-1"
             >
               <Calculator className="w-4 h-4 mr-2" />
@@ -403,7 +403,7 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
         )}
 
         {/* Validation Errors */}
-        {validation && !validation.valid && (
+        {safeValidation && !safeValidation.valid && (
           <div className="p-3 bg-red-50 rounded-lg">
             <p className="text-sm text-red-600 font-medium">
               Cannot calculate LCA: Please fix the validation errors above.
