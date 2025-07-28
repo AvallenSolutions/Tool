@@ -1034,6 +1034,51 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Client Products API endpoints
+  app.post('/api/client-products', async (req, res) => {
+    try {
+      const { products, productInputs } = await import('@shared/schema');
+      
+      const productData = {
+        companyId: 1, // TODO: Get from session
+        name: req.body.name,
+        sku: req.body.sku || `CP-${Date.now()}`,
+        type: req.body.type,
+        volume: req.body.volume,
+        description: req.body.description || null,
+        productionModel: req.body.productionModel,
+        annualProductionVolume: req.body.annualProductionVolume,
+        productionUnit: req.body.productionUnit,
+        status: 'active',
+        isMainProduct: false
+      };
+
+      const [newProduct] = await db
+        .insert(products)
+        .values(productData)
+        .returning();
+
+      // Add product components
+      if (req.body.components && req.body.components.length > 0) {
+        const componentData = req.body.components.map((comp: any) => ({
+          productId: newProduct.id,
+          supplierProductId: comp.supplierProductId,
+          inputCategory: comp.category,
+          quantity: comp.quantity,
+          unit: comp.unit,
+          inputType: 'component'
+        }));
+
+        await db.insert(productInputs).values(componentData);
+      }
+
+      res.json({ ...newProduct, componentCount: req.body.components?.length || 0 });
+    } catch (error) {
+      console.error('Error creating client product:', error);
+      res.status(500).json({ error: 'Failed to create client product' });
+    }
+  });
+
   // Register admin routes
   app.use('/api/admin', adminRouter);
 
