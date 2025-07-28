@@ -102,7 +102,9 @@ function Router() {
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/admin" component={AdminDashboardMain} />
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
+      <Route path="/app/admin/supplier-management" component={SupplierManagement} />
       <Route path="/app/admin/products" component={ProductManagement} />
+      <Route path="/app/admin/product-management" component={ProductManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
       <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />
