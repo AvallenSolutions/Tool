@@ -68,7 +68,8 @@ export default function ProductsPage() {
   };
 
   const handleCreateSuccess = () => {
-    setShowCreateForm(false);
+    // Invalidate queries to refresh the products list
+    queryClient.invalidateQueries({ queryKey: ['/api/products'] });
     toast({
       title: "Success",
       description: "Product created successfully",

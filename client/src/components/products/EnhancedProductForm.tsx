@@ -1767,7 +1767,9 @@ export default function EnhancedProductForm({
               {activeTab !== 'endoflife' ? (
                 <Button 
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     const tabs = ['basic', 'ingredients', 'packaging', 'production', 'certifications', 'distribution', 'endoflife'];
                     const currentIndex = tabs.indexOf(activeTab);
                     if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1]);
