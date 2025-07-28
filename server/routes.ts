@@ -1047,6 +1047,62 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Main product creation endpoint (Enhanced Product Form)
+  app.post('/api/products', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      
+      const productData = {
+        companyId: 1, // TODO: Get from authenticated session
+        ...req.body,
+        status: req.body.status || 'active',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      console.log('Creating product with data:', productData);
+
+      const [newProduct] = await db.insert(products).values(productData).returning();
+      console.log('Product created successfully:', newProduct);
+      
+      res.json(newProduct);
+    } catch (error) {
+      console.error('Error creating product:', error);
+      res.status(500).json({ error: 'Failed to create product', details: error.message });
+    }
+  });
+
+  // Update existing product endpoint
+  app.patch('/api/products/:id', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      const productId = parseInt(req.params.id);
+      
+      const updateData = {
+        ...req.body,
+        updatedAt: new Date()
+      };
+
+      console.log('Updating product:', productId, 'with data:', updateData);
+
+      const [updatedProduct] = await db
+        .update(products)
+        .set(updateData)
+        .where(eq(products.id, productId))
+        .returning();
+
+      if (!updatedProduct) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      console.log('Product updated successfully:', updatedProduct);
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).json({ error: 'Failed to update product', details: error.message });
+    }
+  });
+
   // Draft product endpoint
   app.post('/api/products/draft', async (req, res) => {
     try {
