@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
@@ -163,9 +163,9 @@ export default function EnhancedProductForm({
       ingredients: [{ name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '' }],
       packaging: {
         primaryContainer: { material: '', weight: 0, recycledContent: 0, recyclability: '', color: '', thickness: 0 },
-        labeling: { labelMaterial: '', labelWeight: 0, printingMethod: '', inkType: '', labelSize: '' },
+        labels: { material: '', weight: 0, printingMethod: '', inkType: '', size: 0 },
         closure: { closureType: '', material: '', weight: 0, hasLiner: false, linerMaterial: '' },
-        secondaryPackaging: { hasSecondaryPackaging: false, boxMaterial: '', boxWeight: 0, fillerMaterial: '', fillerWeight: 0 },
+        secondary: { hasSecondaryPackaging: false, material: '', weight: 0, fillerMaterial: '', fillerWeight: 0 },
       },
       production: {
         productionModel: '',
@@ -704,6 +704,150 @@ export default function EnhancedProductForm({
                   </div>
                 </div>
 
+                {/* Labels & Printing */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Labels & Printing</h4>
+                    <SupplierSelectionModal
+                      inputType="label"
+                      onSelect={(supplier) => {
+                        // Auto-fill label data from supplier product
+                        const productAttrs = supplier.productAttributes || {};
+                        form.setValue('packaging.labels.material', productAttrs.material || '');
+                        form.setValue('packaging.labels.weight', productAttrs.weight || 0);
+                        form.setValue('packaging.labels.printingMethod', productAttrs.printing_method || '');
+                      }}
+                      onManualEntry={() => {}}
+                      selectedProduct={null}
+                    >
+                      <Button type="button" variant="outline" size="sm">
+                        <Search className="h-3 w-3 mr-1" />
+                        Browse Label Suppliers
+                      </Button>
+                    </SupplierSelectionModal>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.labels.material"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label Material</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="paper">Paper</SelectItem>
+                              <SelectItem value="plastic">Plastic</SelectItem>
+                              <SelectItem value="metal">Metal</SelectItem>
+                              <SelectItem value="fabric">Fabric</SelectItem>
+                              <SelectItem value="none">No Labels</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.labels.weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label Weight (g)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="15" 
+                              step="0.1"
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.labels.printingMethod"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Printing Method</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select method" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="digital">Digital</SelectItem>
+                              <SelectItem value="offset">Offset</SelectItem>
+                              <SelectItem value="flexographic">Flexographic</SelectItem>
+                              <SelectItem value="screen">Screen</SelectItem>
+                              <SelectItem value="none">No Printing</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.labels.inkType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ink Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select ink type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="water-based">Water-based</SelectItem>
+                              <SelectItem value="solvent-based">Solvent-based</SelectItem>
+                              <SelectItem value="uv-cured">UV-cured</SelectItem>
+                              <SelectItem value="eco-friendly">Eco-friendly</SelectItem>
+                              <SelectItem value="none">No Ink</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="packaging.labels.size"
+                    render={({ field }) => (
+                      <FormItem className="md:w-1/2">
+                        <FormLabel>Label Size (cm²)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="45.5" 
+                            step="0.1"
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormDescription>Total surface area of all labels</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 {/* Closure System */}
                 <div className="space-y-4">
                   <h4 className="font-medium">Closure System</h4>
@@ -746,6 +890,147 @@ export default function EnhancedProductForm({
                       )}
                     />
                   </div>
+                </div>
+
+                {/* Secondary Packaging */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Secondary Packaging</h4>
+                    <SupplierSelectionModal
+                      inputType="secondary"
+                      onSelect={(supplier) => {
+                        // Auto-fill secondary packaging data from supplier product
+                        const productAttrs = supplier.productAttributes || {};
+                        form.setValue('packaging.secondary.hasSecondaryPackaging', true);
+                        form.setValue('packaging.secondary.material', productAttrs.material || '');
+                        form.setValue('packaging.secondary.weight', productAttrs.weight || 0);
+                      }}
+                      onManualEntry={() => {}}
+                      selectedProduct={null}
+                    >
+                      <Button type="button" variant="outline" size="sm">
+                        <Search className="h-3 w-3 mr-1" />
+                        Browse Secondary Packaging
+                      </Button>
+                    </SupplierSelectionModal>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="packaging.secondary.hasSecondaryPackaging"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Uses Secondary Packaging</FormLabel>
+                          <FormDescription>
+                            Product is packaged in boxes, cases, or additional protective materials
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('packaging.secondary.hasSecondaryPackaging') && (
+                    <div className="space-y-4 pl-6 border-l-2 border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="packaging.secondary.material"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Box/Case Material</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select material" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="cardboard">Cardboard</SelectItem>
+                                  <SelectItem value="plastic">Plastic</SelectItem>
+                                  <SelectItem value="wood">Wood</SelectItem>
+                                  <SelectItem value="metal">Metal</SelectItem>
+                                  <SelectItem value="none">None</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="packaging.secondary.weight"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Box Weight (g)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  placeholder="120" 
+                                  {...field} 
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="packaging.secondary.fillerMaterial"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Filler Material</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select filler" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="foam">Foam</SelectItem>
+                                  <SelectItem value="paper">Paper</SelectItem>
+                                  <SelectItem value="plastic">Plastic</SelectItem>
+                                  <SelectItem value="biodegradable">Biodegradable Packing</SelectItem>
+                                  <SelectItem value="none">No Filler</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="packaging.secondary.fillerWeight"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Filler Weight (g)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  placeholder="25" 
+                                  {...field} 
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
