@@ -103,7 +103,7 @@ export default function SupplierSelectionModal({
       if (!response.ok) throw new Error('Failed to load suppliers');
       return response.json();
     },
-    enabled: isOpen && step === 'suppliers'
+    enabled: Boolean(isOpen && step === 'suppliers')
   });
 
   // Fetch supplier products for selected supplier
@@ -116,7 +116,7 @@ export default function SupplierSelectionModal({
       if (!response.ok) throw new Error('Failed to load supplier products');
       return response.json();
     },
-    enabled: isOpen && step === 'products' && selectedSupplier
+    enabled: Boolean(isOpen && step === 'products' && selectedSupplier)
   });
 
   // Filter suppliers or products based on current step and search term
