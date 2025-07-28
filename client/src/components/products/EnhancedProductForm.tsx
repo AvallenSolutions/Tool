@@ -167,9 +167,9 @@ export default function EnhancedProductForm({
       ingredients: [{ name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '' }],
       packaging: {
         primaryContainer: { material: '', weight: 0, recycledContent: 0, recyclability: '', color: '', thickness: 0 },
-        labels: { material: '', weight: 0, printingMethod: '', inkType: '', size: 0 },
+        labeling: { labelMaterial: '', labelWeight: 0, printingMethod: '', inkType: '', labelSize: 0 },
         closure: { closureType: '', material: '', weight: 0, hasLiner: false, linerMaterial: '' },
-        secondary: { hasSecondaryPackaging: false, material: '', weight: 0, fillerMaterial: '', fillerWeight: 0 },
+        secondaryPackaging: { hasSecondaryPackaging: false, boxMaterial: '', boxWeight: 0, fillerMaterial: '', fillerWeight: 0 },
       },
       production: {
         productionModel: '',

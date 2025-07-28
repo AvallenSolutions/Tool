@@ -1047,6 +1047,27 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Draft product endpoint
+  app.post('/api/products/draft', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      
+      const draftData = {
+        companyId: 1, // TODO: Get from session
+        ...req.body,
+        status: 'draft',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const [product] = await db.insert(products).values(draftData).returning();
+      res.json(product);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      res.status(500).json({ error: 'Failed to save draft' });
+    }
+  });
+
   // Client Products API endpoints
   app.post('/api/client-products', async (req, res) => {
     try {

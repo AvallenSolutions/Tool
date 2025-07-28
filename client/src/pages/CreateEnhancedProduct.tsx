@@ -42,6 +42,29 @@ export default function CreateEnhancedProduct() {
     enabled: Boolean(isEditMode && productId),
   });
 
+  // Draft saving mutation
+  const saveDraftMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/products/draft", { ...data, status: 'draft' });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "✅ Draft Saved",
+        description: "Your progress has been saved. You can continue editing later.",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      console.error("Error saving draft:", error);
+      toast({
+        title: "❌ Error",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createProductMutation = useMutation({
     mutationFn: async (data: any) => {
       const method = isEditMode ? "PATCH" : "POST";
@@ -248,8 +271,10 @@ export default function CreateEnhancedProduct() {
       <EnhancedProductForm
         initialData={existingProduct}
         onSubmit={handleSubmit}
+        onSaveDraft={(data) => saveDraftMutation.mutate(data)}
         isEditing={Boolean(isEditMode)}
         isSubmitting={createProductMutation.isPending}
+        isDraftSaving={saveDraftMutation.isPending}
       />
       
       {/* Loading Timer Popup */}
