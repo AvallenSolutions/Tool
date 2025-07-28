@@ -60,7 +60,7 @@ const testReportData: LCAReportData = {
 
 async function generateTestPDF() {
   try {
-    console.log('Generating PDF report...');
+    
     const pdfBuffer = await PDFService.generateLCAPDF(testReportData);
     
     // Save to a file
@@ -69,9 +69,9 @@ async function generateTestPDF() {
     
     fs.writeFileSync(filepath, pdfBuffer);
     
-    console.log(`PDF generated successfully: ${filename}`);
-    console.log(`File size: ${(pdfBuffer.length / 1024).toFixed(2)} KB`);
-    console.log(`File saved to: ${filepath}`);
+    
+    
+    
     
     return filepath;
   } catch (error) {

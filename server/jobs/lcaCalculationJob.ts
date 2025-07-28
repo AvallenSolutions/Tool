@@ -278,8 +278,8 @@ async function performLCACalculation(productSystem: any, options: any): Promise<
 // Job event handlers (only if queue is available)
 if (lcaCalculationQueue) {
   lcaCalculationQueue.on('completed', (job: Bull.Job<LcaCalculationJobData>, result: LcaCalculationResult) => {
-    console.log(`LCA calculation completed for product ${result.productId}`);
-    console.log(`Total Carbon Footprint: ${result.totalCarbonFootprint} kg CO2 eq`);
+    
+    
   });
 
   lcaCalculationQueue.on('failed', (job: Bull.Job<LcaCalculationJobData>, err: Error) => {
@@ -287,7 +287,7 @@ if (lcaCalculationQueue) {
   });
 
   lcaCalculationQueue.on('progress', (job: Bull.Job<LcaCalculationJobData>, progress: number) => {
-    console.log(`LCA calculation progress for product ${job.data.productId}: ${progress}%`);
+    
   });
 }
 
@@ -323,7 +323,7 @@ export class LCAJobManager {
       });
     } else {
       // If Redis is not available, use in-memory processing
-      console.log('Using in-memory LCA processor (Redis not available)');
+      
       
       // Process the job immediately using in-memory processor
       setImmediate(() => {
@@ -479,8 +479,8 @@ class InMemoryLCAProcessor {
         waterFootprint: results.totalWaterFootprint.toString(),
       });
 
-      console.log(`Simplified LCA calculation completed for product ${productId}`);
-      console.log(`Total Carbon Footprint: ${results.totalCarbonFootprint} kg CO2 eq`);
+      
+      
 
     } catch (error) {
       console.error('Simplified LCA calculation failed:', error);

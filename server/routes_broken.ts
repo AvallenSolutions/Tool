@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/supplier-products/:category?', async (req, res) => {
     try {
       const { category } = req.params;
-      console.log('🔍 Received supplier product category:', category);
+      
       
       const { db } = await import('./db');
       const { verifiedSuppliers, supplierProducts } = await import('../shared/schema');
@@ -557,7 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const products = await query;
-      console.log('✅ Found supplier products:', products.length);
+      
       res.json(products);
     } catch (error) {
       console.error("Error fetching supplier products:", error);
@@ -585,7 +585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/products', isAuthenticated, async (req: any, res) => {
     try {
-      console.log('📦 Creating product...');
+      
       const startTime = Date.now();
       
       const userId = req.user.claims.sub;
@@ -595,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Company not found" });
       }
       
-      console.log('🔍 Starting validation...');
+      
       const validationStart = Date.now();
       
       const validatedData = insertProductSchema.parse({
@@ -604,12 +604,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const validationTime = Date.now() - validationStart;
-      console.log(`✅ Validation completed in ${validationTime}ms`);
+      
       
       const product = await dbStorage.createProduct(validatedData);
       
       const endTime = Date.now();
-      console.log(`✅ Product created successfully in ${endTime - startTime}ms:`, product.name, 'ID:', product.id);
+      
       
       res.json(product);
     } catch (error) {
@@ -672,11 +672,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updates = req.body;
       
-      console.log('🛠️ Server received PATCH request for product:', productId);
-      console.log('📋 Update data received:', JSON.stringify(updates, null, 2));
+      
+      
       
       const product = await dbStorage.updateProduct(productId, updates);
-      console.log('✅ Product updated successfully:', product.name);
+      
       res.json(product);
     } catch (error) {
       console.error("Error updating product:", error);
@@ -791,11 +791,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      console.log('🔍 Reports API: User ID:', userId);
+      
       
       // Get all companies owned by user and find reports across all of them
       const allUserCompanies = await db.select().from(companies).where(eq(companies.ownerId, userId));
-      console.log('🔍 Reports API: User companies:', allUserCompanies.map(c => ({ id: c.id, name: c.name })));
+      
       
       const allReports = [];
       for (const company of allUserCompanies) {
@@ -803,7 +803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allReports.push(...companyReports);
       }
       
-      console.log('🔍 Reports API: Total reports found:', allReports.length);
+      
       
       res.json(allReports);
     } catch (error) {
@@ -847,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId
       });
 
-      console.log(`🚀 Queued enhanced report generation job ${job.id} for report ${reportId}`);
+      
 
       res.json({
         message: "Enhanced report generation started",
@@ -1003,7 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       // Log the received ID for debugging
-      console.log('🔍 Received supplier product ID:', id, 'Type:', typeof id);
+      
       
       // Check if ID is actually "[object Object]" string
       if (id === '[object Object]' || id === '[object%20Object]') {
@@ -1655,7 +1655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test routes for E2E validation
   app.get('/api/test/e2e', async (req, res) => {
     try {
-      console.log('🧪 Starting E2E Test Suite via API...');
+      
       const { runE2ETests } = await import('../scripts/test-runner');
       const result = await runE2ETests();
       
@@ -1678,7 +1678,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/test/seed', async (req, res) => {
     try {
-      console.log('🌱 Seeding test data via API...');
+      
       const { runTestSeeding } = await import('../scripts/test-seed');
       const result = await runTestSeeding();
       
@@ -1705,7 +1705,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/test/integrate', async (req, res) => {
     try {
-      console.log('🔗 Running integration test...');
+      
       const { completeIntegrationTest } = await import('../scripts/lca-integration');
       const result = await completeIntegrationTest();
       
@@ -1728,7 +1728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/test/validate', async (req, res) => {
     try {
-      console.log('🔍 Validating complete setup...');
+      
       const { validateCompleteSetup } = await import('../scripts/lca-integration');
       const result = await validateCompleteSetup();
       
@@ -1760,11 +1760,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log(`Starting web scraping for URL: ${url}`);
+      
       const result = await WebScrapingService.scrapeProductData(url);
 
       if (result.success) {
-        console.log(`Successfully extracted ${result.extractedFields.length} fields from ${url}`);
+        
         res.json({
           success: true,
           extractedData: result.data,
@@ -1773,7 +1773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           extractionRate: `${Math.round((result.extractedFields.length / result.totalFields) * 100)}%`
         });
       } else {
-        console.log(`Failed to extract data from ${url}: ${result.error}`);
+        
         res.status(400).json({
           success: false,
           error: result.error,
@@ -1806,8 +1806,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log(`Starting ${type} analysis for GreenwashGuardian`);
-      console.log(`Content to analyze: "${content}"`);
+      
+      
       
       let analysisContent = content;
       
@@ -1816,7 +1816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Add protocol if missing
           const url = content.startsWith('http') ? content : `https://${content}`;
-          console.log(`Scraping website content from: ${url}`);
+          
           
           const response = await fetch(url, {
             headers: {
@@ -1840,16 +1840,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (textContent.length > 100) {
               analysisContent = textContent;
-              console.log(`Successfully scraped ${analysisContent.length} characters from website`);
-              console.log(`Content preview: "${textContent.substring(0, 200)}..."`);
+              
+              
             } else {
-              console.log(`Insufficient website content (${textContent.length} chars), analyzing URL text instead`);
+              
             }
           } else {
-            console.log(`Website fetch failed (${response.status}), analyzing URL text instead`);
+            
           }
         } catch (error) {
-          console.log(`Website scraping error, analyzing URL text instead:`, error.message);
+          
         }
       }
       
@@ -1919,9 +1919,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       const responseText = response.content[0].type === 'text' ? response.content[0].text : '';
       const result = JSON.parse(responseText);
 
-      console.log(`Analysis result:`, JSON.stringify(result, null, 2));
-      console.log(`Issues found: ${result.issues?.length || 0}`);
-      console.log(`Successfully completed GreenwashGuardian analysis`);
+      
+      
+      
       res.json(result);
     } catch (error) {
       console.error('Error in GreenwashGuardian analysis:', error);
@@ -1949,14 +1949,14 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      console.log(`Starting PDF extraction for file: ${req.file.originalname}`);
+      
       const result = await PDFExtractionService.extractProductDataFromPDF(req.file.path, req.file.originalname);
 
       // Clean up uploaded file after processing
       fs.unlinkSync(req.file.path);
 
       if (result.success) {
-        console.log(`Successfully extracted ${result.extractedFields.length} fields from PDF: ${req.file.originalname}`);
+        
         res.json({
           success: true,
           extractedData: result.data,
@@ -1967,7 +1967,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           extractionRate: `${Math.round((result.extractedFields.length / result.totalFields) * 100)}%`
         });
       } else {
-        console.log(`Failed to extract data from PDF: ${req.file.originalname} - ${result.error}`);
+        
         res.status(400).json({
           success: false,
           error: result.error,

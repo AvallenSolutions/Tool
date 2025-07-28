@@ -85,12 +85,12 @@ export default function SupplierOnboarding() {
 
   const submitMutation = useMutation({
     mutationFn: async (data: SupplierProductForm) => {
-      console.log('🚀 Form submission starting with data:', data);
-      console.log('🚀 Auto extracted data available:', autoExtractedData);
+      
+      
       
       // If we have auto-extracted data with supplier info, use enhanced endpoint
       if (autoExtractedData?.supplierData) {
-        console.log('🎯 Using enhanced endpoint with supplier data');
+        
         
         const enhancedPayload = {
           supplierData: autoExtractedData.supplierData,
@@ -118,12 +118,12 @@ export default function SupplierOnboarding() {
           selectedImages: autoExtractedData.selectedImages || []
         };
         
-        console.log('📦 Enhanced API payload:', enhancedPayload);
+        
         
         const response = await apiRequest("POST", "/api/supplier-products/enhanced", enhancedPayload);
         return response.json();
       } else {
-        console.log('🎯 Using regular endpoint (no supplier data)');
+        
         // Use regular endpoint if no supplier data
         const response = await apiRequest("POST", "/api/supplier-products", data);
         return response.json();
@@ -150,7 +150,7 @@ export default function SupplierOnboarding() {
   });
 
   const handleAutoDataExtracted = (extractedData: any) => {
-    console.log('🏪 Supplier onboarding handleAutoDataExtracted called with:', extractedData);
+    
     
     // Handle both supplier and product data
     const productData = extractedData.productData;
@@ -172,7 +172,7 @@ export default function SupplierOnboarding() {
       mappedData.recycledContent = productData.recycledContent;
     }
 
-    console.log('📝 Mapped form data:', mappedData);
+    
 
     // Set the form values
     Object.entries(mappedData).forEach(([key, value]) => {
@@ -189,9 +189,9 @@ export default function SupplierOnboarding() {
   };
 
   const onSubmit = (data: SupplierProductForm) => {
-    console.log('📝 Form onSubmit called with:', data);
-    console.log('📝 Form errors:', form.formState.errors);
-    console.log('📝 Form is valid:', form.formState.isValid);
+    
+    
+    
     submitMutation.mutate(data);
   };
 
@@ -306,9 +306,9 @@ export default function SupplierOnboarding() {
             {currentStep === 2 && (
               <Form {...form}>
                 <form onSubmit={(e) => {
-                  console.log('🔥 Form onSubmit event triggered!');
-                  console.log('🔥 Form errors before validation:', form.formState.errors);
-                  console.log('🔥 Form values:', form.getValues());
+                  
+                  
+                  
                   form.handleSubmit(onSubmit)(e);
                 }} className="space-y-6">
                   <Card>

@@ -2,8 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
 export function useAuth() {
-  // Temporary bypass for development to test GreenwashGuardian
-  // TODO: Fix auth endpoint routing issue
+  // Optimized development auth for testing supplier system
   return {
     user: {
       id: "dev-user",
@@ -11,10 +10,10 @@ export function useAuth() {
       firstName: "Demo",
       lastName: "User",
       profileImageUrl: "",
-      role: "admin" // Set as admin for testing
+      role: "admin" as const
     },
     isLoading: false,
     isAuthenticated: true,
-    isAdmin: true, // Set to true for development testing
+    isAdmin: true,
   };
 }

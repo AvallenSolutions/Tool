@@ -120,8 +120,8 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      console.log(`Starting ${type} analysis for GreenwashGuardian`);
-      console.log(`Content to analyze: "${content.substring(0, 100)}..."`);
+      
+      
       
       let analysisContent = content;
       
@@ -130,7 +130,7 @@ export function registerRoutes(app: Express): Server {
         try {
           // Add protocol if missing
           const url = content.startsWith('http') ? content : `https://${content}`;
-          console.log(`Scraping website content from: ${url}`);
+          
           
           const response = await fetch(url, {
             headers: {
@@ -154,15 +154,15 @@ export function registerRoutes(app: Express): Server {
             
             if (textContent.length > 100) {
               analysisContent = textContent;
-              console.log(`Successfully scraped ${analysisContent.length} characters from website`);
+              
             } else {
-              console.log('Insufficient content scraped, using URL as fallback');
+              
             }
           } else {
-            console.log(`Website not accessible (${response.status}), analyzing URL text instead`);
+            
           }
         } catch (error) {
-          console.log(`Website scraping error, analyzing URL text instead:`, error.message);
+          
         }
       }
       
@@ -245,7 +245,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         cleanedJson = cleanedJson.substring(jsonStart, jsonEnd + 1);
       }
       
-      console.log('Attempting to parse JSON:', cleanedJson.substring(0, 500) + '...');
+      
       
       let result;
       try {
@@ -285,9 +285,9 @@ Be precise and quote actual text from the content, not generic terms.`;
         dmccCompliance: 'Needs Review'
       };
 
-      console.log(`Analysis result:`, JSON.stringify(result, null, 2));
-      console.log(`Issues found: ${result.issues?.length || 0}`);
-      console.log(`Successfully completed GreenwashGuardian analysis with AI`);
+      
+      
+      
       
       res.json(result);
     } catch (error) {
@@ -330,11 +330,11 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      console.log(`Starting web scraping for URL: ${url}`);
+      
       const result = await WebScrapingService.scrapeProductData(url);
 
       if (result.success) {
-        console.log(`Successfully extracted ${result.extractedFields.length} fields from ${url}`);
+        
         res.json({
           success: true,
           productData: result.productData,
@@ -345,7 +345,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           images: result.images || []
         });
       } else {
-        console.log(`Failed to extract data from ${url}: ${result.error}`);
+        
         res.status(400).json({
           success: false,
           error: result.error,
@@ -372,14 +372,14 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      console.log(`Processing ${req.files.length} uploaded images`);
+      
       
       const imageUrls: string[] = [];
       for (const file of req.files) {
         // Generate public URL for the image
         const imageUrl = `/uploads/images/${file.filename}`;
         imageUrls.push(imageUrl);
-        console.log(`Image saved: ${imageUrl}`);
+        
       }
 
       res.json({
@@ -404,10 +404,10 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       const { supplierData, productData, selectedImages } = req.body;
 
-      console.log('🔍 Enhanced endpoint received data:');
-      console.log('supplierData:', JSON.stringify(supplierData, null, 2));
-      console.log('productData:', JSON.stringify(productData, null, 2));
-      console.log('selectedImages:', selectedImages);
+      
+      
+      
+      
 
       if (!supplierData && !productData) {
         return res.status(400).json({ 
@@ -425,8 +425,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         selectedImages: selectedImages || []
       });
 
-      console.log(`${result.isNewSupplier ? 'Created new' : 'Used existing'} supplier: ${result.supplierId}`);
-      console.log(`Created product: ${result.productId}`);
+      
+      
 
       res.json({
         success: true,
@@ -461,12 +461,12 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      console.log(`Starting bulk import from catalog: ${catalogUrl}`);
+      
       
       const bulkImportService = new BulkImportService();
       const result = await bulkImportService.processCatalogPage(catalogUrl);
 
-      console.log(`Bulk import completed: ${result.suppliersCreated} suppliers, ${result.productsCreated} products, ${result.errors.length} errors`);
+      
 
       res.json({
         success: true,
@@ -501,7 +501,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      console.log(`Updating supplier: ${id} with data:`, updateData);
+      
 
       // Update supplier in database
       const { verifiedSuppliers } = await import('@shared/schema');
@@ -521,7 +521,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      console.log(`Successfully updated supplier: ${id}`);
+      
 
       res.json({
         success: true,
@@ -567,7 +567,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         .from(supplierProducts)
         .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id));
       
-      console.log(`✅ Found ${products.length} supplier products for admin management`);
+      
       res.json(products);
     } catch (error) {
       console.error("Error fetching admin supplier products:", error);
@@ -581,7 +581,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       const { id } = req.params;
       const updateData = req.body;
 
-      console.log(`Updating supplier product: ${id} with data:`, updateData);
+      
 
       const { supplierProducts } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
@@ -602,7 +602,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      console.log(`Successfully updated supplier product: ${id}`);
+      
 
       res.json({
         success: true,
@@ -853,7 +853,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
       
       const products = await query;
-      console.log(`✅ Found ${products.length} verified supplier products`);
+      
       res.json(products);
     } catch (error) {
       console.error("Error fetching supplier products:", error);

@@ -46,13 +46,13 @@ export class BulkImportService {
     };
 
     try {
-      console.log(`Starting bulk import from: ${catalogUrl}`);
+      
       
       // Step 1: Discover product links from catalog page
       const productLinks = await this.discoverProductLinks(catalogUrl);
       result.linksScraped = productLinks.length;
       
-      console.log(`Found ${productLinks.length} product links`);
+      
 
       // Step 2: Process each product link
       for (const link of productLinks) {
@@ -65,7 +65,7 @@ export class BulkImportService {
         }
       }
 
-      console.log(`Bulk import completed: ${result.suppliersCreated} suppliers, ${result.productsCreated} products`);
+      
       return result;
 
     } catch (error) {
@@ -107,9 +107,9 @@ export class BulkImportService {
   private async discoverVeralliaLinks($: cheerio.CheerioAPI, baseUrl: string): Promise<ProductLink[]> {
     const links: ProductLink[] = [];
 
-    console.log('Analyzing Verallia spirits range page structure...');
-    console.log(`- Total links on page: ${$('a').length}`);
-    console.log(`- Total images on page: ${$('img').length}`);
+    
+    
+    
 
     // Debug: Show sample of all links found
     const allHrefs: string[] = [];
@@ -117,7 +117,7 @@ export class BulkImportService {
       const href = $(element).attr('href');
       if (href) allHrefs.push(href);
     });
-    console.log('Sample of all links found:', allHrefs.slice(0, 10));
+    
 
     // For Verallia, try different approach - look for any links that could be products
     const allLinks: string[] = [];
@@ -160,18 +160,18 @@ export class BulkImportService {
       }
     });
 
-    console.log(`Found ${allLinks.length} potentially relevant links`);
+    
     
     // If still no links, be even more permissive
     if (allLinks.length === 0) {
-      console.log('No specific links found, trying broader search...');
+      
       $('a[href*="wp-content"], a[href*=".pdf"], a[href*="catalogue"]').each((_, element) => {
         const href = $(element).attr('href');
         if (href && href.trim()) {
           allLinks.push(href);
         }
       });
-      console.log(`Broader search found ${allLinks.length} links`);
+      
     }
 
     // Filter out unwanted links (Instagram, external sites, etc.)
@@ -188,7 +188,7 @@ export class BulkImportService {
              href.length > 10; // Skip very short links
     });
 
-    console.log(`After filtering: ${filteredLinks.length} relevant links`);
+    
 
     // Process filtered links
     filteredLinks.forEach(href => {
@@ -230,9 +230,9 @@ export class BulkImportService {
       }
     });
 
-    console.log(`Final result: ${links.length} product links discovered`);
+    
     links.slice(0, 5).forEach((link, i) => {
-      console.log(`  ${i + 1}. [${link.type}] ${link.title} - ${link.url}`);
+      
     });
 
     return links;

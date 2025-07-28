@@ -42,7 +42,7 @@ export class SupplierDataCaptureService {
     adminUserId: string
   ) {
     try {
-      console.log(`🏢 Admin ${adminUserId} submitting supplier: ${supplierData.supplierName}`);
+      
       
       // Geocode the address if provided
       let coordinates: { latitude: number; longitude: number } | null = null;
@@ -117,7 +117,7 @@ export class SupplierDataCaptureService {
         }
       }
       
-      console.log(`✅ Admin submission successful: ${supplier.supplierName} with ${products.length} products`);
+      
       
       return { supplier, products };
       
@@ -135,7 +135,7 @@ export class SupplierDataCaptureService {
     supplierUserId: string
   ) {
     try {
-      console.log(`🏭 Supplier ${supplierUserId} self-submitting: ${supplierData.supplierName}`);
+      
       
       // Geocode the address if provided
       let coordinates: { latitude: number; longitude: number } | null = null;
@@ -206,7 +206,7 @@ export class SupplierDataCaptureService {
         }
       }
       
-      console.log(`📋 Supplier self-submission pending review: ${supplier.supplierName} with ${products.length} products`);
+      
       
       // TODO: Send admin notification for review
       
@@ -227,7 +227,7 @@ export class SupplierDataCaptureService {
     clientCompanyId: number
   ) {
     try {
-      console.log(`🏢 Client company ${clientCompanyId} submitting supplier: ${supplierData.supplierName}`);
+      
       
       // Geocode the address if provided
       let coordinates: { latitude: number; longitude: number } | null = null;
@@ -300,7 +300,7 @@ export class SupplierDataCaptureService {
         }
       }
       
-      console.log(`✅ Client submission successful: ${supplier.supplierName} with ${products.length} products (company ${clientCompanyId})`);
+      
       
       // TODO: Send admin notification for potential outreach
       

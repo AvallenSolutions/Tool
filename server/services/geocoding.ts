@@ -46,7 +46,7 @@ export class GeocodingService {
         addressdetails: '1'
       });
       
-      console.log(`🌍 Geocoding address: ${addressQuery}`);
+      
       
       const response = await fetch(url, {
         headers: {
@@ -73,7 +73,7 @@ export class GeocodingService {
         throw new Error('Invalid coordinates returned from geocoding service');
       }
       
-      console.log(`✅ Geocoded "${addressQuery}" -> ${latitude}, ${longitude}`);
+      
       
       return {
         latitude,

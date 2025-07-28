@@ -10,7 +10,7 @@ const router = Router();
  */
 router.get('/e2e', async (req, res) => {
   try {
-    console.log('🧪 Starting E2E Test Suite via API...');
+    
     
     const result = await runE2ETests();
     
@@ -37,7 +37,7 @@ router.get('/e2e', async (req, res) => {
  */
 router.post('/seed', async (req, res) => {
   try {
-    console.log('🌱 Seeding test data via API...');
+    
     
     const result = await runTestSeeding();
     

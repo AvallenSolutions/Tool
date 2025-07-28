@@ -97,13 +97,13 @@ export default function EditableDataPreview({
   });
 
   const onSubmit = (data: EditableDataForm) => {
-    console.log('🎯 EditableDataPreview onSubmit called with data:', data);
-    console.log('🎯 Selected photos:', selectedPhotos);
+    
+    
     const approvedData = {
       ...data,
       selectedPhotos
     };
-    console.log('🎯 Final approved data being sent:', approvedData);
+    
     onApprove(approvedData);
   };
 

@@ -201,14 +201,14 @@ export class OpenLCAClient {
     try {
       // Only test connection if server URL is properly configured
       if (!this.baseUrl || this.baseUrl === 'http://localhost:8080') {
-        console.log('OpenLCA server URL not configured or using default localhost - skipping connection test');
+        
         return false;
       }
       
       await this.jsonRpcRequest('ping');
       return true;
     } catch (error) {
-      console.log('OpenLCA connection failed (this is expected if OpenLCA is not running):', error.message);
+      
       return false;
     }
   }
@@ -334,12 +334,12 @@ export class OpenLCAUtils {
     const databaseId = process.env.OPENLCA_DATABASE_ID;
 
     if (!serverUrl || serverUrl === 'http://localhost:8080') {
-      console.log('OPENLCA_SERVER_URL not configured or using default localhost');
+      
       return false;
     }
 
     if (!databaseId) {
-      console.log('OPENLCA_DATABASE_ID not configured, using default');
+      
     }
 
     return true;

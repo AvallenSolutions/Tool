@@ -34,7 +34,7 @@ class SimpleJobQueue {
       
       job.status = 'completed';
       job.result = result;
-      console.log(`✅ Job ${jobId} completed successfully`);
+      
     } catch (error) {
       job.status = 'failed';
       job.error = error;
@@ -66,12 +66,12 @@ export class EnhancedReportJobProcessor {
       job.progress(20);
 
       // Aggregate all necessary data
-      console.log(`🔄 Aggregating data for enhanced report ${reportId}...`);
+      
       const reportData = await ReportDataProcessor.aggregateReportData(reportId);
       job.progress(40);
 
       // Generate the enhanced PDF
-      console.log(`🔄 Generating enhanced PDF for report ${reportId}...`);
+      
       const pdfBuffer = await this.pdfService.generateEnhancedLCAPDF(reportData);
       job.progress(80);
 
@@ -94,7 +94,7 @@ export class EnhancedReportJobProcessor {
       await ReportDataProcessor.updateReportStatus(reportId, 'completed', relativePath);
       job.progress(100);
 
-      console.log(`✅ Enhanced report ${reportId} generated successfully: ${relativePath}`);
+      
       return relativePath;
 
     } catch (error) {

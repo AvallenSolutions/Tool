@@ -28,7 +28,7 @@ export class LCAService {
                            process.env.OPENLCA_SERVER_URL !== 'http://localhost:8080';
       
       if (!hasValidConfig) {
-        console.log('OpenLCA not configured - LCA service will run in mock mode');
+        
         this.initialized = true;
         return;
       }
@@ -53,10 +53,10 @@ export class LCAService {
 
       // Get database info
       const dbInfo = await openLCAClient.getDatabaseInfo();
-      console.log('Connected to OpenLCA database:', dbInfo.name || 'Unknown');
+      
 
       this.initialized = true;
-      console.log('LCA service initialized successfully with OpenLCA');
+      
     } catch (error) {
       console.warn('LCA service initialization failed, running in mock mode:', error.message);
       this.initialized = true;

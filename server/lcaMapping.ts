@@ -31,7 +31,7 @@ export class LCAMappingService {
         this.processMappingCache.get(key)!.push(mapping);
       }
 
-      console.log(`Initialized LCA mapping service with ${flowMappings.length} flow mappings and ${processMappings.length} process mappings`);
+      
     } catch (error) {
       console.error('Error initializing LCA mapping service:', error);
     }

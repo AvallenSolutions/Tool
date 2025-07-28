@@ -42,7 +42,7 @@ app.use((req, res, next) => {
   // Initialize LCA service (graceful fallback if OpenLCA not available)
   try {
     await lcaService.initialize();
-    console.log("LCA service initialized successfully");
+    
   } catch (error) {
     console.warn("LCA service initialization failed (OpenLCA may not be available):", error.message);
   }

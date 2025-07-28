@@ -3,7 +3,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useLocation, useRoute } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import EnhancedProductForm from '@/components/products/EnhancedProductForm';
+import OptimizedProductForm from '@/components/products/OptimizedProductForm';
 import { LoadingTimerPopup } from '@/components/ui/loading-timer-popup';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ export default function CreateEnhancedProduct() {
       const response = await apiRequest("GET", `/api/products/${productId}`);
       return response.json();
     },
-    enabled: isEditMode && !!productId,
+    enabled: Boolean(isEditMode && productId),
   });
 
   const createProductMutation = useMutation({
@@ -50,7 +50,7 @@ export default function CreateEnhancedProduct() {
       return response.json();
     },
     onSuccess: (product) => {
-      console.log('✅ Product saved successfully:', product);
+      
       
       // Ensure navigation state is cleared
       setIsNavigating(false);
@@ -76,8 +76,8 @@ export default function CreateEnhancedProduct() {
           return;
         } else {
           // Stay on enhanced form page after creation instead of navigating away
-          console.log(`✅ Product created successfully: ${product.name} (ID: ${product.id})`);
-          console.log(`📍 Staying on enhanced form page to allow further editing/viewing`);
+          
+          
           // No navigation - user stays on the enhanced form page
         }
       } catch (error) {
@@ -105,11 +105,11 @@ export default function CreateEnhancedProduct() {
   });
 
   const handleSubmit = (data: any) => {
-    console.log('🔄 Form submitted with data:', data);
+    
     
     // Prevent double submission
     if (createProductMutation.isPending) {
-      console.log('⚠️ Submission already in progress, ignoring duplicate request');
+      
       return;
     }
     
@@ -202,8 +202,8 @@ export default function CreateEnhancedProduct() {
     };
     
     const transformTime = Date.now() - startTime;
-    console.log(`📊 Data transformation completed in ${transformTime}ms`);
-    console.log('📤 Sending transformed data to API:', transformedData);
+    
+    
     
     createProductMutation.mutate(transformedData);
   };
@@ -245,12 +245,10 @@ export default function CreateEnhancedProduct() {
         </div>
       </div>
 
-      <EnhancedProductForm
+      <OptimizedProductForm
         initialData={existingProduct}
         onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        mode={isEditMode ? "edit" : "create"}
-        isSubmitting={createProductMutation.isPending}
+        isEditing={Boolean(isEditMode)}
       />
       
       {/* Loading Timer Popup */}
