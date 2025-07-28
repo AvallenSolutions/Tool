@@ -903,10 +903,23 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.get('/api/verified-suppliers', async (req, res) => {
     try {
       const { verifiedSuppliers } = await import('@shared/schema');
-      const suppliers = await db
+      const { eq, and } = await import('drizzle-orm');
+      
+      const category = req.query.category as string;
+      
+      let query = db
         .select()
         .from(verifiedSuppliers)
-        .orderBy(verifiedSuppliers.supplierName);
+        .where(eq(verifiedSuppliers.isVerified, true));
+        
+      if (category) {
+        query = query.where(and(
+          eq(verifiedSuppliers.isVerified, true),
+          eq(verifiedSuppliers.supplierCategory, category)
+        ));
+      }
+      
+      const suppliers = await query.orderBy(verifiedSuppliers.supplierName);
 
       res.json(suppliers);
     } catch (error) {
