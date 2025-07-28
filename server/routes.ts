@@ -908,6 +908,103 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Supplier Product endpoints
+  app.get('/api/supplier-products', async (req, res) => {
+    try {
+      const { supplierProducts, verifiedSuppliers } = await import('@shared/schema');
+      const { eq, and } = await import('drizzle-orm');
+      
+      const category = req.query.category as string;
+      const supplierId = req.query.supplier as string;
+      
+      const query = db
+        .select({
+          id: supplierProducts.id,
+          name: supplierProducts.name,
+          sku: supplierProducts.sku,
+          type: supplierProducts.type,
+          material: supplierProducts.material,
+          weight: supplierProducts.weight,
+          recycledContent: supplierProducts.recycledContent,
+          description: supplierProducts.description,
+          co2Emissions: supplierProducts.co2Emissions,
+          lcaDocumentUrl: supplierProducts.lcaDocumentUrl,
+          certifications: supplierProducts.certifications,
+          unit: supplierProducts.unit,
+          measurement: supplierProducts.measurement,
+          volume: supplierProducts.volume,
+          imageUrls: supplierProducts.imageUrls,
+          supplierId: supplierProducts.supplierId,
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory,
+          isVerified: supplierProducts.isVerified,
+          createdAt: supplierProducts.createdAt
+        })
+        .from(supplierProducts)
+        .leftJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id));
+
+      // Apply filters based on query parameters
+      const conditions = [
+        eq(supplierProducts.isVerified, true),
+        eq(verifiedSuppliers.isVerified, true)
+      ];
+      
+      if (supplierId) {
+        conditions.push(eq(supplierProducts.supplierId, supplierId));
+      }
+        
+      if (category) {
+        conditions.push(eq(verifiedSuppliers.supplierCategory, category as string));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      const products = await query;
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching supplier products:', error);
+      res.status(500).json({ error: 'Failed to fetch supplier products' });
+    }
+  });
+
+  app.post('/api/supplier-products', async (req, res) => {
+    try {
+      const { supplierProducts } = await import('@shared/schema');
+      
+      const productData = {
+        name: req.body.name,
+        sku: req.body.sku || `SKU-${Date.now()}`,
+        type: req.body.type,
+        material: req.body.material || null,
+        weight: req.body.weight || null,
+        recycledContent: req.body.recycledContent || null,
+        description: req.body.description || null,
+        co2Emissions: req.body.co2Emissions || null,
+        lcaDocumentUrl: req.body.lcaDocumentUrl || null,
+        certifications: req.body.certifications || null,
+        unit: req.body.unit || null,
+        measurement: req.body.measurement || null,
+        volume: req.body.volume || null,
+        imageUrls: req.body.imageUrls || [],
+        supplierId: req.body.supplierId,
+        submittedBy: 'CLIENT',
+        isVerified: true // Auto-approve for now
+      };
+
+      const [newProduct] = await db
+        .insert(supplierProducts)
+        .values(productData)
+        .returning();
+
+      res.json(newProduct);
+    } catch (error) {
+      console.error('Error creating supplier product:', error);
+      res.status(500).json({ error: 'Failed to create supplier product' });
+    }
+  });
+
   // Register admin routes
   app.use('/api/admin', adminRouter);
 
