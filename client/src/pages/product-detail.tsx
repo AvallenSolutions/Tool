@@ -67,18 +67,23 @@ export default function ProductDetail() {
     retry: false,
   });
 
-  // Create LCA mutation
+  // Create LCA mutation with job tracking
   const createLCAMutation = useMutation({
     mutationFn: async (productId: string) => {
       const response = await apiRequest("POST", `/api/products/${productId}/lca`, {});
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || 'LCA calculation failed');
+      }
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products", id] });
+      console.log('LCA calculation started:', data);
+      queryClient.invalidateQueries({ queryKey: ["/api/lca/product", id, "history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "LCA Calculation Started",
-        description: `Environmental impact calculation for ${product?.name} is now in progress.`,
+        description: `Environmental impact calculation for ${product?.name} is now in progress. This will take about ${Math.round(data.estimatedDuration / 60)} minutes.`,
       });
     },
     onError: (error) => {
@@ -96,7 +101,7 @@ export default function ProductDetail() {
       console.error("Error creating LCA:", error);
       toast({
         title: "LCA Calculation Failed",
-        description: "Failed to start environmental impact calculation. Please try again.",
+        description: error.message || "Failed to start environmental impact calculation. Please try again.",
         variant: "destructive",
       });
     },

@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
-import { lcaService, LCAJobManager } from "./lca";
+import { simpleLcaService } from "./simpleLca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
@@ -1311,7 +1311,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      const result = await lcaService.calculateProductLCA(productId, req.body.options);
+      const result = await simpleLcaService.calculateProductLCA(productId, req.body.options);
       
       res.json({
         success: true,
@@ -1332,7 +1332,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Get LCA service status
   app.get('/api/lca/status', async (req, res) => {
     try {
-      const status = await lcaService.getServiceStatus();
+      const status = await simpleLcaService.getServiceStatus();
       res.json(status);
     } catch (error) {
       console.error('Error getting LCA service status:', error);
@@ -1355,7 +1355,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      const result = await lcaService.calculateProductLCA(productId, req.body.options);
+      const result = await simpleLcaService.calculateProductLCA(productId, req.body.options);
       res.json(result);
     } catch (error) {
       console.error('Error starting LCA calculation:', error);
@@ -1371,7 +1371,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.get('/api/lca/calculation/:jobId', async (req, res) => {
     try {
       const { jobId } = req.params;
-      const status = await lcaService.getCalculationStatus(jobId);
+      const status = await simpleLcaService.getCalculationStatus(jobId);
       res.json(status);
     } catch (error) {
       console.error('Error getting LCA calculation status:', error);
@@ -1386,7 +1386,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.delete('/api/lca/calculation/:jobId', async (req, res) => {
     try {
       const { jobId } = req.params;
-      const success = await lcaService.cancelCalculation(jobId);
+      const success = await simpleLcaService.cancelCalculation(jobId);
       res.json({ success });
     } catch (error) {
       console.error('Error cancelling LCA calculation:', error);
@@ -1409,7 +1409,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      const history = await lcaService.getProductLCAHistory(productId);
+      const history = await simpleLcaService.getProductLCAHistory(productId);
       res.json(history);
     } catch (error) {
       console.error('Error getting LCA history:', error);
@@ -1432,7 +1432,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      const validation = await lcaService.validateProductForLCA(productId);
+      const validation = await simpleLcaService.validateProductForLCA(productId);
       res.json(validation);
     } catch (error) {
       console.error('Error validating product for LCA:', error);
@@ -1446,7 +1446,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Get available impact methods
   app.get('/api/lca/impact-methods', async (req, res) => {
     try {
-      const methods = await lcaService.getAvailableImpactMethods();
+      const methods = await simpleLcaService.getAvailableImpactMethods();
       res.json(methods);
     } catch (error) {
       console.error('Error getting impact methods:', error);
@@ -1469,7 +1469,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
-      const pdfBuffer = await lcaService.generatePDFReport(productId);
+      const pdfBuffer = await simpleLcaService.generatePDFReport(productId);
       
       res.set({
         'Content-Type': 'application/pdf',

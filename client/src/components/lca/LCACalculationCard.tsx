@@ -55,9 +55,10 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
   const queryClient = useQueryClient();
 
   // Fetch LCA history for this product
-  const { data: lcaHistory, isLoading: historyLoading } = useQuery({
+  const { data: lcaHistory = [], isLoading: historyLoading } = useQuery<LCAJob[]>({
     queryKey: ["/api/lca/product", product.id, "history"],
     refetchInterval: currentJobId ? 2000 : false, // Poll every 2 seconds if job is running
+    retry: false,
   });
 
   // Fetch current job status
@@ -65,12 +66,13 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
     queryKey: ["/api/lca/calculation", currentJobId],
     enabled: !!currentJobId,
     refetchInterval: currentJobId ? 2000 : false,
+    retry: false,
   });
 
-  // Fetch product validation - disable for now to prevent unauthorized errors on every page
-  const { data: validation } = useQuery({
+  // Fetch product validation with proper error handling
+  const { data: validation = { valid: true, errors: [], warnings: [] } } = useQuery({
     queryKey: ["/api/lca/product", product.id, "validate"],
-    enabled: false, // Completely disable this query for now
+    enabled: true,
     retry: false,
     retryOnMount: false,
     refetchOnWindowFocus: false,

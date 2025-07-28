@@ -371,33 +371,113 @@ This is a mock PDF report. In production, this would be a properly formatted PDF
     }
   }
 
-  // Mock methods to satisfy storage interface requirements
-  async getLcaCalculationJobByJobId(jobId: string): Promise<any> {
+  // Start LCA calculation with proper job tracking
+  async calculateProductLCA(productId: number, options: any = {}): Promise<{ jobId: string; estimatedDuration: number }> {
     try {
-      // For now, return a mock job structure
-      return {
-        id: 1,
-        jobId: jobId,
-        productId: 35,
-        status: 'completed',
-        progress: 100,
-        results: {
-          totalCarbonFootprint: 2.5,
-          totalWaterFootprint: 15.2,
+      const product = await storage.getProductById(productId);
+      if (!product) {
+        throw new Error(`Product not found: ${productId}`);
+      }
+
+      // Create a unique job ID
+      const jobId = `lca-${productId}-${Date.now()}`;
+      
+      // For now, simulate the calculation with mock progress
+      setTimeout(async () => {
+        // Simulate calculation completion
+        const mockResults = {
+          totalCarbonFootprint: Math.random() * 5 + 1, // 1-6 kg CO2e
+          totalWaterFootprint: Math.random() * 20 + 5, // 5-25 L
           impactsByCategory: [
-            { category: 'Climate Change', impact: 2.5, unit: 'kg CO2e' },
-            { category: 'Water Use', impact: 15.2, unit: 'L' }
-          ]
-        },
-        errorMessage: null,
-        createdAt: new Date(),
-        completedAt: new Date(),
-        olcaSystemId: 'mock-system-id',
+            { category: 'Climate Change', impact: Math.random() * 3 + 1, unit: 'kg CO2e' },
+            { category: 'Water Use', impact: Math.random() * 15 + 5, unit: 'L' },
+            { category: 'Land Use', impact: Math.random() * 2, unit: 'm²' }
+          ],
+          calculationDate: new Date().toISOString()
+        };
+
+        // Store completed job
+        try {
+          await storage.createLcaCalculationJob({
+            jobId,
+            productId,
+            status: 'completed',
+            progress: 100,
+            results: mockResults,
+            olcaSystemId: 'mock-system',
+            olcaSystemName: 'Mock LCA System'
+          });
+          console.log(`LCA calculation completed for product ${productId}, job ${jobId}`);
+        } catch (error) {
+          console.error('Error storing LCA job:', error);
+        }
+      }, 3000); // Complete after 3 seconds
+
+      // Store initial job
+      await storage.createLcaCalculationJob({
+        jobId,
+        productId,
+        status: 'processing',
+        progress: 0,
+        olcaSystemId: 'mock-system',
         olcaSystemName: 'Mock LCA System'
+      });
+
+      return {
+        jobId,
+        estimatedDuration: this.estimateCalculationDuration(product)
       };
     } catch (error) {
-      console.error('Error getting LCA calculation job by job ID:', error);
-      return null;
+      console.error('Error starting LCA calculation:', error);
+      throw new Error(`Failed to start LCA calculation: ${(error as Error).message}`);
+    }
+  }
+
+  // Get LCA calculation status with proper progress tracking
+  async getCalculationStatus(jobId: string): Promise<{
+    status: string;
+    progress: number;
+    results?: any;
+    errorMessage?: string;
+    estimatedTimeRemaining?: number;
+  }> {
+    try {
+      const job = await storage.getLcaCalculationJobByJobId(jobId);
+      if (!job) {
+        throw new Error(`Job not found: ${jobId}`);
+      }
+
+      return {
+        status: job.status || 'unknown',
+        progress: job.progress || 0,
+        results: job.results,
+        errorMessage: job.errorMessage || undefined,
+        estimatedTimeRemaining: job.status === 'processing' ? 30 : 0
+      };
+    } catch (error) {
+      console.error('Error getting calculation status:', error);
+      throw new Error(`Failed to get calculation status: ${(error as Error).message}`);
+    }
+  }
+
+  // Get product LCA history with proper typing
+  async getProductLCAHistory(productId: number): Promise<any[]> {
+    try {
+      const jobs = await storage.getLcaCalculationJobsByProduct(productId);
+      return jobs.map(job => ({
+        id: job.id,
+        jobId: job.jobId,
+        status: job.status,
+        progress: job.progress,
+        results: job.results,
+        createdAt: job.createdAt,
+        completedAt: job.completedAt,
+        olcaSystemId: job.olcaSystemId,
+        olcaSystemName: job.olcaSystemName,
+      }));
+    } catch (error) {
+      console.error('Error getting product LCA history:', error);
+      return [];
     }
   }
 }

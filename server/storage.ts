@@ -651,12 +651,13 @@ export class DatabaseStorage implements IStorage {
     return job;
   }
 
-  async getLcaCalculationJobByJobId(jobId: string): Promise<LcaCalculationJob | undefined> {
-    const [job] = await db
-      .select()
-      .from(lcaCalculationJobs)
-      .where(eq(lcaCalculationJobs.jobId, jobId));
-    return job;
+  async updateLcaCalculationJob(jobId: string, updates: Partial<InsertLcaCalculationJob>): Promise<LcaCalculationJob | undefined> {
+    const [updatedJob] = await db
+      .update(lcaCalculationJobs)
+      .set(updates)
+      .where(eq(lcaCalculationJobs.jobId, jobId))
+      .returning();
+    return updatedJob;
   }
 
   // LCA Questionnaire operations
