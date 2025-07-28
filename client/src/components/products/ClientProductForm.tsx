@@ -64,6 +64,7 @@ const PRODUCT_COMPONENT_CATEGORIES = [
 ];
 
 export default function ClientProductForm({ onSuccess }: { onSuccess?: () => void }) {
+  console.log('ClientProductForm component rendered');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedComponents, setSelectedComponents] = useState<SelectedComponent[]>([]);
@@ -85,9 +86,15 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
   });
 
   // Fetch supplier products for component selection
-  const { data: supplierProducts = [], isLoading: supplierProductsLoading } = useQuery<SupplierProduct[]>({
+  const { data: supplierProducts = [], isLoading: supplierProductsLoading, error: supplierProductsError } = useQuery<SupplierProduct[]>({
     queryKey: ['/api/supplier-products'],
+    retry: false,
   });
+
+  // Debug logging
+  console.log('Supplier products loading:', supplierProductsLoading);
+  console.log('Supplier products data:', supplierProducts);
+  console.log('Supplier products error:', supplierProductsError);
 
   const createProductMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -194,7 +201,7 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
   const environmentalImpact = calculateTotalEnvironmentalImpact();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-1">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

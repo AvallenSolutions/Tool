@@ -108,7 +108,9 @@ export default function ProductsPage() {
                     <DialogHeader>
                       <DialogTitle>Create New Product</DialogTitle>
                     </DialogHeader>
-                    <ClientProductForm onSuccess={handleCreateSuccess} />
+                    <div className="max-h-[75vh] overflow-y-auto pr-2">
+                      <ClientProductForm onSuccess={handleCreateSuccess} />
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -161,7 +163,9 @@ export default function ProductsPage() {
                       <DialogHeader>
                         <DialogTitle>Create New Product</DialogTitle>
                       </DialogHeader>
-                      <ClientProductForm onSuccess={handleCreateSuccess} />
+                      <div className="max-h-[75vh] overflow-y-auto pr-2">
+                        <ClientProductForm onSuccess={handleCreateSuccess} />
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </div>
