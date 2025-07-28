@@ -105,7 +105,7 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Client product created successfully with selected components",
+        description: "Product created successfully with selected components",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       form.reset();
@@ -115,7 +115,7 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
     onError: (error: any) => {
       toast({
         title: "Error", 
-        description: error.message || "Failed to create client product",
+        description: error.message || "Failed to create product",
         variant: "destructive",
       });
     },
@@ -199,7 +199,7 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
-            Create Client Product
+            Create Product
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -568,7 +568,7 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
           ) : (
             <>
               <Package className="w-4 h-4 mr-2" />
-              Create Client Product
+              Create Product
             </>
           )}
         </Button>

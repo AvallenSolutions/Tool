@@ -49,7 +49,7 @@ export default function ProductsPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       toast({
         title: "Product Deleted",
-        description: "Client product has been successfully removed from your catalog.",
+        description: "Product has been successfully removed from your catalog.",
       });
     },
     onError: (error: any) => {
@@ -71,7 +71,7 @@ export default function ProductsPage() {
     setShowCreateForm(false);
     toast({
       title: "Success",
-      description: "Client product created successfully",
+      description: "Product created successfully",
     });
   };
 
@@ -81,16 +81,16 @@ export default function ProductsPage() {
       <div className="flex-1 flex flex-col">
         <Header 
           title="Products" 
-          subtitle="Manage your client product catalog and track environmental footprints" 
+          subtitle="Manage your product catalog and track environmental footprints" 
         />
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Header Section */}
           <div className="mb-6 p-4 bg-gradient-to-r from-avallen-green/10 to-avallen-green/5 border border-avallen-green/20 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-gray mb-2">Client Product Management</h3>
+                <h3 className="text-lg font-semibold text-slate-gray mb-2">Product Management</h3>
                 <p className="text-sm text-gray-600">
-                  Create and manage your final products by combining supplier components for comprehensive environmental impact assessment
+                  Create and manage your products by combining supplier components for comprehensive environmental impact assessment
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -101,12 +101,12 @@ export default function ProductsPage() {
                       className="hover:bg-green-600 text-white font-medium px-6 py-2 shadow-md border-2"
                     >
                       <Package className="w-4 h-4 mr-2" />
-                      Create Client Product
+                      Create Product
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Create New Client Product</DialogTitle>
+                      <DialogTitle>Create New Product</DialogTitle>
                     </DialogHeader>
                     <ClientProductForm onSuccess={handleCreateSuccess} />
                   </DialogContent>
@@ -122,10 +122,10 @@ export default function ProductsPage() {
                 <div>
                   <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
                     <Package className="w-5 h-5" />
-                    Client Products
+                    Products
                   </CardTitle>
                   <p className="text-sm text-gray-500 mt-1">
-                    Final products built from supplier components with complete environmental impact tracking
+                    Your products built from supplier components with complete environmental impact tracking
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -144,9 +144,9 @@ export default function ProductsPage() {
               ) : products.length === 0 ? (
                 <div className="text-center py-12">
                   <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-slate-gray mb-2">No Client Products Yet</h3>
+                  <h3 className="text-lg font-medium text-slate-gray mb-2">No Products Yet</h3>
                   <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                    Create your first client product by selecting supplier components like bottles, ingredients, labels, and packaging to build a complete environmental impact profile.
+                    Create your first product by selecting supplier components like bottles, ingredients, labels, and packaging to build a complete environmental impact profile.
                   </p>
                   <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
                     <DialogTrigger asChild>
@@ -159,7 +159,7 @@ export default function ProductsPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>Create New Client Product</DialogTitle>
+                        <DialogTitle>Create New Product</DialogTitle>
                       </DialogHeader>
                       <ClientProductForm onSuccess={handleCreateSuccess} />
                     </DialogContent>

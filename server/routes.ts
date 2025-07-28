@@ -1074,8 +1074,8 @@ Be precise and quote actual text from the content, not generic terms.`;
 
       res.json({ ...newProduct, componentCount: req.body.components?.length || 0 });
     } catch (error) {
-      console.error('Error creating client product:', error);
-      res.status(500).json({ error: 'Failed to create client product' });
+      console.error('Error creating product:', error);
+      res.status(500).json({ error: 'Failed to create product' });
     }
   });
 
