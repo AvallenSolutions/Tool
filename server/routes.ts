@@ -835,21 +835,22 @@ Be precise and quote actual text from the content, not generic terms.`;
           eq(verifiedSuppliers.isVerified, true)
         ));
         
+      // Apply filters based on query parameters
+      const conditions = [
+        eq(supplierProducts.isVerified, true),
+        eq(verifiedSuppliers.isVerified, true)
+      ];
+      
       if (req.query.supplier) {
-        const { and: andOp } = await import('drizzle-orm');
-        query = query.where(andOp(
-          eq(supplierProducts.isVerified, true),
-          eq(verifiedSuppliers.isVerified, true),
-          eq(supplierProducts.supplierId, req.query.supplier as string)
-        ));
+        conditions.push(eq(supplierProducts.supplierId, req.query.supplier as string));
       }
         
       if (category) {
-        query = query.where(and(
-          eq(supplierProducts.isVerified, true),
-          eq(verifiedSuppliers.isVerified, true),
-          eq(verifiedSuppliers.supplierCategory, category)
-        ));
+        conditions.push(eq(verifiedSuppliers.supplierCategory, category as string));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
       }
       
       const products = await query;
@@ -858,6 +859,52 @@ Be precise and quote actual text from the content, not generic terms.`;
     } catch (error) {
       console.error("Error fetching supplier products:", error);
       res.status(500).json({ message: "Failed to fetch supplier products" });
+    }
+  });
+
+  // Verified Suppliers API endpoints
+  app.get('/api/verified-suppliers', async (req, res) => {
+    try {
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const suppliers = await db
+        .select()
+        .from(verifiedSuppliers)
+        .orderBy(verifiedSuppliers.supplierName);
+
+      res.json(suppliers);
+    } catch (error) {
+      console.error('Error fetching verified suppliers:', error);
+      res.status(500).json({ error: 'Failed to fetch verified suppliers' });
+    }
+  });
+
+  app.post('/api/verified-suppliers', async (req, res) => {
+    try {
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const supplierData = {
+        supplierName: req.body.supplierName,
+        supplierCategory: req.body.supplierCategory,
+        description: req.body.description || null,
+        website: req.body.website || null,
+        contactEmail: req.body.contactEmail || null,
+        addressStreet: req.body.addressLine1,
+        addressCity: req.body.city,
+        addressPostalCode: req.body.postalCode,
+        addressCountry: req.body.addressCountry,
+        verificationStatus: req.body.verificationStatus || 'pending_review',
+        submittedBy: 'CLIENT',
+        isVerified: req.body.verificationStatus === 'verified' ? true : false
+      };
+
+      const [newSupplier] = await db
+        .insert(verifiedSuppliers)
+        .values(supplierData)
+        .returning();
+
+      res.json(newSupplier);
+    } catch (error) {
+      console.error('Error creating verified supplier:', error);
+      res.status(500).json({ error: 'Failed to create verified supplier' });
     }
   });
 
