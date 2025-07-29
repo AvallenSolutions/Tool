@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { SimplePDFService } from './SimplePDFService';
+import type { EnhancedLCAResults } from './EnhancedLCACalculationService';
 
 export interface EnhancedLCAReportData {
   report: {
@@ -39,6 +40,7 @@ export interface EnhancedLCAReportData {
     contribution: number;
     percentage: number;
   }[];
+  enhancedLCAResults?: EnhancedLCAResults;
 }
 
 export class EnhancedPDFService {
@@ -51,14 +53,11 @@ export class EnhancedPDFService {
       // Generate the comprehensive HTML template (same as before)
       const html = this.generateEnhancedHTML(data);
       
-      // Use React PDF to convert the enhanced template to PDF
-      const { pdf, Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer');
-      
-      // Create enhanced PDF document with proper structure
+      // Use simplified PDF generation for now
       const enhancedDoc = this.createEnhancedPDFDocument(data);
-      const pdfBuffer = await pdf(enhancedDoc).toBuffer();
+      const pdfContent = this.convertHTMLToPDFStructure(html, data);
       
-      return pdfBuffer;
+      return Buffer.from(pdfContent, 'binary');
       
     } catch (error) {
       console.error('Error generating enhanced PDF:', error);
@@ -70,9 +69,13 @@ export class EnhancedPDFService {
     }
   }
 
-  private createEnhancedPDFDocument(data: EnhancedLCAReportData) {
-    // Import React PDF components
-    return null; // Placeholder - will implement React PDF structure
+  private createEnhancedPDFDocument(data: EnhancedLCAReportData): any {
+    // Simple fallback document structure (will be implemented later)
+    return { 
+      type: 'document',
+      content: `LCA Report for ${data.product.name}`,
+      data: data
+    };
   }
 
   private convertHTMLToPDFStructure(html: string, data: EnhancedLCAReportData): string {
@@ -417,7 +420,7 @@ BT
 /F1 12 Tf
 (Carbon Footprint: ${data.report.totalCarbonFootprint || 'Calculating...'} kg CO2e) Tj
 0 -20 Td
-(Water Footprint: ${data.report.totalWaterFootprint || 'Calculating...'} L) Tj
+(Water Footprint: ${data.enhancedLCAResults?.totalWaterFootprint || 'Calculating...'} L) Tj
 0 -20 Td
 (Report Generated: ${new Date().toLocaleDateString()}) Tj
 0 -40 Td
@@ -518,7 +521,22 @@ endstream endobj xref 0 5 0000000000 65535 f 0000000010 00000 n 0000000053 00000
   }
 
   private calculateBreakdown(data: EnhancedLCAReportData): { stage: string; contribution: number; percentage: number; }[] {
-    // Default breakdown if no specific data available
+    // Use enhanced LCA results if available
+    if (data.enhancedLCAResults?.breakdown) {
+      const breakdown = data.enhancedLCAResults.breakdown;
+      const total = data.enhancedLCAResults.totalCarbonFootprint;
+      
+      return [
+        { stage: 'Agriculture & Raw Materials', contribution: breakdown.agriculture, percentage: Math.round((breakdown.agriculture / total) * 100) },
+        { stage: 'Inbound Transport', contribution: breakdown.inboundTransport, percentage: Math.round((breakdown.inboundTransport / total) * 100) },
+        { stage: 'Processing & Production', contribution: breakdown.processing, percentage: Math.round((breakdown.processing / total) * 100) },
+        { stage: 'Packaging', contribution: breakdown.packaging, percentage: Math.round((breakdown.packaging / total) * 100) },
+        { stage: 'Distribution', contribution: breakdown.distribution, percentage: Math.round((breakdown.distribution / total) * 100) },
+        { stage: 'End of Life', contribution: breakdown.endOfLife, percentage: Math.round((breakdown.endOfLife / total) * 100) },
+      ].filter(item => item.contribution > 0); // Only show non-zero contributions
+    }
+    
+    // Fallback: Default breakdown if no enhanced data available
     const totalCarbon = data.report.totalCarbonFootprint || 4.43;
     
     return [

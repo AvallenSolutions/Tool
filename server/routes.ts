@@ -1457,6 +1457,55 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Test Enhanced LCA Calculation System
+  app.get('/api/test/enhanced-lca/:productId', async (req, res) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ 
+          error: 'Invalid product ID',
+          details: 'Product ID must be a valid number'
+        });
+      }
+
+      // Test the enhanced LCA calculation system end-to-end
+      const { ReportDataProcessor } = await import('./services/ReportDataProcessor');
+      
+      console.log(`🧪 Testing Enhanced LCA Calculation for Product ${productId}`);
+      
+      // Get comprehensive report data with enhanced calculation
+      const reportData = await ReportDataProcessor.getEnhancedReportData(productId);
+      
+      // Return calculation results for verification
+      res.json({
+        productId: productId,
+        productName: reportData.product.name,
+        hasEnhancedLCA: !!reportData.enhancedLCAResults,
+        enhancedResults: reportData.enhancedLCAResults ? {
+          totalCarbonFootprint: reportData.enhancedLCAResults.totalCarbonFootprint,
+          totalWaterFootprint: reportData.enhancedLCAResults.totalWaterFootprint,
+          totalLandUse: reportData.enhancedLCAResults.totalLandUse,
+          primaryEnergyDemand: reportData.enhancedLCAResults.primaryEnergyDemand,
+          breakdown: reportData.enhancedLCAResults.breakdown,
+          dataQuality: reportData.enhancedLCAResults.metadata.dataQuality,
+          calculationMethod: reportData.enhancedLCAResults.metadata.calculationMethod,
+          uncertaintyPercentage: reportData.enhancedLCAResults.metadata.uncertaintyPercentage,
+        } : null,
+        fallbackCarbon: reportData.report.totalCarbonFootprint,
+        message: reportData.enhancedLCAResults ? 
+          "✅ Enhanced LCA calculation completed successfully" : 
+          "⚠️ Using fallback calculation - no granular LCA data available"
+      });
+    } catch (error) {
+      console.error('Error testing enhanced LCA calculation:', error);
+      res.status(500).json({ 
+        error: 'Enhanced LCA test failed',
+        details: error.message
+      });
+    }
+  });
+
   // Download LCA PDF report
   app.get('/api/lca/product/:productId/download-pdf', async (req, res) => {
     try {

@@ -2,6 +2,7 @@ import { db } from "../db";
 import { reports, products, companies, lcaQuestionnaires } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import type { EnhancedLCAReportData } from "./EnhancedPDFService";
+import { EnhancedLCACalculationService, type LCADataInputs, type EnhancedLCAResults } from "./EnhancedLCACalculationService";
 
 export class ReportDataProcessor {
   static async getEnhancedReportData(productId: number): Promise<EnhancedLCAReportData> {
@@ -43,15 +44,45 @@ export class ReportDataProcessor {
         .where(eq(lcaQuestionnaires.productId, productId))
         .limit(1);
 
+      // Use enhanced LCA calculation if granular data is available
+      let enhancedResults: EnhancedLCAResults | null = null;
+      if (lcaQuestionnaire[0]?.lcaData) {
+        try {
+          const productionVolume = product.annualProductionVolume ? Number(product.annualProductionVolume) : 1000;
+          enhancedResults = await EnhancedLCACalculationService.calculateEnhancedLCA(
+            product,
+            lcaQuestionnaire[0].lcaData as LCADataInputs,
+            productionVolume
+          );
+          console.log(`Enhanced LCA calculation completed for product ${productId}:`, {
+            totalCarbonFootprint: enhancedResults.totalCarbonFootprint,
+            totalWaterFootprint: enhancedResults.totalWaterFootprint,
+            dataQuality: enhancedResults.metadata.dataQuality
+          });
+        } catch (error) {
+          console.warn('Enhanced LCA calculation failed, using fallback:', error);
+        }
+      }
+
       // Process report data to extract carbon breakdown
-      const breakdown = this.calculateCarbonBreakdown(finalReport.reportData, finalReport.totalCarbonFootprint);
+      const breakdown = enhancedResults ? 
+        enhancedResults.breakdown : 
+        this.calculateCarbonBreakdown(finalReport.reportData, finalReport.totalCarbonFootprint);
 
       return {
         report: {
           id: finalReport.id,
           status: finalReport.status || 'completed',
-          totalCarbonFootprint: finalReport.totalCarbonFootprint ? Number(finalReport.totalCarbonFootprint) : undefined,
-          reportData: finalReport.reportData,
+          totalCarbonFootprint: enhancedResults ? 
+            enhancedResults.totalCarbonFootprint : 
+            (finalReport.totalCarbonFootprint ? Number(finalReport.totalCarbonFootprint) : undefined),
+          reportData: enhancedResults ? {
+            ...finalReport.reportData,
+            enhancedLCA: enhancedResults,
+            calculationMethod: enhancedResults.metadata.calculationMethod,
+            dataQuality: enhancedResults.metadata.dataQuality,
+            uncertaintyPercentage: enhancedResults.metadata.uncertaintyPercentage
+          } : finalReport.reportData,
           createdAt: finalReport.createdAt || new Date(),
         },
         product: {
@@ -73,6 +104,7 @@ export class ReportDataProcessor {
         },
         lcaData: lcaQuestionnaire[0]?.lcaData as any || undefined,
         calculatedBreakdown: breakdown,
+        enhancedLCAResults: enhancedResults || undefined,
       };
     } catch (error) {
       console.error('Error getting enhanced report data:', error);
