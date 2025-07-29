@@ -155,6 +155,31 @@ const enhancedProductSchema = z.object({
       qualityCertifications: z.array(z.string()).optional(),
     }).optional(),
     productionMethods: z.array(z.string()).optional(),
+    // Detailed processing sections for auto-sync with LCA Data
+    processing: z.object({
+      electricityKwhPerTonCrop: z.number().min(0).default(0),
+      lpgKgPerLAlcohol: z.number().min(0).default(0),
+      angelsSharePercentage: z.number().min(0).max(100).default(0),
+      waterM3PerTonCrop: z.number().min(0).default(0),
+    }),
+    fermentation: z.object({
+      fermentationTime: z.number().min(0).default(0),
+      yeastType: z.string().default(""),
+      temperatureControl: z.boolean().default(false),
+      sugarAddedKg: z.number().min(0).default(0),
+    }),
+    distillation: z.object({
+      distillationRounds: z.number().min(0).default(0),
+      energySourceType: z.enum(['electric', 'gas', 'biomass', 'steam']).optional(),
+      heatRecoverySystem: z.boolean().default(false),
+      copperUsageKg: z.number().min(0).default(0),
+    }),
+    maturation: z.object({
+      maturationTimeMonths: z.number().min(0).default(0),
+      barrelType: z.enum(['new-oak', 'used-oak', 'stainless-steel', 'concrete', 'ceramic']).optional(),
+      barrelOrigin: z.string().default(""),
+      barrelReuseCycles: z.number().min(0).default(0),
+    }),
   }),
   
   // Environmental Impact Tab
@@ -403,6 +428,30 @@ export default function EnhancedProductForm({
         waterUsage: { processWaterLiters: 0, cleaningWaterLiters: 0, coolingWaterLiters: 0, wasteWaterTreatment: '' },
         wasteGeneration: { organicWasteKg: 0, packagingWasteKg: 0, hazardousWasteKg: 0, wasteRecycledPercent: 0 },
         productionMethods: [],
+        processing: {
+          electricityKwhPerTonCrop: 0,
+          lpgKgPerLAlcohol: 0,
+          angelsSharePercentage: 0,
+          waterM3PerTonCrop: 0,
+        },
+        fermentation: {
+          fermentationTime: 0,
+          yeastType: '',
+          temperatureControl: false,
+          sugarAddedKg: 0,
+        },
+        distillation: {
+          distillationRounds: 0,
+          energySourceType: undefined,
+          heatRecoverySystem: false,
+          copperUsageKg: 0,
+        },
+        maturation: {
+          maturationTimeMonths: 0,
+          barrelType: undefined,
+          barrelOrigin: '',
+          barrelReuseCycles: 0,
+        },
       },
       environmentalImpact: { calculationMethod: '', co2Emissions: 0, waterFootprint: 0, landUse: 0, biodiversityImpact: '' },
       certifications: [],
@@ -2208,7 +2257,12 @@ export default function EnhancedProductForm({
                               type="number" 
                               placeholder="500" 
                               {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.waterM3PerTonCrop', value / 1000);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -2235,6 +2289,436 @@ export default function EnhancedProductForm({
                       )}
                     />
                   </div>
+                </div>
+
+                {/* Basic Processing Data */}
+                <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                  <h4 className="font-medium text-blue-900">Basic Processing Data</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.processing.electricityKwhPerTonCrop"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Electricity (kWh/ton crop)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="150" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.electricityKwhPerTonCrop', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.processing.lpgKgPerLAlcohol"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>LPG Usage (kg/L alcohol)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              placeholder="0.25" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.lpgKgPerLAlcohol', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.processing.angelsSharePercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Angel's Share (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100"
+                              step="0.1"
+                              placeholder="2.5" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.angelsSharePercentage', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.processing.waterM3PerTonCrop"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Processing Water (m³/ton crop)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="3.5" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.waterM3PerTonCrop', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Fermentation Process */}
+                <div className="bg-green-50 p-4 rounded-lg space-y-4">
+                  <h4 className="font-medium text-green-900">Fermentation Process</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.fermentation.fermentationTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fermentation Time (days)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="14" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.fermentation.fermentationTime', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.fermentation.yeastType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Yeast Type</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="e.g., Wild, Commercial, House strain" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.fermentation.yeastType', e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.fermentation.temperatureControl"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.fermentation.temperatureControl', checked);
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel>Temperature Controlled</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.fermentation.sugarAddedKg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Added Sugar (kg)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="0" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.fermentation.sugarAddedKg', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Distillation Process */}
+                <div className="bg-orange-50 p-4 rounded-lg space-y-4">
+                  <h4 className="font-medium text-orange-900">Distillation Process</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.distillation.distillationRounds"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Distillation Rounds</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="2" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.distillation.distillationRounds', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.distillation.energySourceType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Energy Source</FormLabel>
+                          <Select onValueChange={(value) => {
+                            field.onChange(value);
+                            // Auto-sync to LCA Data tab
+                            form.setValue('lcaData.processing.distillation.energySourceType', value as any);
+                          }} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select energy source" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="electric">Electric</SelectItem>
+                              <SelectItem value="gas">Gas</SelectItem>
+                              <SelectItem value="biomass">Biomass</SelectItem>
+                              <SelectItem value="steam">Steam</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.distillation.heatRecoverySystem"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.distillation.heatRecoverySystem', checked);
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel>Heat Recovery System</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.distillation.copperUsageKg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Copper Usage (kg)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="500" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.distillation.copperUsageKg', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Maturation Process */}
+                <div className="bg-purple-50 p-4 rounded-lg space-y-4">
+                  <h4 className="font-medium text-purple-900">Maturation Process</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.maturation.maturationTimeMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Maturation Time (months)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="24" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.maturation.maturationTimeMonths', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.maturation.barrelType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barrel Type</FormLabel>
+                          <Select onValueChange={(value) => {
+                            field.onChange(value);
+                            // Auto-sync to LCA Data tab
+                            form.setValue('lcaData.processing.maturation.barrelType', value as any);
+                          }} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select barrel type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="new-oak">New Oak</SelectItem>
+                              <SelectItem value="used-oak">Used Oak</SelectItem>
+                              <SelectItem value="stainless-steel">Stainless Steel</SelectItem>
+                              <SelectItem value="concrete">Concrete</SelectItem>
+                              <SelectItem value="ceramic">Ceramic</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="production.maturation.barrelOrigin"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barrel Origin</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="e.g., French Oak, American Oak" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.maturation.barrelOrigin', e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.maturation.barrelReuseCycles"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barrel Reuse Cycles</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="3" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab
+                                form.setValue('lcaData.processing.maturation.barrelReuseCycles', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="text-sm text-green-600 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Auto-syncing to LCA Data tab
                 </div>
               </CardContent>
             </Card>
