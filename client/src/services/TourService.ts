@@ -1,5 +1,6 @@
 import Shepherd from 'shepherd.js';
 import 'shepherd.js/dist/css/shepherd.css';
+import '@/styles/enhanced-shepherd.css';
 
 export interface TourStep {
   id: string;
@@ -29,10 +30,20 @@ export class TourService {
     this.tour = new Shepherd.Tour({
       useModalOverlay: true,
       defaultStepOptions: {
-        classes: 'shadow-md bg-white rounded-lg',
+        classes: 'shepherd-element-enhanced',
         scrollTo: { behavior: 'smooth', block: 'center' },
-        modalOverlayOpeningPadding: 4,
+        modalOverlayOpeningPadding: 8,
       },
+    });
+
+    // Tour completion tracking
+    this.tour.on('complete', () => {
+      localStorage.setItem('lca-tour-completed', 'true');
+      console.log('LCA Tour completed successfully');
+    });
+
+    this.tour.on('cancel', () => {
+      console.log('LCA Tour cancelled');
     });
   }
 

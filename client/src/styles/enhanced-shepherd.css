@@ -1,0 +1,204 @@
+/* Enhanced Shepherd.js styles for Avallen branding with improved UX */
+.shepherd-modal-overlay-container {
+  z-index: 9998;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.shepherd-modal {
+  z-index: 9999;
+}
+
+.shepherd-element {
+  z-index: 10000;
+  max-width: 420px;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  animation: shepherdFadeIn 0.3s ease-out;
+}
+
+@keyframes shepherdFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shepherd-content {
+  padding: 28px;
+  background: white;
+  border-radius: 12px;
+  position: relative;
+}
+
+.shepherd-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+  font-family: 'Roboto Slab', serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shepherd-title::before {
+  content: "🎯";
+  font-size: 16px;
+}
+
+.shepherd-text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #4b5563;
+  margin-bottom: 24px;
+}
+
+.shepherd-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.shepherd-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.shepherd-button-primary {
+  background: linear-gradient(135deg, #209d50 0%, #1a7a3e 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(32, 157, 80, 0.3);
+}
+
+.shepherd-button-primary:hover {
+  background: linear-gradient(135deg, #1a7a3e 0%, #155f30 100%);
+  box-shadow: 0 4px 12px rgba(32, 157, 80, 0.4);
+  transform: translateY(-1px);
+}
+
+.shepherd-button-secondary {
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.shepherd-button-secondary:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.shepherd-button-link {
+  background: transparent;
+  color: #6c757d;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.shepherd-button-link:hover {
+  color: #495057;
+  text-decoration: underline;
+}
+
+.shepherd-arrow:before {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+}
+
+/* Progress indicator */
+.shepherd-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #f3f4f6;
+  border-radius: 12px 12px 0 0;
+}
+
+.shepherd-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #209d50 0%, #1a7a3e 100%);
+  border-radius: 12px 12px 0 0;
+  transition: width 0.3s ease;
+}
+
+/* Enhanced tour button styling */
+.tour-button-enhanced {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%);
+  border: 2px solid #209d50;
+  color: #155f30;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(32, 157, 80, 0.2);
+  transition: all 0.3s ease;
+}
+
+.tour-button-enhanced:hover {
+  background: linear-gradient(135deg, #d4edda 0%, #e8f5e8 100%);
+  box-shadow: 0 4px 16px rgba(32, 157, 80, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Pulsing effect for tour button */
+.tour-button-pulse {
+  animation: tourPulse 2s infinite;
+}
+
+@keyframes tourPulse {
+  0% {
+    box-shadow: 0 2px 8px rgba(32, 157, 80, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(32, 157, 80, 0.4);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(32, 157, 80, 0.2);
+  }
+}
+
+/* Step indicator */
+.shepherd-step-indicator {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: #f8f9fa;
+  color: #6c757d;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Highlight important information */
+.shepherd-highlight {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 8px 12px;
+  margin: 12px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.shepherd-tip {
+  background-color: #d1ecf1;
+  border-left: 4px solid #17a2b8;
+  padding: 8px 12px;
+  margin: 12px 0;
+  border-radius: 0 4px 4px 0;
+}

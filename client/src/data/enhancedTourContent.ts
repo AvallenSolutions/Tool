@@ -3,10 +3,10 @@ export const enhancedTourContent = {
     {
       id: "tour-welcome",
       title: "Welcome to LCA Data Collection!",
-      text: "This guided tour will walk you through each step of Life Cycle Assessment data collection. We'll explain what each field means and why it's important for your sustainability report. Ready to become an LCA expert?",
+      text: "This guided tour will walk you through each step of Life Cycle Assessment data collection. We'll explain what each field means and why it's important for your sustainability report.<br><br><div class='shepherd-highlight'>💡 <strong>Tip:</strong> This tour takes about 3-4 minutes and will help you create more accurate sustainability reports.</div>",
       buttons: [
         {
-          text: "Let's Start!",
+          text: "Let's Start! 🚀",
           action: "next",
           classes: "shepherd-button-primary"
         },
@@ -20,7 +20,7 @@ export const enhancedTourContent = {
     {
       id: "agriculture-overview",
       title: "Agriculture Section Overview",
-      text: "First, we'll collect data about your primary agricultural ingredient. This is the foundation of your product - whether it's barley for whisky, grapes for wine, or apples for calvados. Agricultural data is crucial because farming practices significantly impact carbon footprint.",
+      text: "First, we'll collect data about your primary agricultural ingredient. This is the foundation of your product - whether it's barley for whisky, grapes for wine, or apples for calvados.<br><br><div class='shepherd-highlight'>🌱 <strong>Why this matters:</strong> Agricultural practices can account for 20-40% of your product's total carbon footprint.</div>",
       attachTo: {
         element: "[data-testid='agriculture-section']",
         on: "top"
@@ -202,7 +202,7 @@ export const enhancedTourContent = {
     {
       id: "end-of-life-impact",
       title: "End-of-Life Management",
-      text: "What happens when consumers finish your product matters for sustainability. Higher recycling rates reduce environmental impact. The disposal method for non-recycled materials (landfill vs. incineration) affects the final carbon footprint calculation.",
+      text: "What happens when consumers finish your product matters for sustainability. Higher recycling rates reduce environmental impact. The disposal method for non-recycled materials (landfill vs. incineration) affects the final carbon footprint calculation.<br><br><div class='shepherd-tip'>🎯 <strong>You're almost done!</strong> You now understand all the key data points needed for accurate LCA reporting.</div>",
       attachTo: {
         element: "[data-testid='end-of-life-section']",
         on: "top"
@@ -214,7 +214,7 @@ export const enhancedTourContent = {
           classes: "shepherd-button-secondary"
         },
         {
-          text: "Complete Tour",
+          text: "Complete Tour ✅",
           action: "complete",
           classes: "shepherd-button-primary"
         },
