@@ -38,12 +38,44 @@ const enhancedProductSchema = z.object({
     supplier: z.string().optional(),
   })).min(1, "At least one ingredient is required"),
   
-  // Packaging Tab - Now references LCA Data as master source
+  // Packaging Tab - User-friendly input that auto-syncs to LCA Data
   packaging: z.object({
-    // Note: Primary container data now stored in lcaData.packagingDetailed.container
-    // This object maintained for backward compatibility and non-LCA fields
-    packagingNotes: z.string().optional(), // For additional packaging notes
-    qualityStandards: z.array(z.string()).optional(), // e.g., FDA approved, ISO certified
+    primaryContainer: z.object({
+      material: z.string().min(1, "Container material is required"),
+      weight: z.number().min(0, "Weight must be positive"),
+      recycledContent: z.number().min(0).max(100).optional(),
+      recyclability: z.string().optional(),
+      color: z.string().optional(),
+      thickness: z.number().optional(),
+      origin: z.string().optional(),
+    }),
+    labeling: z.object({
+      labelMaterial: z.string().optional(),
+      labelWeight: z.number().optional(),
+      printingMethod: z.string().optional(),
+      inkType: z.string().optional(),
+      labelSize: z.number().optional(),
+      origin: z.string().optional(),
+    }),
+    closure: z.object({
+      closureType: z.string().optional(),
+      material: z.string().optional(),
+      weight: z.number().optional(),
+      hasLiner: z.boolean().default(false),
+      linerMaterial: z.string().optional(),
+      origin: z.string().optional(),
+    }),
+    secondaryPackaging: z.object({
+      hasSecondaryPackaging: z.boolean().default(false),
+      boxMaterial: z.string().optional(),
+      boxWeight: z.number().optional(),
+      fillerMaterial: z.string().optional(),
+      fillerWeight: z.number().optional(),
+      origin: z.string().optional(),
+    }),
+    // Additional fields
+    packagingNotes: z.string().optional(),
+    qualityStandards: z.array(z.string()).optional(),
     supplierInformation: z.object({
       selectedSupplierId: z.string().optional(),
       supplierName: z.string().optional(),
@@ -278,6 +310,10 @@ export default function EnhancedProductForm({
       status: 'active',
       ingredients: [{ name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '' }],
       packaging: {
+        primaryContainer: { material: '', weight: 0, recycledContent: 0, recyclability: '', color: '', thickness: 0, origin: '' },
+        labeling: { labelMaterial: '', labelWeight: 0, printingMethod: '', inkType: '', labelSize: 0, origin: '' },
+        closure: { closureType: '', material: '', weight: 0, hasLiner: false, linerMaterial: '', origin: '' },
+        secondaryPackaging: { hasSecondaryPackaging: false, boxMaterial: '', boxWeight: 0, fillerMaterial: '', fillerWeight: 0, origin: '' },
         packagingNotes: '',
         qualityStandards: [],
         supplierInformation: {
@@ -864,24 +900,36 @@ export default function EnhancedProductForm({
                             inputType="bottle"
                             onSelect={(supplier) => {
                               setSelectedPackagingSupplier(supplier);
-                              // Auto-fill packaging data from supplier product into LCA Data (master source)
+                              // Auto-fill packaging data from supplier product (user-friendly fields + auto-sync to LCA)
                               const productAttrs = supplier.productAttributes || {};
                               const lcaData = supplier.lcaDataJson || {};
                               const supplierAddr = supplier.supplierAddress || {};
+                              const origin = `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '';
                               
-                              // Update supplier information in packaging tab
+                              // Update user-friendly packaging tab fields
+                              form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
+                              form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams || 0);
+                              form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
+                              form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
+                              form.setValue('packaging.primaryContainer.origin', origin);
+                              if (productAttrs.thickness) {
+                                form.setValue('packaging.primaryContainer.thickness', productAttrs.thickness);
+                              }
+                              if (productAttrs.recyclability) {
+                                form.setValue('packaging.primaryContainer.recyclability', productAttrs.recyclability);
+                              }
+                              
+                              // Update supplier information
                               form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.id);
                               form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName);
                               form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory);
                               
-                              // Auto-fill LCA Data packaging details (master source)
+                              // Auto-sync to LCA Data (for calculations)
                               form.setValue('lcaData.packagingDetailed.container.materialType', productAttrs.material?.toLowerCase() as any);
                               form.setValue('lcaData.packagingDetailed.container.weightGrams', productAttrs.weight || productAttrs.weight_grams || 0);
                               form.setValue('lcaData.packagingDetailed.container.recycledContentPercentage', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
                               form.setValue('lcaData.packagingDetailed.container.color', productAttrs.color || '');
-                              form.setValue('lcaData.packagingDetailed.container.manufacturingLocation', `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '');
-                              
-                              // Additional fields if available
+                              form.setValue('lcaData.packagingDetailed.container.manufacturingLocation', origin);
                               if (productAttrs.thickness) {
                                 form.setValue('lcaData.packagingDetailed.container.thickness', productAttrs.thickness);
                               }
@@ -912,24 +960,36 @@ export default function EnhancedProductForm({
                         inputType="bottle"
                         onSelect={(supplier) => {
                           setSelectedPackagingSupplier(supplier);
-                          // Auto-fill packaging data from supplier product into LCA Data (master source)
+                          // Auto-fill packaging data from supplier product (user-friendly fields + auto-sync to LCA)
                           const productAttrs = supplier.productAttributes || {};
                           const lcaData = supplier.lcaDataJson || {};
                           const supplierAddr = supplier.supplierAddress || {};
+                          const origin = `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '';
                           
-                          // Update supplier information in packaging tab
+                          // Update user-friendly packaging tab fields
+                          form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
+                          form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams || 0);
+                          form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
+                          form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
+                          form.setValue('packaging.primaryContainer.origin', origin);
+                          if (productAttrs.thickness) {
+                            form.setValue('packaging.primaryContainer.thickness', productAttrs.thickness);
+                          }
+                          if (productAttrs.recyclability) {
+                            form.setValue('packaging.primaryContainer.recyclability', productAttrs.recyclability);
+                          }
+                          
+                          // Update supplier information
                           form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.id);
                           form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName);
                           form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory);
                           
-                          // Auto-fill LCA Data packaging details (master source)
+                          // Auto-sync to LCA Data (for calculations)
                           form.setValue('lcaData.packagingDetailed.container.materialType', productAttrs.material?.toLowerCase() as any);
                           form.setValue('lcaData.packagingDetailed.container.weightGrams', productAttrs.weight || productAttrs.weight_grams || 0);
                           form.setValue('lcaData.packagingDetailed.container.recycledContentPercentage', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
                           form.setValue('lcaData.packagingDetailed.container.color', productAttrs.color || '');
-                          form.setValue('lcaData.packagingDetailed.container.manufacturingLocation', `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '');
-                          
-                          // Additional fields if available
+                          form.setValue('lcaData.packagingDetailed.container.manufacturingLocation', origin);
                           if (productAttrs.thickness) {
                             form.setValue('lcaData.packagingDetailed.container.thickness', productAttrs.thickness);
                           }
@@ -951,65 +1011,166 @@ export default function EnhancedProductForm({
                   )}
                 </div>
 
-                {/* Container Summary (reads from LCA Data) */}
+                {/* Primary Container */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Container Summary</h4>
-                    <Badge variant="outline" className="text-xs">
-                      Data from LCA Tab
-                    </Badge>
+                  <h4 className="font-medium">Primary Container</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.material"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Material *</FormLabel>
+                          <Select onValueChange={(value) => {
+                            field.onChange(value);
+                            // Auto-sync to LCA Data
+                            form.setValue('lcaData.packagingDetailed.container.materialType', value.toLowerCase() as any);
+                          }} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="glass">Glass</SelectItem>
+                              <SelectItem value="plastic">Plastic</SelectItem>
+                              <SelectItem value="aluminum">Aluminum</SelectItem>
+                              <SelectItem value="steel">Steel</SelectItem>
+                              <SelectItem value="cardboard">Cardboard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Weight (g) *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="500" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data
+                                form.setValue('lcaData.packagingDetailed.container.weightGrams', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                   
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium">Material</Label>
-                        <p className="text-sm capitalize">
-                          {form.watch('lcaData.packagingDetailed.container.materialType') || 'Not specified'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium">Weight</Label>
-                        <p className="text-sm">
-                          {form.watch('lcaData.packagingDetailed.container.weightGrams') || 0}g
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium">Recycled Content</Label>
-                        <p className="text-sm">
-                          {form.watch('lcaData.packagingDetailed.container.recycledContentPercentage') || 0}%
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium">Color</Label>
-                        <p className="text-sm">
-                          {form.watch('lcaData.packagingDetailed.container.color') || 'Not specified'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium">Origin</Label>
-                        <p className="text-sm">
-                          {form.watch('lcaData.packagingDetailed.container.manufacturingLocation') || 'Not specified'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-sm font-medium">Recyclability</Label>
-                        <p className="text-sm">
-                          {form.watch('lcaData.packagingDetailed.container.recyclability') || 'Not specified'}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.recycledContent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recycled Content (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="30" 
+                              min="0" 
+                              max="100"
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data
+                                form.setValue('lcaData.packagingDetailed.container.recycledContentPercentage', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setActiveTab('lcadata')}
-                      >
-                        Edit Container Details in LCA Data Tab
-                      </Button>
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.color"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Color</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Clear, Green, Amber" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                // Auto-sync to LCA Data
+                                form.setValue('lcaData.packagingDetailed.container.color', e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.origin"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Origin Location</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="e.g., Paris, France" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                // Auto-sync to LCA Data
+                                form.setValue('lcaData.packagingDetailed.container.manufacturingLocation', e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="packaging.primaryContainer.recyclability"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recyclability</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="e.g., Fully recyclable" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                // Auto-sync to LCA Data
+                                form.setValue('lcaData.packagingDetailed.container.recyclability', e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Auto-Sync Status */}
+                <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-sm text-green-700">
+                      Packaging data automatically syncs to LCA calculations
+                    </p>
                   </div>
                 </div>
 
