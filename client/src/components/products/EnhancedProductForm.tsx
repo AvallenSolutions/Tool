@@ -14,6 +14,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
 import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2 } from 'lucide-react';
+import { TourProvider } from '@/components/tour/TourProvider';
+import { TourButton } from '@/components/tour/TourButton';
+import '@/styles/shepherd.css';
 
 // Enhanced Product Schema with all 8 tabs including LCA Data Collection
 const enhancedProductSchema = z.object({
@@ -547,13 +550,14 @@ export default function EnhancedProductForm({
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full" onKeyDown={(e) => {
-        // Prevent form submission on Enter key unless we're on the last tab
-        if (e.key === 'Enter' && activeTab !== 'endoflife') {
-          e.preventDefault();
-        }
-      }}>
+    <TourProvider>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full" onKeyDown={(e) => {
+          // Prevent form submission on Enter key unless we're on the last tab
+          if (e.key === 'Enter' && activeTab !== 'endoflife') {
+            e.preventDefault();
+          }
+        }}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-8 mb-6">
             <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
@@ -2911,7 +2915,10 @@ export default function EnhancedProductForm({
           {/* LCA Data Collection Tab */}
           <TabsContent value="lcadata" className="space-y-6">
             <div className="bg-blue-50 p-4 rounded-lg mb-6">
-              <h3 className="font-medium text-blue-900 mb-2">Enhanced LCA Data Collection</h3>
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-medium text-blue-900">Enhanced LCA Data Collection</h3>
+                <TourButton variant="outline" size="sm" />
+              </div>
               <p className="text-sm text-blue-700">
                 Collect granular life cycle assessment data points for accurate environmental impact calculations. 
                 This data feeds directly into ISO 14040/14044 compliant LCA reports.
@@ -2919,7 +2926,7 @@ export default function EnhancedProductForm({
             </div>
 
             {/* Section 1: Agriculture & Raw Materials */}
-            <Card>
+            <Card data-testid="agriculture-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wheat className="w-5 h-5 text-avallen-green" />
@@ -2935,7 +2942,11 @@ export default function EnhancedProductForm({
                       <FormItem>
                         <FormLabel>Main Crop Type</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Apples, Grapes, Barley" {...field} />
+                          <Input 
+                            placeholder="e.g., Apples, Grapes, Barley" 
+                            {...field}
+                            name="lcaData.agriculture.mainCrop.cropType"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -2954,6 +2965,7 @@ export default function EnhancedProductForm({
                             step="0.1"
                             placeholder="25.5" 
                             {...field} 
+                            name="lcaData.agriculture.mainCrop.yieldTonPerHectare"
                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
@@ -2975,7 +2987,8 @@ export default function EnhancedProductForm({
                             type="number" 
                             step="0.1"
                             placeholder="120.5" 
-                            {...field} 
+                            {...field}
+                            name="lcaData.agriculture.mainCrop.dieselLPerHectare"
                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
@@ -3246,7 +3259,7 @@ export default function EnhancedProductForm({
             </Card>
 
             {/* Section 3: Processing & Production */}
-            <Card>
+            <Card data-testid="processing-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Factory className="w-5 h-5 text-avallen-green" />
@@ -3632,7 +3645,7 @@ export default function EnhancedProductForm({
             </Card>
 
             {/* Section 4: Enhanced Packaging Details */}
-            <Card>
+            <Card data-testid="packaging-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Box className="w-5 h-5 text-avallen-green" />
@@ -3641,7 +3654,7 @@ export default function EnhancedProductForm({
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Container */}
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg" data-testid="container-details">
                   <h4 className="font-medium">Container Specifications</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -4040,7 +4053,7 @@ export default function EnhancedProductForm({
             </Card>
 
             {/* Section 5: Distribution & Transport */}
-            <Card>
+            <Card data-testid="distribution-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Truck className="w-5 h-5 text-avallen-green" />
@@ -4184,7 +4197,7 @@ export default function EnhancedProductForm({
             </Card>
 
             {/* Section 6: End of Life Details */}
-            <Card>
+            <Card data-testid="endoflife-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Recycle className="w-5 h-5 text-avallen-green" />
@@ -4755,5 +4768,6 @@ export default function EnhancedProductForm({
         </Tabs>
       </form>
     </Form>
+    </TourProvider>
   );
 }
