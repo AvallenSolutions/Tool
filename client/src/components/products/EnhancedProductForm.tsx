@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
 import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2 } from 'lucide-react';
 
-// Enhanced Product Schema with all 8 tabs
+// Enhanced Product Schema with all 8 tabs including LCA Data Collection
 const enhancedProductSchema = z.object({
   // Basic Info Tab
   name: z.string().min(1, "Product name is required"),
@@ -133,6 +133,125 @@ const enhancedProductSchema = z.object({
     disposalMethod: z.string().optional(),
     consumerEducation: z.string().optional(),
   }),
+  
+  // LCA Data Collection Tab - Enhanced granular data collection
+  lcaData: z.object({
+    // Section 1: Agriculture & Raw Materials
+    agriculture: z.object({
+      mainCropType: z.string().optional(),
+      yieldTonPerHectare: z.number().positive().optional(),
+      dieselLPerHectare: z.number().nonnegative().optional(),
+      sequestrationTonCo2PerTonCrop: z.number().nonnegative().optional(),
+      fertilizer: z.object({
+        nitrogenKgPerHectare: z.number().nonnegative().optional(),
+        phosphorusKgPerHectare: z.number().nonnegative().optional(),
+        potassiumKgPerHectare: z.number().nonnegative().optional(),
+        organicFertilizerTonPerHectare: z.number().nonnegative().optional(),
+      }).optional(),
+      landUse: z.object({
+        farmingPractice: z.enum(['conventional', 'organic', 'biodynamic', 'regenerative']).optional(),
+        biodiversityIndex: z.number().min(0).max(10).optional(),
+        soilQualityIndex: z.number().min(0).max(10).optional(),
+      }).optional(),
+    }),
+    
+    // Section 2: Inbound Transport
+    inboundTransport: z.object({
+      distanceKm: z.number().positive().optional(),
+      mode: z.enum(['truck', 'rail', 'ship', 'air', 'multimodal']).optional(),
+      fuelEfficiencyLper100km: z.number().positive().optional(),
+      loadFactor: z.number().min(0).max(100).optional(),
+      refrigerationRequired: z.boolean().default(false),
+    }),
+    
+    // Section 3: Processing & Production
+    processing: z.object({
+      waterM3PerTonCrop: z.number().nonnegative().optional(),
+      electricityKwhPerTonCrop: z.number().nonnegative().optional(),
+      lpgKgPerLAlcohol: z.number().nonnegative().optional(),
+      netWaterUseLPerBottle: z.number().nonnegative().optional(),
+      angelsSharePercentage: z.number().min(0).max(100).optional(),
+      fermentation: z.object({
+        fermentationTime: z.number().positive().optional(), // days
+        temperatureControl: z.boolean().default(false),
+        yeastType: z.string().optional(),
+        sugarAddedKg: z.number().nonnegative().optional(),
+      }).optional(),
+      distillation: z.object({
+        distillationRounds: z.number().positive().optional(),
+        energySourceType: z.enum(['electric', 'gas', 'biomass', 'steam']).optional(),
+        heatRecoverySystem: z.boolean().default(false),
+        copperUsageKg: z.number().nonnegative().optional(),
+      }).optional(),
+      maturation: z.object({
+        maturationTimeMonths: z.number().nonnegative().optional(),
+        barrelType: z.enum(['new_oak', 'used_oak', 'stainless_steel', 'other']).optional(),
+        warehouseType: z.enum(['traditional', 'racked', 'climate_controlled']).optional(),
+        evaporationLossPercentage: z.number().min(0).max(100).optional(),
+      }).optional(),
+    }),
+    
+    // Section 4: Packaging (Enhanced)
+    packagingDetailed: z.object({
+      container: z.object({
+        materialType: z.enum(['glass', 'plastic', 'aluminum', 'steel', 'ceramic']).optional(),
+        weightGrams: z.number().positive().optional(),
+        recycledContentPercentage: z.number().min(0).max(100).optional(),
+        manufacturingLocation: z.string().optional(),
+        transportDistanceKm: z.number().nonnegative().optional(),
+      }),
+      label: z.object({
+        materialType: z.enum(['paper', 'plastic', 'foil', 'biodegradable']).optional(),
+        weightGrams: z.number().positive().optional(),
+        inkType: z.enum(['conventional', 'eco_friendly', 'soy_based']).optional(),
+        adhesiveType: z.enum(['water_based', 'solvent_based', 'hot_melt']).optional(),
+      }).optional(),
+      closure: z.object({
+        materialType: z.enum(['cork', 'synthetic_cork', 'screw_cap', 'crown_cap']).optional(),
+        weightGrams: z.number().positive().optional(),
+        hasLiner: z.boolean().default(false),
+        linerMaterial: z.string().optional(),
+      }).optional(),
+      secondaryPackaging: z.object({
+        hasBox: z.boolean().default(false),
+        boxMaterial: z.enum(['cardboard', 'wood', 'plastic', 'metal']).optional(),
+        boxWeightGrams: z.number().positive().optional(),
+        protectiveMaterial: z.string().optional(),
+        protectiveMaterialWeightGrams: z.number().nonnegative().optional(),
+      }).optional(),
+    }),
+    
+    // Section 5: Distribution & Transport
+    distribution: z.object({
+      avgDistanceToDcKm: z.number().positive().optional(),
+      primaryTransportMode: z.enum(['truck', 'rail', 'ship', 'air']).optional(),
+      palletizationEfficiency: z.number().min(0).max(100).optional(),
+      coldChainRequirement: z.boolean().default(false),
+      temperatureRangeCelsius: z.object({
+        min: z.number().optional(),
+        max: z.number().optional(),
+      }).optional(),
+      distributionCenters: z.array(z.object({
+        location: z.string(),
+        distanceFromProducerKm: z.number().nonnegative(),
+        energySource: z.enum(['grid', 'renewable', 'mixed']).optional(),
+      })).optional(),
+    }),
+    
+    // Section 6: End of Life (Enhanced)
+    endOfLifeDetailed: z.object({
+      recyclingRatePercentage: z.number().min(0).max(100).optional(),
+      primaryDisposalMethod: z.enum(['recycling', 'landfill', 'incineration', 'composting']).optional(),
+      containerRecyclability: z.object({
+        isRecyclable: z.boolean().default(true),
+        recyclingInfrastructureAvailable: z.boolean().default(true),
+        contaminationRate: z.number().min(0).max(100).optional(),
+      }).optional(),
+      labelRemovalRequired: z.boolean().default(false),
+      consumerEducationProgram: z.boolean().default(false),
+      takeback_program: z.boolean().default(false),
+    }),
+  }).optional(),
 });
 
 type EnhancedProductFormData = z.infer<typeof enhancedProductSchema>;
@@ -193,6 +312,49 @@ export default function EnhancedProductForm({
       awards: [],
       distribution: { averageTransportDistance: 0, primaryTransportMode: '', distributionCenters: 0, coldChainRequired: false, packagingEfficiency: 0 },
       endOfLife: { returnableContainer: false, recyclingRate: 0, disposalMethod: '', consumerEducation: '' },
+      lcaData: {
+        agriculture: {
+          mainCropType: '',
+          yieldTonPerHectare: 0,
+          dieselLPerHectare: 0,
+          sequestrationTonCo2PerTonCrop: 0,
+          fertilizer: { nitrogenKgPerHectare: 0, phosphorusKgPerHectare: 0, potassiumKgPerHectare: 0, organicFertilizerTonPerHectare: 0 },
+          landUse: { farmingPractice: undefined, biodiversityIndex: 0, soilQualityIndex: 0 },
+        },
+        inboundTransport: { distanceKm: 0, mode: undefined, fuelEfficiencyLper100km: 0, loadFactor: 0, refrigerationRequired: false },
+        processing: {
+          waterM3PerTonCrop: 0,
+          electricityKwhPerTonCrop: 0,
+          lpgKgPerLAlcohol: 0,
+          netWaterUseLPerBottle: 0,
+          angelsSharePercentage: 0,
+          fermentation: { fermentationTime: 0, temperatureControl: false, yeastType: '', sugarAddedKg: 0 },
+          distillation: { distillationRounds: 0, energySourceType: undefined, heatRecoverySystem: false, copperUsageKg: 0 },
+          maturation: { maturationTimeMonths: 0, barrelType: undefined, warehouseType: undefined, evaporationLossPercentage: 0 },
+        },
+        packagingDetailed: {
+          container: { materialType: undefined, weightGrams: 0, recycledContentPercentage: 0, manufacturingLocation: '', transportDistanceKm: 0 },
+          label: { materialType: undefined, weightGrams: 0, inkType: undefined, adhesiveType: undefined },
+          closure: { materialType: undefined, weightGrams: 0, hasLiner: false, linerMaterial: '' },
+          secondaryPackaging: { hasBox: false, boxMaterial: undefined, boxWeightGrams: 0, protectiveMaterial: '', protectiveMaterialWeightGrams: 0 },
+        },
+        distribution: { 
+          avgDistanceToDcKm: 0, 
+          primaryTransportMode: undefined, 
+          palletizationEfficiency: 0, 
+          coldChainRequirement: false,
+          temperatureRangeCelsius: { min: 0, max: 0 },
+          distributionCenters: [],
+        },
+        endOfLifeDetailed: {
+          recyclingRatePercentage: 0,
+          primaryDisposalMethod: undefined,
+          containerRecyclability: { isRecyclable: true, recyclingInfrastructureAvailable: true, contaminationRate: 0 },
+          labelRemovalRequired: false,
+          consumerEducationProgram: false,
+          takeback_program: false,
+        },
+      },
     },
   });
 
@@ -214,11 +376,12 @@ export default function EnhancedProductForm({
         }
       }}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-6">
+          <TabsList className="grid w-full grid-cols-8 mb-6">
             <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
             <TabsTrigger value="ingredients" className="text-xs">Ingredients</TabsTrigger>
             <TabsTrigger value="packaging" className="text-xs">Packaging</TabsTrigger>
             <TabsTrigger value="production" className="text-xs">Production</TabsTrigger>
+            <TabsTrigger value="lcadata" className="text-xs">LCA Data</TabsTrigger>
             <TabsTrigger value="certifications" className="text-xs">Certifications</TabsTrigger>
             <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
             <TabsTrigger value="endoflife" className="text-xs">End of Life</TabsTrigger>
@@ -1687,6 +1850,1433 @@ export default function EnhancedProductForm({
             </Card>
           </TabsContent>
 
+          {/* LCA Data Collection Tab */}
+          <TabsContent value="lcadata" className="space-y-6">
+            <div className="bg-blue-50 p-4 rounded-lg mb-6">
+              <h3 className="font-medium text-blue-900 mb-2">Enhanced LCA Data Collection</h3>
+              <p className="text-sm text-blue-700">
+                Collect granular life cycle assessment data points for accurate environmental impact calculations. 
+                This data feeds directly into ISO 14040/14044 compliant LCA reports.
+              </p>
+            </div>
+
+            {/* Section 1: Agriculture & Raw Materials */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wheat className="w-5 h-5 text-avallen-green" />
+                  Agriculture & Raw Materials
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lcaData.agriculture.mainCropType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Main Crop Type</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Apples, Grapes, Barley" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.agriculture.yieldTonPerHectare"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Yield (tons/hectare)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="25.5" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lcaData.agriculture.dieselLPerHectare"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Diesel Consumption (L/hectare)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="120.5" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.agriculture.sequestrationTonCo2PerTonCrop"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Carbon Sequestration (tCO2/ton crop)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01"
+                            placeholder="0.15" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Fertilizer Sub-section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Fertilizer Application</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.agriculture.fertilizer.nitrogenKgPerHectare"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nitrogen (kg/hectare)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="150" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.agriculture.fertilizer.phosphorusKgPerHectare"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phosphorus (kg/hectare)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="60" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Land Use Sub-section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Land Use & Practices</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.agriculture.landUse.farmingPractice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Farming Practice</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select practice" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="conventional">Conventional</SelectItem>
+                              <SelectItem value="organic">Organic</SelectItem>
+                              <SelectItem value="biodynamic">Biodynamic</SelectItem>
+                              <SelectItem value="regenerative">Regenerative</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.agriculture.landUse.biodiversityIndex"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Biodiversity Index (0-10)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="10"
+                              step="0.1"
+                              placeholder="7.5" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.agriculture.landUse.soilQualityIndex"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Soil Quality Index (0-10)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="10"
+                              step="0.1"
+                              placeholder="8.0" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 2: Inbound Transport */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-avallen-green" />
+                  Inbound Transport
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lcaData.inboundTransport.distanceKm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Transport Distance (km)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="350" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.inboundTransport.mode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Transport Mode</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select transport mode" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="truck">Truck</SelectItem>
+                            <SelectItem value="rail">Rail</SelectItem>
+                            <SelectItem value="ship">Ship</SelectItem>
+                            <SelectItem value="air">Air</SelectItem>
+                            <SelectItem value="multimodal">Multimodal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lcaData.inboundTransport.fuelEfficiencyLper100km"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fuel Efficiency (L/100km)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="32.5" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.inboundTransport.loadFactor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Load Factor (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            max="100"
+                            step="1"
+                            placeholder="75" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="lcaData.inboundTransport.refrigerationRequired"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel>Refrigeration Required</FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Section 3: Processing & Production */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Factory className="w-5 h-5 text-avallen-green" />
+                  Processing & Production
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Basic Processing */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Basic Processing Data</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.waterM3PerTonCrop"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Water Usage (m³/ton crop)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="3.5" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.electricityKwhPerTonCrop"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Electricity (kWh/ton crop)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="150" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.lpgKgPerLAlcohol"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>LPG Usage (kg/L alcohol)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              placeholder="0.25" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.angelsSharePercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Angel's Share (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100"
+                              step="0.1"
+                              placeholder="2.5" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Fermentation Sub-section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Fermentation Process</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.fermentation.fermentationTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fermentation Time (days)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="14" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.fermentation.yeastType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Yeast Type</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Wild, Commercial, House strain" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.fermentation.temperatureControl"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Temperature Controlled</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.fermentation.sugarAddedKg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Added Sugar (kg)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="0" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Distillation Sub-section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Distillation Process</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.distillation.distillationRounds"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Distillation Rounds</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="2" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.distillation.energySourceType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Energy Source</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select energy source" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="electric">Electric</SelectItem>
+                              <SelectItem value="gas">Gas</SelectItem>
+                              <SelectItem value="biomass">Biomass</SelectItem>
+                              <SelectItem value="steam">Steam</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.distillation.heatRecoverySystem"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Heat Recovery System</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.distillation.copperUsageKg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Copper Usage (kg)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="500" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Maturation Sub-section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Maturation Process</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.maturation.maturationTimeMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Maturation Time (months)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="24" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.maturation.barrelType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Barrel Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select barrel type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="new_oak">New Oak</SelectItem>
+                              <SelectItem value="used_oak">Used Oak</SelectItem>
+                              <SelectItem value="stainless_steel">Stainless Steel</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.maturation.warehouseType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Warehouse Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select warehouse type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="traditional">Traditional</SelectItem>
+                              <SelectItem value="racked">Racked</SelectItem>
+                              <SelectItem value="climate_controlled">Climate Controlled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.maturation.evaporationLossPercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Evaporation Loss (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100"
+                              step="0.1"
+                              placeholder="2.0" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 4: Enhanced Packaging Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Box className="w-5 h-5 text-avallen-green" />
+                  Enhanced Packaging Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Container */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Container Specifications</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.container.materialType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Material Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="glass">Glass</SelectItem>
+                              <SelectItem value="plastic">Plastic</SelectItem>
+                              <SelectItem value="aluminum">Aluminum</SelectItem>
+                              <SelectItem value="steel">Steel</SelectItem>
+                              <SelectItem value="ceramic">Ceramic</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.container.weightGrams"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Weight (grams)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="500" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.container.recycledContentPercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recycled Content (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100"
+                              step="1"
+                              placeholder="25" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.container.transportDistanceKm"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Transport Distance (km)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="200" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.packagingDetailed.container.manufacturingLocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Manufacturing Location</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Barcelona, Spain" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Label */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Label Specifications</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.label.materialType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label Material</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="paper">Paper</SelectItem>
+                              <SelectItem value="plastic">Plastic</SelectItem>
+                              <SelectItem value="foil">Foil</SelectItem>
+                              <SelectItem value="biodegradable">Biodegradable</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.label.weightGrams"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label Weight (grams)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="3.5" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.label.inkType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ink Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select ink type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="conventional">Conventional</SelectItem>
+                              <SelectItem value="eco_friendly">Eco-Friendly</SelectItem>
+                              <SelectItem value="soy_based">Soy-Based</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.label.adhesiveType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Adhesive Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select adhesive" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="water_based">Water-Based</SelectItem>
+                              <SelectItem value="solvent_based">Solvent-Based</SelectItem>
+                              <SelectItem value="hot_melt">Hot Melt</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Closure */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Closure System</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.closure.materialType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Closure Material</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select closure type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="cork">Cork</SelectItem>
+                              <SelectItem value="synthetic_cork">Synthetic Cork</SelectItem>
+                              <SelectItem value="screw_cap">Screw Cap</SelectItem>
+                              <SelectItem value="crown_cap">Crown Cap</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.closure.weightGrams"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Closure Weight (grams)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="2.5" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.packagingDetailed.closure.hasLiner"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Has Liner</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    {form.watch('lcaData.packagingDetailed.closure.hasLiner') && (
+                      <FormField
+                        control={form.control}
+                        name="lcaData.packagingDetailed.closure.linerMaterial"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Liner Material</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Saranex, PVdC" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Secondary Packaging */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Secondary Packaging</h4>
+                  <FormField
+                    control={form.control}
+                    name="lcaData.packagingDetailed.secondaryPackaging.hasBox"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Uses Secondary Packaging</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('lcaData.packagingDetailed.secondaryPackaging.hasBox') && (
+                    <div className="space-y-4 pl-6 border-l-2 border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="lcaData.packagingDetailed.secondaryPackaging.boxMaterial"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Box Material</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select material" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="cardboard">Cardboard</SelectItem>
+                                  <SelectItem value="wood">Wood</SelectItem>
+                                  <SelectItem value="plastic">Plastic</SelectItem>
+                                  <SelectItem value="metal">Metal</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="lcaData.packagingDetailed.secondaryPackaging.boxWeightGrams"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Box Weight (grams)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.1"
+                                  placeholder="150" 
+                                  {...field} 
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="lcaData.packagingDetailed.secondaryPackaging.protectiveMaterial"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Protective Material</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Foam, Bubble wrap, Paper" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="lcaData.packagingDetailed.secondaryPackaging.protectiveMaterialWeightGrams"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Protective Material Weight (grams)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.1"
+                                  placeholder="25" 
+                                  {...field} 
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 5: Distribution & Transport */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-avallen-green" />
+                  Distribution & Transport
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lcaData.distribution.avgDistanceToDcKm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Average Distance to DC (km)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="450" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.distribution.primaryTransportMode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Primary Transport Mode</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select transport mode" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="truck">Truck</SelectItem>
+                            <SelectItem value="rail">Rail</SelectItem>
+                            <SelectItem value="ship">Ship</SelectItem>
+                            <SelectItem value="air">Air</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lcaData.distribution.palletizationEfficiency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Palletization Efficiency (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            max="100"
+                            step="1"
+                            placeholder="85" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.distribution.coldChainRequirement"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Cold Chain Required</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {form.watch('lcaData.distribution.coldChainRequirement') && (
+                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium">Temperature Requirements</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="lcaData.distribution.temperatureRangeCelsius.min"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Minimum Temperature (°C)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.1"
+                                placeholder="2" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="lcaData.distribution.temperatureRangeCelsius.max"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Maximum Temperature (°C)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.1"
+                                placeholder="8" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Section 6: End of Life Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Recycle className="w-5 h-5 text-avallen-green" />
+                  End of Life Management (Detailed)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lcaData.endOfLifeDetailed.recyclingRatePercentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recycling Rate (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            max="100"
+                            step="1"
+                            placeholder="75" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.endOfLifeDetailed.primaryDisposalMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Primary Disposal Method</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select disposal method" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="recycling">Recycling</SelectItem>
+                            <SelectItem value="landfill">Landfill</SelectItem>
+                            <SelectItem value="incineration">Incineration</SelectItem>
+                            <SelectItem value="composting">Composting</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Container Recyclability */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Container Recyclability</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.endOfLifeDetailed.containerRecyclability.isRecyclable"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Container is Recyclable</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.endOfLifeDetailed.containerRecyclability.recyclingInfrastructureAvailable"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Recycling Infrastructure Available</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="lcaData.endOfLifeDetailed.containerRecyclability.contaminationRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contamination Rate (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            max="100"
+                            step="1"
+                            placeholder="15" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Consumer Programs */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">Consumer Programs</h4>
+                  <div className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="lcaData.endOfLifeDetailed.labelRemovalRequired"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Label Removal Required for Recycling</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.endOfLifeDetailed.consumerEducationProgram"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Consumer Education Program</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.endOfLifeDetailed.takeback_program"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Take-back Program Available</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* End of Life Tab */}
           <TabsContent value="endoflife" className="space-y-6">
             <Card>
@@ -1816,7 +3406,7 @@ export default function EnhancedProductForm({
                   type="button" 
                   variant="outline"
                   onClick={() => {
-                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'certifications', 'distribution', 'endoflife'];
+                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'lcadata', 'certifications', 'distribution', 'endoflife'];
                     const currentIndex = tabs.indexOf(activeTab);
                     if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1]);
                   }}
@@ -1831,7 +3421,7 @@ export default function EnhancedProductForm({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'certifications', 'distribution', 'endoflife'];
+                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'lcadata', 'certifications', 'distribution', 'endoflife'];
                     const currentIndex = tabs.indexOf(activeTab);
                     if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1]);
                   }}
