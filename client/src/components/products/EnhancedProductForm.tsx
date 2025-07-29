@@ -1343,6 +1343,16 @@ export default function EnhancedProductForm({
                               if (productAttrs.recyclability) {
                                 form.setValue('lcaData.packagingDetailed.container.recyclability', productAttrs.recyclability);
                               }
+                              
+                              // Supplier CO2 emissions data override (converted from grams to kg for calculation)
+                              if (productAttrs.co2Emissions) {
+                                const supplierCo2Kg = productAttrs.co2Emissions / 1000; // Convert grams to kg
+                                form.setValue('environmentalImpact.co2Emissions', supplierCo2Kg);
+                                
+                                // Also update LCA data to reflect supplier-provided emissions
+                                form.setValue('lcaData.packagingDetailed.container.co2EmissionsKg', supplierCo2Kg);
+                                form.setValue('lcaData.packagingDetailed.container.hasSupplierLcaData', true);
+                              }
                             }}
                             onManualEntry={() => {
                               setSelectedPackagingSupplier(null);
@@ -1402,6 +1412,16 @@ export default function EnhancedProductForm({
                           }
                           if (productAttrs.recyclability) {
                             form.setValue('lcaData.packagingDetailed.container.recyclability', productAttrs.recyclability);
+                          }
+                          
+                          // Supplier CO2 emissions data override (converted from grams to kg for calculation)
+                          if (productAttrs.co2Emissions) {
+                            const supplierCo2Kg = productAttrs.co2Emissions / 1000; // Convert grams to kg
+                            form.setValue('environmentalImpact.co2Emissions', supplierCo2Kg);
+                            
+                            // Also update LCA data to reflect supplier-provided emissions
+                            form.setValue('lcaData.packagingDetailed.container.co2EmissionsKg', supplierCo2Kg);
+                            form.setValue('lcaData.packagingDetailed.container.hasSupplierLcaData', true);
                           }
                         }}
                         onManualEntry={() => {

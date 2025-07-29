@@ -607,9 +607,25 @@ export default function SupplierNetwork() {
                         <p className="text-sm text-gray-700 mb-3">{product.productDescription}</p>
                       )}
                       {product.sku && (
-                        <p className="text-xs text-gray-500 mb-3">SKU: {product.sku}</p>
+                        <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
                       )}
-                      <Button variant="outline" size="sm" className="w-full">
+                      
+                      {/* CO2 Emissions Display */}
+                      {product.productAttributes?.co2Emissions && (
+                        <div className="flex items-center gap-2 mb-3 p-2 bg-green-50 rounded-md">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-green-800">
+                            CO2: {product.productAttributes.co2Emissions}g CO2e
+                          </span>
+                        </div>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => setLocation(`/app/supplier-network/product/${product.id}`)}
+                      >
                         View Details
                       </Button>
                     </CardContent>

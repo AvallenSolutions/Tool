@@ -190,7 +190,8 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
     selectedComponents.forEach(comp => {
       const attributes = comp.supplierProduct.productAttributes;
       if (attributes) {
-        totals.co2 += (attributes.co2Emissions || 0) * comp.quantity;
+        // Convert CO2 emissions from grams to kg for calculation
+        totals.co2 += ((attributes.co2Emissions || 0) / 1000) * comp.quantity;
         totals.weight += (attributes.weight || 0) * comp.quantity;
       }
     });
@@ -444,7 +445,7 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
                             <p className="text-xs text-gray-600">by {product.supplierName}</p>
                             {product.productAttributes?.co2Emissions && (
                               <p className="text-xs text-green-600">
-                                CO₂: {product.productAttributes.co2Emissions} kg CO₂e
+                                CO₂: {product.productAttributes.co2Emissions}g CO₂e
                               </p>
                             )}
                           </div>
@@ -493,7 +494,7 @@ export default function ClientProductForm({ onSuccess }: { onSuccess?: () => voi
                     <p className="text-xs text-gray-600">by {component.supplierProduct.supplierName}</p>
                     {component.supplierProduct.productAttributes?.co2Emissions && (
                       <p className="text-xs text-green-600">
-                        CO₂ per unit: {component.supplierProduct.productAttributes.co2Emissions} kg CO₂e
+                        CO₂ per unit: {component.supplierProduct.productAttributes.co2Emissions}g CO₂e
                       </p>
                     )}
                   </div>

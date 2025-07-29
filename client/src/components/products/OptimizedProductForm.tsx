@@ -412,7 +412,7 @@ export default function OptimizedProductForm() {
               name="co2Emissions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>CO2 Emissions (kg CO2e)</FormLabel>
+                  <FormLabel>CO2 Emissions (g CO2e)</FormLabel>
                   <FormControl>
                     <Input type="number" min="0" step="0.01" placeholder="Enter CO2 emissions" {...field} onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
                   </FormControl>
