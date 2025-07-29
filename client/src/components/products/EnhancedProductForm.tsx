@@ -1981,7 +1981,12 @@ export default function EnhancedProductForm({
                             type="number" 
                             placeholder="500" 
                             {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value) || 0;
+                              field.onChange(value);
+                              // Auto-sync to LCA Data
+                              form.setValue('lcaData.distribution.avgDistanceToDcKm', value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -1995,7 +2000,12 @@ export default function EnhancedProductForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Primary Transport Mode</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={(value) => {
+                          field.onChange(value);
+                          // Auto-sync to LCA Data
+                          const lcaMapping = { road: 'truck', rail: 'rail', sea: 'ship', air: 'air', multimodal: 'multimodal' };
+                          form.setValue('lcaData.distribution.primaryTransportMode', lcaMapping[value] as any);
+                        }} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select transport mode" />
@@ -2027,7 +2037,11 @@ export default function EnhancedProductForm({
                             type="number" 
                             placeholder="3" 
                             {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value) || 0;
+                              field.onChange(value);
+                              // Auto-sync to LCA Data - no direct mapping for distribution centers
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -2043,13 +2057,27 @@ export default function EnhancedProductForm({
                         <FormControl>
                           <Checkbox
                             checked={field.value}
-                            onCheckedChange={field.onChange}
+                            onCheckedChange={(value) => {
+                              field.onChange(value);
+                              // Auto-sync to LCA Data
+                              form.setValue('lcaData.distribution.coldChainRequirement', value);
+                            }}
                           />
                         </FormControl>
                         <FormLabel>Cold chain required</FormLabel>
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Auto-Sync Status */}
+                <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-sm text-green-700">
+                      Distribution data automatically syncs to LCA calculations
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
