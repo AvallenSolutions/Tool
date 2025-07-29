@@ -36,6 +36,15 @@ const enhancedProductSchema = z.object({
     origin: z.string().optional(),
     organic: z.boolean().default(false),
     supplier: z.string().optional(),
+    // Additional agriculture fields for comprehensive LCA data collection
+    yieldPerHectare: z.number().optional(),
+    farmingPractice: z.enum(['conventional', 'organic', 'biodynamic', 'regenerative']).optional(),
+    nitrogenFertilizer: z.number().optional(),
+    phosphorusFertilizer: z.number().optional(),
+    dieselUsage: z.number().optional(),
+    transportDistance: z.number().optional(),
+    processingEnergy: z.number().optional(),
+    waterUsage: z.number().optional(),
   })).min(1, "At least one ingredient is required"),
   
   // Packaging Tab - User-friendly input that auto-syncs to LCA Data
@@ -83,32 +92,60 @@ const enhancedProductSchema = z.object({
     }).optional(),
   }),
   
-  // Production Tab
+  // Production Tab - Comprehensive manufacturing data collection
   production: z.object({
     productionModel: z.string().min(1, "Production model is required"),
     annualProductionVolume: z.number().min(0, "Production volume must be positive"),
     productionUnit: z.string().default('units'),
     facilityLocation: z.string().optional(),
     facilityAddress: z.string().optional(),
+    // Process-specific data for LCA calculations
+    processSteps: z.array(z.object({
+      stepName: z.string().optional(),
+      duration: z.number().optional(),
+      temperature: z.number().optional(),
+      energyIntensity: z.number().optional(),
+      waterConsumption: z.number().optional(),
+      wasteGenerated: z.number().optional(),
+    })).optional(),
+    equipmentSpecifications: z.object({
+      fermentationVessels: z.number().optional(),
+      distillationColumns: z.number().optional(),
+      agingBarrels: z.number().optional(),
+      bottlingLineCapacity: z.number().optional(),
+      cleaningSystemType: z.string().optional(),
+    }).optional(),
     energyConsumption: z.object({
       electricityKwh: z.number().optional(),
       gasM3: z.number().optional(),
       steamKg: z.number().optional(),
       fuelLiters: z.number().optional(),
       renewableEnergyPercent: z.number().min(0).max(100).optional(),
+      energySource: z.string().optional(),
+      heatRecovery: z.boolean().default(false),
     }),
     waterUsage: z.object({
       processWaterLiters: z.number().optional(),
       cleaningWaterLiters: z.number().optional(),
       coolingWaterLiters: z.number().optional(),
       wasteWaterTreatment: z.string().optional(),
+      waterRecyclingPercent: z.number().min(0).max(100).optional(),
+      waterSourceType: z.string().optional(),
     }),
     wasteGeneration: z.object({
       organicWasteKg: z.number().optional(),
       packagingWasteKg: z.number().optional(),
       hazardousWasteKg: z.number().optional(),
       wasteRecycledPercent: z.number().min(0).max(100).optional(),
+      yeastRecovery: z.boolean().default(false),
+      grainWasteDestination: z.string().optional(),
     }),
+    qualityControl: z.object({
+      testingFrequency: z.string().optional(),
+      rejectionRate: z.number().min(0).max(100).optional(),
+      reworkRate: z.number().min(0).max(100).optional(),
+      qualityCertifications: z.array(z.string()).optional(),
+    }).optional(),
     productionMethods: z.array(z.string()).optional(),
   }),
   
@@ -308,7 +345,11 @@ export default function EnhancedProductForm({
       productImage: '',
       isMainProduct: false,
       status: 'active',
-      ingredients: [{ name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '' }],
+      ingredients: [{ 
+        name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '',
+        yieldPerHectare: 0, farmingPractice: undefined, nitrogenFertilizer: 0, phosphorusFertilizer: 0,
+        dieselUsage: 0, transportDistance: 0, processingEnergy: 0, waterUsage: 0
+      }],
       packaging: {
         primaryContainer: { material: '', weight: 0, recycledContent: 0, recyclability: '', color: '', thickness: 0, origin: '' },
         labeling: { labelMaterial: '', labelWeight: 0, printingMethod: '', inkType: '', labelSize: 0, origin: '' },
@@ -648,7 +689,11 @@ export default function EnhancedProductForm({
                       const currentIngredients = form.getValues('ingredients');
                       form.setValue('ingredients', [
                         ...currentIngredients, 
-                        { name: '', amount: 0, unit: 'kg', type: '', origin: '', organic: false, supplier: '' }
+                        { 
+                          name: '', amount: 0, unit: 'kg', type: '', origin: '', organic: false, supplier: '',
+                          yieldPerHectare: 0, farmingPractice: undefined, nitrogenFertilizer: 0, phosphorusFertilizer: 0,
+                          dieselUsage: 0, transportDistance: 0, processingEnergy: 0, waterUsage: 0
+                        }
                       ]);
                     }}
                     selectedProduct={null}
@@ -779,6 +824,189 @@ export default function EnhancedProductForm({
                             </FormItem>
                           )}
                         />
+                      </div>
+
+                      {/* Agriculture & Sourcing Details */}
+                      <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                        <h5 className="font-medium text-blue-900">Agriculture & Sourcing Details</h5>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.yieldPerHectare`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Yield (tons/hectare)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1"
+                                    placeholder="25.5" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      field.onChange(parseFloat(e.target.value) || 0);
+                                      // Auto-sync to LCA Data
+                                      form.setValue('lcaData.agriculture.yieldTonPerHectare', parseFloat(e.target.value) || 0);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.farmingPractice`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Farming Practice</FormLabel>
+                                <Select onValueChange={(value) => {
+                                  field.onChange(value);
+                                  // Auto-sync to LCA Data
+                                  form.setValue('lcaData.agriculture.landUse.farmingPractice', value as any);
+                                }} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select practice" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="conventional">Conventional</SelectItem>
+                                    <SelectItem value="organic">Organic</SelectItem>
+                                    <SelectItem value="biodynamic">Biodynamic</SelectItem>
+                                    <SelectItem value="regenerative">Regenerative</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.nitrogenFertilizer`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Nitrogen Fertilizer (kg/ha)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1"
+                                    placeholder="120" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      field.onChange(parseFloat(e.target.value) || 0);
+                                      // Auto-sync to LCA Data
+                                      form.setValue('lcaData.agriculture.fertilizer.nitrogenKgPerHectare', parseFloat(e.target.value) || 0);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.phosphorusFertilizer`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Phosphorus (kg/ha)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1"
+                                    placeholder="60" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      field.onChange(parseFloat(e.target.value) || 0);
+                                      // Auto-sync to LCA Data
+                                      form.setValue('lcaData.agriculture.fertilizer.phosphorusKgPerHectare', parseFloat(e.target.value) || 0);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.dieselUsage`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Diesel Usage (L/ha)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1"
+                                    placeholder="150" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      field.onChange(parseFloat(e.target.value) || 0);
+                                      // Auto-sync to LCA Data
+                                      form.setValue('lcaData.agriculture.dieselLPerHectare', parseFloat(e.target.value) || 0);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.transportDistance`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Transport Distance (km)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1"
+                                    placeholder="350" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      field.onChange(parseFloat(e.target.value) || 0);
+                                      // Auto-sync to LCA Data
+                                      form.setValue('lcaData.inboundTransport.distanceKm', parseFloat(e.target.value) || 0);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.waterUsage`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Water Usage (m³/ton)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1"
+                                    placeholder="3.5" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      field.onChange(parseFloat(e.target.value) || 0);
+                                      // Auto-sync to LCA Data
+                                      form.setValue('lcaData.processing.waterM3PerTonCrop', parseFloat(e.target.value) || 0);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -2003,7 +2231,7 @@ export default function EnhancedProductForm({
                         <Select onValueChange={(value) => {
                           field.onChange(value);
                           // Auto-sync to LCA Data
-                          const lcaMapping = { road: 'truck', rail: 'rail', sea: 'ship', air: 'air', multimodal: 'multimodal' };
+                          const lcaMapping: Record<string, string> = { road: 'truck', rail: 'rail', sea: 'ship', air: 'air', multimodal: 'multimodal' };
                           form.setValue('lcaData.distribution.primaryTransportMode', lcaMapping[value] as any);
                         }} defaultValue={field.value}>
                           <FormControl>
@@ -2060,7 +2288,7 @@ export default function EnhancedProductForm({
                             onCheckedChange={(value) => {
                               field.onChange(value);
                               // Auto-sync to LCA Data
-                              form.setValue('lcaData.distribution.coldChainRequirement', value);
+                              form.setValue('lcaData.distribution.coldChainRequirement', Boolean(value));
                             }}
                           />
                         </FormControl>
