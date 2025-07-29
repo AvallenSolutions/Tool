@@ -45,6 +45,9 @@ const enhancedProductSchema = z.object({
     transportDistance: z.number().optional(),
     processingEnergy: z.number().optional(),
     waterUsage: z.number().optional(),
+    biodiversityImpact: z.number().optional(),
+    soilQualityIndex: z.number().optional(),
+    carbonSequestration: z.number().optional(),
   })).min(1, "At least one ingredient is required"),
   
   // Packaging Tab - User-friendly input that auto-syncs to LCA Data
@@ -99,6 +102,11 @@ const enhancedProductSchema = z.object({
     productionUnit: z.string().default('units'),
     facilityLocation: z.string().optional(),
     facilityAddress: z.string().optional(),
+    energySource: z.string().optional(),
+    waterSourceType: z.string().optional(),
+    heatRecoverySystem: z.boolean().default(false),
+    wasteManagement: z.string().optional(),
+    circularEconomyFeatures: z.array(z.string()).optional(),
     // Process-specific data for LCA calculations
     processSteps: z.array(z.object({
       stepName: z.string().optional(),
@@ -169,6 +177,8 @@ const enhancedProductSchema = z.object({
     distributionCenters: z.number().optional(),
     coldChainRequired: z.boolean().default(false),
     packagingEfficiency: z.number().optional(),
+    palletizationEfficiency: z.number().optional(),
+    temperatureRange: z.string().optional(),
   }),
   
   // End of Life Tab
@@ -177,6 +187,23 @@ const enhancedProductSchema = z.object({
     recyclingRate: z.number().min(0).max(100).optional(),
     disposalMethod: z.string().optional(),
     consumerEducation: z.string().optional(),
+    biodegradability: z.object({
+      organic: z.boolean().default(false),
+      composting: z.boolean().default(false),
+      marineBiodegradable: z.boolean().default(false),
+    }).optional(),
+    lcaEndOfLife: z.object({
+      recyclingRate: z.number().optional(),
+      energyRecoveryRate: z.number().optional(),
+      landfillRate: z.number().optional(),
+      transportDistanceKm: z.number().optional(),
+      sortingEfficiency: z.number().optional(),
+    }).optional(),
+    takeback: z.object({
+      takebackProgram: z.boolean().default(false),
+      refillProgram: z.boolean().default(false),
+      returnIncentive: z.string().optional(),
+    }).optional(),
   }),
   
   // LCA Data Collection Tab - Enhanced granular data collection
@@ -198,6 +225,9 @@ const enhancedProductSchema = z.object({
         biodiversityIndex: z.number().min(0).max(10).optional(),
         soilQualityIndex: z.number().min(0).max(10).optional(),
       }).optional(),
+      biodiversityImpactScore: z.number().optional(),
+      soilQualityIndex: z.number().optional(),
+      carbonSequestrationRate: z.number().optional(),
     }),
     
     // Section 2: Inbound Transport
@@ -1002,6 +1032,98 @@ export default function EnhancedProductForm({
                                     }}
                                   />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Biodiversity and Soil Quality Fields */}
+                        <div className="bg-green-50 p-4 rounded-lg space-y-4">
+                          <h6 className="font-medium text-green-900">Environmental Impact Assessment</h6>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.biodiversityImpact`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Biodiversity Impact Score (1-10)</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="1"
+                                      max="10"
+                                      step="0.1"
+                                      placeholder="7.5" 
+                                      {...field} 
+                                      onChange={(e) => {
+                                        field.onChange(parseFloat(e.target.value) || 0);
+                                        // Auto-sync to LCA Data
+                                        form.setValue('lcaData.agriculture.biodiversityImpactScore', parseFloat(e.target.value) || 0);
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Higher scores indicate better biodiversity outcomes (1=poor, 10=excellent)
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.soilQualityIndex`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Soil Quality Index (1-10)</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number" 
+                                      min="1"
+                                      max="10"
+                                      step="0.1"
+                                      placeholder="6.8" 
+                                      {...field} 
+                                      onChange={(e) => {
+                                        field.onChange(parseFloat(e.target.value) || 0);
+                                        // Auto-sync to LCA Data
+                                        form.setValue('lcaData.agriculture.soilQualityIndex', parseFloat(e.target.value) || 0);
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Measures soil health and fertility (1=degraded, 10=excellent)
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name={`ingredients.${index}.carbonSequestration`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Carbon Sequestration (tonnes CO2/ha/year)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.01"
+                                    placeholder="2.3" 
+                                    {...field} 
+                                    onChange={(e) => {
+                                      field.onChange(parseFloat(e.target.value) || 0);
+                                      // Auto-sync to LCA Data
+                                      form.setValue('lcaData.agriculture.carbonSequestrationRate', parseFloat(e.target.value) || 0);
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Amount of CO2 sequestered by farming practices (positive values = carbon capture)
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -2296,6 +2418,59 @@ export default function EnhancedProductForm({
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Additional Distribution Fields */}
+                <div className="bg-green-50 p-4 rounded-lg space-y-4">
+                  <h5 className="font-medium text-green-900">Advanced Distribution Metrics</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="distribution.palletizationEfficiency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Palletization Efficiency (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.1"
+                              min="0"
+                              max="100"
+                              placeholder="85.5" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(parseFloat(e.target.value) || 0);
+                                form.setValue('lcaData.distribution.palletizationEfficiency', parseFloat(e.target.value) || 0);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="distribution.temperatureRange"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Temperature Range (°C)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="2-8°C" 
+                              {...field} 
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                form.setValue('lcaData.distribution.temperatureRangeCelsius.min', 2);
+                                form.setValue('lcaData.distribution.temperatureRangeCelsius.max', 8);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Auto-Sync Status */}
@@ -3762,7 +3937,10 @@ export default function EnhancedProductForm({
                             min="0" 
                             max="100"
                             {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) => {
+                              field.onChange(parseFloat(e.target.value) || 0);
+                              form.setValue('lcaData.endOfLifeDetailed.recyclingRatePercentage', parseFloat(e.target.value) || 0);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -3778,7 +3956,10 @@ export default function EnhancedProductForm({
                         <FormControl>
                           <Checkbox
                             checked={field.value}
-                            onCheckedChange={field.onChange}
+                            onCheckedChange={(value) => {
+                              field.onChange(value);
+                              form.setValue('lcaData.endOfLifeDetailed.takeback_program', Boolean(value));
+                            }}
                           />
                         </FormControl>
                         <FormLabel>Returnable container system</FormLabel>
@@ -3787,30 +3968,34 @@ export default function EnhancedProductForm({
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="endOfLife.disposalMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Primary Disposal Method</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select disposal method" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="recycling">Recycling</SelectItem>
-                          <SelectItem value="composting">Composting</SelectItem>
-                          <SelectItem value="energy-recovery">Energy Recovery</SelectItem>
-                          <SelectItem value="landfill">Landfill</SelectItem>
-                          <SelectItem value="reuse">Reuse</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="endOfLife.disposalMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Primary Disposal Method</FormLabel>
+                        <Select onValueChange={(value) => {
+                          field.onChange(value);
+                          form.setValue('lcaData.endOfLifeDetailed.primaryDisposalMethod', value as any);
+                        }} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select disposal method" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="recycling">Recycling</SelectItem>
+                            <SelectItem value="composting">Composting</SelectItem>
+                            <SelectItem value="energy-recovery">Energy Recovery</SelectItem>
+                            <SelectItem value="landfill">Landfill</SelectItem>
+                            <SelectItem value="reuse">Reuse</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                 <FormField
                   control={form.control}
@@ -3823,12 +4008,225 @@ export default function EnhancedProductForm({
                           placeholder="Describe your consumer education programs for proper disposal..." 
                           rows={3}
                           {...field} 
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                            form.setValue('lcaData.endOfLifeDetailed.consumerEducationProgram', Boolean(e.target.value));
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                </div>
+
+                {/* Enhanced Biodegradability Assessment */}
+                <div className="bg-green-50 p-4 rounded-lg space-y-4">
+                  <h5 className="font-medium text-green-900">Biodegradability Assessment</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.biodegradability.organic"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Organic biodegradable</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.biodegradability.composting"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Industrial composting</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.biodegradability.marineBiodegradable"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Marine biodegradable</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* LCA End-of-Life Breakdown */}
+                <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                  <h5 className="font-medium text-blue-900">LCA End-of-Life Breakdown</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.lcaEndOfLife.recyclingRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recycling Rate (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="75.0" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.lcaEndOfLife.energyRecoveryRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Energy Recovery Rate (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="15.0" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.lcaEndOfLife.landfillRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Landfill Rate (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="10.0" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.lcaEndOfLife.sortingEfficiency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sorting Efficiency (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="85.0" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Take-back Programs */}
+                <div className="bg-purple-50 p-4 rounded-lg space-y-4">
+                  <h5 className="font-medium text-purple-900">Take-back Programs</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.takeback.takebackProgram"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Take-back program available</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endOfLife.takeback.refillProgram"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Refill program available</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="endOfLife.takeback.returnIncentive"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Return Incentive</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g. £0.10 deposit, 5% discount on next purchase" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="text-sm text-green-600 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Auto-syncing to LCA Data tab
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
