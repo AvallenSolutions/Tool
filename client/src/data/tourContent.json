@@ -1,0 +1,319 @@
+{
+  "tourSteps": [
+    {
+      "id": "tour-start",
+      "title": "Welcome to LCA Data Collection",
+      "text": "Welcome to your LCA questionnaire! This guided tour will walk you through each step to ensure you provide the most accurate data. Let's get started!",
+      "buttons": [
+        {
+          "text": "Start Tour",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Skip",
+          "action": "cancel",
+          "classes": "btn btn-secondary"
+        }
+      ]
+    },
+    {
+      "id": "agriculture-crop-type",
+      "title": "Primary Agricultural Ingredient",
+      "text": "First, tell us about the primary agricultural ingredient for your drink. For a whisky this would be barley, for a rum it might be sugar cane, and for our Avallen Calvados, it's apples!",
+      "attachTo": {
+        "element": "[name='lcaData.agriculture.mainCrop.cropType']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "agriculture-yield",
+      "title": "Crop Yield",
+      "text": "This is the 'yield' of your crop. We need to know, on average, how many tonnes of your main ingredient are harvested from one hectare of land. You can usually get this information from your farm or grower.",
+      "attachTo": {
+        "element": "[name='lcaData.agriculture.mainCrop.yieldTonPerHectare']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "agriculture-diesel",
+      "title": "Farm Machinery Fuel",
+      "text": "This helps us account for the fuel used by farm machinery during cultivation and harvesting. Please enter the average litres of diesel used per hectare. An estimate is perfectly fine to start with.",
+      "attachTo": {
+        "element": "[name='lcaData.agriculture.mainCrop.dieselLPerHectare']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "packaging-intro",
+      "title": "Product Packaging",
+      "text": "Now let's break down your product's packaging. It's really important to add every single component here, from the bottle right down to the label and stopper, as packaging is often a major part of a product's footprint.",
+      "attachTo": {
+        "element": "[data-testid='packaging-section']",
+        "on": "top"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "packaging-container",
+      "title": "Container Details",
+      "text": "This is the most important part. Enter the material of your bottle or can, its weight in grams (you can find this on the manufacturer's spec sheet), and the percentage of recycled content it contains. Higher recycled content is great for sustainability!",
+      "attachTo": {
+        "element": "[data-testid='container-details']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "processing-transport",
+      "title": "Inbound Transport",
+      "text": "Here, we need to know how your raw materials get to your production facility. Just enter the average distance in kilometers and the main type of transport used.",
+      "attachTo": {
+        "element": "[data-testid='inbound-transport']",
+        "on": "top"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "processing-energy",
+      "title": "Processing Energy",
+      "text": "This section is about the energy and water used inside your facility to turn your ingredients into the final liquid. Try to be as accurate as you can, but good estimates are fine.",
+      "attachTo": {
+        "element": "[data-testid='processing-section']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "processing-lpg",
+      "title": "Distillation Energy",
+      "text": "For spirits, this is the fuel used to heat your stills during distillation. If you use natural gas or another fuel, you can convert it to kWh and enter it in the electricity field.",
+      "attachTo": {
+        "element": "[name='lcaData.processing.lpgKgPerLAlcohol']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "distribution-distance",
+      "title": "Distribution Distance",
+      "text": "This is about 'outbound' logistics. Tell us the average distance your finished product travels from your facility to your first main warehouse or distribution centre.",
+      "attachTo": {
+        "element": "[name='lcaData.distribution.averageDistanceToDistributionCenterKm']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "endoflife-recycling",
+      "title": "Recycling Rate",
+      "text": "Based on your main market (e.g., the UK), what is the average recycling rate for your primary container type? You can find this in public data, or we can help you with an estimate.",
+      "attachTo": {
+        "element": "[name='lcaData.endOfLife.recyclingRatePercentage']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "endoflife-disposal",
+      "title": "Disposal Method",
+      "text": "If your product is not recycled, what is the most common disposal method in your primary market? This is usually 'Landfill' or 'Incineration'.",
+      "attachTo": {
+        "element": "[name='lcaData.endOfLife.primaryDisposalMethod']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "tour-complete",
+      "title": "Congratulations!",
+      "text": "That's it! You've completed the questionnaire. You can now review your data and, when you're ready, click to generate your first LCA report. Well done!",
+      "buttons": [
+        {
+          "text": "Finish Tour",
+          "action": "complete",
+          "classes": "btn btn-primary"
+        }
+      ]
+    }
+  ]
+}
