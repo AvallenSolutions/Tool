@@ -1,7 +1,17 @@
-/* Enhanced Shepherd.js styles for Avallen branding with improved UX */
+/* Enhanced Shepherd.js styles for Avallen branding with advanced animations */
 .shepherd-modal-overlay-container {
   z-index: 9998;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: overlayFadeIn 0.4s ease-out;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    background-color: rgba(0, 0, 0, 0);
+  }
+  to {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
 }
 
 .shepherd-modal {
@@ -11,51 +21,115 @@
 .shepherd-element {
   z-index: 10000;
   max-width: 420px;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  animation: shepherdFadeIn 0.3s ease-out;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 
+              0 10px 20px rgba(0, 0, 0, 0.15),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(32, 157, 80, 0.2);
+  animation: shepherdSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes shepherdFadeIn {
+.shepherd-element::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes shepherdSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Bounce animation for buttons */
+@keyframes buttonPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.shepherd-content {
+  padding: 32px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.shepherd-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 18px;
+  font-family: 'Roboto Slab', serif;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: titleBounce 0.6s ease-out 0.2s both;
+}
+
+.shepherd-title::before {
+  content: "🎯";
+  font-size: 20px;
+  animation: iconSpin 0.8s ease-out 0.4s both;
+  transform-origin: center;
+}
+
+@keyframes titleBounce {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes iconSpin {
+  from {
+    transform: rotate(-180deg) scale(0);
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.shepherd-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #4b5563;
+  margin-bottom: 28px;
+  animation: textFadeIn 0.6s ease-out 0.4s both;
+}
+
+@keyframes textFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.shepherd-content {
-  padding: 28px;
-  background: white;
-  border-radius: 12px;
-  position: relative;
-}
-
-.shepherd-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 16px;
-  font-family: 'Roboto Slab', serif;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.shepherd-title::before {
-  content: "🎯";
-  font-size: 16px;
-}
-
-.shepherd-text {
-  font-size: 15px;
-  line-height: 1.7;
-  color: #4b5563;
-  margin-bottom: 24px;
 }
 
 .shepherd-footer {
@@ -67,30 +141,62 @@
 }
 
 .shepherd-button {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 80px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  animation: buttonSlideIn 0.5s ease-out 0.6s both;
+}
+
+.shepherd-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.shepherd-button:hover::before {
+  left: 100%;
 }
 
 .shepherd-button-primary {
   background: linear-gradient(135deg, #209d50 0%, #1a7a3e 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(32, 157, 80, 0.3);
+  box-shadow: 0 4px 15px rgba(32, 157, 80, 0.3), 
+              0 2px 8px rgba(32, 157, 80, 0.2);
 }
 
 .shepherd-button-primary:hover {
   background: linear-gradient(135deg, #1a7a3e 0%, #155f30 100%);
-  box-shadow: 0 4px 12px rgba(32, 157, 80, 0.4);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(32, 157, 80, 0.4), 
+              0 4px 12px rgba(32, 157, 80, 0.3);
+  transform: translateY(-2px) scale(1.02);
+  animation: buttonPop 0.3s ease;
+}
+
+@keyframes buttonSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .shepherd-button-secondary {
@@ -122,22 +228,47 @@
   border: 1px solid #e5e7eb;
 }
 
-/* Progress indicator */
+/* Enhanced Progress indicator */
 .shepherd-progress {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background-color: #f3f4f6;
-  border-radius: 12px 12px 0 0;
+  height: 4px;
+  background-color: rgba(243, 244, 246, 0.8);
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
 }
 
 .shepherd-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #209d50 0%, #1a7a3e 100%);
-  border-radius: 12px 12px 0 0;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #209d50 0%, #1a7a3e 50%, #209d50 100%);
+  background-size: 200% 100%;
+  border-radius: 16px 16px 0 0;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: progressShimmer 2s infinite;
+  position: relative;
+}
+
+.shepherd-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: progressGlow 1.5s infinite;
+}
+
+@keyframes progressShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes progressGlow {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 /* Enhanced tour button styling */
@@ -196,9 +327,66 @@
 }
 
 .shepherd-tip {
-  background-color: #d1ecf1;
+  background: linear-gradient(135deg, #d1ecf1 0%, #b8e6f1 100%);
   border-left: 4px solid #17a2b8;
-  padding: 8px 12px;
-  margin: 12px 0;
-  border-radius: 0 4px 4px 0;
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.15);
+  animation: tipSlideIn 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.shepherd-tip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #17a2b8, #138496);
+  animation: tipGlow 2s infinite alternate;
+}
+
+@keyframes tipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tipGlow {
+  from { box-shadow: 0 0 5px rgba(23, 162, 184, 0.5); }
+  to { box-shadow: 0 0 15px rgba(23, 162, 184, 0.8); }
+}
+
+/* Floating animation for highlighted elements */
+.shepherd-target-highlighted {
+  animation: floatHighlight 3s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(32, 157, 80, 0.4) !important;
+  position: relative;
+  z-index: 9997;
+}
+
+@keyframes floatHighlight {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 0 20px rgba(32, 157, 80, 0.4);
+  }
+  50% { 
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 5px 25px rgba(32, 157, 80, 0.6);
+  }
+}
+
+/* Arrow enhancements */
+.shepherd-arrow::before {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 2px solid rgba(32, 157, 80, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

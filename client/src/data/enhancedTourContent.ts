@@ -124,7 +124,7 @@ export const enhancedTourContent = {
     {
       id: "processing-energy",
       title: "Production Energy Consumption",
-      text: "Energy use during production is critical for calculating carbon footprint. This includes electricity for pumps, lighting, refrigeration, and any heating or cooling processes. Renewable energy significantly reduces environmental impact, so be sure to include that percentage!",
+      text: "Energy use during production is critical for calculating carbon footprint. This includes electricity for pumps, lighting, refrigeration, and any heating or cooling processes.<br><br><div class='shepherd-tip'>⚡ <strong>Pro Tip:</strong> Renewable energy significantly reduces environmental impact, so be sure to include that percentage!</div>",
       attachTo: {
         element: "[name='lcaData.processing.electricityKwhPerTonCrop']",
         on: "bottom"
@@ -150,7 +150,7 @@ export const enhancedTourContent = {
     {
       id: "packaging-importance",
       title: "Packaging Environmental Impact",
-      text: "Packaging often represents 30-60% of a product's total carbon footprint! Every component matters - bottles, labels, caps, secondary packaging. Material choice (glass vs. plastic vs. aluminum) and recycled content percentages make huge differences in environmental impact.",
+      text: "Packaging often represents 30-60% of a product's total carbon footprint! Every component matters - bottles, labels, caps, secondary packaging.<br><br><div class='shepherd-highlight'>📦 <strong>Impact Focus:</strong> Material choice (glass vs. plastic vs. aluminum) and recycled content percentages make huge differences in environmental impact.</div>",
       attachTo: {
         element: "[data-testid='packaging-section']",
         on: "top"

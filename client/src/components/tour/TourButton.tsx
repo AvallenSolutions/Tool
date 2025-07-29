@@ -45,16 +45,24 @@ export const TourButton: React.FC<TourButtonProps> = ({
       size={size}
       className={`
         flex items-center gap-2 
-        bg-green-50 hover:bg-green-100 
+        bg-gradient-to-r from-green-50 to-green-100
+        hover:from-green-100 hover:to-green-200
         border-green-200 hover:border-green-300
         text-green-700 hover:text-green-800
-        font-medium transition-all duration-300
-        ${isPulsing ? 'animate-pulse shadow-lg shadow-green-200' : ''}
+        font-semibold transition-all duration-500
+        shadow-md hover:shadow-lg
+        transform hover:scale-105
+        ${isPulsing ? 'animate-bounce shadow-xl shadow-green-200' : ''}
         ${className}
       `}
     >
-      <BookOpen className="w-4 h-4" />
-      Take Guided Tour
+      <BookOpen className={`w-4 h-4 transition-transform duration-300 ${isPulsing ? 'animate-spin' : ''}`} />
+      <span className="relative">
+        Take Guided Tour
+        {isPulsing && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+        )}
+      </span>
     </Button>
   );
 };
