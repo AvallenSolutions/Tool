@@ -747,34 +747,78 @@ export const lcaQuestionnaires = pgTable("lca_questionnaires", {
   reportingPeriodStart: date("reporting_period_start").notNull(),
   reportingPeriodEnd: date("reporting_period_end").notNull(),
   
-  // Structured LCA data as JSONB
+  // Enhanced structured LCA data as JSONB - supports both legacy and new enhanced format
   lcaData: jsonb("lca_data").notNull().$type<{
-    agriculture: {
-      mainCropType: string;
-      yieldTonPerHectare: number;
-      dieselLPerHectare: number;
-      sequestrationTonCo2PerTonCrop: number;
+    // Basic product info
+    basic_info?: {
+      product_name: string;
+      sku_code: string;
+      product_type: string;
+      volume_ml: number;
     };
-    inboundTransport: {
+    // Enhanced agriculture data
+    agriculture: {
+      mainCropType?: string; // Legacy field - maintained for backward compatibility
+      main_crop_type?: string; // New enhanced field
+      yieldTonPerHectare?: number; // Legacy field
+      yield_ton_per_hectare?: number; // New enhanced field
+      dieselLPerHectare?: number; // Legacy field
+      diesel_l_per_hectare?: number; // New enhanced field
+      sequestrationTonCo2PerTonCrop?: number; // Legacy field
+      sequestration_ton_co2_per_ton_crop?: number; // New enhanced field
+    };
+    // Enhanced inbound transport
+    inboundTransport?: { // Legacy structure
       distanceKm: number;
       mode: string;
     };
+    inbound_transport?: { // New enhanced structure
+      distance_km: number;
+      mode: string;
+    };
+    // Enhanced processing data
     processing: {
-      waterM3PerTonCrop: number;
-      electricityKwhPerTonCrop: number;
+      // Legacy fields - maintained for backward compatibility
+      waterM3PerTonCrop?: number;
+      electricityKwhPerTonCrop?: number;
       juiceLPerTonCrop?: number;
       pulpKgPerTonCrop?: number;
       ciderLPerLSpirit?: number;
       lpgKgPerLAlcohol?: number;
-      netWaterUseLPerBottle: number;
+      netWaterUseLPerBottle?: number;
       spiritYieldLPerTonCrop?: number;
       angelsSharePercentage?: number;
+      // New enhanced fields
+      water_m3_per_ton_crop?: number;
+      electricity_kwh_per_ton_crop?: number;
+      lpg_kg_per_l_alcohol?: number;
+      net_water_use_l_per_bottle?: number;
+      angels_share_percentage?: number;
     };
-    packaging: Array<{
+    // Enhanced packaging structure
+    packaging?: Array<{ // Legacy format
       component: string;
       material: string;
       weightGrams: number;
+    }> | Array<{ // New enhanced format
+      component_type: 'Container' | 'Label' | 'Stopper/Closure' | 'Secondary Packaging';
+      container_name?: string;
+      material: string;
+      weight_grams: number;
+      recycled_content_percentage?: number;
+      label_material?: string;
+      label_weight_grams?: number;
     }>;
+    // Enhanced distribution data
+    distribution?: {
+      avg_distance_to_dc_km: number;
+      primary_transport_mode: string;
+    };
+    // Enhanced end of life data
+    end_of_life?: {
+      recycling_rate_percentage: number;
+      primary_disposal_method: string;
+    };
   }>(),
   
   status: varchar("status").notNull().default("incomplete"), // incomplete, complete, processing, calculated
@@ -832,12 +876,90 @@ export const uploadedSupplierLcaRelations = relations(uploadedSupplierLcas, ({ o
 }));
 
 // Type exports for new LCA tables
+// Enhanced LCA Data validation schema
+export const enhancedLcaDataSchema = z.object({
+  basic_info: z.object({
+    product_name: z.string(),
+    sku_code: z.string(),
+    product_type: z.string(),
+    volume_ml: z.number().positive(),
+  }).optional(),
+  agriculture: z.object({
+    // Legacy fields for backward compatibility
+    mainCropType: z.string().optional(),
+    yieldTonPerHectare: z.number().positive().optional(),
+    dieselLPerHectare: z.number().nonnegative().optional(),
+    sequestrationTonCo2PerTonCrop: z.number().nonnegative().optional(),
+    // New enhanced fields
+    main_crop_type: z.string().optional(),
+    yield_ton_per_hectare: z.number().positive().optional(),
+    diesel_l_per_hectare: z.number().nonnegative().optional(),
+    sequestration_ton_co2_per_ton_crop: z.number().nonnegative().optional(),
+  }),
+  inboundTransport: z.object({
+    distanceKm: z.number().positive(),
+    mode: z.string(),
+  }).optional(),
+  inbound_transport: z.object({
+    distance_km: z.number().positive(),
+    mode: z.string(),
+  }).optional(),
+  processing: z.object({
+    // Legacy fields
+    waterM3PerTonCrop: z.number().nonnegative().optional(),
+    electricityKwhPerTonCrop: z.number().nonnegative().optional(),
+    juiceLPerTonCrop: z.number().nonnegative().optional(),
+    pulpKgPerTonCrop: z.number().nonnegative().optional(),
+    ciderLPerLSpirit: z.number().nonnegative().optional(),
+    lpgKgPerLAlcohol: z.number().nonnegative().optional(),
+    netWaterUseLPerBottle: z.number().nonnegative().optional(),
+    spiritYieldLPerTonCrop: z.number().nonnegative().optional(),
+    angelsSharePercentage: z.number().min(0).max(100).optional(),
+    // New enhanced fields
+    water_m3_per_ton_crop: z.number().nonnegative().optional(),
+    electricity_kwh_per_ton_crop: z.number().nonnegative().optional(),
+    lpg_kg_per_l_alcohol: z.number().nonnegative().optional(),
+    net_water_use_l_per_bottle: z.number().nonnegative().optional(),
+    angels_share_percentage: z.number().min(0).max(100).optional(),
+  }),
+  packaging: z.array(
+    z.union([
+      // Legacy format
+      z.object({
+        component: z.string(),
+        material: z.string(),
+        weightGrams: z.number().positive(),
+      }),
+      // New enhanced format
+      z.object({
+        component_type: z.enum(['Container', 'Label', 'Stopper/Closure', 'Secondary Packaging']),
+        container_name: z.string().optional(),
+        material: z.string(),
+        weight_grams: z.number().positive(),
+        recycled_content_percentage: z.number().min(0).max(100).optional(),
+        label_material: z.string().optional(),
+        label_weight_grams: z.number().positive().optional(),
+      }),
+    ])
+  ).optional(),
+  distribution: z.object({
+    avg_distance_to_dc_km: z.number().positive(),
+    primary_transport_mode: z.string(),
+  }).optional(),
+  end_of_life: z.object({
+    recycling_rate_percentage: z.number().min(0).max(100),
+    primary_disposal_method: z.string(),
+  }).optional(),
+});
+
 export type LcaQuestionnaire = typeof lcaQuestionnaires.$inferSelect;
 export type InsertLcaQuestionnaire = typeof lcaQuestionnaires.$inferInsert;
 export const insertLcaQuestionnaireSchema = createInsertSchema(lcaQuestionnaires).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  lcaData: enhancedLcaDataSchema, // Use the enhanced validation schema
 });
 
 export type UploadedSupplierLca = typeof uploadedSupplierLcas.$inferSelect;
