@@ -11,7 +11,7 @@ export interface TourStep {
   };
   buttons: Array<{
     text: string;
-    action: () => void;
+    action: string;
     classes?: string;
   }>;
   classes?: string;
@@ -36,15 +36,32 @@ export class TourService {
     });
   }
 
-  public loadSteps(steps: TourStep[]) {
+  public loadSteps(steps: any[]) {
     this.steps = steps;
+    console.log('Loading steps into Shepherd:', steps.length);
+    
     this.steps.forEach((step) => {
       this.tour?.addStep({
         title: step.title,
         text: step.text,
         attachTo: step.attachTo,
-        buttons: step.buttons,
-        classes: step.classes || 'shadow-md bg-white rounded-lg',
+        buttons: step.buttons.map((button: any) => ({
+          text: button.text,
+          action: () => {
+            console.log('Button action:', button.action);
+            if (button.action === 'next') {
+              this.tour?.next();
+            } else if (button.action === 'back') {
+              this.tour?.back();
+            } else if (button.action === 'cancel') {
+              this.tour?.cancel();
+            } else if (button.action === 'complete') {
+              this.tour?.complete();
+            }
+          },
+          classes: button.classes,
+        })),
+        classes: step.classes || 'shepherd-theme-arrows shadow-md bg-white rounded-lg',
         id: step.id,
       });
     });

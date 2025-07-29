@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import TourService, { TourStep } from '../../services/TourService';
-import tourContent from '../../data/tourContent.json';
+import { enhancedTourContent } from '../../data/enhancedTourContent';
 
 interface TourContextType {
   startTour: () => void;
@@ -30,41 +30,9 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    // Load tour steps from JSON content
-    const steps: TourStep[] = tourContent.tourSteps.map((step, index) => ({
-      id: step.id,
-      title: step.title,
-      text: step.text,
-      attachTo: step.attachTo,
-      buttons: step.buttons.map((button) => ({
-        text: button.text,
-        classes: button.classes,
-        action: () => {
-          switch (button.action) {
-            case 'next':
-              if (index < tourContent.tourSteps.length - 1) {
-                setCurrentStep(index + 1);
-              }
-              tourService.tour?.next();
-              break;
-            case 'back':
-              if (index > 0) {
-                setCurrentStep(index - 1);
-              }
-              tourService.tour?.back();
-              break;
-            case 'cancel':
-              cancelTour();
-              break;
-            case 'complete':
-              completeTour();
-              break;
-          }
-        },
-      })),
-    }));
-
-    tourService.loadSteps(steps);
+    // Load tour steps from enhanced content
+    console.log('Loading enhanced tour content:', enhancedTourContent.tourSteps);
+    tourService.loadSteps(enhancedTourContent.tourSteps);
   }, [tourService]);
 
   const startTour = useCallback(() => {

@@ -22,7 +22,7 @@
       "title": "Primary Agricultural Ingredient",
       "text": "First, tell us about the primary agricultural ingredient for your drink. For a whisky this would be barley, for a rum it might be sugar cane, and for our Avallen Calvados, it's apples!",
       "attachTo": {
-        "element": "[name='lcaData.agriculture.mainCrop.cropType']",
+        "element": "[name='lcaData.agriculture.mainCropType']",
         "on": "bottom"
       },
       "buttons": [
@@ -48,7 +48,7 @@
       "title": "Crop Yield",
       "text": "This is the 'yield' of your crop. We need to know, on average, how many tonnes of your main ingredient are harvested from one hectare of land. You can usually get this information from your farm or grower.",
       "attachTo": {
-        "element": "[name='lcaData.agriculture.mainCrop.yieldTonPerHectare']",
+        "element": "[name='lcaData.agriculture.yieldTonPerHectare']",
         "on": "bottom"
       },
       "buttons": [
@@ -74,7 +74,7 @@
       "title": "Farm Machinery Fuel",
       "text": "This helps us account for the fuel used by farm machinery during cultivation and harvesting. Please enter the average litres of diesel used per hectare. An estimate is perfectly fine to start with.",
       "attachTo": {
-        "element": "[name='lcaData.agriculture.mainCrop.dieselLPerHectare']",
+        "element": "[name='lcaData.agriculture.dieselLPerHectare']",
         "on": "bottom"
       },
       "buttons": [
@@ -148,12 +148,12 @@
       ]
     },
     {
-      "id": "processing-transport",
-      "title": "Inbound Transport",
-      "text": "Here, we need to know how your raw materials get to your production facility. Just enter the average distance in kilometers and the main type of transport used.",
+      "id": "inbound-transport",
+      "title": "Raw Material Transport",
+      "text": "This section tracks the environmental impact of getting your raw materials to your production facility. Consider the distance from your main supplier and the primary transport method used (truck, rail, ship).",
       "attachTo": {
-        "element": "[data-testid='inbound-transport']",
-        "on": "top"
+        "element": "[name='lcaData.inboundTransport.avgDistanceKm']",
+        "on": "bottom"
       },
       "buttons": [
         {
@@ -230,7 +230,7 @@
       "title": "Distribution Distance",
       "text": "This is about 'outbound' logistics. Tell us the average distance your finished product travels from your facility to your first main warehouse or distribution centre.",
       "attachTo": {
-        "element": "[name='lcaData.distribution.averageDistanceToDistributionCenterKm']",
+        "element": "[name='lcaData.distribution.avgDistanceToDcKm']",
         "on": "bottom"
       },
       "buttons": [
@@ -256,7 +256,7 @@
       "title": "Recycling Rate",
       "text": "Based on your main market (e.g., the UK), what is the average recycling rate for your primary container type? You can find this in public data, or we can help you with an estimate.",
       "attachTo": {
-        "element": "[name='lcaData.endOfLife.recyclingRatePercentage']",
+        "element": "[name='lcaData.endOfLifeDetailed.recyclingRatePercentage']",
         "on": "bottom"
       },
       "buttons": [
@@ -282,7 +282,7 @@
       "title": "Disposal Method",
       "text": "If your product is not recycled, what is the most common disposal method in your primary market? This is usually 'Landfill' or 'Incineration'.",
       "attachTo": {
-        "element": "[name='lcaData.endOfLife.primaryDisposalMethod']",
+        "element": "[name='lcaData.endOfLifeDetailed.primaryDisposalMethod']",
         "on": "bottom"
       },
       "buttons": [
@@ -307,6 +307,70 @@
       "id": "tour-complete",
       "title": "Congratulations!",
       "text": "That's it! You've completed the questionnaire. You can now review your data and, when you're ready, click to generate your first LCA report. Well done!",
+      "buttons": [
+        {
+          "text": "Finish Tour",
+          "action": "complete",
+          "classes": "btn btn-primary"
+        }
+      ]
+    },
+    {
+      "id": "renewable-energy",
+      "title": "Renewable Energy Usage",
+      "text": "This is great for reducing your carbon footprint! Enter the percentage of renewable energy used in your production. This could be solar, wind, hydroelectric, or green energy from your electricity supplier.",
+      "attachTo": {
+        "element": "[name='lcaData.processing.renewableEnergyPercent']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "water-usage",
+      "title": "Water Consumption",
+      "text": "Water usage is a key sustainability metric. Enter the cubic meters of water used per tonne of crop processed. This includes all water used in production - cleaning, cooling, processing, and bottling.",
+      "attachTo": {
+        "element": "[name='lcaData.processing.waterM3PerTonCrop']",
+        "on": "bottom"
+      },
+      "buttons": [
+        {
+          "text": "Previous",
+          "action": "back",
+          "classes": "btn btn-secondary"  
+        },
+        {
+          "text": "Next",
+          "action": "next",
+          "classes": "btn btn-primary"
+        },
+        {
+          "text": "Exit",
+          "action": "cancel",
+          "classes": "btn btn-link"
+        }
+      ]
+    },
+    {
+      "id": "tour-complete",
+      "title": "Excellent Work!",
+      "text": "You've now learned about all the key sections of the LCA questionnaire. These data points will help create accurate sustainability reports for your products. Remember, you can always click the tour button again if you need help!",
       "buttons": [
         {
           "text": "Finish Tour",
