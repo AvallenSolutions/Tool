@@ -161,6 +161,7 @@ const enhancedProductSchema = z.object({
       lpgKgPerLAlcohol: z.number().min(0).default(0),
       angelsSharePercentage: z.number().min(0).max(100).default(0),
       waterM3PerTonCrop: z.number().min(0).default(0),
+      renewableEnergyPercent: z.number().min(0).max(100).default(0),
     }),
     fermentation: z.object({
       fermentationTime: z.number().min(0).default(0),
@@ -271,6 +272,7 @@ const enhancedProductSchema = z.object({
       lpgKgPerLAlcohol: z.number().nonnegative().optional(),
       netWaterUseLPerBottle: z.number().nonnegative().optional(),
       angelsSharePercentage: z.number().min(0).max(100).optional(),
+      renewableEnergyPercent: z.number().min(0).max(100).optional(),
       fermentation: z.object({
         fermentationTime: z.number().positive().optional(), // days
         temperatureControl: z.boolean().default(false),
@@ -433,6 +435,7 @@ export default function EnhancedProductForm({
           lpgKgPerLAlcohol: 0,
           angelsSharePercentage: 0,
           waterM3PerTonCrop: 0,
+          renewableEnergyPercent: 0,
         },
         fermentation: {
           fermentationTime: 0,
@@ -474,6 +477,7 @@ export default function EnhancedProductForm({
           lpgKgPerLAlcohol: 0,
           netWaterUseLPerBottle: 0,
           angelsSharePercentage: 0,
+          renewableEnergyPercent: 0,
           fermentation: { fermentationTime: 0, temperatureControl: false, yeastType: '', sugarAddedKg: 0 },
           distillation: { distillationRounds: 0, energySourceType: undefined, heatRecoverySystem: false, copperUsageKg: 0 },
           maturation: { maturationTimeMonths: 0, barrelType: undefined, warehouseType: undefined, evaporationLossPercentage: 0 },
@@ -2196,100 +2200,7 @@ export default function EnhancedProductForm({
                   </div>
                 </div>
 
-                {/* Energy Consumption */}
-                <div className="space-y-4">
-                  <h4 className="font-medium">Energy Consumption</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="production.energyConsumption.electricityKwh"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Electricity (kWh)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="1000" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="production.energyConsumption.renewableEnergyPercent"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Renewable Energy (%)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="50" 
-                              min="0" 
-                              max="100"
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
 
-                {/* Water Usage */}
-                <div className="space-y-4">
-                  <h4 className="font-medium">Water Usage</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="production.waterUsage.processWaterLiters"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Process Water (L)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="500" 
-                              {...field} 
-                              onChange={(e) => {
-                                const value = parseFloat(e.target.value) || 0;
-                                field.onChange(value);
-                                // Auto-sync to LCA Data tab
-                                form.setValue('lcaData.processing.waterM3PerTonCrop', value / 1000);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="production.waterUsage.cleaningWaterLiters"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cleaning Water (L)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="200" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
 
                 {/* Basic Processing Data */}
                 <div className="bg-blue-50 p-4 rounded-lg space-y-4">
@@ -2346,7 +2257,7 @@ export default function EnhancedProductForm({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
                       control={form.control}
                       name="production.processing.angelsSharePercentage"
@@ -2391,6 +2302,33 @@ export default function EnhancedProductForm({
                                 field.onChange(value);
                                 // Auto-sync to LCA Data tab
                                 form.setValue('lcaData.processing.waterM3PerTonCrop', value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="production.processing.renewableEnergyPercent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Renewable Energy (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100"
+                              step="0.1"
+                              placeholder="50.0" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                field.onChange(value);
+                                // Auto-sync to LCA Data tab - need to add this field to LCA schema
+                                form.setValue('lcaData.processing.renewableEnergyPercent', value);
                               }}
                             />
                           </FormControl>
@@ -3361,7 +3299,7 @@ export default function EnhancedProductForm({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
                       control={form.control}
                       name="lcaData.processing.lpgKgPerLAlcohol"
@@ -3395,6 +3333,28 @@ export default function EnhancedProductForm({
                               max="100"
                               step="0.1"
                               placeholder="2.5" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lcaData.processing.renewableEnergyPercent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Renewable Energy (%)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100"
+                              step="0.1"
+                              placeholder="50.0" 
                               {...field} 
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
