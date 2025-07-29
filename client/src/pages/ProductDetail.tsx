@@ -150,6 +150,22 @@ function ProductDetail() {
                     </div>
                   )}
 
+                  {/* CO2 Emissions Highlight */}
+                  {product.productAttributes?.co2Emissions && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <label className="text-sm font-medium text-green-800">Environmental Impact Data</label>
+                      </div>
+                      <p className="text-2xl font-bold text-green-800">
+                        {product.productAttributes.co2Emissions}g CO2e
+                      </p>
+                      <p className="text-sm text-green-600 mt-1">
+                        Supplier-verified carbon footprint per unit
+                      </p>
+                    </div>
+                  )}
+
                   {product.sku && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">SKU</label>
@@ -180,6 +196,14 @@ function ProductDetail() {
                           <div>
                             <span className="text-xs font-medium text-gray-500">Recycled Content</span>
                             <p className="font-medium text-lg">{product.productAttributes.recycledContent}%</p>
+                          </div>
+                        )}
+                        {product.productAttributes.co2Emissions && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">CO2 Emissions</span>
+                            <p className="font-medium text-lg text-green-700">
+                              {product.productAttributes.co2Emissions}g CO2e
+                            </p>
                           </div>
                         )}
                       </div>

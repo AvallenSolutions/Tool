@@ -1591,12 +1591,35 @@ export default function EnhancedProductForm({
                   </div>
                 </div>
 
+                {/* Supplier CO2 Data Display */}
+                {selectedPackagingSupplier?.productAttributes?.co2Emissions && (
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h5 className="font-medium text-blue-800 mb-1">
+                          Supplier-Verified CO2 Emissions
+                        </h5>
+                        <p className="text-2xl font-bold text-blue-900">
+                          {selectedPackagingSupplier.productAttributes.co2Emissions}g CO2e
+                        </p>
+                        <p className="text-sm text-blue-600 mt-1">
+                          Per unit carbon footprint (overrides OpenLCA calculations)
+                        </p>
+                      </div>
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Auto-Sync Status */}
                 <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <p className="text-sm text-green-700">
                       Packaging data automatically syncs to LCA calculations
+                      {selectedPackagingSupplier?.productAttributes?.co2Emissions && (
+                        <span className="font-medium"> • Supplier CO2 data overrides OpenLCA</span>
+                      )}
                     </p>
                   </div>
                 </div>

@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Loader2, Plus, Search, Filter, Building2, Package, CheckCircle, 
   Clock, Globe, Mail, MapPin, Star, ShieldCheck, Users, FileText,
-  ExternalLink, ChevronDown, ChevronRight, X, AlertCircle
+  ExternalLink, ChevronDown, ChevronRight, X, AlertCircle, Trash2, Edit
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
