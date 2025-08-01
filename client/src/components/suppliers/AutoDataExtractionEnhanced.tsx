@@ -131,7 +131,7 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
           productImage: selectedImages[0], // Primary image is first selected
           additionalImages: selectedImages.slice(1) // Rest are additional
         } : undefined,
-        supplierData: editableSupplierData,
+        supplierData: editableSupplierData || undefined,
         selectedImages
       };
       
@@ -483,26 +483,26 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {renderEditableField('Product Name', 'productName', 'text')}
-                  {renderEditableField('SKU', 'sku', 'text')}
-                  {renderEditableField('Material Type', 'materialType', 'text')}
-                  {renderEditableField('Color', 'color', 'text')}
-                  {renderEditableField('Weight', 'weight', 'number')}
-                  {renderEditableField('Weight Unit', 'weightUnit', 'text')}
-                  {renderEditableField('Capacity', 'capacity', 'number')}
-                  {renderEditableField('Capacity Unit', 'capacityUnit', 'text')}
-                  {renderEditableField('Recycled Content (%)', 'recycledContent', 'number')}
-                  {renderEditableField('Price', 'price', 'number')}
-                  {renderEditableField('Currency', 'currency', 'text')}
+                  {renderEditableProductField('Product Name', 'productName', 'text')}
+                  {renderEditableProductField('SKU', 'sku', 'text')}
+                  {renderEditableProductField('Material Type', 'materialType', 'text')}
+                  {renderEditableProductField('Color', 'color', 'text')}
+                  {renderEditableProductField('Weight', 'weight', 'number')}
+                  {renderEditableProductField('Weight Unit', 'weightUnit', 'text')}
+                  {renderEditableProductField('Capacity', 'capacity', 'number')}
+                  {renderEditableProductField('Capacity Unit', 'capacityUnit', 'text')}
+                  {renderEditableProductField('Recycled Content (%)', 'recycledContent', 'number')}
+                  {renderEditableProductField('Price', 'price', 'number')}
+                  {renderEditableProductField('Currency', 'currency', 'text')}
                 </div>
                 
                 <Separator />
                 
                 <div className="space-y-4">
-                  {renderEditableField('Description', 'description', 'textarea')}
+                  {renderEditableProductField('Description', 'description', 'textarea')}
                 </div>
 
-                {editableData?.dimensions && (
+                {editableProductData?.dimensions && (
                   <>
                     <Separator />
                     <div>
@@ -513,15 +513,15 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
                           {isEditing ? (
                             <Input
                               type="number"
-                              value={editableData.dimensions.height?.toString() || ''}
-                              onChange={(e) => updateEditableField('dimensions', {
-                                ...editableData.dimensions,
+                              value={editableProductData.dimensions.height?.toString() || ''}
+                              onChange={(e) => updateEditableProductField('dimensions', {
+                                ...editableProductData.dimensions,
                                 height: parseFloat(e.target.value) || 0
                               })}
                             />
                           ) : (
                             <div className="p-2 bg-gray-50 rounded text-sm">
-                              {editableData.dimensions.height || 'N/A'}
+                              {editableProductData.dimensions.height || 'N/A'}
                             </div>
                           )}
                         </div>
@@ -530,15 +530,15 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
                           {isEditing ? (
                             <Input
                               type="number"
-                              value={editableData.dimensions.width?.toString() || ''}
-                              onChange={(e) => updateEditableField('dimensions', {
-                                ...editableData.dimensions,
+                              value={editableProductData.dimensions.width?.toString() || ''}
+                              onChange={(e) => updateEditableProductField('dimensions', {
+                                ...editableProductData.dimensions,
                                 width: parseFloat(e.target.value) || 0
                               })}
                             />
                           ) : (
                             <div className="p-2 bg-gray-50 rounded text-sm">
-                              {editableData.dimensions.width || 'N/A'}
+                              {editableProductData.dimensions.width || 'N/A'}
                             </div>
                           )}
                         </div>
@@ -547,15 +547,15 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
                           {isEditing ? (
                             <Input
                               type="number"
-                              value={editableData.dimensions.depth?.toString() || ''}
-                              onChange={(e) => updateEditableField('dimensions', {
-                                ...editableData.dimensions,
+                              value={editableProductData.dimensions.depth?.toString() || ''}
+                              onChange={(e) => updateEditableProductField('dimensions', {
+                                ...editableProductData.dimensions,
                                 depth: parseFloat(e.target.value) || 0
                               })}
                             />
                           ) : (
                             <div className="p-2 bg-gray-50 rounded text-sm">
-                              {editableData.dimensions.depth || 'N/A'}
+                              {editableProductData.dimensions.depth || 'N/A'}
                             </div>
                           )}
                         </div>
@@ -564,15 +564,15 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
                           {isEditing ? (
                             <Input
                               type="text"
-                              value={editableData.dimensions.unit?.toString() || ''}
-                              onChange={(e) => updateEditableField('dimensions', {
-                                ...editableData.dimensions,
+                              value={editableProductData.dimensions.unit?.toString() || ''}
+                              onChange={(e) => updateEditableProductField('dimensions', {
+                                ...editableProductData.dimensions,
                                 unit: e.target.value
                               })}
                             />
                           ) : (
                             <div className="p-2 bg-gray-50 rounded text-sm">
-                              {editableData.dimensions.unit || 'N/A'}
+                              {editableProductData.dimensions.unit || 'N/A'}
                             </div>
                           )}
                         </div>
@@ -581,13 +581,13 @@ export default function AutoDataExtractionEnhanced({ onDataExtracted, disabled =
                   </>
                 )}
 
-                {editableData?.certifications && editableData.certifications.length > 0 && (
+                {editableProductData?.certifications && editableProductData.certifications.length > 0 && (
                   <>
                     <Separator />
                     <div>
                       <Label className="text-sm font-medium mb-2 block">Certifications</Label>
                       <div className="flex flex-wrap gap-2">
-                        {editableData.certifications.map((cert, index) => (
+                        {editableProductData.certifications.map((cert: string, index: number) => (
                           <Badge key={index} variant="outline">
                             {cert}
                           </Badge>
