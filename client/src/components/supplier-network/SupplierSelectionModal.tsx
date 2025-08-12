@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Building2, MapPin, CheckCircle, Loader2, Globe, Package } from 'lucide-react';
+import { SearchAndFilterBar, type SearchFilters } from '@/components/SearchAndFilterBar';
 
 // Map input types to supplier categories
 function getSupplierCategoryFromInputType(inputType: string): string {
@@ -93,6 +94,7 @@ export default function SupplierSelectionModal({
   const [step, setStep] = useState<'suppliers' | 'products'>('suppliers');
   const category = getSupplierCategoryFromInputType(inputType);
   const [searchTerm, setSearchTerm] = useState('');
+  const [productSearchFilters, setProductSearchFilters] = useState<SearchFilters>({});
 
   // Fetch suppliers from API
   const { data: suppliers = [], isLoading: loadingSuppliers } = useQuery({
@@ -107,11 +109,25 @@ export default function SupplierSelectionModal({
     enabled: Boolean(isOpen && step === 'suppliers')
   });
 
-  // Fetch supplier products for selected supplier
-  const { data: supplierProducts = [], isLoading: loadingProducts } = useQuery({
-    queryKey: ['/api/supplier-products', selectedSupplier?.id],
+  // Fetch supplier products for selected supplier using enhanced search
+  const { data: supplierProductsData, isLoading: loadingProducts } = useQuery({
+    queryKey: ['/api/products/search', selectedSupplier?.id, productSearchFilters],
     queryFn: async () => {
-      const response = await fetch(`/api/supplier-products?supplier=${selectedSupplier.id}`, { 
+      if (!selectedSupplier?.id) return { products: [], total: 0 };
+      
+      const params = new URLSearchParams({
+        supplier_id: selectedSupplier.id,
+        limit: '20'
+      });
+      
+      if (productSearchFilters.name) {
+        params.append('name', productSearchFilters.name);
+      }
+      if (productSearchFilters.category) {
+        params.append('category', productSearchFilters.category);
+      }
+      
+      const response = await fetch(`/api/products/search?${params}`, { 
         credentials: 'include' 
       });
       if (!response.ok) throw new Error('Failed to load supplier products');
@@ -120,21 +136,26 @@ export default function SupplierSelectionModal({
     enabled: Boolean(isOpen && step === 'products' && selectedSupplier)
   });
 
-  // Filter suppliers or products based on current step and search term
+  const supplierProducts = supplierProductsData?.products || [];
+
+  // Filter suppliers based on search term (products filtering is handled by API)
   const filteredSuppliers = suppliers.filter((supplier: any) => 
     supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (supplier.description && supplier.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const filteredProducts = supplierProducts.filter((product: any) => 
-    product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.productDescription && product.productDescription.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Products are already filtered by the search API, no need for client-side filtering
+  const filteredProducts = supplierProducts;
 
   const handleSupplierSelect = (supplier: any) => {
     setSelectedSupplier(supplier);
     setStep('products');
     setSearchTerm(''); // Clear search when moving to products
+    setProductSearchFilters({}); // Clear product search filters
+  };
+
+  const handleProductSearch = (filters: SearchFilters) => {
+    setProductSearchFilters(filters);
   };
 
   const handleProductSelect = (product: any) => {
@@ -206,15 +227,26 @@ export default function SupplierSelectionModal({
         </DialogHeader>
 
         {/* Search */}
-        <div className="relative py-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            placeholder={step === 'suppliers' ? "Search suppliers..." : "Search products..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 py-3 text-base bg-white border-gray-300 focus:border-[#209d50] focus:ring-[#209d50]"
-          />
-        </div>
+        {step === 'suppliers' ? (
+          <div className="relative py-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              placeholder="Search suppliers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 py-3 text-base bg-white border-gray-300 focus:border-[#209d50] focus:ring-[#209d50]"
+            />
+          </div>
+        ) : (
+          <div className="py-4">
+            <SearchAndFilterBar
+              onSearch={handleProductSearch}
+              placeholder="Search products..."
+              showCategoryFilter={true}
+              showSupplierFilter={false}
+            />
+          </div>
+        )}
 
         {/* Results */}
         <div className="flex-1 overflow-y-auto space-y-3">

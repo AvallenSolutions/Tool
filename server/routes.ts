@@ -976,6 +976,123 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ END IMAGE UPLOAD ENDPOINTS ============
 
+  // ============ PRODUCT SEARCH ENDPOINTS ============
+
+  // Enhanced product search endpoint
+  app.get('/api/products/search', async (req, res) => {
+    try {
+      const { name, type, supplier_id, category, limit = 50 } = req.query;
+      const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
+      const { eq, and, like, ilike } = await import('drizzle-orm');
+      
+      let query = db
+        .select({
+          id: supplierProducts.id,
+          supplierId: supplierProducts.supplierId,
+          productName: supplierProducts.productName,
+          productDescription: supplierProducts.productDescription,
+          sku: supplierProducts.sku,
+          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+          lcaDataJson: supplierProducts.lcaDataJson,
+          productAttributes: supplierProducts.productAttributes,
+          basePrice: supplierProducts.basePrice,
+          currency: supplierProducts.currency,
+          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+          leadTimeDays: supplierProducts.leadTimeDays,
+          certifications: supplierProducts.certifications,
+          imageUrl: supplierProducts.imageUrl,
+          isVerified: supplierProducts.isVerified,
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory,
+          logoUrl: verifiedSuppliers.logoUrl,
+          createdAt: supplierProducts.createdAt
+        })
+        .from(supplierProducts)
+        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+        .where(and(
+          eq(supplierProducts.isVerified, true),
+          eq(verifiedSuppliers.isVerified, true)
+        ))
+        .limit(parseInt(limit as string) || 50);
+
+      // Build search conditions
+      const conditions = [
+        eq(supplierProducts.isVerified, true),
+        eq(verifiedSuppliers.isVerified, true)
+      ];
+
+      // Filter by product name (case-insensitive partial match)
+      if (name && typeof name === 'string') {
+        conditions.push(ilike(supplierProducts.productName, `%${name}%`));
+      }
+
+      // Filter by product type/category (supplier category)
+      if (type && typeof type === 'string') {
+        conditions.push(eq(verifiedSuppliers.supplierCategory, type));
+      }
+
+      // Filter by category (alias for type)
+      if (category && typeof category === 'string') {
+        conditions.push(eq(verifiedSuppliers.supplierCategory, category));
+      }
+
+      // Filter by specific supplier ID
+      if (supplier_id && typeof supplier_id === 'string') {
+        conditions.push(eq(supplierProducts.supplierId, supplier_id));
+      }
+
+      // Apply all conditions
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      const products = await query;
+      
+      res.json({
+        products,
+        total: products.length,
+        filters: {
+          name: name || null,
+          type: type || null,
+          category: category || null,
+          supplier_id: supplier_id || null,
+        }
+      });
+    } catch (error) {
+      console.error('Error searching products:', error);
+      res.status(500).json({ 
+        error: 'Internal server error occurred while searching products',
+        products: [],
+        total: 0
+      });
+    }
+  });
+
+  // Get available product categories/types for search filters
+  app.get('/api/products/categories', async (req, res) => {
+    try {
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const { sql } = await import('drizzle-orm');
+      
+      const categories = await db
+        .select({
+          category: verifiedSuppliers.supplierCategory,
+          count: sql<number>`cast(count(*) as int)`
+        })
+        .from(verifiedSuppliers)
+        .where(eq(verifiedSuppliers.isVerified, true))
+        .groupBy(verifiedSuppliers.supplierCategory)
+        .orderBy(verifiedSuppliers.supplierCategory);
+
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching product categories:', error);
+      res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
+  // ============ END PRODUCT SEARCH ENDPOINTS ============
+
   // Verified Suppliers API endpoints
   app.get('/api/verified-suppliers', async (req, res) => {
     try {
