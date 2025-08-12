@@ -4,6 +4,21 @@
 
 This is a comprehensive sustainability platform designed for SME drinks brands, providing guided Life Cycle Assessment (LCA) reporting, supplier collaboration, and expert validation. The application helps companies measure, manage, and report their environmental impact with a focus on user-friendly workflows and industry-specific requirements. The business vision is to empower drinks brands with accessible tools for environmental stewardship, leveraging market potential for sustainable practices and driving industry-wide positive change.
 
+## Recent Changes (January 2025)
+
+### MVP Enhancement - 5-Phase Implementation Complete ✅
+- **Phase 1**: Enhanced database schema with comprehensive image storage support via Google Cloud Storage integration
+- **Phase 2**: Complete image upload system with ObjectUploader component and secure object storage workflows  
+- **Phase 3**: Advanced product search with SearchAndFilterBar component integrated into supplier selection modals
+- **Phase 4**: Full supplier invitation & onboarding system with secure token-based workflows (7-day expiration), admin management interface, and complete supplier registration workflow
+- **Phase 5**: Final testing, polish, and system validation - all core functionality verified and ready for deployment
+
+### Key Features Added
+- **Secure Supplier Invitations**: Token-based invitation system with email integration and admin management dashboard
+- **Enhanced Product Search**: Real-time filtering by category, search terms, and supplier selection in modal interfaces  
+- **Professional Image Management**: Complete upload, storage, and retrieval system with Google Cloud Storage backend
+- **Comprehensive Onboarding**: Multi-step supplier registration with validation, approval workflows, and admin oversight
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

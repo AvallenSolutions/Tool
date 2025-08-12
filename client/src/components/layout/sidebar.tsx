@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail } from "lucide-react";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
@@ -22,6 +22,7 @@ export default function Sidebar() {
     // Admin-only items
     ...(user && user.role === 'admin' ? [
       { path: "/app/admin", label: "Admin Dashboard", icon: Users },
+      { path: "/app/admin/invitations", label: "Supplier Invitations", icon: Mail },
     ] : []),
     { path: "/app/test", label: "Test Runner", icon: TestTube },
   ];
