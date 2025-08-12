@@ -35,7 +35,7 @@ export default function Sidebar() {
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
             <span className="text-[#209d50] font-bold text-sm">A</span>
           </div>
-          <span className="text-xl font-bold text-white">Avallen Solutions</span>
+          <span className="text-xl font-headline text-white">Avallen Solutions</span>
         </div>
       </div>
 
@@ -58,7 +58,7 @@ export default function Sidebar() {
                   onClick={() => navigate(item.path)}
                 >
                   <Icon className="w-5 h-5 mr-3" />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-body font-medium">{item.label}</span>
                 </Button>
               </li>
             );

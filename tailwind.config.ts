@@ -62,6 +62,12 @@ export default {
           ring: "var(--sidebar-ring)",
         },
       },
+      fontFamily: {
+        'headline': ['Space Grotesk', 'sans-serif'],
+        'subtitle': ['Space Grotesk', 'sans-serif'], 
+        'body': ['Raleway', 'sans-serif'],
+        'sans': ['Raleway', 'sans-serif'], // Default font
+      },
       keyframes: {
         "accordion-down": {
           from: {
