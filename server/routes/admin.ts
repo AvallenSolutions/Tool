@@ -271,9 +271,12 @@ router.put('/reports/:reportId/approve', async (req: AdminRequest, res) => {
 router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
   try {
     const { supplierId } = req.params;
+    
+    // Clean the request body and ensure proper date handling
+    const { images, ...cleanData } = req.body;
     const updateData = {
-      ...req.body,
-      updatedAt: new Date()
+      ...cleanData,
+      updatedAt: new Date().toISOString()
     };
 
     const [updatedSupplier] = await db

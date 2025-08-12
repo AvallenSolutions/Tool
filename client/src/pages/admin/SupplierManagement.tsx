@@ -79,26 +79,49 @@ export default function SupplierManagement() {
     };
   };
 
-  const handleImageUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+  const handleImageUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
-      toast({
-        title: 'Images Uploaded',
-        description: `Successfully uploaded ${result.successful.length} image(s)`,
-      });
+      console.log('Upload result:', result);
       
-      // Update the editing supplier with the new images
-      if (editingSupplier) {
-        const uploadedFiles = result.successful.map(file => ({
-          name: file.name,
-          url: file.uploadURL,
-          size: file.size,
-        }));
-        
-        setEditingSupplier(prev => ({
-          ...prev!,
-          images: [...((prev as any)?.images || []), ...uploadedFiles]
-        }));
+      try {
+        // Process uploaded files and normalize paths
+        const uploadedFiles = result.successful.map(file => {
+          console.log('Processing uploaded file:', file);
+          return {
+            name: file.name,
+            url: file.uploadURL || file.response?.uploadURL,
+            size: file.size,
+            type: file.type
+          };
+        });
+
+        // Update the editing supplier with the new images
+        if (editingSupplier) {
+          setEditingSupplier(prev => ({
+            ...prev!,
+            images: [...((prev as any)?.images || []), ...uploadedFiles]
+          }));
+
+          toast({
+            title: 'Images Uploaded Successfully',
+            description: `Uploaded ${uploadedFiles.length} image(s). Remember to save changes.`,
+          });
+        }
+      } catch (error) {
+        console.error('Error processing uploaded images:', error);
+        toast({
+          title: 'Upload Processing Error',
+          description: 'Images uploaded but failed to process. Please try again.',
+          variant: 'destructive',
+        });
       }
+    } else {
+      console.error('Upload failed:', result);
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to upload images. Please check file format and size.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -598,7 +621,7 @@ export default function SupplierManagement() {
                   >
                     <div className="flex items-center gap-2">
                       <Upload className="h-4 w-4" />
-                      Upload Images
+                      Upload Images (PNG, JPG, WebP)
                     </div>
                   </ObjectUploader>
                 </div>

@@ -64,6 +64,7 @@ export function ObjectUploader({
       restrictions: {
         maxNumberOfFiles,
         maxFileSize,
+        allowedFileTypes: ['image/*', '.jpg', '.jpeg', '.png', '.gif', '.webp']
       },
       autoProceed: false,
     })
@@ -72,7 +73,11 @@ export function ObjectUploader({
         getUploadParameters: onGetUploadParameters,
       })
       .on("complete", (result) => {
+        console.log('Uppy upload complete:', result);
         onComplete?.(result);
+      })
+      .on("upload-error", (file, error) => {
+        console.error('Uppy upload error:', error);
       })
   );
 
