@@ -20,6 +20,12 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 - **API Updates**: Updated Stripe API to latest version (2024-12-18.acacia)
 - **Typography**: Updated to Space Grotesk (headlines) and Raleway (body text)
 
+### Supplier Logo Upload System Complete (August 12, 2025) ✅
+- **Upload Integration**: Fixed ObjectUploader component to prevent form submission conflicts
+- **Path Conversion**: Implemented proper Google Cloud Storage URL to API path conversion
+- **Database Updates**: Resolved backend filtering issues preventing logoUrl field saves
+- **Full Workflow**: Complete supplier logo upload with automatic database updates and display across all pages
+
 ### Key Features Added
 - **Secure Supplier Invitations**: Token-based invitation system with email integration and admin management dashboard
 - **Enhanced Product Search**: Real-time filtering by category, search terms, and supplier selection in modal interfaces  
