@@ -172,6 +172,8 @@ export default function SupplierManagement() {
   console.log('Supplier query - loading:', isLoading, 'error:', error, 'data:', supplierResponse);
 
   const suppliers = supplierResponse?.data || [];
+  console.log('Extracted suppliers array:', suppliers);
+  console.log('Number of suppliers:', suppliers.length);
 
   const verifySupplierMutation = useMutation({
     mutationFn: (supplierId: number) => 
@@ -270,8 +272,12 @@ export default function SupplierManagement() {
       supplier.supplierName.toLowerCase().includes(searchFilter.toLowerCase()) ||
       supplier.supplierCategory.toLowerCase().includes(searchFilter.toLowerCase()) ||
       supplier.addressCountry?.toLowerCase().includes(searchFilter.toLowerCase());
+    console.log(`Supplier ${supplier.supplierName}: status=${supplier.verificationStatus}, filter=${statusFilter}, matches=${matchesStatus && matchesSearch}`);
     return matchesStatus && matchesSearch;
   }) || [];
+
+  console.log('Filtered suppliers:', filteredSuppliers);
+  console.log('Number of filtered suppliers:', filteredSuppliers.length);
 
   const pendingCount = suppliers?.filter(s => s.verificationStatus === 'pending_review').length || 0;
 
@@ -357,6 +363,14 @@ export default function SupplierManagement() {
 
       {/* Suppliers List */}
       <div className="space-y-4">
+        {console.log('About to render suppliers list, length:', filteredSuppliers.length)}
+        {filteredSuppliers.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">No suppliers found matching current filters.</p>
+            </CardContent>
+          </Card>
+        ) : null}
         {filteredSuppliers.map((supplier) => (
           <Card key={supplier.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
