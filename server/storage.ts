@@ -346,7 +346,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSupplierProductsByCategory(category: string): Promise<SupplierProduct[]> {
-    return await db
+    const results = await db
       .select({
         id: supplierProducts.id,
         supplierId: supplierProducts.supplierId,
@@ -356,16 +356,22 @@ export class DatabaseStorage implements IStorage {
         hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
         lcaDataJson: supplierProducts.lcaDataJson,
         productAttributes: supplierProducts.productAttributes,
+        submittedBy: supplierProducts.submittedBy,
+        submittedByUserId: supplierProducts.submittedByUserId,
+        submittedByCompanyId: supplierProducts.submittedByCompanyId,
         isVerified: supplierProducts.isVerified,
+        verifiedBy: supplierProducts.verifiedBy,
+        verifiedAt: supplierProducts.verifiedAt,
         basePrice: supplierProducts.basePrice,
         currency: supplierProducts.currency,
         minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
         leadTimeDays: supplierProducts.leadTimeDays,
         certifications: supplierProducts.certifications,
+        submissionStatus: supplierProducts.submissionStatus,
+        adminNotes: supplierProducts.adminNotes,
+        imageUrl: supplierProducts.imageUrl,
         createdAt: supplierProducts.createdAt,
         updatedAt: supplierProducts.updatedAt,
-        supplierName: verifiedSuppliers.supplierName,
-        supplierCategory: verifiedSuppliers.supplierCategory,
       })
       .from(supplierProducts)
       .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
@@ -375,6 +381,7 @@ export class DatabaseStorage implements IStorage {
         eq(supplierProducts.isVerified, true)
       ))
       .orderBy(supplierProducts.productName);
+    return results as SupplierProduct[];
   }
 
   async getSupplierProductById(id: string): Promise<SupplierProduct | undefined> {
@@ -429,7 +436,7 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
-    return await db
+    const results = await db
       .select({
         id: supplierProducts.id,
         supplierId: supplierProducts.supplierId,
@@ -439,21 +446,28 @@ export class DatabaseStorage implements IStorage {
         hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
         lcaDataJson: supplierProducts.lcaDataJson,
         productAttributes: supplierProducts.productAttributes,
+        submittedBy: supplierProducts.submittedBy,
+        submittedByUserId: supplierProducts.submittedByUserId,
+        submittedByCompanyId: supplierProducts.submittedByCompanyId,
         isVerified: supplierProducts.isVerified,
+        verifiedBy: supplierProducts.verifiedBy,
+        verifiedAt: supplierProducts.verifiedAt,
         basePrice: supplierProducts.basePrice,
         currency: supplierProducts.currency,
         minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
         leadTimeDays: supplierProducts.leadTimeDays,
         certifications: supplierProducts.certifications,
+        submissionStatus: supplierProducts.submissionStatus,
+        adminNotes: supplierProducts.adminNotes,
+        imageUrl: supplierProducts.imageUrl,
         createdAt: supplierProducts.createdAt,
         updatedAt: supplierProducts.updatedAt,
-        supplierName: verifiedSuppliers.supplierName,
-        supplierCategory: verifiedSuppliers.supplierCategory,
       })
       .from(supplierProducts)
       .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
       .where(whereClause)
       .orderBy(supplierProducts.productName);
+    return results as SupplierProduct[];
   }
 
   // Report operations
@@ -531,7 +545,8 @@ export class DatabaseStorage implements IStorage {
         .set({ 
           ...data, 
           updatedAt: new Date(),
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
+          certifications: data.certifications ? data.certifications as string[] : undefined
         })
         .where(eq(companySustainabilityData.companyId, companyId))
         .returning();
@@ -694,7 +709,7 @@ export class DatabaseStorage implements IStorage {
     return job;
   }
 
-  async updateLcaCalculationJob(jobId: string, updates: Partial<InsertLcaCalculationJob>): Promise<LcaCalculationJob | undefined> {
+  async updateLcaCalculationJobByJobId(jobId: string, updates: Partial<InsertLcaCalculationJob>): Promise<LcaCalculationJob | undefined> {
     const [updatedJob] = await db
       .update(lcaCalculationJobs)
       .set(updates)
