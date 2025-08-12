@@ -272,30 +272,43 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
   try {
     const { supplierId } = req.params;
     
-    // Clean the request body and ensure proper date handling
-    const { images, createdAt, updatedAt, id, ...cleanData } = req.body;
+    console.log('Raw request body:', JSON.stringify(req.body, null, 2));
     
-    // Only include valid supplier fields, excluding timestamps and ID
-    const updateData = {
-      supplierName: cleanData.supplierName,
-      supplierCategory: cleanData.supplierCategory,
-      website: cleanData.website || null,
-      contactEmail: cleanData.contactEmail || null,
-      description: cleanData.description || null,
-      location: cleanData.location || null,
-      addressCountry: cleanData.addressCountry || null,
-      verificationStatus: cleanData.verificationStatus || 'pending_review',
+    // Clean the request body and ensure proper date handling
+    const { images, createdAt, updatedAt, id, submittedBy, companyName, ...cleanData } = req.body;
+    
+    // Only include valid supplier fields that can be updated
+    const updateData: any = {
       updatedAt: new Date()
     };
 
-    // Remove any undefined values
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key as keyof typeof updateData] === undefined) {
-        delete updateData[key as keyof typeof updateData];
-      }
-    });
+    // Only add fields that are present and valid
+    if (cleanData.supplierName && typeof cleanData.supplierName === 'string') {
+      updateData.supplierName = cleanData.supplierName;
+    }
+    if (cleanData.supplierCategory && typeof cleanData.supplierCategory === 'string') {
+      updateData.supplierCategory = cleanData.supplierCategory;
+    }
+    if (cleanData.website !== undefined) {
+      updateData.website = cleanData.website || null;
+    }
+    if (cleanData.contactEmail !== undefined) {
+      updateData.contactEmail = cleanData.contactEmail || null;
+    }
+    if (cleanData.description !== undefined) {
+      updateData.description = cleanData.description || null;
+    }
+    if (cleanData.location !== undefined) {
+      updateData.location = cleanData.location || null;
+    }
+    if (cleanData.addressCountry !== undefined) {
+      updateData.addressCountry = cleanData.addressCountry || null;
+    }
+    if (cleanData.verificationStatus && typeof cleanData.verificationStatus === 'string') {
+      updateData.verificationStatus = cleanData.verificationStatus;
+    }
 
-    console.log('Updating supplier with data:', updateData);
+    console.log('Cleaned update data:', JSON.stringify(updateData, null, 2));
 
     const [updatedSupplier] = await db
       .update(verifiedSuppliers)
