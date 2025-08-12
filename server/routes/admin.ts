@@ -81,7 +81,7 @@ router.get('/analytics', async (req: AdminRequest, res) => {
       .select({ count: count() })
       .from(companies);
 
-    res.json({
+    const response = {
       totalUsers: totalUsers.count,
       newUserCount: newUsersLast30Days.count,
       userGrowthPercentage: Math.round(userGrowthPercentage * 100) / 100,
@@ -91,7 +91,12 @@ router.get('/analytics', async (req: AdminRequest, res) => {
       totalCompanies: totalCompanies.count,
       pendingLcaReviews: pendingReviews.count,
       lastUpdated: new Date().toISOString()
-    });
+    };
+    
+    console.log('Analytics response data:', JSON.stringify(response, null, 2));
+    console.log('Total suppliers count from query:', totalSuppliers.count);
+    
+    res.json(response);
 
   } catch (error) {
     console.error('Admin analytics error:', error);
