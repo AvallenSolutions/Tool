@@ -363,7 +363,7 @@ export default function SupplierManagement() {
 
       {/* Suppliers List */}
       <div className="space-y-4">
-        {console.log('About to render suppliers list, length:', filteredSuppliers.length)}
+
         {filteredSuppliers.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
