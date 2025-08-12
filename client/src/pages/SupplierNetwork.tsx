@@ -60,6 +60,8 @@ const supplierCategories = [
 export default function SupplierNetwork() {
   const [selectedTab, setSelectedTab] = useState('browse');
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [isEditSupplierOpen, setIsEditSupplierOpen] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [, setLocation] = useLocation();
@@ -193,6 +195,76 @@ export default function SupplierNetwork() {
     };
 
     addSupplierMutation.mutate(invitationData);
+  };
+
+  const handleEditSupplier = (supplier: any) => {
+    setEditingSupplier({
+      id: supplier.id,
+      supplierName: supplier.supplierName,
+      supplierCategory: supplier.supplierCategory,
+      website: supplier.website || '',
+      contactEmail: supplier.contactEmail || '',
+      description: supplier.description || '',
+      addressStreet: supplier.addressLine1 || '',
+      addressCity: supplier.city || '',
+      addressCountry: supplier.addressCountry || '',
+    });
+    setIsEditSupplierOpen(true);
+  };
+
+  const updateSupplierMutation = useMutation({
+    mutationFn: async (supplierData: any) => {
+      const response = await fetch(`/api/verified-suppliers/${supplierData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(supplierData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update supplier');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/suppliers'] });
+      toast({
+        title: 'Supplier Updated',
+        description: 'Supplier information has been successfully updated.',
+      });
+      
+      setIsEditSupplierOpen(false);
+      setEditingSupplier(null);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: (error as any)?.message || 'Failed to update supplier',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleUpdateSupplier = () => {
+    if (!editingSupplier.supplierName || !editingSupplier.supplierCategory) {
+      toast({
+        title: 'Validation Error',
+        description: 'Supplier name and category are required',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    updateSupplierMutation.mutate(editingSupplier);
+  };
+
+  const handleEditProduct = (product: any) => {
+    // For now, just show a toast - full product editing would require a separate component
+    toast({
+      title: 'Feature Coming Soon',
+      description: 'Product editing functionality is being developed. You can currently add new products through the Product Registration page.',
+    });
   };
 
   const addProductToSupplier = () => {
@@ -454,6 +526,115 @@ export default function SupplierNetwork() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Supplier Dialog */}
+        <Dialog open={isEditSupplierOpen} onOpenChange={setIsEditSupplierOpen}>
+          <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <DialogHeader>
+              <DialogTitle>Edit Supplier</DialogTitle>
+              <DialogDescription>
+                Update supplier information. Changes will be saved to your supplier network.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Supplier Name *</Label>
+                  <Input
+                    value={editingSupplier?.supplierName || ''}
+                    onChange={(e) => setEditingSupplier({
+                      ...editingSupplier,
+                      supplierName: e.target.value
+                    })}
+                    placeholder="Enter supplier name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Category *</Label>
+                  <Select 
+                    value={editingSupplier?.supplierCategory || ''} 
+                    onValueChange={(value) => setEditingSupplier({
+                      ...editingSupplier,
+                      supplierCategory: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supplierCategories.map(category => (
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Website</Label>
+                  <Input
+                    value={editingSupplier?.website || ''}
+                    onChange={(e) => setEditingSupplier({
+                      ...editingSupplier,
+                      website: e.target.value
+                    })}
+                    placeholder="https://www.example.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Contact Email</Label>
+                  <Input
+                    value={editingSupplier?.contactEmail || ''}
+                    onChange={(e) => setEditingSupplier({
+                      ...editingSupplier,
+                      contactEmail: e.target.value
+                    })}
+                    placeholder="contact@supplier.com"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={editingSupplier?.description || ''}
+                  onChange={(e) => setEditingSupplier({
+                    ...editingSupplier,
+                    description: e.target.value
+                  })}
+                  placeholder="Brief description of the supplier..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsEditSupplierOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleUpdateSupplier}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  disabled={updateSupplierMutation.isPending}
+                >
+                  {updateSupplierMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Supplier'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
@@ -509,8 +690,7 @@ export default function SupplierNetwork() {
                     {verifiedSuppliers.map((supplier) => (
                       <Card 
                         key={supplier.id} 
-                        className="border-green-200 cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => setLocation(`/app/supplier-network/supplier/${supplier.id}`)}
+                        className="border-green-200 hover:shadow-md transition-shadow"
                       >
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
@@ -522,6 +702,16 @@ export default function SupplierNetwork() {
                             </div>
                             <div className="flex items-center gap-2">
                               {getStatusBadge(supplier)}
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSupplier(supplier);
+                                }}
+                              >
+                                Edit
+                              </Button>
                             </div>
                           </div>
                         </CardHeader>
@@ -701,6 +891,16 @@ export default function SupplierNetwork() {
                       {product.sku && (
                         <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
                       )}
+                      <div className="flex gap-2 mt-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditProduct(product)}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
                       
                       {/* CO2 Emissions Display */}
                       {product.productAttributes?.co2Emissions && (

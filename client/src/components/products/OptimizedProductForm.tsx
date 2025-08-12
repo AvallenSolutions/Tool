@@ -12,7 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Save, Loader2, Upload, Package, FileText, X, Check } from 'lucide-react';
+import { Save, Loader2, Upload, Package, FileText, X, Check, Image as ImageIcon } from 'lucide-react';
+import { ImageUploader } from "@/components/ImageUploader";
 
 // Dynamic product schema based on supplier category
 const createProductSchema = (supplierCategory: string) => {
@@ -85,6 +86,7 @@ export default function OptimizedProductForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedDocument, setUploadedDocument] = useState<{path: string, name: string} | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [productImages, setProductImages] = useState<string[]>([]);
 
   // Fetch verified suppliers
   const { data: suppliers = [], isLoading: suppliersLoading } = useQuery<Supplier[]>({
@@ -499,6 +501,26 @@ export default function OptimizedProductForm() {
               </FormItem>
             )}
           />
+
+          {/* Product Images */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-4 h-4" />
+              <Label className="text-base font-medium">Product Images (Optional)</Label>
+            </div>
+            <p className="text-sm text-gray-600">
+              Upload product photos to showcase your items. These images will be visible to customers.
+            </p>
+            
+            <ImageUploader 
+              onUpload={(urls) => {
+                setProductImages(urls);
+              }}
+              maxImages={5}
+              existingImages={productImages}
+              placeholder="Upload Product Images"
+            />
+          </div>
 
           <Button 
             type="submit" 
