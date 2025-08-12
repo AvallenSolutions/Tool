@@ -375,7 +375,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // LCA Document Upload Route
-  app.post('/api/upload-lca-document', imageUpload.single('lcaDocument'), async (req, res) => {
+  app.post('/api/upload-lca-document', upload.single('lcaDocument'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ 

@@ -279,7 +279,18 @@ export default function OptimizedProductForm() {
                   <FormItem>
                     <FormLabel>Material</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Glass, Plastic, Paper" {...field} />
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select material" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Glass">Glass</SelectItem>
+                          <SelectItem value="Plastic">Plastic</SelectItem>
+                          <SelectItem value="aluminium">Aluminium</SelectItem>
+                          <SelectItem value="steel">Steel</SelectItem>
+                          <SelectItem value="cardboard">Cardboard</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
