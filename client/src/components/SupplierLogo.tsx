@@ -8,8 +8,6 @@ interface SupplierLogoProps {
 }
 
 export function SupplierLogo({ logoUrl, supplierName, size = 'md', className = '' }: SupplierLogoProps) {
-  // Debug: Log the logoUrl to see what we're getting
-  console.log('SupplierLogo rendered:', { logoUrl, supplierName });
   const sizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',

@@ -222,6 +222,95 @@ router.get('/suppliers/:supplierId', async (req: AdminRequest, res) => {
 });
 
 /**
+ * PUT /api/admin/suppliers/:supplierId
+ * Updates supplier information
+ */
+router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+  try {
+    const { supplierId } = req.params;
+    const updateData = {
+      supplierName: req.body.supplierName,
+      supplierCategory: req.body.supplierCategory,
+      verificationStatus: req.body.verificationStatus,
+      website: req.body.website || null,
+      contactEmail: req.body.contactEmail || null,
+      description: req.body.description || null,
+      addressStreet: req.body.addressStreet || null,
+      addressCity: req.body.addressCity || null,
+      addressPostalCode: req.body.addressPostalCode || null,
+      addressCountry: req.body.addressCountry || null,
+      logoUrl: req.body.logoUrl || null,
+      updatedAt: new Date()
+    };
+
+    const [updatedSupplier] = await db
+      .update(verifiedSuppliers)
+      .set(updateData)
+      .where(eq(verifiedSuppliers.id, supplierId))
+      .returning();
+
+    if (!updatedSupplier) {
+      return res.status(404).json({
+        success: false,
+        error: 'Supplier not found',
+        message: `No supplier found with ID ${supplierId}`
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Supplier updated successfully',
+      data: updatedSupplier
+    });
+
+  } catch (error) {
+    console.error('Admin supplier update error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update supplier',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/suppliers/:supplierId
+ * Deletes a supplier
+ */
+router.delete('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+  try {
+    const { supplierId } = req.params;
+
+    const [deletedSupplier] = await db
+      .delete(verifiedSuppliers)
+      .where(eq(verifiedSuppliers.id, supplierId))
+      .returning();
+
+    if (!deletedSupplier) {
+      return res.status(404).json({
+        success: false,
+        error: 'Supplier not found',
+        message: `No supplier found with ID ${supplierId}`
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Supplier deleted successfully',
+      data: deletedSupplier
+    });
+
+  } catch (error) {
+    console.error('Admin supplier delete error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to delete supplier',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * PUT /api/admin/suppliers/:supplierId/verify
  * Updates a supplier's verification status to 'verified'
  */
