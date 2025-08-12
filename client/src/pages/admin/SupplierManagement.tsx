@@ -41,6 +41,9 @@ interface SupplierWithDetails {
 }
 
 export default function SupplierManagement() {
+  console.log('🚀 SupplierManagement component mounted!');
+  console.log('🚀 Current URL:', window.location.pathname);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
@@ -53,7 +56,9 @@ export default function SupplierManagement() {
   });
 
   // Debug logging
-  console.log('Supplier query - loading:', isLoading, 'error:', error, 'data:', supplierResponse);
+  console.log('🚀 SupplierManagement - Component mounted and query initiated');
+  console.log('🚀 Supplier query - loading:', isLoading, 'error:', error, 'data:', supplierResponse);
+  console.log('🚀 Full response structure:', supplierResponse);
 
   const suppliers = supplierResponse?.data || [];
   console.log('Extracted suppliers array:', suppliers);
@@ -192,7 +197,14 @@ export default function SupplierManagement() {
 
             {/* Debug info */}
             <div className="bg-blue-100 p-4 rounded">
-              <p className="font-bold">Debug: {filteredSuppliers.length} suppliers to render</p>
+              <p className="font-bold">Debug Info:</p>
+              <p>Loading: {isLoading ? 'YES' : 'NO'}</p>
+              <p>Error: {error ? String(error) : 'NONE'}</p>
+              <p>Raw response: {JSON.stringify(supplierResponse)}</p>
+              <p>Suppliers array length: {suppliers.length}</p>
+              <p>Filtered suppliers length: {filteredSuppliers.length}</p>
+              <p>Status filter: {statusFilter}</p>
+              <p>Search filter: {searchFilter}</p>
               {filteredSuppliers.map((s, i) => (
                 <p key={i}>Supplier {i + 1}: {s.supplierName} (Status: {s.verificationStatus})</p>
               ))}
