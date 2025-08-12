@@ -928,12 +928,19 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Object storage upload endpoint (for supplier images, etc.)
   app.post('/api/objects/upload', async (req, res) => {
     try {
+      console.log('Getting upload URL for object storage...');
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      console.log('Upload URL generated successfully:', uploadURL);
       res.json({ uploadURL });
     } catch (error) {
       console.error('Error getting upload URL:', error);
-      res.status(500).json({ error: 'Failed to get upload URL' });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        error: 'Failed to get upload URL', 
+        message: errorMessage,
+        details: error instanceof Error ? error.stack : String(error)
+      });
     }
   });
 
@@ -943,9 +950,10 @@ Be precise and quote actual text from the content, not generic terms.`;
       return res.status(400).json({ error: 'imageURL is required' });
     }
 
-    const userId = req.user?.claims?.sub || 'dev-user';
+    const userId = (req.user as any)?.id || req.user?.id || 'dev-user';
 
     try {
+      console.log('Setting ACL for image:', req.body.imageURL);
       const objectStorageService = new ObjectStorageService();
       const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
         req.body.imageURL,
@@ -961,7 +969,11 @@ Be precise and quote actual text from the content, not generic terms.`;
       });
     } catch (error) {
       console.error('Error setting image ACL:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        error: 'Internal server error',
+        message: errorMessage
+      });
     }
   });
 

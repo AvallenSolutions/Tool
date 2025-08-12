@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +68,7 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
   const [hasChanges, setHasChanges] = useState(false);
 
   // Initialize form when supplier changes
-  useState(() => {
+  useEffect(() => {
     if (supplier) {
       setFormData({
         supplierName: supplier.supplierName,
