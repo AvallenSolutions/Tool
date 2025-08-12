@@ -243,6 +243,9 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
       updatedAt: new Date()
     };
 
+    console.log('Raw request body for supplier update:', req.body);
+    console.log('Update data prepared:', updateData);
+
     const [updatedSupplier] = await db
       .update(verifiedSuppliers)
       .set(updateData)
