@@ -872,6 +872,21 @@ export default function SupplierNetwork() {
                       )}
 
                       
+                      {/* LCA Document Link */}
+                      {product.productAttributes?.lcaDocumentPath && (
+                        <div className="mb-2">
+                          <a 
+                            href={`/uploads/${product.productAttributes.lcaDocumentPath}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            View LCA Document
+                          </a>
+                        </div>
+                      )}
+
                       {/* CO2 Emissions Display */}
                       {product.productAttributes?.co2Emissions && (
                         <div className="flex items-center gap-2 mb-3 p-2 bg-green-50 rounded-md">

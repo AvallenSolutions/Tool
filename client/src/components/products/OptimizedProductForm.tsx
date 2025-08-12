@@ -533,14 +533,16 @@ export default function OptimizedProductForm() {
               Upload product photos to showcase your items. These images will be visible to customers.
             </p>
             
-            <ImageUploader 
-              onUpload={(urls) => {
-                setProductImages(urls);
-              }}
-              maxImages={5}
-              existingImages={productImages}
-              placeholder="Upload Product Images"
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <ImageUploader 
+                onUpload={(urls) => {
+                  setProductImages(urls);
+                }}
+                maxImages={5}
+                existingImages={productImages}
+                placeholder="Upload Product Images"
+              />
+            </div>
           </div>
 
           <Button 

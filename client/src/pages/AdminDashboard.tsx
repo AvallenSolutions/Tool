@@ -16,6 +16,7 @@ import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import SupplierEditDialog from '@/components/admin/SupplierEditDialog';
 import BulkImportDialog from '@/components/admin/BulkImportDialog';
+import SupplierProductsTable from '@/components/admin/SupplierProductsTable';
 
 const supplierCategories = [
   { value: 'bottle_producer', label: 'Bottle Producer' },
@@ -440,16 +441,10 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Supplier Products</CardTitle>
-              <CardDescription>Manage products in the verified supplier network</CardDescription>
+              <CardDescription>Products created through the supplier network</CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert>
-                <Package className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Phase 2 Implementation:</strong> Product management interface will provide comprehensive 
-                  oversight of supplier products, LCA data validation, and product approval workflows.
-                </AlertDescription>
-              </Alert>
+              <SupplierProductsTable />
             </CardContent>
           </Card>
         </TabsContent>
