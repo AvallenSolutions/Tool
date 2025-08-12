@@ -16,6 +16,7 @@ const router = Router();
  */
 router.get('/analytics', async (req: AdminRequest, res) => {
   try {
+    console.log('Admin analytics endpoint called');
     // Calculate date ranges for growth calculations
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -107,6 +108,7 @@ router.get('/analytics', async (req: AdminRequest, res) => {
  */
 router.get('/suppliers', async (req: AdminRequest, res) => {
   try {
+    console.log('Admin suppliers endpoint called');
     const suppliersWithSubmitter = await db
       .select({
         id: verifiedSuppliers.id,
