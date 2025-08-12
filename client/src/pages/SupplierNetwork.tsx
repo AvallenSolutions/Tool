@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { ObjectUploader } from '@/components/ObjectUploader';
 
 interface Supplier {
   id: number;
@@ -60,6 +61,10 @@ const supplierCategories = [
 export default function SupplierNetwork() {
   const [selectedTab, setSelectedTab] = useState('browse');
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [isEditSupplierOpen, setIsEditSupplierOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [reviewSupplier, setReviewSupplier] = useState<any>(null);
+  const [editingSupplier, setEditingSupplier] = useState<any>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -106,15 +111,15 @@ export default function SupplierNetwork() {
     },
   });
 
-  const filteredSuppliers = (suppliers || []).filter((supplier: any) => {
+  const filteredSuppliers = (suppliers || []).filter((supplier: Supplier) => {
     const matchesSearch = supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          supplier.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || selectedCategory === 'none' || supplier.supplierCategory === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const verifiedSuppliers = filteredSuppliers.filter((s: any) => s.verificationStatus === 'verified');
-  const clientSuppliers = filteredSuppliers.filter((s: any) => s.verificationStatus === 'client_provided');
+  const verifiedSuppliers = filteredSuppliers.filter((s: Supplier) => s.verificationStatus === 'verified');
+  const clientSuppliers = filteredSuppliers.filter((s: Supplier) => s.verificationStatus === 'client_provided');
 
   const addSupplierMutation = useMutation({
     mutationFn: async (invitationData: {
@@ -246,7 +251,7 @@ export default function SupplierNetwork() {
   });
 
   const handleUpdateSupplier = () => {
-    if (!editingSupplier.supplierName || !editingSupplier.supplierCategory) {
+    if (!editingSupplier?.supplierName || !editingSupplier?.supplierCategory || editingSupplier.supplierCategory === 'none') {
       toast({
         title: 'Validation Error',
         description: 'Supplier name and category are required',
@@ -264,6 +269,92 @@ export default function SupplierNetwork() {
       title: 'Feature Coming Soon',
       description: 'Product editing functionality is being developed. You can currently add new products through the Product Registration page.',
     });
+  };
+
+  const handleReviewSupplier = (supplier: any) => {
+    setReviewSupplier(supplier);
+    setIsReviewOpen(true);
+  };
+
+  const deleteSupplierMutation = useMutation({
+    mutationFn: async (supplierId: number) => {
+      const response = await fetch(`/api/verified-suppliers/${supplierId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete supplier');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/suppliers'] });
+      toast({
+        title: 'Supplier Deleted',
+        description: 'Supplier has been successfully deleted.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: (error as any)?.message || 'Failed to delete supplier',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleDeleteSupplier = (supplierId: number) => {
+    if (confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
+      deleteSupplierMutation.mutate(supplierId);
+    }
+  };
+
+  // Image upload functionality
+  const handleGetUploadParameters = async () => {
+    try {
+      const response = await fetch('/api/objects/upload', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get upload URL');
+      }
+      
+      const data = await response.json();
+      return {
+        method: 'PUT' as const,
+        url: data.uploadURL,
+      };
+    } catch (error) {
+      console.error('Error getting upload parameters:', error);
+      throw error;
+    }
+  };
+
+  const handleImageUploadComplete = async (result: any) => {
+    try {
+      if (result.successful && result.successful.length > 0) {
+        const uploadedFile = result.successful[0];
+        const imageUrl = uploadedFile.uploadURL;
+        
+        // Update supplier with image URL
+        // This would be implemented based on your supplier update logic
+        toast({
+          title: 'Image Uploaded',
+          description: 'Supplier image has been uploaded successfully.',
+        });
+      }
+    } catch (error) {
+      console.error('Error handling image upload:', error);
+      toast({
+        title: 'Upload Error',
+        description: 'Failed to process uploaded image.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const addProductToSupplier = () => {
@@ -579,7 +670,7 @@ export default function SupplierNetwork() {
                     <Badge variant="outline">{verifiedSuppliers.length}</Badge>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {verifiedSuppliers.map((supplier) => (
+                    {verifiedSuppliers.map((supplier: Supplier) => (
                       <Card 
                         key={supplier.id} 
                         className="border-green-200 hover:shadow-md transition-shadow"
@@ -807,7 +898,7 @@ export default function SupplierNetwork() {
                 </Alert>
               ) : (
                 <div className="space-y-4">
-                  {clientSuppliers.map((supplier) => (
+                  {clientSuppliers.map((supplier: Supplier) => (
                     <Card key={supplier.id} className="border-blue-200">
                       <CardContent className="pt-4">
                         <div className="flex justify-between items-start">
@@ -840,9 +931,30 @@ export default function SupplierNetwork() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              <Plus className="w-4 h-4 mr-1" />
-                              Add to Network
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleReviewSupplier(supplier)}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Review
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditSupplier(supplier)}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteSupplier(supplier.id)}
+                              className="text-red-600 hover:text-red-700 hover:border-red-300"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Delete
                             </Button>
                           </div>
                         </div>
@@ -856,6 +968,237 @@ export default function SupplierNetwork() {
         </TabsContent>
           </Tabs>
 
+          {/* Edit Supplier Dialog */}
+          <Dialog open={isEditSupplierOpen} onOpenChange={setIsEditSupplierOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
+              <DialogHeader>
+                <DialogTitle>Edit Supplier</DialogTitle>
+                <DialogDescription>
+                  Update supplier information and upload images.
+                </DialogDescription>
+              </DialogHeader>
+              {editingSupplier && (
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="editSupplierName">Supplier Name *</Label>
+                      <Input
+                        id="editSupplierName"
+                        value={editingSupplier.supplierName}
+                        onChange={(e) => setEditingSupplier(prev => ({ ...prev, supplierName: e.target.value }))}
+                        placeholder="Enter supplier name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="editSupplierCategory">Category *</Label>
+                      <Select 
+                        value={editingSupplier.supplierCategory} 
+                        onValueChange={(value) => setEditingSupplier(prev => ({ ...prev, supplierCategory: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {supplierCategories.map(cat => (
+                            <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="editWebsite">Website</Label>
+                      <Input
+                        id="editWebsite"
+                        type="url"
+                        value={editingSupplier.website}
+                        onChange={(e) => setEditingSupplier(prev => ({ ...prev, website: e.target.value }))}
+                        placeholder="https://supplier.com"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="editContactEmail">Contact Email</Label>
+                      <Input
+                        id="editContactEmail"
+                        type="email"
+                        value={editingSupplier.contactEmail}
+                        onChange={(e) => setEditingSupplier(prev => ({ ...prev, contactEmail: e.target.value }))}
+                        placeholder="contact@supplier.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="editDescription">Description</Label>
+                    <Textarea
+                      id="editDescription"
+                      value={editingSupplier.description}
+                      onChange={(e) => setEditingSupplier(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Brief description of the supplier and their capabilities"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="editAddressStreet">Street Address</Label>
+                      <Input
+                        id="editAddressStreet"
+                        value={editingSupplier.addressStreet}
+                        onChange={(e) => setEditingSupplier(prev => ({ ...prev, addressStreet: e.target.value }))}
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="editAddressCity">City</Label>
+                      <Input
+                        id="editAddressCity"
+                        value={editingSupplier.addressCity}
+                        onChange={(e) => setEditingSupplier(prev => ({ ...prev, addressCity: e.target.value }))}
+                        placeholder="London"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="editAddressCountry">Country</Label>
+                      <Input
+                        id="editAddressCountry"
+                        value={editingSupplier.addressCountry}
+                        onChange={(e) => setEditingSupplier(prev => ({ ...prev, addressCountry: e.target.value }))}
+                        placeholder="United Kingdom"
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <Label className="text-base font-medium">Supplier Images</Label>
+                    <p className="text-sm text-gray-600 mb-3">Upload images for this supplier (logo, facility photos, etc.)</p>
+                    <ObjectUploader
+                      maxNumberOfFiles={5}
+                      maxFileSize={10485760}
+                      onGetUploadParameters={handleGetUploadParameters}
+                      onComplete={handleImageUploadComplete}
+                      buttonClassName="w-full"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        <span>Upload Images</span>
+                      </div>
+                    </ObjectUploader>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" onClick={() => setIsEditSupplierOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleUpdateSupplier}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      disabled={updateSupplierMutation.isPending}
+                    >
+                      {updateSupplierMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Update Supplier'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Review Supplier Dialog */}
+          <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-lg">
+              <DialogHeader className="bg-gray-50 p-6 rounded-t-lg">
+                <DialogTitle className="font-headline text-xl text-gray-900">Supplier Review</DialogTitle>
+                <DialogDescription className="text-gray-600 font-body">
+                  Review detailed information about this supplier.
+                </DialogDescription>
+              </DialogHeader>
+              {reviewSupplier && (
+                <div className="p-6 space-y-4 bg-white">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Supplier Name</Label>
+                      <p className="text-gray-900 font-medium">{reviewSupplier.supplierName}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Category</Label>
+                      <p className="text-gray-900 capitalize">{reviewSupplier.supplierCategory?.replace('_', ' ')}</p>
+                    </div>
+                  </div>
+
+                  {reviewSupplier.description && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Description</Label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{reviewSupplier.description}</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {reviewSupplier.website && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Website</Label>
+                        <a 
+                          href={reviewSupplier.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline flex items-center"
+                        >
+                          {reviewSupplier.website}
+                          <ExternalLink className="w-3 h-3 ml-1" />
+                        </a>
+                      </div>
+                    )}
+                    {reviewSupplier.contactEmail && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Contact Email</Label>
+                        <a href={`mailto:${reviewSupplier.contactEmail}`} className="text-blue-600 hover:underline">
+                          {reviewSupplier.contactEmail}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {reviewSupplier.location && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Location</Label>
+                      <p className="text-gray-900">{reviewSupplier.location}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">Status</Label>
+                    <div>{getStatusBadge(reviewSupplier)}</div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+                    <Button variant="outline" onClick={() => setIsReviewOpen(false)}>
+                      Close
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        setIsReviewOpen(false);
+                        handleEditSupplier(reviewSupplier);
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Supplier
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
         </main>
       </div>

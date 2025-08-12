@@ -925,6 +925,18 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // General object upload endpoint (for supplier images, etc.)
+  app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: 'Failed to get upload URL' });
+    }
+  });
+
   // Image upload completion endpoint - sets ACL and returns normalized path
   app.put('/api/admin/images', isAuthenticated, async (req, res) => {
     if (!req.body.imageURL) {
