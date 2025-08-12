@@ -58,15 +58,23 @@ export default function EnhancedAdminDashboard() {
     refetchInterval: 30000,
   });
 
+  // Debug logging for analytics data
+  console.log('🎯 Frontend Admin Dashboard - Analytics data:', analytics);
+  console.log('🎯 Frontend - Total suppliers value:', analytics?.totalSuppliers);
+
   const { data: supplierProducts, isLoading: productsLoading } = useQuery({
     queryKey: ['/api/admin/supplier-products'],
     refetchInterval: 30000,
   });
 
-  const { data: suppliers, isLoading: suppliersLoading } = useQuery({
-    queryKey: ['/api/verified-suppliers'],
+  const { data: suppliersResponse, isLoading: suppliersLoading } = useQuery<{success: boolean, data: any[]}>({
+    queryKey: ['/api/admin/suppliers'],
     refetchInterval: 30000,
   });
+
+  const suppliers = suppliersResponse?.data || [];
+  console.log('🎯 Admin Dashboard - Suppliers data:', suppliers);
+  console.log('🎯 Admin Dashboard - Suppliers count:', suppliers.length);
 
   // Mock action items - would come from API in production
   const actionItems: ActionItem[] = [
