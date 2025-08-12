@@ -213,67 +213,67 @@ export default function SupplierManagement() {
             {/* Suppliers List */}
             <div className="space-y-4">
               {filteredSuppliers.length === 0 ? (
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-muted-foreground">No suppliers found matching current filters.</p>
-                    <p className="text-sm text-gray-500 mt-2">Total suppliers in database: {suppliers.length}</p>
-                  </CardContent>
-                </Card>
+                <div className="border-4 border-red-500 bg-yellow-200 p-8 rounded text-center">
+                  <p className="text-black font-bold text-2xl">No suppliers found matching current filters.</p>
+                  <p className="text-black font-bold text-lg mt-2">Total suppliers in database: {suppliers.length}</p>
+                </div>
               ) : (
-                filteredSuppliers.map((supplier) => {
-                  console.log('Rendering supplier card for:', supplier.supplierName);
-                  return (
-                    <Card key={supplier.id} className="border-4 border-red-500 bg-yellow-200 shadow-lg">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="flex items-center gap-2">
-                                {getStatusIcon(supplier.verificationStatus)}
-                                <h3 className="text-xl font-bold text-black">{supplier.supplierName}</h3>
-                              </div>
-                              {getStatusBadge(supplier.verificationStatus)}
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
-                              <div className="flex items-center gap-2">
-                                <Building2 className="h-4 w-4" />
-                                <span><strong>Category:</strong> {supplier.supplierCategory}</span>
-                              </div>
-                              
-                              {supplier.addressCountry && (
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4" />
-                                  <span><strong>Country:</strong> {supplier.addressCountry}</span>
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4" />
-                                <span><strong>Added:</strong> {new Date(supplier.createdAt).toLocaleDateString()}</span>
-                              </div>
-                            </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-red-600 mb-4 bg-yellow-300 p-4 border-4 border-red-500">
+                    FOUND {filteredSuppliers.length} SUPPLIER(S) - RENDERING NOW:
+                  </h2>
+                  {filteredSuppliers.map((supplier, index) => {
+                    console.log(`🚀 Rendering supplier ${index + 1}:`, supplier.supplierName);
+                    return (
+                      <div 
+                        key={supplier.id} 
+                        className="border-8 border-red-600 bg-yellow-300 p-8 mb-6 rounded-lg shadow-2xl"
+                        style={{
+                          border: '8px solid red',
+                          backgroundColor: 'yellow',
+                          padding: '32px',
+                          margin: '24px 0',
+                          minHeight: '200px',
+                          display: 'block',
+                          visibility: 'visible',
+                          position: 'relative',
+                          zIndex: 9999
+                        }}
+                      >
+                        <div className="bg-red-500 text-white p-4 mb-4 text-center">
+                          <h1 className="text-4xl font-bold">SUPPLIER #{index + 1}</h1>
+                        </div>
+                        
+                        <div className="bg-black text-yellow-300 p-6 rounded">
+                          <h2 className="text-3xl font-bold mb-4">
+                            🎯 SUPPLIER NAME: {supplier.supplierName}
+                          </h2>
+                          
+                          <div className="text-xl space-y-2">
+                            <p>🏢 <strong>Category:</strong> {supplier.supplierCategory}</p>
+                            <p>🌍 <strong>Country:</strong> {supplier.addressCountry || 'Not specified'}</p>
+                            <p>✅ <strong>Status:</strong> {supplier.verificationStatus}</p>
+                            <p>📧 <strong>Email:</strong> {supplier.contactEmail || 'Not provided'}</p>
+                            <p>🌐 <strong>Website:</strong> {supplier.website || 'Not provided'}</p>
+                            <p>📅 <strong>Added:</strong> {new Date(supplier.createdAt).toLocaleDateString()}</p>
                           </div>
-
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4 mr-2" />
-                              Review
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Button>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </Button>
+                          
+                          <div className="mt-6 space-x-4">
+                            <button className="bg-yellow-500 text-black px-6 py-3 rounded font-bold">
+                              REVIEW SUPPLIER
+                            </button>
+                            <button className="bg-green-500 text-white px-6 py-3 rounded font-bold">
+                              EDIT SUPPLIER
+                            </button>
+                            <button className="bg-red-600 text-white px-6 py-3 rounded font-bold">
+                              DELETE SUPPLIER
+                            </button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
