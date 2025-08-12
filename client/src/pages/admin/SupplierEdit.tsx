@@ -117,6 +117,22 @@ export default function SupplierEdit() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Convert Google Cloud Storage upload URL to object storage path
+  const convertUploadURLToObjectPath = (uploadURL: string): string => {
+    try {
+      // Extract the object path from the Google Cloud Storage URL
+      const url = new URL(uploadURL);
+      const pathParts = url.pathname.split('/');
+      // Remove empty first element and bucket name
+      const objectPath = pathParts.slice(2).join('/');
+      // Return as objects path that our API can serve
+      return `/api/objects/${objectPath}`;
+    } catch (error) {
+      console.error('Error converting upload URL:', error);
+      return uploadURL; // Fallback to original URL
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen bg-lightest-gray">
@@ -243,37 +259,46 @@ export default function SupplierEdit() {
                         size="lg"
                       />
                       <div className="flex-1">
-                        <ObjectUploader
-                          maxNumberOfFiles={1}
-                          maxFileSize={5242880} // 5MB
-                          onGetUploadParameters={async () => {
-                            const response = await fetch('/api/objects/upload', {
-                              method: 'POST',
-                              credentials: 'include',
-                            });
-                            if (!response.ok) {
-                              throw new Error('Failed to get upload URL');
-                            }
-                            const { uploadURL } = await response.json();
-                            return {
-                              method: 'PUT' as const,
-                              url: uploadURL,
-                            };
-                          }}
-                          onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-                            if (result.successful && result.successful.length > 0) {
-                              const uploadedFile = result.successful[0];
-                              const imageUrl = uploadedFile.uploadURL;
-                              if (imageUrl) {
-                                handleInputChange('logoUrl', imageUrl);
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880} // 5MB
+                            onGetUploadParameters={async () => {
+                              const response = await fetch('/api/objects/upload', {
+                                method: 'POST',
+                                credentials: 'include',
+                              });
+                              if (!response.ok) {
+                                throw new Error('Failed to get upload URL');
                               }
-                            }
-                          }}
-                          buttonClassName="w-full"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload New Logo
-                        </ObjectUploader>
+                              const { uploadURL } = await response.json();
+                              return {
+                                method: 'PUT' as const,
+                                url: uploadURL,
+                              };
+                            }}
+                            onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                              console.log('Upload complete:', result);
+                              if (result.successful && result.successful.length > 0) {
+                                const uploadedFile = result.successful[0];
+                                const uploadURL = uploadedFile.uploadURL;
+                                if (uploadURL) {
+                                  // Convert the upload URL to object storage path
+                                  const objectPath = convertUploadURLToObjectPath(uploadURL);
+                                  handleInputChange('logoUrl', objectPath);
+                                  toast({
+                                    title: 'Success',
+                                    description: 'Logo uploaded successfully',
+                                  });
+                                }
+                              }
+                            }}
+                            buttonClassName="w-full"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload New Logo
+                          </ObjectUploader>
+                        </div>
                         <p className="text-sm text-gray-500 mt-1">
                           Upload PNG, JPG, or SVG. Max 5MB.
                         </p>
