@@ -25,13 +25,14 @@ import { ObjectUploader } from '@/components/ObjectUploader';
 import type { UploadResult } from '@uppy/core';
 
 interface Supplier {
-  id: number;
+  id: string;
   supplierName: string;
   supplierCategory: string;
   website?: string;
   contactEmail?: string;
   description?: string;
   location?: string;
+  addressCountry?: string;
   verificationStatus: 'verified' | 'pending_review' | 'client_provided';
   submittedBy: 'ADMIN' | 'SUPPLIER' | 'CLIENT';
   isVerified: boolean;
@@ -39,8 +40,8 @@ interface Supplier {
 }
 
 interface SupplierProduct {
-  id: number;
-  supplierId: number;
+  id: string;
+  supplierId: string;
   productName: string;
   productDescription?: string;
   sku?: string;
@@ -94,14 +95,16 @@ export default function SupplierNetwork() {
 
 
   // Fetch real data from API
-  const { data: suppliers, isLoading: suppliersLoading, error: suppliersError } = useQuery({
-    queryKey: ['/api/suppliers'],
+  const { data: suppliersResponse, isLoading: suppliersLoading, error: suppliersError } = useQuery<{success: boolean, data: Supplier[]}>({
+    queryKey: ['/api/admin/suppliers'],
     queryFn: async () => {
-      const response = await fetch('/api/suppliers', { credentials: 'include' });
+      const response = await fetch('/api/admin/suppliers', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to load suppliers');
       return response.json();
     },
   });
+
+  const suppliers = suppliersResponse?.data || [];
 
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['/api/supplier-products'],
