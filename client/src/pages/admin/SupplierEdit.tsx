@@ -9,8 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ObjectUploader } from '@/components/ObjectUploader';
+import { SupplierLogo } from '@/components/SupplierLogo';
+import { ArrowLeft, Save, Upload } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import type { UploadResult } from '@uppy/core';
 
 interface SupplierDetails {
   id: string;
@@ -232,14 +235,50 @@ export default function SupplierEdit() {
                   </div>
 
                   <div>
-                    <Label htmlFor="logoUrl">Logo URL</Label>
-                    <Input
-                      id="logoUrl"
-                      type="url"
-                      value={formData.logoUrl || ''}
-                      onChange={(e) => handleInputChange('logoUrl', e.target.value)}
-                      placeholder="https://example.com/logo.png"
-                    />
+                    <Label>Supplier Logo</Label>
+                    <div className="flex items-center gap-4">
+                      <SupplierLogo 
+                        logoUrl={formData.logoUrl} 
+                        supplierName={formData.supplierName || 'Supplier'}
+                        size="lg"
+                      />
+                      <div className="flex-1">
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={5242880} // 5MB
+                          onGetUploadParameters={async () => {
+                            const response = await fetch('/api/objects/upload', {
+                              method: 'POST',
+                              credentials: 'include',
+                            });
+                            if (!response.ok) {
+                              throw new Error('Failed to get upload URL');
+                            }
+                            const { uploadURL } = await response.json();
+                            return {
+                              method: 'PUT' as const,
+                              url: uploadURL,
+                            };
+                          }}
+                          onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const uploadedFile = result.successful[0];
+                              const imageUrl = uploadedFile.uploadURL;
+                              if (imageUrl) {
+                                handleInputChange('logoUrl', imageUrl);
+                              }
+                            }
+                          }}
+                          buttonClassName="w-full"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload New Logo
+                        </ObjectUploader>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Upload PNG, JPG, or SVG. Max 5MB.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div>

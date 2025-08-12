@@ -2220,6 +2220,45 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Object storage routes for image uploads
+  app.post('/api/objects/upload', async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      
+      res.json({ 
+        success: true,
+        uploadURL 
+      });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to get upload URL',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.get('/api/objects/:objectPath(*)', async (req, res) => {
+    try {
+      const objectPath = `/objects/${req.params.objectPath}`;
+      const objectStorageService = new ObjectStorageService();
+      
+      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+      await objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error('Error serving object:', error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ error: 'Object not found' });
+      }
+      res.status(500).json({ 
+        error: 'Failed to serve object',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const server = createServer(app);
   
   return server;
