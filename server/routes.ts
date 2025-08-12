@@ -925,20 +925,8 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Object storage upload endpoint
+  // Object storage upload endpoint (for supplier images, etc.)
   app.post('/api/objects/upload', async (req, res) => {
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error('Error getting upload URL:', error);
-      res.status(500).json({ error: 'Failed to get upload URL' });
-    }
-  });
-
-  // General object upload endpoint (for supplier images, etc.)
-  app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
