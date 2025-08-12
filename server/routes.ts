@@ -61,6 +61,9 @@ const imageUpload = multer({
 });
 
 export function registerRoutes(app: Express): Server {
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
   // Authentication routes
   setupAuth(app);
 
@@ -394,7 +397,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
 
       // Generate public URL for the document
-      const documentPath = `/uploads/images/${req.file.filename}`;
+      const documentPath = req.file.filename;
       
       res.json({
         success: true,
@@ -1765,6 +1768,10 @@ Be precise and quote actual text from the content, not generic terms.`;
         isMainProduct: convertBoolean(req.body.isMainProduct),
         hasBuiltInClosure: convertBoolean(req.body.hasBuiltInClosure),
         wasteWaterTreatment: convertBoolean(req.body.wasteWaterTreatment),
+        
+        // LCA document and images
+        lcaDocumentPath: req.body.lcaDocumentPath,
+        packShotUrl: req.body.productImages && req.body.productImages.length > 0 ? req.body.productImages[0] : null,
         
         createdAt: new Date(),
         updatedAt: new Date()

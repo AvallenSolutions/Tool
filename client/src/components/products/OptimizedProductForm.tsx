@@ -479,7 +479,17 @@ export default function OptimizedProductForm() {
                       ) : (
                         <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                           <Check className="w-5 h-5 text-green-600" />
-                          <span className="text-sm text-green-800 flex-1">{uploadedDocument.name}</span>
+                          <div className="flex-1">
+                            <p className="text-sm text-green-800 font-medium">{uploadedDocument.name}</p>
+                            <a 
+                              href={`/uploads/${uploadedDocument.path}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            >
+                              📄 View LCA Document
+                            </a>
+                          </div>
                           <Button
                             type="button"
                             variant="ghost"
