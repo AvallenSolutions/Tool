@@ -123,10 +123,12 @@ export default function SupplierEdit() {
       // Extract the object path from the Google Cloud Storage URL
       const url = new URL(uploadURL);
       const pathParts = url.pathname.split('/');
-      // Remove empty first element and bucket name
+      // Remove empty first element and bucket name to get the object path
       const objectPath = pathParts.slice(2).join('/');
-      // Return as objects path that our API can serve
-      return `/api/objects/${objectPath}`;
+      console.log('Converting URL:', uploadURL, 'to path:', objectPath);
+      // Return as objects path that our API can serve (without .private prefix in URL)
+      const cleanPath = objectPath.replace('.private/uploads/', 'uploads/');
+      return `/api/objects/${cleanPath}`;
     } catch (error) {
       console.error('Error converting upload URL:', error);
       return uploadURL; // Fallback to original URL

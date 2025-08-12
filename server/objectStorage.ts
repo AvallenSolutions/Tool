@@ -145,6 +145,8 @@ export class ObjectStorageService {
 
   // Gets the object entity file from the object path.
   async getObjectEntityFile(objectPath: string): Promise<File> {
+    console.log('Looking for object at path:', objectPath);
+    
     if (!objectPath.startsWith("/objects/")) {
       throw new ObjectNotFoundError();
     }
@@ -159,11 +161,19 @@ export class ObjectStorageService {
     if (!entityDir.endsWith("/")) {
       entityDir = `${entityDir}/`;
     }
+    
+    // For uploaded files, they're in the uploads subdirectory
     const objectEntityPath = `${entityDir}${entityId}`;
+    console.log('Full object path:', objectEntityPath);
+    
     const { bucketName, objectName } = parseObjectPath(objectEntityPath);
+    console.log('Bucket:', bucketName, 'Object:', objectName);
+    
     const bucket = objectStorageClient.bucket(bucketName);
     const objectFile = bucket.file(objectName);
     const [exists] = await objectFile.exists();
+    console.log('Object exists:', exists);
+    
     if (!exists) {
       throw new ObjectNotFoundError();
     }
