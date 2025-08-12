@@ -550,16 +550,49 @@ Be precise and quote actual text from the content, not generic terms.`;
         });
       }
 
+      console.log('Raw request body for supplier update:', JSON.stringify(updateData, null, 2));
+
+      // Clean the request body and ensure proper date handling
+      const { images, createdAt, updatedAt, submittedBy, companyName, ...cleanData } = updateData;
       
+      // Only include valid supplier fields that can be updated
+      const supplierUpdateData: any = {
+        updatedAt: new Date() // Use Date object, not string
+      };
+
+      // Only add fields that are present and valid
+      if (cleanData.supplierName && typeof cleanData.supplierName === 'string') {
+        supplierUpdateData.supplierName = cleanData.supplierName;
+      }
+      if (cleanData.supplierCategory && typeof cleanData.supplierCategory === 'string') {
+        supplierUpdateData.supplierCategory = cleanData.supplierCategory;
+      }
+      if (cleanData.website !== undefined) {
+        supplierUpdateData.website = cleanData.website || null;
+      }
+      if (cleanData.contactEmail !== undefined) {
+        supplierUpdateData.contactEmail = cleanData.contactEmail || null;
+      }
+      if (cleanData.description !== undefined) {
+        supplierUpdateData.description = cleanData.description || null;
+      }
+      if (cleanData.location !== undefined) {
+        supplierUpdateData.location = cleanData.location || null;
+      }
+      if (cleanData.addressCountry !== undefined) {
+        supplierUpdateData.addressCountry = cleanData.addressCountry || null;
+      }
+      if (cleanData.verificationStatus && typeof cleanData.verificationStatus === 'string') {
+        supplierUpdateData.verificationStatus = cleanData.verificationStatus;
+      }
+
+      console.log('Cleaned supplier update data:', JSON.stringify(supplierUpdateData, null, 2));
 
       // Update supplier in database
       const { verifiedSuppliers } = await import('@shared/schema');
       const updatedSupplier = await db
         .update(verifiedSuppliers)
-        .set({ 
-          ...updateData,
-          updatedAt: new Date().toISOString()
-        })
+        .set(supplierUpdateData)
         .where(eq(verifiedSuppliers.id, id))
         .returning();
 
@@ -569,8 +602,6 @@ Be precise and quote actual text from the content, not generic terms.`;
           error: 'Supplier not found' 
         });
       }
-
-      
 
       res.json({
         success: true,
