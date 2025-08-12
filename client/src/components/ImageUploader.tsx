@@ -66,12 +66,14 @@ export function ImageUploader({
         shouldUseMultipart: false,
         getUploadParameters: async () => {
           try {
-            const response = await apiRequest('/api/admin/upload-image', {
+            const response = await fetch('/api/objects/upload', {
               method: 'POST',
-            }) as { uploadURL: string };
+              credentials: 'include',
+            });
+            const data = await response.json() as { uploadURL: string };
             return {
               method: 'PUT' as const,
-              url: response.uploadURL,
+              url: data.uploadURL,
             };
           } catch (error) {
             console.error('Error getting upload parameters:', error);
@@ -86,7 +88,7 @@ export function ImageUploader({
         setIsUploading(false);
         setShowModal(false);
         
-        if (result.successful.length > 0) {
+        if (result.successful && result.successful.length > 0) {
           const uploadURLs = result.successful.map(file => (file as any).uploadURL);
           
           if (onUpload) {
@@ -95,11 +97,15 @@ export function ImageUploader({
           
           if (onComplete && uploadURLs.length > 0) {
             try {
-              const response = await apiRequest('PUT', '/api/admin/images', { 
-                imageURL: uploadURLs[0] 
-              }) as { objectPath: string };
+              const response = await fetch('/api/admin/images', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ imageURL: uploadURLs[0] }),
+              });
+              const data = await response.json() as { objectPath: string };
               
-              onComplete(response.objectPath);
+              onComplete(data.objectPath);
             } catch (error) {
               console.error('Error updating image:', error);
             }
