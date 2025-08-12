@@ -34,7 +34,7 @@ import {
 import { useLocation } from "wouter";
 
 interface SupplierWithDetails {
-  id: number;
+  id: string;
   supplierName: string;
   supplierCategory: string;
   verificationStatus: 'verified' | 'pending_review' | 'client_provided';
@@ -176,7 +176,7 @@ export default function SupplierManagement() {
   console.log('Number of suppliers:', suppliers.length);
 
   const verifySupplierMutation = useMutation({
-    mutationFn: (supplierId: number) => 
+    mutationFn: (supplierId: string) => 
       apiRequest('PUT', `/api/admin/suppliers/${supplierId}/verify`),
     onSuccess: () => {
       toast({
@@ -198,7 +198,7 @@ export default function SupplierManagement() {
 
   // Edit supplier mutation
   const editSupplierMutation = useMutation({
-    mutationFn: (data: { id: number; supplierData: Partial<SupplierWithDetails> }) => 
+    mutationFn: (data: { id: string; supplierData: Partial<SupplierWithDetails> }) => 
       apiRequest('PUT', `/api/admin/suppliers/${data.id}`, data.supplierData),
     onSuccess: () => {
       toast({
@@ -219,8 +219,8 @@ export default function SupplierManagement() {
 
   // Delete supplier mutation
   const deleteSupplierMutation = useMutation({
-    mutationFn: (supplierId: number) => 
-      apiRequest('DELETE', '/api/verified-suppliers/' + supplierId),
+    mutationFn: (supplierId: string) => 
+      apiRequest('DELETE', `/api/admin/suppliers/${supplierId}`),
     onSuccess: () => {
       toast({
         title: "Supplier Deleted",
