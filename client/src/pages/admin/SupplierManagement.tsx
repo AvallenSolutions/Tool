@@ -41,9 +41,6 @@ interface SupplierWithDetails {
 }
 
 export default function SupplierManagement() {
-  console.log('🚀 SupplierManagement component mounted!');
-  console.log('🚀 Current URL:', window.location.pathname);
-  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
@@ -55,14 +52,7 @@ export default function SupplierManagement() {
     refetchInterval: 30000,
   });
 
-  // Debug logging
-  console.log('🚀 SupplierManagement - Component mounted and query initiated');
-  console.log('🚀 Supplier query - loading:', isLoading, 'error:', error, 'data:', supplierResponse);
-  console.log('🚀 Full response structure:', supplierResponse);
-
   const suppliers = supplierResponse?.data || [];
-  console.log('Extracted suppliers array:', suppliers);
-  console.log('Number of suppliers:', suppliers.length);
 
   const filteredSuppliers = suppliers?.filter(supplier => {
     const matchesStatus = statusFilter === 'all' || supplier.verificationStatus === statusFilter;
@@ -70,12 +60,8 @@ export default function SupplierManagement() {
       supplier.supplierName.toLowerCase().includes(searchFilter.toLowerCase()) ||
       supplier.supplierCategory.toLowerCase().includes(searchFilter.toLowerCase()) ||
       supplier.addressCountry?.toLowerCase().includes(searchFilter.toLowerCase());
-    console.log(`Supplier ${supplier.supplierName}: status=${supplier.verificationStatus}, filter=${statusFilter}, matches=${matchesStatus && matchesSearch}`);
     return matchesStatus && matchesSearch;
   }) || [];
-
-  console.log('Filtered suppliers:', filteredSuppliers);
-  console.log('Number of filtered suppliers:', filteredSuppliers.length);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
