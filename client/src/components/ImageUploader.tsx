@@ -90,12 +90,14 @@ export function ImageUploader({
         
         if (result.successful && result.successful.length > 0) {
           const uploadURLs = result.successful.map(file => (file as any).uploadURL);
+          console.log('Upload successful, URLs:', uploadURLs);
           
           if (onUpload) {
             onUpload(uploadURLs);
           }
           
           if (onComplete && uploadURLs.length > 0) {
+            console.log('Calling admin images API to set ACL...');
             try {
               const response = await fetch('/api/admin/images', {
                 method: 'PUT',
@@ -103,18 +105,24 @@ export function ImageUploader({
                 credentials: 'include',
                 body: JSON.stringify({ imageURL: uploadURLs[0] }),
               });
+              
+              console.log('Admin images API response status:', response.status);
+              
               if (response.ok) {
                 const data = await response.json() as { objectPath: string };
+                console.log('Admin images response data:', data);
                 onComplete(data.objectPath);
               } else {
-                // Fallback for development - use uploaded URL directly
-                console.log('Using uploaded URL directly for development');
+                const errorData = await response.text();
+                console.error('Admin images API error:', response.status, errorData);
+                // For development, fall back to using the uploaded URL directly
+                console.log('Fallback: using uploaded URL directly:', uploadURLs[0]);
                 onComplete(uploadURLs[0]);
               }
             } catch (error) {
-              console.error('Error updating image:', error);
-              // Fallback for development - use uploaded URL directly
-              console.log('Using uploaded URL directly for development');
+              console.error('Error calling admin images API:', error);
+              // For development, fall back to using the uploaded URL directly
+              console.log('Fallback: using uploaded URL directly:', uploadURLs[0]);
               onComplete(uploadURLs[0]);
             }
           }

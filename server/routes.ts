@@ -955,11 +955,12 @@ Be precise and quote actual text from the content, not generic terms.`;
         },
       );
 
+      console.log('Image ACL set, returning object path:', objectPath);
       res.status(200).json({
         objectPath: objectPath,
       });
     } catch (error) {
-      console.error('Error setting image:', error);
+      console.error('Error setting image ACL:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
