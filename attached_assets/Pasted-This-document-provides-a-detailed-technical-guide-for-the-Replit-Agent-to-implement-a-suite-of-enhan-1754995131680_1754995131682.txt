@@ -1,0 +1,101 @@
+This document provides a detailed technical guide for the Replit Agent to implement a suite of enhancements to the supplier management system. These features include image uploads for suppliers and products, a client-facing product search, and a completely reworked, form-based supplier invitation and onboarding flow.
+
+2. Part 1: Database & Storage Enhancements
+To support image uploads, we must update our database schema and plan for file storage.
+
+2.1. File Storage Strategy
+Requirement: We need a scalable solution to store uploaded images (logos, product photos). Storing binary files directly in the database is inefficient.
+
+Solution: The platform will integrate with a cloud object storage service like AWS S3 or Google Cloud Storage. The backend will handle uploading files to this service, and the database will only store the public URL of the uploaded file. API keys for the storage service must be stored in Replit Secrets.
+
+2.2. Database Schema Modifications
+verified_suppliers Table: Add a new column for the logo URL.
+| Column Name | Data Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| ... (existing columns) | | | |
+| logo_url | VARCHAR(255) | NULLABLE | Public URL to the supplier's logo image file. |
+
+supplier_products Table: Add a new column for the product photo URL.
+| Column Name | Data Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| ... (existing columns) | | | |
+| image_url | VARCHAR(255) | NULLABLE | Public URL to the product's photo. |
+
+3. Part 2: Image Upload Functionality (Admin Dashboard)
+Backend:
+
+Create a new API endpoint, e.g., POST /api/admin/upload-image, that accepts a multipart/form-data file upload.
+
+This endpoint will upload the received file to the cloud storage bucket and return the public URL in its response.
+
+Frontend (Admin Dashboard - /admin/suppliers):
+
+Supplier Logo: In the "Add/Edit Supplier" form, add a new ImageUploader component. This component will allow the admin to select an image file, which will be sent to the new upload endpoint. The returned URL will be saved in the logo_url field.
+
+Product Photo: In the dynamic "Add Product" form, add another ImageUploader component to allow the admin to upload a photo for each product. The returned URL will be saved in the image_url field.
+
+4. Part 3: Client-Facing Product Search Feature
+Backend:
+
+Create a new API endpoint: GET /api/products/search.
+
+This endpoint will accept query parameters like ?name=..., ?type=..., ?supplier_id=....
+
+It will query the supplier_products table based on these parameters and return a list of matching products.
+
+Frontend (Client Onboarding - Product Footprint Step):
+
+When a client is selecting a supplier's product, the UI must be enhanced.
+
+Add a SearchAndFilterBar component above the product selection list.
+
+This component will include:
+
+A text input for searching by product_name.
+
+A dropdown to filter by product_type (e.g., "Bottle", "Label").
+
+As the user types or selects a filter, the frontend will make a request to the new search endpoint and dynamically update the list of products shown.
+
+5. Part 4: Reworked "Invite Supplier" & Onboarding Flow
+This is a major enhancement to create a self-service onboarding portal for suppliers.
+
+5.1. Backend Logic
+Invitation Token: When a client or admin invites a supplier, the backend will:
+
+Generate a unique, secure, and time-limited token (e.g., a JWT).
+
+Store this token in a new table, supplier_invitations, along with the supplier's email and the inviting user's ID.
+
+Send an email to the supplier containing a link with this token, e.g., https://your-app.com/supplier-onboarding/{token}.
+
+5.2. Frontend (New Supplier Onboarding Portal)
+Requirement: Create a new, public-facing set of pages at the /supplier-onboarding route. This is a separate application flow that does not require the user to be logged in initially.
+
+Workflow:
+
+Token Validation: When a supplier visits the unique link, the frontend makes a request to a new backend endpoint (GET /api/suppliers/invitation/{token}) to validate the token. If valid, the onboarding process begins.
+
+Account Creation: The supplier is first prompted to create a simple, secure account using Replit Auth.
+
+Guided Form: After creating an account, the supplier is taken to a multi-step guided form. This form will be a public-facing version of the dynamic admin form:
+
+Step 1: Company Details: The supplier enters their company name, address, website, and uploads their logo.
+
+Step 2: Product Details: The supplier is presented with the dynamic, category-specific form to add their products. They can add multiple products, upload product photos, and fill in all the relevant attributes (weight, material, etc.).
+
+Submission for Review: Once the supplier completes the form, they submit it.
+
+Backend Logic on Submission:
+
+The backend receives the submitted data.
+
+It creates new entries in the verified_suppliers and supplier_products tables.
+
+The verification_status for the new supplier is set to 'pending_review', and submitted_by is set to 'SUPPLIER'.
+
+An alert is sent to the Avallen Solutions admin team's review queue.
+
+The original invitation token is invalidated.
+
+This reworked flow creates a powerful, scalable, and self-service mechanism for growing your supplier network.
