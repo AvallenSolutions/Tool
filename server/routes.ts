@@ -9,7 +9,7 @@ import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, ilike, or, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
@@ -17,13 +17,14 @@ import { simpleLcaService } from "./simpleLca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
+import { body, validationResult } from "express-validator";
 import { adminRouter } from "./routes/admin";
 import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-11-20.acacia",
+  apiVersion: "2024-12-18.acacia",
 });
 
 // Configure multer for file uploads
@@ -110,8 +111,18 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Input validation middleware
+  const validateAnalysisInput = [
+    body('type').isIn(['website', 'text']).withMessage('Type must be either "website" or "text"'),
+    body('content').isLength({ min: 1, max: 50000 }).trim().escape().withMessage('Content must be between 1 and 50000 characters'),
+  ];
+
   // GreenwashGuardian API Routes - AI-powered analysis
-  app.post('/api/greenwash-guardian/analyze', async (req, res) => {
+  app.post('/api/greenwash-guardian/analyze', validateAnalysisInput, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     try {
       const { type, content } = req.body;
 
@@ -1239,8 +1250,21 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ SUPPLIER INVITATION ENDPOINTS ============
 
+  // Validation for supplier invitations
+  const validateSupplierInvitation = [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('category').isLength({ min: 1, max: 100 }).trim().escape().withMessage('Category is required and must be less than 100 characters'),
+    body('companyName').isLength({ min: 1, max: 255 }).trim().escape().withMessage('Company name is required and must be less than 255 characters'),
+    body('contactName').optional().isLength({ max: 255 }).trim().escape().withMessage('Contact name must be less than 255 characters'),
+    body('message').optional().isLength({ max: 1000 }).trim().escape().withMessage('Message must be less than 1000 characters'),
+  ];
+
   // Create a new supplier invitation
-  app.post('/api/admin/supplier-invitations', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/supplier-invitations', isAuthenticated, validateSupplierInvitation, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     try {
       const { supplierInvitations } = await import('@shared/schema');
       const { nanoid } = await import('nanoid');
@@ -1257,7 +1281,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       const existingInvitation = await db
         .select()
         .from(supplierInvitations)
-        .where(eq(supplierInvitations.email, email))
+        .where(eq(supplierInvitations.supplierEmail, email))
         .limit(1);
 
       if (existingInvitation.length > 0) {
@@ -1270,19 +1294,25 @@ Be precise and quote actual text from the content, not generic terms.`;
       const invitationToken = nanoid(32);
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
+      // Get current user ID for invitedBy
+      const user = req.user as any;
+      const invitedByUserId = user.claims?.sub;
+      
+      if (!invitedByUserId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
       const newInvitation = await db
         .insert(supplierInvitations)
         .values({
-          email,
-          category,
-          companyName,
-          contactName: contactName || null,
-          message: message || null,
-          invitationToken,
+          token: invitationToken,
+          supplierEmail: email,
+          supplierName: companyName,
+          invitedBy: invitedByUserId,
+          expectedSupplierCategory: category,
+          invitationMessage: message || null,
           expiresAt,
           status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
         })
         .returning();
 
@@ -1323,7 +1353,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       const invitation = await db
         .select()
         .from(supplierInvitations)
-        .where(eq(supplierInvitations.invitationToken, token))
+        .where(eq(supplierInvitations.token, token))
         .limit(1);
 
       if (!invitation.length) {
@@ -1338,7 +1368,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
 
       // Check if already used
-      if (inv.status === 'accepted') {
+      if (inv.status === 'completed') {
         return res.status(400).json({ error: 'Invitation has already been used' });
       }
 
@@ -1346,11 +1376,11 @@ Be precise and quote actual text from the content, not generic terms.`;
         valid: true, 
         invitation: {
           id: inv.id,
-          email: inv.email,
-          category: inv.category,
-          companyName: inv.companyName,
-          contactName: inv.contactName,
-          message: inv.message,
+          email: inv.supplierEmail,
+          category: inv.expectedSupplierCategory,
+          companyName: inv.supplierName,
+          contactName: inv.supplierName,
+          message: inv.invitationMessage,
         }
       });
     } catch (error) {
@@ -1381,7 +1411,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       const invitation = await db
         .select()
         .from(supplierInvitations)
-        .where(eq(supplierInvitations.invitationToken, token))
+        .where(eq(supplierInvitations.token, token))
         .limit(1);
 
       if (!invitation.length) {
@@ -1394,7 +1424,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'Invitation has expired' });
       }
 
-      if (inv.status === 'accepted') {
+      if (inv.status === 'completed') {
         return res.status(400).json({ error: 'Invitation has already been used' });
       }
 
@@ -1403,11 +1433,11 @@ Be precise and quote actual text from the content, not generic terms.`;
         .insert(verifiedSuppliers)
         .values({
           supplierName,
-          supplierCategory: inv.category,
+          supplierCategory: inv.expectedSupplierCategory,
           description,
           website,
           contactName,
-          contactEmail: contactEmail || inv.email,
+          contactEmail: contactEmail || inv.supplierEmail,
           contactPhone,
           addressStreet,
           addressCity,
@@ -1415,19 +1445,15 @@ Be precise and quote actual text from the content, not generic terms.`;
           certifications: certifications || [],
           isVerified: false, // Requires admin approval
           verificationStatus: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date(),
         })
         .returning();
 
-      // Mark invitation as accepted
+      // Mark invitation as used
       await db
         .update(supplierInvitations)
         .set({ 
-          status: 'accepted', 
-          acceptedAt: new Date(),
-          supplierId: newSupplier[0].id,
-          updatedAt: new Date()
+          status: 'completed', 
+          usedAt: new Date()
         })
         .where(eq(supplierInvitations.id, inv.id));
 
