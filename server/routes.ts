@@ -20,6 +20,7 @@ import { PDFExtractionService } from "./services/PDFExtractionService";
 import { adminRouter } from "./routes/admin";
 import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2024-11-20.acacia",
@@ -898,6 +899,82 @@ Be precise and quote actual text from the content, not generic terms.`;
       res.status(500).json({ message: "Failed to fetch supplier products" });
     }
   });
+
+  // ============ IMAGE UPLOAD ENDPOINTS ============
+
+  // Image upload endpoint for admin dashboard
+  app.post('/api/admin/upload-image', isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: 'Failed to get upload URL' });
+    }
+  });
+
+  // Image upload completion endpoint - sets ACL and returns normalized path
+  app.put('/api/admin/images', isAuthenticated, async (req, res) => {
+    if (!req.body.imageURL) {
+      return res.status(400).json({ error: 'imageURL is required' });
+    }
+
+    const userId = req.user?.claims?.sub;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.imageURL,
+        {
+          owner: userId,
+          visibility: "public", // Images are public by default
+        },
+      );
+
+      res.status(200).json({
+        objectPath: objectPath,
+      });
+    } catch (error) {
+      console.error('Error setting image:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Serve uploaded images
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving image:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Serve public assets
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // ============ END IMAGE UPLOAD ENDPOINTS ============
 
   // Verified Suppliers API endpoints
   app.get('/api/verified-suppliers', async (req, res) => {

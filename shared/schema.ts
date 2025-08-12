@@ -293,6 +293,9 @@ export const verifiedSuppliers = pgTable("verified_suppliers", {
   // Admin notes
   adminNotes: text("admin_notes"),
   
+  // Image storage
+  logoUrl: varchar("logo_url", { length: 500 }), // Public URL to supplier's logo image
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -332,6 +335,31 @@ export const supplierProducts = pgTable("supplier_products", {
   // Admin workflow
   submissionStatus: varchar("submission_status").default("pending"), // pending, approved, rejected, needs_revision
   adminNotes: text("admin_notes"),
+  
+  // Image storage
+  imageUrl: varchar("image_url", { length: 500 }), // Public URL to product's photo
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Supplier invitations table (for invitation token management)
+export const supplierInvitations = pgTable("supplier_invitations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  token: varchar("token", { length: 255 }).notNull().unique(), // JWT token for invitation
+  supplierEmail: varchar("supplier_email", { length: 255 }).notNull(),
+  supplierName: varchar("supplier_name", { length: 255 }),
+  invitedBy: varchar("invited_by").notNull().references(() => users.id),
+  invitedByCompany: integer("invited_by_company").references(() => companies.id),
+  
+  // Token lifecycle
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, completed, expired, cancelled
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  
+  // Optional invitation context
+  invitationMessage: text("invitation_message"),
+  expectedSupplierCategory: varchar("expected_supplier_category", { length: 100 }),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -675,6 +703,15 @@ export const insertVerifiedSupplierSchema = createInsertSchema(verifiedSuppliers
 export type SupplierProduct = typeof supplierProducts.$inferSelect;
 export type InsertSupplierProduct = typeof supplierProducts.$inferInsert;
 export const insertSupplierProductSchema = createInsertSchema(supplierProducts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Supplier Invitation Types
+export type SupplierInvitation = typeof supplierInvitations.$inferSelect;
+export type InsertSupplierInvitation = typeof supplierInvitations.$inferInsert;
+export const insertSupplierInvitationSchema = createInsertSchema(supplierInvitations).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
