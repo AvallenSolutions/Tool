@@ -163,10 +163,13 @@ export default function SupplierManagement() {
     }
   };
 
-  const { data: supplierResponse, isLoading } = useQuery<{success: boolean, data: SupplierWithDetails[]}>({
+  const { data: supplierResponse, isLoading, error } = useQuery<{success: boolean, data: SupplierWithDetails[]}>({
     queryKey: ['/api/admin/suppliers'],
     refetchInterval: 30000,
   });
+
+  // Debug logging
+  console.log('Supplier query - loading:', isLoading, 'error:', error, 'data:', supplierResponse);
 
   const suppliers = supplierResponse?.data || [];
 
