@@ -103,9 +103,14 @@ export default function SupplierManagement() {
 
   const deleteSupplierMutation = useMutation({
     mutationFn: async (supplierId: string) => {
-      return apiRequest(`/api/admin/suppliers/${supplierId}`, {
+      const response = await fetch(`/api/admin/suppliers/${supplierId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
+      if (!response.ok) {
+        throw new Error('Failed to delete supplier');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/suppliers'] });

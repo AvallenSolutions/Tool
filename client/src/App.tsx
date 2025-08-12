@@ -109,6 +109,7 @@ function Router() {
       <Route path="/app/company" component={Company} />
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/admin" component={AdminDashboardMain} />
+      <Route path="/app/admin/suppliers/:id/edit" component={SupplierManagement} />
       <Route path="/app/admin/suppliers/:id" component={AdminSupplierDetail} />
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
       <Route path="/app/admin/supplier-management" component={SupplierManagement} />
