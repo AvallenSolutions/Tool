@@ -22,6 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { ObjectUploader } from '@/components/ObjectUploader';
+import type { UploadResult } from '@uppy/core';
 
 interface Supplier {
   id: number;
@@ -276,6 +277,53 @@ export default function SupplierNetwork() {
     setIsReviewOpen(true);
   };
 
+  const handleDeleteSupplier = (supplierId: number) => {
+    if (confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
+      deleteSupplierMutation.mutate(supplierId);
+    }
+  };
+
+  const handleGetUploadParameters = async () => {
+    const response = await fetch('/api/objects/upload', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get upload parameters');
+    }
+    
+    const { uploadURL } = await response.json();
+    
+    return {
+      method: 'PUT' as const,
+      url: uploadURL,
+    };
+  };
+
+  const handleImageUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFiles = result.successful.map(file => ({
+        name: file.name,
+        url: file.uploadURL,
+        size: file.size,
+      }));
+      
+      toast({
+        title: 'Images Uploaded',
+        description: `Successfully uploaded ${uploadedFiles.length} image(s)`,
+      });
+      
+      // Update the editing supplier with the new images
+      if (editingSupplier) {
+        setEditingSupplier(prev => ({
+          ...prev,
+          images: [...(prev.images || []), ...uploadedFiles]
+        }));
+      }
+    }
+  };
+
   const deleteSupplierMutation = useMutation({
     mutationFn: async (supplierId: number) => {
       const response = await fetch(`/api/verified-suppliers/${supplierId}`, {
@@ -304,58 +352,6 @@ export default function SupplierNetwork() {
       });
     },
   });
-
-  const handleDeleteSupplier = (supplierId: number) => {
-    if (confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
-      deleteSupplierMutation.mutate(supplierId);
-    }
-  };
-
-  // Image upload functionality
-  const handleGetUploadParameters = async () => {
-    try {
-      const response = await fetch('/api/objects/upload', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-      
-      const data = await response.json();
-      return {
-        method: 'PUT' as const,
-        url: data.uploadURL,
-      };
-    } catch (error) {
-      console.error('Error getting upload parameters:', error);
-      throw error;
-    }
-  };
-
-  const handleImageUploadComplete = async (result: any) => {
-    try {
-      if (result.successful && result.successful.length > 0) {
-        const uploadedFile = result.successful[0];
-        const imageUrl = uploadedFile.uploadURL;
-        
-        // Update supplier with image URL
-        // This would be implemented based on your supplier update logic
-        toast({
-          title: 'Image Uploaded',
-          description: 'Supplier image has been uploaded successfully.',
-        });
-      }
-    } catch (error) {
-      console.error('Error handling image upload:', error);
-      toast({
-        title: 'Upload Error',
-        description: 'Failed to process uploaded image.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const addProductToSupplier = () => {
     setNewSupplier(prev => ({
@@ -1116,8 +1112,9 @@ export default function SupplierNetwork() {
 
           {/* Review Supplier Dialog */}
           <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-lg">
-              <DialogHeader className="bg-gray-50 p-6 rounded-t-lg">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-xl">
+              <div className="bg-white rounded-lg">
+              <DialogHeader className="bg-gray-50 p-6 rounded-t-lg border-b">
                 <DialogTitle className="font-headline text-xl text-gray-900">Supplier Review</DialogTitle>
                 <DialogDescription className="text-gray-600 font-body">
                   Review detailed information about this supplier.
@@ -1197,6 +1194,7 @@ export default function SupplierNetwork() {
                   </div>
                 </div>
               )}
+              </div>
             </DialogContent>
           </Dialog>
 

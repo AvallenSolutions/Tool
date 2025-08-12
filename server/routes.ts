@@ -24,7 +24,7 @@ import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2025-06-30.basil",
 });
 
 // Configure multer for file uploads
@@ -801,7 +801,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Delete supplier
-  app.delete('/api/suppliers/:id', async (req, res) => {
+  app.delete('/api/verified-suppliers/:id', async (req, res) => {
     try {
       const { id } = req.params;
       const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
@@ -915,6 +915,18 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // Image upload endpoint for admin dashboard
   app.post('/api/admin/upload-image', isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: 'Failed to get upload URL' });
+    }
+  });
+
+  // Object storage upload endpoint
+  app.post('/api/objects/upload', async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
