@@ -15,7 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Building2, MapPin, Globe, Mail, CheckCircle, ArrowLeft } from "lucide-react";
+import { Building2, MapPin, Globe, Mail, CheckCircle, ArrowLeft, Upload } from "lucide-react";
+import { ImageUploader } from "@/components/ImageUploader";
 
 const supplierRegistrationSchema = z.object({
   supplierName: z.string().min(1, "Supplier name is required"),
@@ -84,6 +85,7 @@ export default function SupplierRegistration() {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [supplierImages, setSupplierImages] = useState<string[]>([]);
 
   const form = useForm<SupplierRegistrationForm>({
     resolver: zodResolver(supplierRegistrationSchema),
@@ -396,6 +398,25 @@ export default function SupplierRegistration() {
                           )}
                         />
                       </div>
+                    </div>
+
+                    {/* Company Images */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Upload className="w-4 h-4" />
+                        Company Images (Optional)
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Upload company logos, facility images, or product photos to showcase your business.
+                      </p>
+                      
+                      <ImageUploader 
+                        onUpload={(urls) => {
+                          setSupplierImages(urls);
+                        }}
+                        maxImages={5}
+                        existingImages={supplierImages}
+                      />
                     </div>
 
                     {/* Submit Button */}

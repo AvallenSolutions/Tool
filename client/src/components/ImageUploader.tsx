@@ -13,7 +13,10 @@ import { Upload, Image as ImageIcon } from "lucide-react";
 interface ImageUploaderProps {
   maxNumberOfFiles?: number;
   maxFileSize?: number;
+  onUpload?: (urls: string[]) => void;
   onComplete?: (imagePath: string) => void;
+  maxImages?: number;
+  existingImages?: string[];
   buttonClassName?: string;
   children?: ReactNode;
   currentImageUrl?: string;
@@ -38,7 +41,10 @@ interface ImageUploaderProps {
 export function ImageUploader({
   maxNumberOfFiles = 1,
   maxFileSize = 10485760, // 10MB default
+  onUpload,
   onComplete,
+  maxImages = 1,
+  existingImages = [],
   buttonClassName,
   children,
   currentImageUrl,
@@ -77,28 +83,27 @@ export function ImageUploader({
         setIsUploading(true);
       })
       .on('complete', async (result) => {
-        try {
-          setIsUploading(false);
-          if (result.successful && result.successful.length > 0) {
-            const uploadedFile = result.successful[0];
-            const uploadURL = (uploadedFile as any).uploadURL;
-            
-            // Notify backend that upload is complete and get normalized path
-            const response = await apiRequest('/api/admin/images', {
-              method: 'PUT',
-              body: JSON.stringify({ imageURL: uploadURL }),
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }) as { objectPath: string };
-
-            onComplete?.(response.objectPath);
-            setShowModal(false);
-            uppy.clear();
+        setIsUploading(false);
+        setShowModal(false);
+        
+        if (result.successful.length > 0) {
+          const uploadURLs = result.successful.map(file => (file as any).uploadURL);
+          
+          if (onUpload) {
+            onUpload(uploadURLs);
           }
-        } catch (error) {
-          console.error('Error completing upload:', error);
-          setIsUploading(false);
+          
+          if (onComplete && uploadURLs.length > 0) {
+            try {
+              const response = await apiRequest('PUT', '/api/admin/images', { 
+                imageURL: uploadURLs[0] 
+              }) as { objectPath: string };
+              
+              onComplete(response.objectPath);
+            } catch (error) {
+              console.error('Error updating image:', error);
+            }
+          }
         }
       })
       .on('error', () => {
@@ -108,6 +113,21 @@ export function ImageUploader({
 
   return (
     <div className="flex flex-col items-start gap-2">
+      {/* Display existing images */}
+      {existingImages.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {existingImages.map((url, index) => (
+            <div key={index} className="w-24 h-24 border rounded-lg overflow-hidden">
+              <img 
+                src={url} 
+                alt={`Uploaded ${index + 1}`} 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      
       {currentImageUrl && (
         <div className="w-32 h-32 border rounded-lg overflow-hidden">
           <img 

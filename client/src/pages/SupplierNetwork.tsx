@@ -115,6 +115,56 @@ export default function SupplierNetwork() {
   const verifiedSuppliers = filteredSuppliers.filter((s: any) => s.verificationStatus === 'verified');
   const clientSuppliers = filteredSuppliers.filter((s: any) => s.verificationStatus === 'client_provided');
 
+  const addSupplierMutation = useMutation({
+    mutationFn: async (invitationData: {
+      email: string;
+      category: string;
+      companyName: string;
+      contactName?: string;
+      message?: string;
+    }) => {
+      const response = await fetch('/api/admin/supplier-invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(invitationData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send invitation');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/supplier-invitations'] });
+      toast({
+        title: 'Invitation Sent',
+        description: `Invitation sent to ${newSupplier.contactEmail}. They will receive an email to complete their registration.`,
+      });
+      
+      setIsAddSupplierOpen(false);
+      setNewSupplier({
+        supplierName: '',
+        supplierCategory: 'none',
+        website: '',
+        contactEmail: '',
+        description: '',
+        addressStreet: '',
+        addressCity: '',
+        addressCountry: '',
+        products: []
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: (error as any)?.message || 'Failed to send invitation',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleAddSupplier = () => {
     if (!newSupplier.supplierName || !newSupplier.supplierCategory || newSupplier.supplierCategory === 'none') {
       toast({
@@ -125,24 +175,24 @@ export default function SupplierNetwork() {
       return;
     }
 
-    // For Phase 3 development - simulate API call
-    toast({
-      title: 'Supplier Added',
-      description: `${newSupplier.supplierName} has been added to your supplier network and will be reviewed by our team for potential inclusion in the verified network.`,
-    });
+    if (!newSupplier.contactEmail) {
+      toast({
+        title: 'Validation Error',
+        description: 'Contact email is required to send invitation',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    setIsAddSupplierOpen(false);
-    setNewSupplier({
-      supplierName: '',
-      supplierCategory: 'none',
-      website: '',
-      contactEmail: '',
-      description: '',
-      addressStreet: '',
-      addressCity: '',
-      addressCountry: '',
-      products: []
-    });
+    const invitationData = {
+      email: newSupplier.contactEmail,
+      category: newSupplier.supplierCategory,
+      companyName: newSupplier.supplierName,
+      contactName: '', // Could be extracted from other fields if needed
+      message: newSupplier.description || 'Welcome to our supplier network!',
+    };
+
+    addSupplierMutation.mutate(invitationData);
   };
 
   const addProductToSupplier = () => {
@@ -216,7 +266,7 @@ export default function SupplierNetwork() {
                   Invite Your Supplier
                 </Button>
               </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
             <DialogHeader>
               <DialogTitle>Invite Your Supplier</DialogTitle>
               <DialogDescription>
@@ -389,8 +439,16 @@ export default function SupplierNetwork() {
                 <Button 
                   onClick={handleAddSupplier}
                   className="bg-green-600 hover:bg-green-700 text-white"
+                  disabled={addSupplierMutation.isPending}
                 >
-                  Send Invitation
+                  {addSupplierMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Sending Invitation...
+                    </>
+                  ) : (
+                    'Send Invitation'
+                  )}
                 </Button>
               </div>
             </div>
@@ -581,12 +639,46 @@ export default function SupplierNetwork() {
         <TabsContent value="products" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Supplier Products</CardTitle>
-              <CardDescription>Browse products available from your supplier network</CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Supplier Products</CardTitle>
+                  <CardDescription>Browse products available from your supplier network</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search products..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-64"
+                    />
+                  </div>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All categories</SelectItem>
+                      {supplierCategories.map(cat => (
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(products || []).map((product: any) => (
+                {(products || [])
+                  .filter((product: any) => {
+                    const matchesSearch = product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                         product.productDescription?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                         product.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesCategory = selectedCategory === 'all' || product.supplierCategory === selectedCategory;
+                    return matchesSearch && matchesCategory;
+                  })
+                  .map((product: any) => (
                   <Card key={product.id} className="border-gray-200">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">

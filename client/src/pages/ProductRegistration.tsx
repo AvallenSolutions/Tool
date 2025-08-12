@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OptimizedProductForm from "@/components/products/OptimizedProductForm";
 import { Package, Building2, AlertTriangle, ArrowLeft, Plus } from "lucide-react";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface Supplier {
   id: number;
