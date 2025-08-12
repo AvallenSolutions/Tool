@@ -84,16 +84,54 @@ export default function SupplierManagement() {
       console.log('Upload result:', result);
       
       try {
-        // Process uploaded files and normalize paths
-        const uploadedFiles = result.successful.map(file => {
-          console.log('Processing uploaded file:', file);
-          return {
-            name: file.name,
-            url: file.uploadURL || file.response?.uploadURL,
-            size: file.size,
-            type: file.type
-          };
-        });
+        // Process uploaded files and set ACL policies
+        const uploadedFiles = await Promise.all(
+          result.successful.map(async (file) => {
+            console.log('Processing uploaded file:', file);
+            
+            // Get the upload URL from the file object
+            const uploadURL = (file as any).uploadURL;
+            console.log('File upload URL:', uploadURL);
+            
+            if (!uploadURL) {
+              throw new Error('No upload URL found in file object');
+            }
+
+            // Call the admin API to set ACL and get the normalized object path
+            try {
+              const response = await fetch('/api/admin/images', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ imageURL: uploadURL }),
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Failed to set image ACL: ${errorData.message || response.statusText}`);
+              }
+
+              const { objectPath } = await response.json();
+              console.log('Image ACL set, object path:', objectPath);
+
+              return {
+                name: file.name,
+                url: objectPath, // Use the normalized object path
+                size: file.size,
+                type: file.type
+              };
+            } catch (error) {
+              console.error('Error setting ACL for image:', error);
+              // Fallback to the original upload URL if ACL setting fails
+              return {
+                name: file.name,
+                url: uploadURL,
+                size: file.size,
+                type: file.type
+              };
+            }
+          })
+        );
 
         // Update the editing supplier with the new images
         if (editingSupplier) {
