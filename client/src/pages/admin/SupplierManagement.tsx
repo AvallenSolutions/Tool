@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 import { 
   Eye, 
   CheckCircle, 
@@ -25,7 +27,9 @@ import {
   Calendar,
   Edit,
   Trash2,
-  Plus
+  Plus,
+  Package,
+  Upload
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -55,6 +59,48 @@ export default function SupplierManagement() {
   const [deletingSupplier, setDeletingSupplier] = useState<SupplierWithDetails | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
+
+  // Image upload handlers
+  const handleGetUploadParameters = async () => {
+    const response = await fetch('/api/objects/upload', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get upload parameters');
+    }
+    
+    const { uploadURL } = await response.json();
+    
+    return {
+      method: 'PUT' as const,
+      url: uploadURL,
+    };
+  };
+
+  const handleImageUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      toast({
+        title: 'Images Uploaded',
+        description: `Successfully uploaded ${result.successful.length} image(s)`,
+      });
+      
+      // Update the editing supplier with the new images
+      if (editingSupplier) {
+        const uploadedFiles = result.successful.map(file => ({
+          name: file.name,
+          url: file.uploadURL,
+          size: file.size,
+        }));
+        
+        setEditingSupplier(prev => ({
+          ...prev!,
+          images: [...((prev as any)?.images || []), ...uploadedFiles]
+        }));
+      }
+    }
+  };
 
   const { data: supplierResponse, isLoading } = useQuery<{success: boolean, data: SupplierWithDetails[]}>({
     queryKey: ['/api/admin/suppliers'],
@@ -108,7 +154,7 @@ export default function SupplierManagement() {
   // Delete supplier mutation
   const deleteSupplierMutation = useMutation({
     mutationFn: (supplierId: number) => 
-      apiRequest('DELETE', '/api/admin/suppliers/' + supplierId),
+      apiRequest('DELETE', '/api/verified-suppliers/' + supplierId),
     onSuccess: () => {
       toast({
         title: "Supplier Deleted",
@@ -300,9 +346,9 @@ export default function SupplierManagement() {
                         Review
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
+                    <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
+                      <DialogHeader className="bg-white">
+                        <DialogTitle className="flex items-center gap-2 text-slate-900">
                           <Building2 className="h-5 w-5" />
                           {selectedSupplier?.supplierName}
                         </DialogTitle>
@@ -537,6 +583,63 @@ export default function SupplierManagement() {
                 })}
               />
             </div>
+
+            {/* Image Upload Section */}
+            <div className="space-y-3">
+              <Label>Supplier Images</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <ObjectUploader
+                    maxNumberOfFiles={5}
+                    maxFileSize={10485760}
+                    onGetUploadParameters={handleGetUploadParameters}
+                    onComplete={handleImageUploadComplete}
+                    buttonClassName="w-full"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Upload Images
+                    </div>
+                  </ObjectUploader>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Upload up to 5 images (max 10MB each)
+                  <br />
+                  Supported formats: JPG, PNG, WebP
+                </div>
+              </div>
+              
+              {/* Display uploaded images */}
+              {((editingSupplier as any)?.images?.length > 0) && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Uploaded Images</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {((editingSupplier as any)?.images || []).map((image: any, index: number) => (
+                      <div key={index} className="relative">
+                        <img 
+                          src={image.url} 
+                          alt={image.name}
+                          className="w-full h-20 object-cover rounded border"
+                        />
+                        <button
+                          onClick={() => {
+                            const updatedImages = ((editingSupplier as any)?.images || []).filter((_: any, i: number) => i !== index);
+                            setEditingSupplier(prev => ({
+                              ...prev!,
+                              images: updatedImages
+                            }) as any);
+                          }}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditingSupplier(null)}>
                 Cancel

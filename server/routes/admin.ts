@@ -264,4 +264,86 @@ router.put('/reports/:reportId/approve', async (req: AdminRequest, res) => {
   }
 });
 
+/**
+ * PUT /api/admin/suppliers/:supplierId
+ * Updates a supplier's information
+ */
+router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+  try {
+    const { supplierId } = req.params;
+    const updateData = {
+      ...req.body,
+      updatedAt: new Date()
+    };
+
+    const [updatedSupplier] = await db
+      .update(verifiedSuppliers)
+      .set(updateData)
+      .where(eq(verifiedSuppliers.id, parseInt(supplierId)))
+      .returning();
+
+    if (!updatedSupplier) {
+      return res.status(404).json({
+        error: 'Supplier not found',
+        message: `No supplier found with ID ${supplierId}`
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Supplier updated successfully',
+      supplier: updatedSupplier
+    });
+
+  } catch (error) {
+    console.error('Admin supplier update error:', error);
+    res.status(500).json({ 
+      error: 'Failed to update supplier',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/suppliers/:supplierId
+ * Deletes a supplier and all associated products
+ */
+router.delete('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+  try {
+    const { supplierId } = req.params;
+    const supplierIdNum = parseInt(supplierId);
+
+    // First delete all associated supplier products
+    await db
+      .delete(supplierProducts)
+      .where(eq(supplierProducts.supplierId, supplierIdNum));
+
+    // Then delete the supplier
+    const [deletedSupplier] = await db
+      .delete(verifiedSuppliers)
+      .where(eq(verifiedSuppliers.id, supplierIdNum))
+      .returning();
+
+    if (!deletedSupplier) {
+      return res.status(404).json({
+        error: 'Supplier not found',
+        message: `No supplier found with ID ${supplierId}`
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Supplier and all associated products deleted successfully',
+      supplier: deletedSupplier
+    });
+
+  } catch (error) {
+    console.error('Admin supplier delete error:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete supplier',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export { router as adminRouter };

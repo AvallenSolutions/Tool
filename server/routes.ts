@@ -1889,6 +1889,53 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // ================== OBJECT STORAGE ENDPOINTS ==================
+  
+  // Get upload URL for object storage
+  app.post('/api/objects/upload', async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: 'Failed to get upload URL' });
+    }
+  });
+
+  // Serve private objects (for uploaded files)
+  app.get('/objects/:objectPath(*)', async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      await objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error('Error serving object:', error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ error: 'Object not found' });
+      }
+      res.status(500).json({ error: 'Failed to serve object' });
+    }
+  });
+
+  // Serve public objects (for static assets)
+  app.get('/public-objects/:filePath(*)', async (req, res) => {
+    try {
+      const filePath = req.params.filePath;
+      const objectStorageService = new ObjectStorageService();
+      const file = await objectStorageService.searchPublicObject(filePath);
+      
+      if (!file) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      await objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error('Error serving public object:', error);
+      res.status(500).json({ error: 'Failed to serve public object' });
+    }
+  });
+
   // Register admin routes
   app.use('/api/admin', adminRouter);
 
