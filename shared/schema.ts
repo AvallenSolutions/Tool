@@ -490,6 +490,82 @@ export const contractProducerInvitations = pgTable("contract_producer_invitation
   lcaData: jsonb("lca_data"), // Submitted LCA data from producer
 });
 
+// Company sustainability data
+export const companySustainabilityData = pgTable("company_sustainability_data", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id).unique(), // One record per company
+  
+  // Environmental Certifications
+  certifications: jsonb("certifications").$type<string[]>().default([]),
+  
+  // Environmental Policies
+  environmentalPolicies: jsonb("environmental_policies").$type<{
+    wasteManagement: string;
+    energyEfficiency: string;
+    waterConservation: string;
+    carbonReduction: string;
+  }>().default({
+    wasteManagement: '',
+    energyEfficiency: '',
+    waterConservation: '',
+    carbonReduction: '',
+  }),
+  
+  // Facilities Data
+  facilitiesData: jsonb("facilities_data").$type<{
+    energySource: string;
+    renewableEnergyPercentage?: number;
+    wasteRecyclingPercentage?: number;
+    waterTreatment: string;
+    transportationMethods: string[];
+  }>().default({
+    energySource: '',
+    renewableEnergyPercentage: undefined,
+    wasteRecyclingPercentage: undefined,
+    waterTreatment: '',
+    transportationMethods: [],
+  }),
+  
+  // Sustainability Reporting
+  sustainabilityReporting: jsonb("sustainability_reporting").$type<{
+    hasAnnualReport: boolean;
+    reportingStandards: string[];
+    thirdPartyVerification: boolean;
+    scopeEmissions: {
+      scope1: boolean;
+      scope2: boolean;
+      scope3: boolean;
+    };
+  }>().default({
+    hasAnnualReport: false,
+    reportingStandards: [],
+    thirdPartyVerification: false,
+    scopeEmissions: {
+      scope1: false,
+      scope2: false,
+      scope3: false,
+    },
+  }),
+  
+  // Goals and Commitments
+  goals: jsonb("goals").$type<{
+    carbonNeutralTarget: string;
+    sustainabilityGoals: string;
+    circularEconomyInitiatives: string;
+  }>().default({
+    carbonNeutralTarget: '',
+    sustainabilityGoals: '',
+    circularEconomyInitiatives: '',
+  }),
+  
+  // Progress tracking
+  completionPercentage: integer("completion_percentage").default(0),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ one, many }) => ({
   company: one(companies, {
@@ -507,6 +583,17 @@ export const companyRelations = relations(companies, ({ one, many }) => ({
   products: many(products),
   suppliers: many(suppliers),
   reports: many(reports),
+  sustainabilityData: one(companySustainabilityData, {
+    fields: [companies.id],
+    references: [companySustainabilityData.companyId],
+  }),
+}));
+
+export const companySustainabilityDataRelations = relations(companySustainabilityData, ({ one }) => ({
+  company: one(companies, {
+    fields: [companySustainabilityData.companyId],
+    references: [companies.id],
+  }),
 }));
 
 export const productRelations = relations(products, ({ one, many }) => ({
@@ -621,9 +708,18 @@ export const insertUploadedDocumentSchema = createInsertSchema(uploadedDocuments
   updatedAt: true,
 });
 
+export const insertCompanySustainabilityDataSchema = createInsertSchema(companySustainabilityData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastUpdated: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type CompanySustainabilityData = typeof companySustainabilityData.$inferSelect;
+export type InsertCompanySustainabilityData = z.infer<typeof insertCompanySustainabilityDataSchema>;
 
 // Product types
 export type Product = typeof products.$inferSelect;

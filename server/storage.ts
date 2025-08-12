@@ -14,6 +14,7 @@ import {
   lcaCalculationJobs,
   lcaQuestionnaires,
   uploadedSupplierLcas,
+  companySustainabilityData,
   type User,
   type UpsertUser,
   type Company,
@@ -42,6 +43,8 @@ import {
   type InsertLcaQuestionnaire,
   type UploadedSupplierLca,
   type InsertUploadedSupplierLca,
+  type CompanySustainabilityData,
+  type InsertCompanySustainabilityData,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ilike, or } from "drizzle-orm";
@@ -56,6 +59,10 @@ export interface IStorage {
   getCompanyByOwner(ownerId: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
+  
+  // Company sustainability data operations
+  getCompanySustainabilityData(companyId: number): Promise<CompanySustainabilityData | undefined>;
+  upsertCompanySustainabilityData(companyId: number, data: Partial<InsertCompanySustainabilityData>): Promise<CompanySustainabilityData>;
   
   // Product operations
   getProductsByCompany(companyId: number): Promise<Product[]>;
@@ -503,6 +510,42 @@ export class DatabaseStorage implements IStorage {
         .values({ ...data, companyId } as any)
         .returning();
       return newData;
+    }
+  }
+
+  // Company sustainability data operations
+  async getCompanySustainabilityData(companyId: number): Promise<CompanySustainabilityData | undefined> {
+    const [data] = await db
+      .select()
+      .from(companySustainabilityData)
+      .where(eq(companySustainabilityData.companyId, companyId));
+    return data;
+  }
+
+  async upsertCompanySustainabilityData(companyId: number, data: Partial<InsertCompanySustainabilityData>): Promise<CompanySustainabilityData> {
+    const existing = await this.getCompanySustainabilityData(companyId);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(companySustainabilityData)
+        .set({ 
+          ...data, 
+          updatedAt: new Date(),
+          lastUpdated: new Date()
+        })
+        .where(eq(companySustainabilityData.companyId, companyId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(companySustainabilityData)
+        .values({ 
+          ...data, 
+          companyId,
+          completionPercentage: 0
+        } as any)
+        .returning();
+      return created;
     }
   }
 

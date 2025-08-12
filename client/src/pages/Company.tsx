@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Building2, Leaf, Target, BarChart3, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -78,6 +79,35 @@ export default function Company() {
     retry: false,
   });
 
+  // Fetch sustainability data from backend
+  const { data: backendSustainabilityData, isLoading: sustainabilityLoading } = useQuery({
+    queryKey: ["/api/company/sustainability-data"],
+    retry: false,
+    enabled: !!company,
+  });
+
+  // Update sustainability data mutation
+  const sustainabilityMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("/api/company/sustainability-data", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/company/sustainability-data"] });
+      toast({
+        title: 'Environmental Data Saved',
+        description: 'Your company environmental information has been successfully updated.',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Save Failed',
+        description: 'There was an error saving your environmental data.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Initialize sustainability data with proper types
   const [sustainabilityData, setSustainabilityData] = useState({
     certifications: [] as string[],
@@ -111,9 +141,34 @@ export default function Company() {
     },
   });
 
-  // Calculate completion percentage based on filled fields
-  const calculateCompletionPercentage = () => {
-    const totalFields = 15; // Approximate number of main data points
+  // Update state when backend data loads
+  useEffect(() => {
+    if (backendSustainabilityData && !sustainabilityLoading) {
+      setSustainabilityData(prevData => ({
+        ...prevData,
+        ...backendSustainabilityData,
+      }));
+    }
+  }, [backendSustainabilityData, sustainabilityLoading]);
+
+  // Auto-save functionality - save changes after 2 seconds of inactivity
+  useEffect(() => {
+    if (!backendSustainabilityData || sustainabilityLoading) return;
+    
+    const timeoutId = setTimeout(() => {
+      // Only auto-save if data has actually changed
+      const hasChanges = JSON.stringify(sustainabilityData) !== JSON.stringify(backendSustainabilityData);
+      if (hasChanges && !sustainabilityMutation.isPending) {
+        sustainabilityMutation.mutate(sustainabilityData);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [sustainabilityData, backendSustainabilityData, sustainabilityLoading, sustainabilityMutation]);
+
+  // Use backend completion percentage if available, otherwise calculate locally
+  const completionPercentage = backendSustainabilityData?.completionPercentage ?? (() => {
+    const totalFields = 17; // Updated count for more accurate tracking
     let completedFields = 0;
 
     if (sustainabilityData.certifications.length > 0) completedFields++;
@@ -126,7 +181,9 @@ export default function Company() {
     if (sustainabilityData.facilitiesData.wasteRecyclingPercentage !== undefined) completedFields++;
     if (sustainabilityData.facilitiesData.waterTreatment) completedFields++;
     if (sustainabilityData.facilitiesData.transportationMethods.length > 0) completedFields++;
+    if (sustainabilityData.sustainabilityReporting.hasAnnualReport) completedFields++;
     if (sustainabilityData.sustainabilityReporting.reportingStandards.length > 0) completedFields++;
+    if (sustainabilityData.sustainabilityReporting.thirdPartyVerification) completedFields++;
     if (sustainabilityData.sustainabilityReporting.scopeEmissions.scope1 || 
         sustainabilityData.sustainabilityReporting.scopeEmissions.scope2 || 
         sustainabilityData.sustainabilityReporting.scopeEmissions.scope3) completedFields++;
@@ -135,27 +192,12 @@ export default function Company() {
     if (sustainabilityData.goals.circularEconomyInitiatives) completedFields++;
 
     return Math.round((completedFields / totalFields) * 100);
-  };
-
-  const completionPercentage = calculateCompletionPercentage();
+  })();
 
   const handleSaveSustainabilityData = async () => {
     setIsSaving(true);
-    
     try {
-      // TODO: Implement API call to save sustainability data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: 'Environmental Data Saved',
-        description: 'Your company environmental information has been successfully updated.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Save Failed',
-        description: 'There was an error saving your environmental data.',
-        variant: 'destructive',
-      });
+      await sustainabilityMutation.mutateAsync(sustainabilityData);
     } finally {
       setIsSaving(false);
     }
@@ -181,11 +223,23 @@ export default function Company() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold">Environmental Data Collection</h3>
-                  <p className="text-sm text-gray-600">Complete your sustainability profile to generate comprehensive reports</p>
+                  <p className="text-sm text-gray-600">
+                    Complete your sustainability profile to generate comprehensive reports
+                    {sustainabilityMutation.isPending && (
+                      <span className="text-blue-600 ml-2">• Auto-saving...</span>
+                    )}
+                  </p>
                 </div>
-                <Badge variant="outline" className="px-3 py-1">
-                  {completionPercentage}% Complete
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {backendSustainabilityData?.lastUpdated && (
+                    <span className="text-xs text-gray-500">
+                      Last saved: {new Date(backendSustainabilityData.lastUpdated).toLocaleTimeString()}
+                    </span>
+                  )}
+                  <Badge variant="outline" className="px-3 py-1">
+                    {completionPercentage}% Complete
+                  </Badge>
+                </div>
               </div>
               <Progress value={completionPercentage} className="w-full" />
             </CardContent>
@@ -799,13 +853,27 @@ export default function Company() {
               </Card>
 
               {/* Save Button */}
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  {sustainabilityMutation.isPending ? (
+                    <span className="flex items-center text-blue-600">
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      Auto-saving changes...
+                    </span>
+                  ) : backendSustainabilityData?.lastUpdated ? (
+                    <span>
+                      Last updated: {new Date(backendSustainabilityData.lastUpdated).toLocaleString()}
+                    </span>
+                  ) : (
+                    <span>Changes are automatically saved</span>
+                  )}
+                </div>
                 <Button 
                   onClick={handleSaveSustainabilityData}
-                  disabled={isSaving}
+                  disabled={isSaving || sustainabilityMutation.isPending}
                   className="bg-avallen-green hover:bg-avallen-green-light text-white"
                 >
-                  {isSaving ? (
+                  {(isSaving || sustainabilityMutation.isPending) ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Saving...
@@ -813,7 +881,7 @@ export default function Company() {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Save Environmental Data
+                      Save Now
                     </>
                   )}
                 </Button>

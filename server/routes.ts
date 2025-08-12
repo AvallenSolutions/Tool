@@ -7,7 +7,7 @@ import Stripe from "stripe";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, companies, reports, users } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -1092,6 +1092,150 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // ============ END PRODUCT SEARCH ENDPOINTS ============
+
+  // ============ COMPANY SUSTAINABILITY DATA ENDPOINTS ============
+
+  // Get company sustainability data
+  app.get('/api/company/sustainability-data', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const sustainabilityData = await dbStorage.getCompanySustainabilityData(company.id);
+      res.json(sustainabilityData || {
+        companyId: company.id,
+        certifications: [],
+        environmentalPolicies: {
+          wasteManagement: '',
+          energyEfficiency: '',
+          waterConservation: '',
+          carbonReduction: ''
+        },
+        facilitiesData: {
+          energySource: '',
+          renewableEnergyPercentage: undefined,
+          wasteRecyclingPercentage: undefined,
+          waterTreatment: '',
+          transportationMethods: []
+        },
+        sustainabilityReporting: {
+          hasAnnualReport: false,
+          reportingStandards: [],
+          thirdPartyVerification: false,
+          scopeEmissions: {
+            scope1: false,
+            scope2: false,
+            scope3: false
+          }
+        },
+        goals: {
+          carbonNeutralTarget: '',
+          sustainabilityGoals: '',
+          circularEconomyInitiatives: ''
+        },
+        completionPercentage: 0
+      });
+    } catch (error) {
+      console.error('Error fetching sustainability data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Update company sustainability data
+  app.put('/api/company/sustainability-data', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Validate the request body
+      const validatedData = insertCompanySustainabilityDataSchema.parse(req.body);
+
+      // Calculate completion percentage
+      const completionPercentage = calculateSustainabilityCompletionPercentage(validatedData);
+
+      const updatedData = await dbStorage.upsertCompanySustainabilityData(company.id, {
+        ...validatedData,
+        completionPercentage
+      });
+
+      res.json(updatedData);
+    } catch (error) {
+      console.error('Error updating sustainability data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Helper function to calculate completion percentage
+  function calculateSustainabilityCompletionPercentage(data: any): number {
+    let totalFields = 0;
+    let completedFields = 0;
+
+    // Count environmental policies
+    if (data.environmentalPolicies) {
+      totalFields += 4;
+      Object.values(data.environmentalPolicies).forEach(value => {
+        if (value && typeof value === 'string' && value.trim().length > 0) {
+          completedFields++;
+        }
+      });
+    }
+
+    // Count facilities data
+    if (data.facilitiesData) {
+      totalFields += 5;
+      if (data.facilitiesData.energySource && data.facilitiesData.energySource.trim().length > 0) completedFields++;
+      if (data.facilitiesData.renewableEnergyPercentage !== undefined && data.facilitiesData.renewableEnergyPercentage !== null) completedFields++;
+      if (data.facilitiesData.wasteRecyclingPercentage !== undefined && data.facilitiesData.wasteRecyclingPercentage !== null) completedFields++;
+      if (data.facilitiesData.waterTreatment && data.facilitiesData.waterTreatment.trim().length > 0) completedFields++;
+      if (data.facilitiesData.transportationMethods && data.facilitiesData.transportationMethods.length > 0) completedFields++;
+    }
+
+    // Count sustainability reporting
+    if (data.sustainabilityReporting) {
+      totalFields += 4;
+      if (data.sustainabilityReporting.hasAnnualReport) completedFields++;
+      if (data.sustainabilityReporting.reportingStandards && data.sustainabilityReporting.reportingStandards.length > 0) completedFields++;
+      if (data.sustainabilityReporting.thirdPartyVerification) completedFields++;
+      if (data.sustainabilityReporting.scopeEmissions && 
+          (data.sustainabilityReporting.scopeEmissions.scope1 || 
+           data.sustainabilityReporting.scopeEmissions.scope2 || 
+           data.sustainabilityReporting.scopeEmissions.scope3)) completedFields++;
+    }
+
+    // Count goals
+    if (data.goals) {
+      totalFields += 3;
+      Object.values(data.goals).forEach(value => {
+        if (value && typeof value === 'string' && value.trim().length > 0) {
+          completedFields++;
+        }
+      });
+    }
+
+    // Count certifications
+    totalFields += 1;
+    if (data.certifications && data.certifications.length > 0) {
+      completedFields++;
+    }
+
+    return totalFields > 0 ? Math.round((completedFields / totalFields) * 100) : 0;
+  }
+
+  // ============ END COMPANY SUSTAINABILITY DATA ENDPOINTS ============
 
   // ============ SUPPLIER INVITATION ENDPOINTS ============
 
