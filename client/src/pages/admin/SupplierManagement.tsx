@@ -91,6 +91,42 @@ export default function SupplierManagement() {
 
   const pendingCount = suppliers?.filter(s => s.verificationStatus === 'pending_review').length || 0;
 
+  const handleViewSupplier = (supplier: SupplierWithDetails) => {
+    navigate(`/app/admin/suppliers/${supplier.id}`);
+  };
+
+  const handleEditSupplier = (supplier: SupplierWithDetails) => {
+    navigate(`/app/admin/suppliers/${supplier.id}/edit`);
+  };
+
+  const deleteSupplierMutation = useMutation({
+    mutationFn: async (supplierId: string) => {
+      return apiRequest(`/api/admin/suppliers/${supplierId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/suppliers'] });
+      toast({
+        title: 'Success',
+        description: 'Supplier deleted successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete supplier',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleDeleteSupplier = (supplier: SupplierWithDetails) => {
+    if (confirm(`Are you sure you want to delete ${supplier.supplierName}? This action cannot be undone.`)) {
+      deleteSupplierMutation.mutate(supplier.id);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen bg-lightest-gray">
@@ -254,6 +290,7 @@ export default function SupplierManagement() {
                             <Button 
                               variant="outline" 
                               size="sm"
+                              onClick={() => handleViewSupplier(supplier)}
                               className="text-blue-600 hover:text-blue-700"
                             >
                               <Eye className="h-4 w-4 mr-1" />
@@ -262,6 +299,7 @@ export default function SupplierManagement() {
                             <Button 
                               variant="outline" 
                               size="sm"
+                              onClick={() => handleEditSupplier(supplier)}
                               className="text-green-600 hover:text-green-700"
                             >
                               <Edit className="h-4 w-4 mr-1" />
@@ -270,6 +308,8 @@ export default function SupplierManagement() {
                             <Button 
                               variant="outline" 
                               size="sm"
+                              onClick={() => handleDeleteSupplier(supplier)}
+                              disabled={deleteSupplierMutation.isPending}
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4 mr-1" />

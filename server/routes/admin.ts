@@ -156,6 +156,70 @@ router.get('/suppliers', async (req: AdminRequest, res) => {
 });
 
 /**
+ * GET /api/admin/suppliers/:supplierId
+ * Returns detailed information for a specific supplier
+ */
+router.get('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+  try {
+    const { supplierId } = req.params;
+    console.log('Admin supplier detail endpoint called for ID:', supplierId);
+    
+    const [supplier] = await db
+      .select({
+        id: verifiedSuppliers.id,
+        supplierName: verifiedSuppliers.supplierName,
+        supplierCategory: verifiedSuppliers.supplierCategory,
+        verificationStatus: verifiedSuppliers.verificationStatus,
+        website: verifiedSuppliers.website,
+        contactEmail: verifiedSuppliers.contactEmail,
+        description: verifiedSuppliers.description,
+        location: verifiedSuppliers.location,
+        addressStreet: verifiedSuppliers.addressStreet,
+        addressCity: verifiedSuppliers.addressCity,
+        addressPostalCode: verifiedSuppliers.addressPostalCode,
+        addressCountry: verifiedSuppliers.addressCountry,
+        submittedBy: verifiedSuppliers.submittedBy,
+        submittedByUserId: verifiedSuppliers.submittedByUserId,
+        submittedByCompanyId: verifiedSuppliers.submittedByCompanyId,
+        createdAt: verifiedSuppliers.createdAt,
+        updatedAt: verifiedSuppliers.updatedAt,
+        verifiedBy: verifiedSuppliers.verifiedBy,
+        verifiedAt: verifiedSuppliers.verifiedAt,
+        // Submitter details (only when submitted by a specific user)
+        submitterEmail: users.email,
+        submitterName: users.firstName,
+        // Company details if submitted by company
+        companyName: companies.name
+      })
+      .from(verifiedSuppliers)
+      .leftJoin(users, eq(verifiedSuppliers.submittedByUserId, users.id))
+      .leftJoin(companies, eq(verifiedSuppliers.submittedByCompanyId, companies.id))
+      .where(eq(verifiedSuppliers.id, supplierId));
+
+    if (!supplier) {
+      return res.status(404).json({
+        success: false,
+        error: 'Supplier not found',
+        message: `No supplier found with ID ${supplierId}`
+      });
+    }
+
+    res.json({
+      success: true,
+      data: supplier
+    });
+
+  } catch (error) {
+    console.error('Admin supplier detail error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch supplier details',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * PUT /api/admin/suppliers/:supplierId/verify
  * Updates a supplier's verification status to 'verified'
  */
