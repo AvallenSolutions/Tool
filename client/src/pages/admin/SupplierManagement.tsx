@@ -22,6 +22,7 @@ import {
   Plus
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { SupplierLogo } from "@/components/SupplierLogo";
 
 interface SupplierWithDetails {
   id: string;
@@ -32,6 +33,7 @@ interface SupplierWithDetails {
   contactEmail?: string;
   description?: string;
   addressCountry?: string;
+  logoUrl?: string;
   submittedBy?: string;
   submittedByCompanyId?: number;
   createdAt: string;
@@ -240,11 +242,18 @@ export default function SupplierManagement() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-3">
-                              {getStatusIcon(supplier.verificationStatus)}
-                              <h3 className="text-xl font-semibold text-gray-900">
-                                {supplier.supplierName}
-                              </h3>
-                              {getStatusBadge(supplier.verificationStatus)}
+                              <SupplierLogo 
+                                logoUrl={supplier.logoUrl} 
+                                supplierName={supplier.supplierName}
+                                size="md"
+                              />
+                              <div className="flex items-center gap-3">
+                                {getStatusIcon(supplier.verificationStatus)}
+                                <h3 className="text-xl font-semibold text-gray-900">
+                                  {supplier.supplierName}
+                                </h3>
+                                {getStatusBadge(supplier.verificationStatus)}
+                              </div>
                             </div>
                             
                             <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">

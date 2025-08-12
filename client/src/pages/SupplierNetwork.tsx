@@ -22,6 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { ObjectUploader } from '@/components/ObjectUploader';
+import { SupplierLogo } from '@/components/SupplierLogo';
 import type { UploadResult } from '@uppy/core';
 
 interface Supplier {
@@ -33,6 +34,7 @@ interface Supplier {
   description?: string;
   location?: string;
   addressCountry?: string;
+  logoUrl?: string;
   verificationStatus: 'verified' | 'pending_review' | 'client_provided';
   submittedBy: 'ADMIN' | 'SUPPLIER' | 'CLIENT';
   isVerified: boolean;
@@ -676,11 +678,18 @@ export default function SupplierNetwork() {
                       >
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <CardTitle className="text-lg">{supplier.supplierName}</CardTitle>
-                              <p className="text-sm text-gray-600 capitalize">
-                                {supplier.supplierCategory.replace('_', ' ')}
-                              </p>
+                            <div className="flex items-center gap-3 flex-1">
+                              <SupplierLogo 
+                                logoUrl={supplier.logoUrl} 
+                                supplierName={supplier.supplierName}
+                                size="sm"
+                              />
+                              <div>
+                                <CardTitle className="text-lg">{supplier.supplierName}</CardTitle>
+                                <p className="text-sm text-gray-600 capitalize">
+                                  {supplier.supplierCategory.replace('_', ' ')}
+                                </p>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               {getStatusBadge(supplier)}
@@ -740,11 +749,18 @@ export default function SupplierNetwork() {
                       <Card key={supplier.id} className="border-blue-200">
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
-                            <div>
-                              <CardTitle className="text-lg">{supplier.supplierName}</CardTitle>
-                              <p className="text-sm text-gray-600 capitalize">
-                                {supplier.supplierCategory.replace('_', ' ')}
-                              </p>
+                            <div className="flex items-center gap-3 flex-1">
+                              <SupplierLogo 
+                                logoUrl={supplier.logoUrl} 
+                                supplierName={supplier.supplierName}
+                                size="sm"
+                              />
+                              <div>
+                                <CardTitle className="text-lg">{supplier.supplierName}</CardTitle>
+                                <p className="text-sm text-gray-600 capitalize">
+                                  {supplier.supplierCategory.replace('_', ' ')}
+                                </p>
+                              </div>
                             </div>
                             {getStatusBadge(supplier)}
                           </div>

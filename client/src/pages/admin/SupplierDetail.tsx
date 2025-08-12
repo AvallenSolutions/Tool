@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { ArrowLeft, Building2, MapPin, Globe, Mail, Calendar, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { SupplierLogo } from '@/components/SupplierLogo';
 
 interface SupplierDetails {
   id: string;
@@ -19,6 +20,7 @@ interface SupplierDetails {
   addressCity?: string;
   addressPostalCode?: string;
   addressCountry?: string;
+  logoUrl?: string;
   submittedBy?: string;
   createdAt: string;
   updatedAt: string;
@@ -133,9 +135,16 @@ export default function SupplierDetail() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(supplier.verificationStatus)}
-                    <CardTitle className="text-2xl">{supplier.supplierName}</CardTitle>
+                  <div className="flex items-center gap-4">
+                    <SupplierLogo 
+                      logoUrl={supplier.logoUrl} 
+                      supplierName={supplier.supplierName}
+                      size="lg"
+                    />
+                    <div className="flex items-center gap-3">
+                      {getStatusIcon(supplier.verificationStatus)}
+                      <CardTitle className="text-2xl">{supplier.supplierName}</CardTitle>
+                    </div>
                   </div>
                   {getStatusBadge(supplier.verificationStatus)}
                 </div>
