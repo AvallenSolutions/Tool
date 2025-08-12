@@ -116,22 +116,28 @@ router.get('/suppliers', async (req: AdminRequest, res) => {
         website: verifiedSuppliers.website,
         contactEmail: verifiedSuppliers.contactEmail,
         description: verifiedSuppliers.description,
+        location: verifiedSuppliers.location,
         addressCountry: verifiedSuppliers.addressCountry,
         submittedBy: verifiedSuppliers.submittedBy,
+        submittedByUserId: verifiedSuppliers.submittedByUserId,
         submittedByCompanyId: verifiedSuppliers.submittedByCompanyId,
         createdAt: verifiedSuppliers.createdAt,
-        // Submitter details
+        updatedAt: verifiedSuppliers.updatedAt,
+        // Submitter details (only when submitted by a specific user)
         submitterEmail: users.email,
         submitterName: users.firstName,
         // Company details if submitted by company
         companyName: companies.name
       })
       .from(verifiedSuppliers)
-      .leftJoin(users, eq(verifiedSuppliers.submittedBy, users.id))
+      .leftJoin(users, eq(verifiedSuppliers.submittedByUserId, users.id))
       .leftJoin(companies, eq(verifiedSuppliers.submittedByCompanyId, companies.id))
       .orderBy(desc(verifiedSuppliers.createdAt));
 
-    res.json(suppliersWithSubmitter);
+    res.json({
+      success: true,
+      data: suppliersWithSubmitter
+    });
 
   } catch (error) {
     console.error('Admin suppliers list error:', error);
