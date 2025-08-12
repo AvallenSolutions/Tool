@@ -273,11 +273,29 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
     const { supplierId } = req.params;
     
     // Clean the request body and ensure proper date handling
-    const { images, ...cleanData } = req.body;
+    const { images, createdAt, updatedAt, id, ...cleanData } = req.body;
+    
+    // Only include valid supplier fields, excluding timestamps and ID
     const updateData = {
-      ...cleanData,
-      updatedAt: new Date().toISOString()
+      supplierName: cleanData.supplierName,
+      supplierCategory: cleanData.supplierCategory,
+      website: cleanData.website || null,
+      contactEmail: cleanData.contactEmail || null,
+      description: cleanData.description || null,
+      location: cleanData.location || null,
+      addressCountry: cleanData.addressCountry || null,
+      verificationStatus: cleanData.verificationStatus || 'pending_review',
+      updatedAt: new Date()
     };
+
+    // Remove any undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key as keyof typeof updateData] === undefined) {
+        delete updateData[key as keyof typeof updateData];
+      }
+    });
+
+    console.log('Updating supplier with data:', updateData);
 
     const [updatedSupplier] = await db
       .update(verifiedSuppliers)
