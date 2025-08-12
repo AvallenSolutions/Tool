@@ -1093,6 +1093,213 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ END PRODUCT SEARCH ENDPOINTS ============
 
+  // ============ SUPPLIER INVITATION ENDPOINTS ============
+
+  // Create a new supplier invitation
+  app.post('/api/admin/supplier-invitations', isAuthenticated, async (req, res) => {
+    try {
+      const { supplierInvitations } = await import('@shared/schema');
+      const { nanoid } = await import('nanoid');
+      
+      const { email, category, companyName, contactName, message } = req.body;
+      
+      if (!email || !category || !companyName) {
+        return res.status(400).json({ 
+          error: 'Email, category, and company name are required' 
+        });
+      }
+
+      // Check if invitation already exists for this email
+      const existingInvitation = await db
+        .select()
+        .from(supplierInvitations)
+        .where(eq(supplierInvitations.email, email))
+        .limit(1);
+
+      if (existingInvitation.length > 0) {
+        return res.status(400).json({ 
+          error: 'An invitation already exists for this email address' 
+        });
+      }
+
+      // Generate unique invitation token
+      const invitationToken = nanoid(32);
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      const newInvitation = await db
+        .insert(supplierInvitations)
+        .values({
+          email,
+          category,
+          companyName,
+          contactName: contactName || null,
+          message: message || null,
+          invitationToken,
+          expiresAt,
+          status: 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      res.json({ 
+        success: true, 
+        invitation: newInvitation[0],
+        invitationUrl: `${req.get('origin')}/supplier-onboarding?token=${invitationToken}`
+      });
+    } catch (error) {
+      console.error('Error creating supplier invitation:', error);
+      res.status(500).json({ error: 'Failed to create supplier invitation' });
+    }
+  });
+
+  // Get all supplier invitations (admin only)
+  app.get('/api/admin/supplier-invitations', isAuthenticated, async (req, res) => {
+    try {
+      const { supplierInvitations } = await import('@shared/schema');
+      
+      const invitations = await db
+        .select()
+        .from(supplierInvitations)
+        .orderBy(desc(supplierInvitations.createdAt));
+
+      res.json(invitations);
+    } catch (error) {
+      console.error('Error fetching supplier invitations:', error);
+      res.status(500).json({ error: 'Failed to fetch supplier invitations' });
+    }
+  });
+
+  // Validate invitation token (public endpoint)
+  app.get('/api/supplier-invitations/validate/:token', async (req, res) => {
+    try {
+      const { supplierInvitations } = await import('@shared/schema');
+      const { token } = req.params;
+      
+      const invitation = await db
+        .select()
+        .from(supplierInvitations)
+        .where(eq(supplierInvitations.invitationToken, token))
+        .limit(1);
+
+      if (!invitation.length) {
+        return res.status(404).json({ error: 'Invalid invitation token' });
+      }
+
+      const inv = invitation[0];
+      
+      // Check if invitation has expired
+      if (new Date() > inv.expiresAt) {
+        return res.status(400).json({ error: 'Invitation has expired' });
+      }
+
+      // Check if already used
+      if (inv.status === 'accepted') {
+        return res.status(400).json({ error: 'Invitation has already been used' });
+      }
+
+      res.json({ 
+        valid: true, 
+        invitation: {
+          id: inv.id,
+          email: inv.email,
+          category: inv.category,
+          companyName: inv.companyName,
+          contactName: inv.contactName,
+          message: inv.message,
+        }
+      });
+    } catch (error) {
+      console.error('Error validating invitation:', error);
+      res.status(500).json({ error: 'Failed to validate invitation' });
+    }
+  });
+
+  // Accept supplier invitation and create supplier (public endpoint)
+  app.post('/api/supplier-invitations/accept/:token', async (req, res) => {
+    try {
+      const { supplierInvitations, verifiedSuppliers } = await import('@shared/schema');
+      const { token } = req.params;
+      const {
+        supplierName,
+        description,
+        website,
+        contactName,
+        contactEmail,
+        contactPhone,
+        addressStreet,
+        addressCity,
+        addressCountry,
+        certifications
+      } = req.body;
+
+      // Validate invitation token
+      const invitation = await db
+        .select()
+        .from(supplierInvitations)
+        .where(eq(supplierInvitations.invitationToken, token))
+        .limit(1);
+
+      if (!invitation.length) {
+        return res.status(404).json({ error: 'Invalid invitation token' });
+      }
+
+      const inv = invitation[0];
+      
+      if (new Date() > inv.expiresAt) {
+        return res.status(400).json({ error: 'Invitation has expired' });
+      }
+
+      if (inv.status === 'accepted') {
+        return res.status(400).json({ error: 'Invitation has already been used' });
+      }
+
+      // Create new supplier
+      const newSupplier = await db
+        .insert(verifiedSuppliers)
+        .values({
+          supplierName,
+          supplierCategory: inv.category,
+          description,
+          website,
+          contactName,
+          contactEmail: contactEmail || inv.email,
+          contactPhone,
+          addressStreet,
+          addressCity,
+          addressCountry,
+          certifications: certifications || [],
+          isVerified: false, // Requires admin approval
+          verificationStatus: 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      // Mark invitation as accepted
+      await db
+        .update(supplierInvitations)
+        .set({ 
+          status: 'accepted', 
+          acceptedAt: new Date(),
+          supplierId: newSupplier[0].id,
+          updatedAt: new Date()
+        })
+        .where(eq(supplierInvitations.id, inv.id));
+
+      res.json({ 
+        success: true, 
+        supplier: newSupplier[0],
+        message: 'Supplier registration completed. Your application is under review.'
+      });
+    } catch (error) {
+      console.error('Error accepting supplier invitation:', error);
+      res.status(500).json({ error: 'Failed to complete supplier registration' });
+    }
+  });
+
+  // ============ END SUPPLIER INVITATION ENDPOINTS ============
+
   // Verified Suppliers API endpoints
   app.get('/api/verified-suppliers', async (req, res) => {
     try {

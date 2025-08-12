@@ -24,10 +24,11 @@ import ProductManagement from "@/pages/admin/ProductManagement";
 import LCAApprovals from "@/pages/admin/LCAApprovals";
 import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
+import SupplierInvitations from "@/pages/admin/SupplierInvitations";
 import SupplierNetwork from "@/pages/SupplierNetwork";
 import SupplierDetail from "@/pages/SupplierDetail";
 import ProductDetail from "@/pages/ProductDetail";
-import SupplierOnboarding from "@/pages/supplier-onboarding";
+import SupplierOnboarding from "@/pages/SupplierOnboarding";
 import SupplierRegistration from "@/pages/SupplierRegistration";
 import ProductRegistration from "@/pages/ProductRegistration";
 import Suppliers from "@/pages/suppliers";
@@ -112,8 +113,10 @@ function Router() {
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
       <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />
+      <Route path="/app/admin/invitations" component={SupplierInvitations} />
       <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
+      <Route path="/supplier-onboarding" component={SupplierOnboarding} />
       <Route component={NotFound} />
     </Switch>
   );
