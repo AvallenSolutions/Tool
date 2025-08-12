@@ -14,10 +14,11 @@ export default function Sidebar() {
 
   const navItems = [
     { path: "/app/dashboard", label: "Dashboard", icon: BarChart3 },
+    { path: "/app/company", label: "Company", icon: Building2 },
     { path: "/app/products", label: "Products", icon: Package },
     { path: "/app/reports", label: "Reports", icon: FileText },
     { path: "/app/greenwash-guardian", label: "GreenwashGuardian", icon: Shield },
-    { path: "/app/supplier-network", label: "Supplier Network", icon: Building2 },
+    { path: "/app/supplier-network", label: "Supplier Network", icon: Users },
     { path: "/app/settings", label: "Settings", icon: Settings },
     // Admin-only items
     ...(user && user.role === 'admin' ? [

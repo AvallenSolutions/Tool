@@ -15,6 +15,7 @@ import CreateEnhancedProduct from "@/pages/CreateEnhancedProduct";
 import Reports from "@/pages/reports";
 
 import Settings from "@/pages/settings";
+import Company from "@/pages/Company";
 import Onboarding from "@/pages/onboarding";
 import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -104,6 +105,7 @@ function Router() {
       <Route path="/app/product-registration" component={ProductRegistration} />
       <Route path="/app/suppliers" component={Suppliers} />
       <Route path="/app/lca" component={LCAPage} />
+      <Route path="/app/company" component={Company} />
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/admin" component={AdminDashboardMain} />
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
