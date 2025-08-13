@@ -187,11 +187,11 @@ export default function ProductEditDialog({ product, isOpen, onClose }: ProductE
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-xl">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
           <DialogDescription>
-            Update product information and specifications
+            Update product information, images, CO2 emissions, and LCA documentation
           </DialogDescription>
         </DialogHeader>
 

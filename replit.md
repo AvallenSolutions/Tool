@@ -36,6 +36,10 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 Preferred communication style: Simple, everyday language.
 
+**Critical UI Requirements:**
+- NEVER make popups/dialogs transparent - all dialog components must have opaque backgrounds with explicit styling (bg-white, border, shadow)
+- User explicitly stated: "NEVER make popups transparent" - this is mandatory for all dialog interfaces
+
 ## System Architecture
 
 ### Frontend Architecture
