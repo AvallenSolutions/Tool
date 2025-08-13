@@ -400,21 +400,18 @@ export default function SupplierRegistration() {
                       </div>
                     </div>
 
-                    {/* Company Images */}
+                    {/* Supplier Logo */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Upload className="w-4 h-4" />
-                        Company Images (Optional)
+                        Supplier Logo (Optional)
                       </h3>
-                      <p className="text-sm text-gray-600">
-                        Upload company logos, facility images, or product photos to showcase your business.
-                      </p>
                       
                       <ImageUploader 
                         onUpload={(urls) => {
                           setSupplierImages(urls);
                         }}
-                        maxImages={5}
+                        maxImages={1}
                         existingImages={supplierImages}
                       />
                     </div>
