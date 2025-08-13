@@ -1588,11 +1588,11 @@ Be precise and quote actual text from the content, not generic terms.`;
       let query = db
         .select()
         .from(verifiedSuppliers)
-        .where(eq(verifiedSuppliers.isVerified, true));
+        .where(eq(verifiedSuppliers.verificationStatus, 'verified'));
         
       if (category) {
         query = query.where(and(
-          eq(verifiedSuppliers.isVerified, true),
+          eq(verifiedSuppliers.verificationStatus, 'verified'),
           eq(verifiedSuppliers.supplierCategory, category)
         ));
       }
