@@ -198,8 +198,14 @@ export class ObjectStorageService {
       return rawObjectPath;
     }
 
-    // Extract the entity ID from the path
+    // Extract the entity ID from the path, removing the objectEntityDir prefix
     const entityId = rawObjectPath.slice(objectEntityDir.length);
+    
+    // Avoid double /uploads/ by checking if entityId already contains uploads/
+    if (entityId.startsWith('uploads/')) {
+      return `/objects/${entityId.slice('uploads/'.length)}`;
+    }
+    
     return `/objects/${entityId}`;
   }
 }

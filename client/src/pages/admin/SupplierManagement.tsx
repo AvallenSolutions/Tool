@@ -19,7 +19,8 @@ import {
   Eye,
   Edit,
   Trash2,
-  Plus
+  Plus,
+  Shield
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { SupplierLogo } from "@/components/SupplierLogo";
@@ -131,6 +132,35 @@ export default function SupplierManagement() {
   const handleDeleteSupplier = (supplier: SupplierWithDetails) => {
     if (confirm(`Are you sure you want to delete ${supplier.supplierName}? This action cannot be undone.`)) {
       deleteSupplierMutation.mutate(supplier.id);
+    }
+  };
+
+  const verifySupplierMutation = useMutation({
+    mutationFn: async (supplierId: string) => {
+      const response = await apiRequest("PUT", `/api/admin/suppliers/${supplierId}`, {
+        verificationStatus: 'verified'
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/suppliers'] });
+      toast({
+        title: 'Success',
+        description: 'Supplier verified successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to verify supplier',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleVerifySupplier = (supplier: SupplierWithDetails) => {
+    if (confirm(`Are you sure you want to verify ${supplier.supplierName}?`)) {
+      verifySupplierMutation.mutate(supplier.id);
     }
   };
 
@@ -319,6 +349,18 @@ export default function SupplierManagement() {
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
+                            {supplier.verificationStatus !== 'verified' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleVerifySupplier(supplier)}
+                                disabled={verifySupplierMutation.isPending}
+                                className="text-emerald-600 hover:text-emerald-700"
+                              >
+                                <Shield className="h-4 w-4 mr-1" />
+                                Verify
+                              </Button>
+                            )}
                             <Button 
                               variant="outline" 
                               size="sm"
