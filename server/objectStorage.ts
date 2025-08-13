@@ -162,8 +162,8 @@ export class ObjectStorageService {
       entityDir = `${entityDir}/`;
     }
     
-    // The entityId already includes the uploads/ prefix, so we don't add it again
-    const objectEntityPath = `${entityDir}${entityId}`;
+    // Files are uploaded to uploads/ subdirectory, so we need to include it
+    const objectEntityPath = `${entityDir}uploads/${entityId}`;
     console.log('Full object path:', objectEntityPath);
     
     const { bucketName, objectName } = parseObjectPath(objectEntityPath);

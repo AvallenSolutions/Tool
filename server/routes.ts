@@ -1588,6 +1588,20 @@ Be precise and quote actual text from the content, not generic terms.`;
       const category = req.query.category as string;
       const supplierId = req.query.supplier as string;
       
+      // Apply filters based on query parameters
+      const conditions = [
+        eq(supplierProducts.isVerified, true),
+        eq(verifiedSuppliers.isVerified, true)
+      ];
+      
+      if (supplierId) {
+        conditions.push(eq(supplierProducts.supplierId, supplierId));
+      }
+        
+      if (category) {
+        conditions.push(eq(verifiedSuppliers.supplierCategory, category as string));
+      }
+
       const query = db
         .select({
           id: supplierProducts.id,
@@ -1609,25 +1623,8 @@ Be precise and quote actual text from the content, not generic terms.`;
           createdAt: supplierProducts.createdAt
         })
         .from(supplierProducts)
-        .leftJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id));
-
-      // Apply filters based on query parameters
-      const conditions = [
-        eq(supplierProducts.isVerified, true),
-        eq(verifiedSuppliers.isVerified, true)
-      ];
-      
-      if (supplierId) {
-        conditions.push(eq(supplierProducts.supplierId, supplierId));
-      }
-        
-      if (category) {
-        conditions.push(eq(verifiedSuppliers.supplierCategory, category as string));
-      }
-      
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
+        .leftJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+        .where(and(...conditions));
 
       const products = await query;
       
