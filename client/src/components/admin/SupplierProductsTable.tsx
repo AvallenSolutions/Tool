@@ -87,7 +87,11 @@ export default function SupplierProductsTable() {
           </CardHeader>
           <CardContent>
             {product.productDescription && (
-              <p className="text-sm text-gray-700 mb-3">{product.productDescription}</p>
+              <p className="text-sm text-gray-700 mb-3">
+                {product.productDescription.length > 300 
+                  ? `${product.productDescription.substring(0, 300)}...` 
+                  : product.productDescription}
+              </p>
             )}
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">

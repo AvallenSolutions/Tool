@@ -934,64 +934,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Supplier Products API for Supplier Network
-  app.get('/api/supplier-products', async (req, res) => {
-    try {
-      const { category, search } = req.query;
-      const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
-      const { eq, and } = await import('drizzle-orm');
-      
-      let query = db
-        .select({
-          id: supplierProducts.id,
-          supplierId: supplierProducts.supplierId,
-          productName: supplierProducts.productName,
-          productDescription: supplierProducts.productDescription,
-          sku: supplierProducts.sku,
-          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
-          lcaDataJson: supplierProducts.lcaDataJson,
-          productAttributes: supplierProducts.productAttributes,
-          basePrice: supplierProducts.basePrice,
-          currency: supplierProducts.currency,
-          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
-          leadTimeDays: supplierProducts.leadTimeDays,
-          certifications: supplierProducts.certifications,
-          supplierName: verifiedSuppliers.supplierName,
-          supplierCategory: verifiedSuppliers.supplierCategory
-        })
-        .from(supplierProducts)
-        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
-        .where(and(
-          eq(supplierProducts.isVerified, true),
-          eq(verifiedSuppliers.isVerified, true)
-        ));
-        
-      // Apply filters based on query parameters
-      const conditions = [
-        eq(supplierProducts.isVerified, true),
-        eq(verifiedSuppliers.isVerified, true)
-      ];
-      
-      if (req.query.supplier) {
-        conditions.push(eq(supplierProducts.supplierId, req.query.supplier as string));
-      }
-        
-      if (category) {
-        conditions.push(eq(verifiedSuppliers.supplierCategory, category as string));
-      }
-      
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
-      
-      const products = await query;
-      
-      res.json(products);
-    } catch (error) {
-      console.error("Error fetching supplier products:", error);
-      res.status(500).json({ message: "Failed to fetch supplier products" });
-    }
-  });
+  // Removed duplicate route - using consolidated version below
 
   // ============ IMAGE UPLOAD ENDPOINTS ============
 
@@ -1636,7 +1579,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Supplier Product endpoints
+  // Consolidated Supplier Product endpoint - supports both admin dashboard and supplier network
   app.get('/api/supplier-products', async (req, res) => {
     try {
       const { supplierProducts, verifiedSuppliers } = await import('@shared/schema');
@@ -1648,14 +1591,21 @@ Be precise and quote actual text from the content, not generic terms.`;
       const query = db
         .select({
           id: supplierProducts.id,
-          name: supplierProducts.productName,
+          productName: supplierProducts.productName,
+          productDescription: supplierProducts.productDescription,
           sku: supplierProducts.sku,
-          description: supplierProducts.productDescription,
-          productAttributes: supplierProducts.productAttributes,
           supplierId: supplierProducts.supplierId,
           supplierName: verifiedSuppliers.supplierName,
           supplierCategory: verifiedSuppliers.supplierCategory,
           isVerified: supplierProducts.isVerified,
+          productAttributes: supplierProducts.productAttributes,
+          basePrice: supplierProducts.basePrice,
+          currency: supplierProducts.currency,
+          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+          leadTimeDays: supplierProducts.leadTimeDays,
+          certifications: supplierProducts.certifications,
+          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+          lcaDataJson: supplierProducts.lcaDataJson,
           createdAt: supplierProducts.createdAt
         })
         .from(supplierProducts)
@@ -1680,6 +1630,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
 
       const products = await query;
+      
+      console.log(`Products fetched: ${products.length} for company ${req.user?.companyId || 'unknown'}`);
+      
       res.json(products);
     } catch (error) {
       console.error('Error fetching supplier products:', error);

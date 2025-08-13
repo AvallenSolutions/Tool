@@ -56,7 +56,7 @@ export function ImageUploader({
   const [uppy] = useState(() =>
     new Uppy({
       restrictions: {
-        maxNumberOfFiles,
+        maxNumberOfFiles: maxImages,
         maxFileSize,
         allowedFileTypes: ['image/*'],
       },

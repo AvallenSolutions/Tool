@@ -193,7 +193,9 @@ export default function SupplierProductSearch({
 
                     {product.productDescription && (
                       <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {product.productDescription}
+                        {product.productDescription.length > 300 
+                          ? `${product.productDescription.substring(0, 300)}...` 
+                          : product.productDescription}
                       </p>
                     )}
 

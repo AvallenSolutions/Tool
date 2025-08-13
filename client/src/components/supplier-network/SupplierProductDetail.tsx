@@ -155,7 +155,11 @@ export default function SupplierProductDetail({ product, showLcaData = true }: S
         {product.productDescription && (
           <div>
             <h4 className="font-medium text-sm mb-2">Description</h4>
-            <p className="text-sm text-muted-foreground">{product.productDescription}</p>
+            <p className="text-sm text-muted-foreground">
+              {product.productDescription.length > 300 
+                ? `${product.productDescription.substring(0, 300)}...` 
+                : product.productDescription}
+            </p>
           </div>
         )}
 

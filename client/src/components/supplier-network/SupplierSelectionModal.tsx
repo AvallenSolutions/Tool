@@ -329,7 +329,11 @@ export default function SupplierSelectionModal({
                           </Badge>
                         </div>
 
-                        <p className="text-sm text-gray-600 mb-3">{product.productDescription}</p>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {product.productDescription.length > 300 
+                            ? `${product.productDescription.substring(0, 300)}...` 
+                            : product.productDescription}
+                        </p>
 
                         <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                           {product.basePrice && (
