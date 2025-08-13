@@ -384,16 +384,26 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="addressStreet">Street Address *</Label>
+                <Label htmlFor="addressLine1">Address Line 1 *</Label>
                 <Input
-                  id="addressStreet"
+                  id="addressLine1"
                   value={formData.addressStreet || ''}
                   onChange={(e) => handleInputChange('addressStreet', e.target.value)}
                   placeholder="Street address"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="addressLine2">Address Line 2</Label>
+                <Input
+                  id="addressLine2"
+                  value=""
+                  onChange={() => {}}
+                  placeholder="Apartment, suite, unit, building, floor, etc."
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="city">City *</Label>
                   <Input
@@ -405,33 +415,43 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="stateProvince">State/Province</Label>
+                  <Input
+                    id="stateProvince"
+                    value=""
+                    onChange={() => {}}
+                    placeholder="State or Province"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="postalCode">Postal Code *</Label>
                   <Input
                     id="postalCode"
                     value={formData.addressPostalCode || ''}
                     onChange={(e) => handleInputChange('addressPostalCode', e.target.value)}
-                    placeholder="Postal code"
+                    placeholder="Postal Code"
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="addressCountry">Country *</Label>
-                  <Select
-                    value={formData.addressCountry || ''}
-                    onValueChange={(value) => handleInputChange('addressCountry', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRIES.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="addressCountry">Country *</Label>
+                <Select
+                  value={formData.addressCountry || ''}
+                  onValueChange={(value) => handleInputChange('addressCountry', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

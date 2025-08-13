@@ -582,8 +582,20 @@ Be precise and quote actual text from the content, not generic terms.`;
       if (cleanData.location !== undefined) {
         supplierUpdateData.location = cleanData.location || null;
       }
+      if (cleanData.addressStreet !== undefined) {
+        supplierUpdateData.addressStreet = cleanData.addressStreet || null;
+      }
+      if (cleanData.addressCity !== undefined) {
+        supplierUpdateData.addressCity = cleanData.addressCity || null;
+      }
+      if (cleanData.addressPostalCode !== undefined) {
+        supplierUpdateData.addressPostalCode = cleanData.addressPostalCode || null;
+      }
       if (cleanData.addressCountry !== undefined) {
         supplierUpdateData.addressCountry = cleanData.addressCountry || null;
+      }
+      if (cleanData.logoUrl !== undefined) {
+        supplierUpdateData.logoUrl = cleanData.logoUrl || null;
       }
       if (cleanData.verificationStatus && typeof cleanData.verificationStatus === 'string') {
         supplierUpdateData.verificationStatus = cleanData.verificationStatus;
