@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import ProductEditDialog from "@/components/admin/ProductEditDialog";
 import { 
   Eye, 
   Edit,
@@ -434,151 +435,12 @@ export default function ProductManagement() {
         </Dialog>
       )}
 
-      {/* Edit Product Dialog */}
-      {editingProduct && (
-        <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="max-w-2xl bg-white border border-gray-200 shadow-lg">
-            <DialogHeader>
-              <DialogTitle>Edit Product</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Product Name</Label>
-                <Input
-                  value={editingProduct.productName}
-                  onChange={(e) => setEditingProduct({
-                    ...editingProduct,
-                    productName: e.target.value
-                  })}
-                />
-              </div>
-              
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={editingProduct.productDescription || ''}
-                  onChange={(e) => setEditingProduct({
-                    ...editingProduct,
-                    productDescription: e.target.value
-                  })}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>SKU</Label>
-                  <Input
-                    value={editingProduct.sku || ''}
-                    onChange={(e) => setEditingProduct({
-                      ...editingProduct,
-                      sku: e.target.value
-                    })}
-                  />
-                </div>
-                <div>
-                  <Label>Base Price</Label>
-                  <Input
-                    type="number"
-                    value={editingProduct.basePrice || ''}
-                    onChange={(e) => setEditingProduct({
-                      ...editingProduct,
-                      basePrice: parseFloat(e.target.value) || undefined
-                    })}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Minimum Order Quantity</Label>
-                  <Input
-                    type="number"
-                    value={editingProduct.minimumOrderQuantity || ''}
-                    onChange={(e) => setEditingProduct({
-                      ...editingProduct,
-                      minimumOrderQuantity: parseInt(e.target.value) || undefined
-                    })}
-                  />
-                </div>
-                <div>
-                  <Label>Lead Time (days)</Label>
-                  <Input
-                    type="number"
-                    value={editingProduct.leadTimeDays || ''}
-                    onChange={(e) => setEditingProduct({
-                      ...editingProduct,
-                      leadTimeDays: parseInt(e.target.value) || undefined
-                    })}
-                  />
-                </div>
-              </div>
-              
-              {/* Product Attributes */}
-              <div>
-                <Label>Product Specifications</Label>
-                <div className="grid grid-cols-3 gap-4 p-4 border rounded-lg">
-                  <div>
-                    <Label className="text-xs">Material</Label>
-                    <Input
-                      value={editingProduct.productAttributes?.material || ''}
-                      onChange={(e) => setEditingProduct({
-                        ...editingProduct,
-                        productAttributes: {
-                          ...editingProduct.productAttributes,
-                          material: e.target.value
-                        }
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Weight (g)</Label>
-                    <Input
-                      type="number"
-                      value={editingProduct.productAttributes?.weight || ''}
-                      onChange={(e) => setEditingProduct({
-                        ...editingProduct,
-                        productAttributes: {
-                          ...editingProduct.productAttributes,
-                          weight: parseFloat(e.target.value) || null
-                        }
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Recycled Content (%)</Label>
-                    <Input
-                      type="number"
-                      value={editingProduct.productAttributes?.recycledContent || ''}
-                      onChange={(e) => setEditingProduct({
-                        ...editingProduct,
-                        productAttributes: {
-                          ...editingProduct.productAttributes,
-                          recycledContent: parseFloat(e.target.value) || null
-                        }
-                      })}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setEditingProduct(null)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={() => editProductMutation.mutate({
-                    id: editingProduct.id,
-                    productData: editingProduct
-                  })}
-                  disabled={editProductMutation.isPending}
-                >
-                  {editProductMutation.isPending ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Comprehensive Edit Product Dialog */}
+      <ProductEditDialog
+        product={editingProduct}
+        isOpen={!!editingProduct}
+        onClose={() => setEditingProduct(null)}
+      />
 
       {/* Delete Product Dialog */}
       {deletingProduct && (

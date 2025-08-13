@@ -163,7 +163,7 @@ export class ObjectStorageService {
     }
     
     // For uploaded files, they're in the uploads subdirectory
-    const objectEntityPath = `${entityDir}${entityId}`;
+    const objectEntityPath = `${entityDir}uploads/${entityId}`;
     console.log('Full object path:', objectEntityPath);
     
     const { bucketName, objectName } = parseObjectPath(objectEntityPath);
