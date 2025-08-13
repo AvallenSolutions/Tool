@@ -698,7 +698,9 @@ export default function SupplierNetwork() {
                         </CardHeader>
                         <CardContent>
                           {supplier.description && (
-                            <p className="text-sm text-gray-700 mb-3">{supplier.description}</p>
+                            <p className="text-sm text-gray-700 mb-3">
+                              {supplier.description.length > 300 ? `${supplier.description.substring(0, 300)}...` : supplier.description}
+                            </p>
                           )}
                           <div className="space-y-2">
                             {supplier.location && (
@@ -767,7 +769,9 @@ export default function SupplierNetwork() {
                         </CardHeader>
                         <CardContent>
                           {supplier.description && (
-                            <p className="text-sm text-gray-700 mb-3">{supplier.description}</p>
+                            <p className="text-sm text-gray-700 mb-3">
+                              {supplier.description.length > 300 ? `${supplier.description.substring(0, 300)}...` : supplier.description}
+                            </p>
                           )}
                           <div className="space-y-2">
                             {supplier.location && (
@@ -865,7 +869,9 @@ export default function SupplierNetwork() {
                     </CardHeader>
                     <CardContent>
                       {product.productDescription && (
-                        <p className="text-sm text-gray-700 mb-3">{product.productDescription}</p>
+                        <p className="text-sm text-gray-700 mb-3">
+                          {product.productDescription.length > 300 ? `${product.productDescription.substring(0, 300)}...` : product.productDescription}
+                        </p>
                       )}
                       {product.sku && (
                         <p className="text-xs text-gray-500 mb-2">SKU: {product.sku}</p>
@@ -941,7 +947,9 @@ export default function SupplierNetwork() {
                               {supplier.supplierCategory.replace('_', ' ')}
                             </p>
                             {supplier.description && (
-                              <p className="text-gray-700 mb-3">{supplier.description}</p>
+                              <p className="text-gray-700 mb-3">
+                                {supplier.description.length > 300 ? `${supplier.description.substring(0, 300)}...` : supplier.description}
+                              </p>
                             )}
                             <div className="flex gap-6 text-sm text-gray-600">
                               {supplier.location && (

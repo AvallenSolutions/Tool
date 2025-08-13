@@ -33,6 +33,7 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 - **Enhanced Product Specifications**: Weight, material, volume, recycled content, certifications with proper form validation
 - **Object Storage Path Resolution**: Fixed path resolution to include `/uploads/` subdirectory for proper image display
 - **Opaque Dialog Backgrounds**: Ensured all dialogs have proper white backgrounds with borders and shadows (user requirement)
+- **300-Character Description Truncation**: Applied consistent 300-character truncation across all product and supplier descriptions in Supplier Network interface for improved readability and consistency
 
 ### Key Features Added
 - **Secure Supplier Invitations**: Token-based invitation system with email integration and admin management dashboard
