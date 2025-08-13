@@ -35,6 +35,7 @@ const materialOptions = [
   { value: 'aluminium', label: 'Aluminium' },
   { value: 'steel', label: 'Steel' },
   { value: 'cardboard', label: 'Cardboard' },
+  { value: 'mixed', label: 'Mixed' },
 ];
 
 const productEditSchema = z.object({

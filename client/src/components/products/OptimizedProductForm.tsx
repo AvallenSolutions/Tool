@@ -298,6 +298,7 @@ export default function OptimizedProductForm() {
                           <SelectItem value="aluminium">Aluminium</SelectItem>
                           <SelectItem value="steel">Steel</SelectItem>
                           <SelectItem value="cardboard">Cardboard</SelectItem>
+                          <SelectItem value="mixed">Mixed</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>

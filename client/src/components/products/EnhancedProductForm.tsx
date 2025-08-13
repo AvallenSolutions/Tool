@@ -300,7 +300,7 @@ const enhancedProductSchema = z.object({
     packagingDetailed: z.object({
       container: z.object({
         // Core fields (required for LCA calculations)
-        materialType: z.enum(['glass', 'plastic', 'aluminum', 'steel', 'ceramic']).optional(),
+        materialType: z.enum(['glass', 'plastic', 'aluminum', 'steel', 'ceramic', 'mixed']).optional(),
         weightGrams: z.number().positive().optional(),
         recycledContentPercentage: z.number().min(0).max(100).optional(),
         manufacturingLocation: z.string().optional(),
@@ -1464,6 +1464,7 @@ export default function EnhancedProductForm({
                               <SelectItem value="aluminum">Aluminum</SelectItem>
                               <SelectItem value="steel">Steel</SelectItem>
                               <SelectItem value="cardboard">Cardboard</SelectItem>
+                              <SelectItem value="mixed">Mixed</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -3718,6 +3719,7 @@ export default function EnhancedProductForm({
                               <SelectItem value="aluminum">Aluminum</SelectItem>
                               <SelectItem value="steel">Steel</SelectItem>
                               <SelectItem value="ceramic">Ceramic</SelectItem>
+                              <SelectItem value="mixed">Mixed</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
