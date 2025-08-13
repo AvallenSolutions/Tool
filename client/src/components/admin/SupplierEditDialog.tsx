@@ -326,10 +326,12 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
                     };
                   }}
                   onComplete={(result) => {
-                    if (result.successful.length > 0) {
+                    if (result.successful && result.successful.length > 0) {
                       const uploadURL = result.successful[0].uploadURL;
-                      console.log("Upload successful, URLs:", [uploadURL]);
-                      handleLogoUpload([uploadURL]);
+                      if (uploadURL) {
+                        console.log("Upload successful, URLs:", [uploadURL]);
+                        handleLogoUpload([uploadURL]);
+                      }
                     }
                   }}
                   buttonClassName="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -382,7 +384,7 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
             </h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="addressStreet">Address Line 1 *</Label>
+                <Label htmlFor="addressStreet">Street Address *</Label>
                 <Input
                   id="addressStreet"
                   value={formData.addressStreet || ''}
@@ -393,9 +395,9 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="addressCity">City *</Label>
+                  <Label htmlFor="city">City *</Label>
                   <Input
-                    id="addressCity"
+                    id="city"
                     value={formData.addressCity || ''}
                     onChange={(e) => handleInputChange('addressCity', e.target.value)}
                     placeholder="City"
@@ -403,9 +405,9 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="addressPostalCode">Postal Code *</Label>
+                  <Label htmlFor="postalCode">Postal Code *</Label>
                   <Input
-                    id="addressPostalCode"
+                    id="postalCode"
                     value={formData.addressPostalCode || ''}
                     onChange={(e) => handleInputChange('addressPostalCode', e.target.value)}
                     placeholder="Postal code"
