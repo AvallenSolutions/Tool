@@ -599,6 +599,8 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
       if (cleanData.verificationStatus && typeof cleanData.verificationStatus === 'string') {
         supplierUpdateData.verificationStatus = cleanData.verificationStatus;
+        // Automatically set isVerified based on verificationStatus
+        supplierUpdateData.isVerified = cleanData.verificationStatus === 'verified';
       }
 
       console.log('Cleaned supplier update data:', JSON.stringify(supplierUpdateData, null, 2));

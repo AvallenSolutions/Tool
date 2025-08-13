@@ -58,7 +58,7 @@ export function ImageUploader({
       restrictions: {
         maxNumberOfFiles: maxImages,
         maxFileSize,
-        allowedFileTypes: ['image/*'],
+        allowedFileTypes: ['image/*', '.webp', 'image/webp'],
       },
       autoProceed: false,
     })
