@@ -106,9 +106,13 @@ function ProductDetail() {
                       {product.productAttributes.imageUrls.map((photo: string, index: number) => (
                         <img 
                           key={index} 
-                          src={photo} 
+                          src={photo.startsWith('http') ? `/objects/${photo.split('/uploads/')[1]}` : photo}
                           alt={`${product.productName} - Image ${index + 1}`}
                           className="w-full h-48 object-cover rounded-lg border"
+                          onError={(e) => {
+                            console.error('Image failed to load:', photo);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
                         />
                       ))}
                     </div>

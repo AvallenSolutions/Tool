@@ -767,7 +767,9 @@ Be precise and quote actual text from the content, not generic terms.`;
           supplierName: verifiedSuppliers.supplierName,
           supplierCategory: verifiedSuppliers.supplierCategory,
           isVerified: supplierProducts.isVerified,
-          createdAt: supplierProducts.createdAt
+          submittedBy: supplierProducts.submittedBy,
+          createdAt: supplierProducts.createdAt,
+          updatedAt: supplierProducts.updatedAt
         })
         .from(supplierProducts)
         .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
@@ -860,6 +862,40 @@ Be precise and quote actual text from the content, not generic terms.`;
     } catch (error) {
       console.error('❌ Error deleting supplier:', error);
       res.status(500).json({ error: 'Failed to delete supplier' });
+    }
+  });
+
+  // Update supplier product
+  app.put('/api/supplier-products/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const { supplierProducts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      console.log('Updating supplier product:', id, updateData);
+      
+      const result = await db
+        .update(supplierProducts)
+        .set({
+          productName: updateData.productName,
+          productDescription: updateData.productDescription,
+          sku: updateData.sku,
+          productAttributes: updateData.productAttributes,
+          certifications: updateData.certifications,
+          updatedAt: new Date()
+        })
+        .where(eq(supplierProducts.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      res.json(result[0]);
+    } catch (error) {
+      console.error('❌ Error updating supplier product:', error);
+      res.status(500).json({ error: 'Failed to update supplier product' });
     }
   });
 

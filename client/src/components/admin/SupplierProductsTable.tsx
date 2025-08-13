@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, ExternalLink, Package } from 'lucide-react';
+import { FileText, ExternalLink, Package, Edit } from 'lucide-react';
+import ProductEditDialog from './ProductEditDialog';
 
 interface SupplierProduct {
   id: string;
@@ -25,6 +27,8 @@ interface SupplierProduct {
 }
 
 export default function SupplierProductsTable() {
+  const [selectedProduct, setSelectedProduct] = useState<SupplierProduct | null>(null);
+  
   const { data: products = [], isLoading } = useQuery<SupplierProduct[]>({
     queryKey: ['/api/supplier-products'],
     retry: false,
@@ -51,10 +55,11 @@ export default function SupplierProductsTable() {
   }
 
   return (
-    <div className="space-y-4">
-      {products.map((product) => (
-        <Card key={product.id} className="border-gray-200">
-          <CardHeader className="pb-3">
+    <>
+      <div className="space-y-4">
+        {products.map((product) => (
+          <Card key={product.id} className="border-gray-200">
+            <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-lg">{product.productName}</CardTitle>
@@ -124,28 +129,47 @@ export default function SupplierProductsTable() {
                 <span>Submitted by: {product.submittedBy}</span>
               </div>
               
-              {product.productAttributes.lcaDocumentPath && (
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  asChild
-                  className="text-blue-600 hover:text-blue-800"
+                  onClick={() => setSelectedProduct(product)}
+                  className="text-gray-600 hover:text-gray-800"
                 >
-                  <a
-                    href={`/uploads/${product.productAttributes.lcaDocumentPath}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    View LCA Document
-                    <ExternalLink className="w-3 h-3 ml-1" />
-                  </a>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
                 </Button>
-              )}
+                
+                {product.productAttributes.lcaDocumentPath && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <a
+                      href={`/uploads/${product.productAttributes.lcaDocumentPath}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      View LCA Document
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </a>
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
       ))}
     </div>
+
+    <ProductEditDialog
+      product={selectedProduct}
+      isOpen={!!selectedProduct}
+      onClose={() => setSelectedProduct(null)}
+    />
+    </>
   );
 }
