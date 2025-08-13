@@ -128,6 +128,8 @@ export default function OptimizedProductForm() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
       form.reset();
       setSelectedSupplier(null);
+      setProductImages([]); // Clear uploaded images
+      setUploadedDocument(null); // Clear uploaded document
       setIsSubmitting(false);
     },
     onError: (error: any) => {
@@ -218,8 +220,15 @@ export default function OptimizedProductForm() {
       return;
     }
     
+    // Include product images in submission data
+    const submissionData = {
+      ...data,
+      imageUrls: productImages,
+    };
+    
+    console.log('Submitting product with data:', submissionData);
     setIsSubmitting(true);
-    createProductMutation.mutate(data);
+    createProductMutation.mutate(submissionData);
   };
 
   const renderCategorySpecificFields = () => {
@@ -533,15 +542,35 @@ export default function OptimizedProductForm() {
               Upload product photos to showcase your items. These images will be visible to customers.
             </p>
             
-            <div onClick={(e) => e.stopPropagation()}>
+            <div className="border rounded-lg p-4">
               <ImageUploader 
                 onUpload={(urls) => {
+                  console.log('ImageUploader onUpload called with:', urls);
                   setProductImages(urls);
+                  // Prevent form submission by not calling any form methods
                 }}
                 maxImages={5}
                 existingImages={productImages}
                 placeholder="Upload Product Images"
               />
+              {productImages.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-green-600 mb-2">
+                    {productImages.length} image(s) ready for submission
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {productImages.map((url, index) => (
+                      <div key={index} className="relative">
+                        <img 
+                          src={url} 
+                          alt={`Upload ${index + 1}`} 
+                          className="w-full h-20 object-cover rounded border"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

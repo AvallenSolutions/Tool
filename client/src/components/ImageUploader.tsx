@@ -161,11 +161,16 @@ export function ImageUploader({
       )}
       
       <Button 
-        onClick={() => setShowModal(true)} 
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowModal(true);
+        }} 
         className={buttonClassName}
         disabled={isUploading}
         variant="outline"
         size="sm"
+        type="button"
       >
         {isUploading ? (
           <>

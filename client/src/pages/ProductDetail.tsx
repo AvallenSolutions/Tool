@@ -101,9 +101,9 @@ function ProductDetail() {
                   <CardTitle>Product Images</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {product.photos && product.photos.length > 0 ? (
+                  {product.productAttributes?.imageUrls && product.productAttributes.imageUrls.length > 0 ? (
                     <div className="space-y-4">
-                      {product.photos.map((photo: string, index: number) => (
+                      {product.productAttributes.imageUrls.map((photo: string, index: number) => (
                         <img 
                           key={index} 
                           src={photo} 
@@ -147,6 +147,34 @@ function ProductDetail() {
                     <div>
                       <label className="text-sm font-medium text-gray-600">Description</label>
                       <p className="text-gray-800">{product.productDescription}</p>
+                    </div>
+                  )}
+
+                  {/* LCA Document */}
+                  {product.productAttributes?.lcaDocumentPath && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <FileText className="w-4 h-4 text-blue-600" />
+                            <label className="text-sm font-medium text-blue-800">LCA Document Available</label>
+                          </div>
+                          <p className="text-sm text-blue-600">
+                            View detailed Life Cycle Assessment data for this product
+                          </p>
+                        </div>
+                        <Button variant="outline" asChild className="text-blue-600 hover:text-blue-800">
+                          <a
+                            href={`/uploads/${product.productAttributes.lcaDocumentPath}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center"
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            View LCA Document
+                          </a>
+                        </Button>
+                      </div>
                     </div>
                   )}
 
