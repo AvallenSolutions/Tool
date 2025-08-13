@@ -387,20 +387,24 @@ export default function ProductEditDialog({ product, isOpen, onClose }: ProductE
                 <ImageUploader 
                   onUpload={(urls) => {
                     console.log('Edit form - ImageUploader onUpload called with:', urls);
-                    setProductImages(urls);
+                    // Add new images to existing ones, but ensure we don't exceed 5 total
+                    setProductImages(prev => {
+                      const combined = [...prev, ...urls];
+                      return combined.slice(0, 5); // Keep only first 5 images
+                    });
                   }}
-                  maxImages={5}
+                  maxImages={Math.max(1, 5 - productImages.length)} // Allow remaining slots up to 5
                   existingImages={productImages}
-                  placeholder="Upload Product Images"
+                  placeholder={productImages.length >= 5 ? "Maximum 5 images reached" : `Upload Product Images (${productImages.length}/5)`}
                 />
                 {productImages.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-medium text-green-600 mb-2">
-                      {productImages.length} image(s) uploaded
+                      {productImages.length} image(s) uploaded (max 5)
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       {productImages.map((url, index) => (
-                        <div key={index} className="relative">
+                        <div key={index} className="relative group">
                           <img 
                             src={url.startsWith('http') ? `/objects/${url.split('/uploads/')[1]}` : url}
                             alt={`Upload ${index + 1}`} 
@@ -410,6 +414,15 @@ export default function ProductEditDialog({ product, isOpen, onClose }: ProductE
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProductImages(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
                         </div>
                       ))}
                     </div>

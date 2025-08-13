@@ -167,7 +167,7 @@ export function ImageUploader({
           setShowModal(true);
         }} 
         className={buttonClassName}
-        disabled={isUploading}
+        disabled={isUploading || maxImages <= 0}
         variant="outline"
         size="sm"
         type="button"
@@ -176,6 +176,11 @@ export function ImageUploader({
           <>
             <Upload className="w-4 h-4 mr-2 animate-spin" />
             Uploading...
+          </>
+        ) : maxImages <= 0 ? (
+          <>
+            <ImageIcon className="w-4 h-4 mr-2 opacity-50" />
+            {children || placeholder}
           </>
         ) : (
           <>
