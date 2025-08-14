@@ -78,9 +78,9 @@ export function WhatsNextModule() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
-            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500">Unable to load suggestions</p>
-            <p className="text-sm text-gray-400">Please try refreshing the page</p>
+            <Target className="w-12 h-12 text-blue-400 mx-auto mb-3" />
+            <p className="text-gray-700 font-medium">No suggestions at the moment</p>
+            <p className="text-sm text-gray-500">Upload more data so we can personalise an action plan for you</p>
           </div>
         </CardContent>
       </Card>
@@ -101,9 +101,9 @@ export function WhatsNextModule() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
-            <Target className="w-12 h-12 text-green-400 mx-auto mb-3" />
-            <p className="text-gray-700 font-medium">Great work! You're all caught up.</p>
-            <p className="text-sm text-gray-500">New suggestions will appear as you add more data</p>
+            <Target className="w-12 h-12 text-blue-400 mx-auto mb-3" />
+            <p className="text-gray-700 font-medium">No suggestions at the moment</p>
+            <p className="text-sm text-gray-500">Upload more data so we can personalise an action plan for you</p>
           </div>
         </CardContent>
       </Card>
