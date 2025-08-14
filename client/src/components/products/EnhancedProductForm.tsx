@@ -16,6 +16,7 @@ import SupplierSelectionModal from '@/components/supplier-network/SupplierSelect
 import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2, CheckCircle } from 'lucide-react';
 import { TourProvider } from '@/components/tour/TourProvider';
 import { TourButton } from '@/components/tour/TourButton';
+import { HelpBubble } from '@/components/ui/help-bubble';
 import '@/styles/shepherd.css';
 
 // Enhanced Product Schema with all 8 tabs including LCA Data Collection
@@ -1056,7 +1057,13 @@ export default function EnhancedProductForm({
                             name={`ingredients.${index}.transportDistance`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Transport Distance (km)</FormLabel>
+                                <FormLabel className="flex items-center gap-2">
+                                  Transport Distance (km)
+                                  <HelpBubble 
+                                    title="Ingredient Transport Distance"
+                                    content="Distance from ingredient source to your production facility. This significantly impacts the carbon footprint of raw materials.<br><br><strong>Transport impact per km:</strong><br>• <strong>Road transport:</strong> 0.1-0.2 kg CO₂ per ton-km<br>• <strong>Rail transport:</strong> 0.03-0.05 kg CO₂ per ton-km<br>• <strong>Sea freight:</strong> 0.01-0.02 kg CO₂ per ton-km<br><br><strong>Local sourcing benefits:</strong><br>• Reduced transport emissions<br>• Lower supply chain risk<br>• Often fresher ingredients<br>• Support for local economy"
+                                  />
+                                </FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="number" 
@@ -1080,7 +1087,13 @@ export default function EnhancedProductForm({
                             name={`ingredients.${index}.waterUsage`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Water Usage (m³/ton)</FormLabel>
+                                <FormLabel className="flex items-center gap-2">
+                                  Water Usage (m³/ton)
+                                  <HelpBubble 
+                                    title="Agricultural Water Usage"
+                                    content="Water consumed during crop cultivation per ton of harvested product. This includes irrigation, processing, and cleaning water.<br><br><strong>Typical water requirements:</strong><br>• <strong>Barley (rainfed):</strong> 0.5-1.2 m³/ton<br>• <strong>Barley (irrigated):</strong> 1.5-3.0 m³/ton<br>• <strong>Grapes (rainfed):</strong> 0.3-0.8 m³/ton<br>• <strong>Grapes (irrigated):</strong> 1.0-2.5 m³/ton<br><br><strong>Water stress impact:</strong><br>High water usage in water-stressed regions significantly increases environmental impact scores."
+                                  />
+                                </FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="number" 
@@ -1110,7 +1123,13 @@ export default function EnhancedProductForm({
                               name={`ingredients.${index}.biodiversityImpact`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Biodiversity Impact Score (1-10)</FormLabel>
+                                  <FormLabel className="flex items-center gap-2">
+                                    Biodiversity Impact Score (1-10)
+                                    <HelpBubble 
+                                      title="Biodiversity Impact Assessment"
+                                      content="A comprehensive score assessing the farming practices' impact on local ecosystem biodiversity.<br><br><strong>Scoring guide:</strong><br>• <strong>1-3:</strong> High negative impact (intensive monoculture, pesticide use)<br>• <strong>4-6:</strong> Moderate impact (conventional farming with some conservation)<br>• <strong>7-8:</strong> Low impact (integrated pest management, crop rotation)<br>• <strong>9-10:</strong> Positive impact (organic, agroecology, habitat creation)<br><br><strong>Factors considered:</strong><br>• Pesticide and herbicide use<br>• Habitat preservation<br>• Pollinator support<br>• Soil health practices"
+                                    />
+                                  </FormLabel>
                                   <FormControl>
                                     <Input 
                                       type="number" 
@@ -1637,7 +1656,13 @@ export default function EnhancedProductForm({
                       name="packaging.primaryContainer.recyclability"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Recyclability</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            Recyclability
+                            <HelpBubble 
+                              title="Container Recyclability Rating"
+                              content="Assessment of how easily and effectively the container can be recycled in typical waste management systems.<br><br><strong>Rating Scale:</strong><br>• <strong>Not recyclable:</strong> No recycling infrastructure exists<br>• <strong>Limited recycling:</strong> Only specialty facilities<br>• <strong>Locally recyclable:</strong> Available in major cities<br>• <strong>Widely recyclable:</strong> Available in most areas<br>• <strong>Highly recyclable:</strong> Universal infrastructure<br>• <strong>Fully circular:</strong> Closed-loop system with high recovery rates<br><br><strong>Impact:</strong> Higher ratings significantly reduce end-of-life environmental impact."
+                            />
+                          </FormLabel>
                           <Select onValueChange={(value) => {
                             field.onChange(value);
                             // Auto-sync to LCA Data
@@ -2331,7 +2356,13 @@ export default function EnhancedProductForm({
                       name="production.processing.electricityKwhPerTonCrop"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Electricity (kWh/ton crop)</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            Electricity (kWh/ton crop)
+                            <HelpBubble 
+                              title="Processing Electricity Usage"
+                              content="Electrical energy consumed per ton of raw crop processed into final product.<br><br><strong>Typical consumption:</strong><br>• <strong>Beer production:</strong> 150-300 kWh/ton grain<br>• <strong>Wine making:</strong> 50-120 kWh/ton grapes<br>• <strong>Distillation (spirits):</strong> 800-1,500 kWh/ton grain<br>• <strong>Fruit processing:</strong> 100-250 kWh/ton fruit<br><br><strong>Major energy uses:</strong><br>• Heating/cooling processes (50-60%)<br>• Pumps and motors (20-25%)<br>• Control systems (10-15%)<br>• Packaging equipment (5-10%)"
+                            />
+                          </FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
@@ -2410,7 +2441,13 @@ export default function EnhancedProductForm({
                       name="production.processing.waterM3PerTonCrop"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Processing Water (m³/ton crop)</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            Processing Water (m³/ton crop)
+                            <HelpBubble 
+                              title="Production Water Usage"
+                              content="Water consumed during processing operations per ton of raw crop.<br><br><strong>Typical usage:</strong><br>• <strong>Beer production:</strong> 4-7 m³/ton grain<br>• <strong>Wine making:</strong> 1.5-3 m³/ton grapes<br>• <strong>Distillation:</strong> 8-15 m³/ton grain<br>• <strong>Juice production:</strong> 2-5 m³/ton fruit<br><br><strong>Major uses:</strong><br>• Equipment cleaning (40-50%)<br>• Processing and dilution (30-35%)<br>• Cooling systems (15-20%)<br>• Steam generation (5-10%)"
+                            />
+                          </FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
@@ -2568,7 +2605,13 @@ export default function EnhancedProductForm({
                       name="production.distillation.distillationRounds"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Distillation Rounds</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            Distillation Rounds
+                            <HelpBubble 
+                              title="Number of Distillation Steps"
+                              content="The number of distillation passes used to achieve desired alcohol content and purity.<br><br><strong>Typical industry standards:</strong><br>• <strong>Whisky/Bourbon:</strong> 2 rounds (double distillation)<br>• <strong>Irish whiskey:</strong> 3 rounds (triple distillation)<br>• <strong>Vodka:</strong> 3-5 rounds for purity<br>• <strong>Brandy:</strong> 2-3 rounds depending on style<br><br><strong>Environmental impact:</strong><br>Each additional round requires significant energy input but improves product quality and reduces waste."
+                            />
+                          </FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
@@ -2633,7 +2676,13 @@ export default function EnhancedProductForm({
                               }}
                             />
                           </FormControl>
-                          <FormLabel>Heat Recovery System</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            Heat Recovery System
+                            <HelpBubble 
+                              title="Heat Recovery Technology"
+                              content="Systems that capture and reuse waste heat from distillation processes, significantly reducing energy consumption.<br><br><strong>Energy savings:</strong><br>• <strong>Without heat recovery:</strong> 100% energy input required<br>• <strong>With heat recovery:</strong> 30-50% energy savings possible<br><br><strong>Common systems:</strong><br>• Heat exchangers for preheating<br>• Vapor recompression systems<br>• Thermal energy storage<br><br><strong>Environmental benefit:</strong><br>Can reduce process carbon footprint by 25-40% in distillation operations."
+                            />
+                          </FormLabel>
                         </FormItem>
                       )}
                     />
@@ -2643,7 +2692,13 @@ export default function EnhancedProductForm({
                       name="production.distillation.copperUsageKg"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Copper Usage (kg)</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            Copper Usage (kg)
+                            <HelpBubble 
+                              title="Copper in Distillation Equipment"
+                              content="Amount of copper used in stills, condensers, and piping. Copper is essential for spirits production but has environmental impact.<br><br><strong>Typical usage:</strong><br>• <strong>Pot stills:</strong> 500-2,000 kg per still<br>• <strong>Column stills:</strong> 200-800 kg per still<br>• <strong>Condensers:</strong> 100-500 kg per unit<br><br><strong>Environmental considerations:</strong><br>• High embodied carbon in copper production<br>• Long equipment lifespan (20-50 years)<br>• High recycling value at end of life<br><br><strong>Quality impact:</strong><br>Copper removes sulfur compounds, essential for premium spirits quality."
+                            />
+                          </FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
@@ -2971,7 +3026,13 @@ export default function EnhancedProductForm({
                       name="distribution.palletizationEfficiency"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Palletization Efficiency (%)</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            Palletization Efficiency (%)
+                            <HelpBubble 
+                              title="Palletization Efficiency"
+                              content="This measures how efficiently your products are packed on pallets for transport. It's calculated as:<br><br><strong>Formula:</strong> (Product Volume × Units per Pallet) ÷ Total Pallet Space × 100<br><br><strong>Impact:</strong> Higher efficiency (85%+) reduces transport emissions per unit. Poor efficiency (below 70%) significantly increases carbon footprint.<br><br><strong>Typical ranges:</strong><br>• Wine bottles: 75-85%<br>• Spirits bottles: 80-90%<br>• Canned beverages: 85-95%"
+                            />
+                          </FormLabel>
                           <FormDescription className="text-xs text-muted-foreground">
                             Percentage of container space utilized during palletized transport (typical range: 70-95%)
                           </FormDescription>
@@ -3085,7 +3146,13 @@ export default function EnhancedProductForm({
                     name="lcaData.agriculture.mainCropType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Main Crop Type</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          Main Crop Type
+                          <HelpBubble 
+                            title="Main Crop Type"
+                            content="The primary agricultural ingredient that forms the base of your product. This is crucial for LCA calculations as different crops have vastly different environmental impacts.<br><br><strong>Examples:</strong><br>• <strong>Spirits:</strong> Barley, wheat, rye, corn<br>• <strong>Wine:</strong> Grapes (specify variety if known)<br>• <strong>Calvados/Brandy:</strong> Apples, pears<br>• <strong>Rum:</strong> Sugar cane<br><br><strong>Why it matters:</strong> Each crop has different:<br>• Water requirements<br>• Fertilizer needs<br>• Carbon sequestration potential<br>• Processing energy requirements"
+                          />
+                        </FormLabel>
                         <FormDescription className="text-xs text-muted-foreground">
                           {selectedIngredientSuppliers.length > 0 
                             ? `Auto-filled from ingredient selection: ${selectedIngredientSuppliers.map(s => s.productName).join(', ')}`
@@ -3109,7 +3176,13 @@ export default function EnhancedProductForm({
                     name="lcaData.agriculture.yieldTonPerHectare"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Yield (tons/hectare)</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          Yield (tons/hectare)
+                          <HelpBubble 
+                            title="Agricultural Yield"
+                            content="The amount of raw material harvested per hectare of land. Higher yields generally mean better land use efficiency and lower environmental impact per unit.<br><br><strong>Typical yields:</strong><br>• <strong>Barley:</strong> 6-8 tons/hectare<br>• <strong>Grapes:</strong> 10-15 tons/hectare<br>• <strong>Apples:</strong> 20-40 tons/hectare<br>• <strong>Sugar Cane:</strong> 70-100 tons/hectare<br><br><strong>Factors affecting yield:</strong><br>• Climate and soil quality<br>• Farming practices (organic vs conventional)<br>• Use of fertilizers and pesticides<br>• Irrigation methods"
+                          />
+                        </FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -3132,7 +3205,13 @@ export default function EnhancedProductForm({
                     name="lcaData.agriculture.dieselLPerHectare"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Diesel Consumption (L/hectare)</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          Diesel Consumption (L/hectare)
+                          <HelpBubble 
+                            title="Agricultural Diesel Usage"
+                            content="Fuel consumption for farming operations including plowing, planting, harvesting, and transport within the farm.<br><br><strong>Typical consumption:</strong><br>• <strong>Cereal crops:</strong> 80-120 L/hectare<br>• <strong>Vineyards:</strong> 150-250 L/hectare<br>• <strong>Orchards:</strong> 200-300 L/hectare<br><br><strong>Major uses:</strong><br>• Soil preparation (30-40%)<br>• Harvesting (25-35%)<br>• Spraying/fertilizing (20-25%)<br>• Transport on farm (10-15%)<br><br><strong>Impact:</strong> Each liter of diesel produces ~2.7 kg CO₂"
+                          />
+                        </FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -3153,7 +3232,13 @@ export default function EnhancedProductForm({
                     name="lcaData.agriculture.sequestrationTonCo2PerTonCrop"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Carbon Sequestration (tCO2/ton crop)</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          Carbon Sequestration (tCO2/ton crop)
+                          <HelpBubble 
+                            title="Carbon Sequestration"
+                            content="The amount of CO₂ absorbed from the atmosphere and stored in soil and plant biomass per ton of crop produced. This is a credit that reduces the overall carbon footprint.<br><br><strong>Typical values:</strong><br>• <strong>Annual crops (barley/wheat):</strong> 0.1-0.3 tCO₂/ton<br>• <strong>Perennial crops (grapes):</strong> 0.2-0.5 tCO₂/ton<br>• <strong>Tree crops (apples):</strong> 0.3-0.8 tCO₂/ton<br><br><strong>Factors increasing sequestration:</strong><br>• Cover crops and crop rotation<br>• Reduced tillage practices<br>• Organic matter management<br>• Agroforestry systems"
+                          />
+                        </FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
