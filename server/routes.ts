@@ -1033,6 +1033,34 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Simple image proxy for debugging
+  app.get("/api/image-proxy", async (req, res) => {
+    try {
+      const imageUrl = req.query.url as string;
+      if (!imageUrl) {
+        return res.status(400).json({ error: "URL parameter required" });
+      }
+      
+      console.log("Image proxy request for:", imageUrl);
+      
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        console.log("Failed to fetch image:", response.status, response.statusText);
+        return res.status(response.status).json({ error: "Failed to fetch image" });
+      }
+      
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      res.setHeader('Content-Type', contentType);
+      
+      const imageBuffer = await response.arrayBuffer();
+      res.send(Buffer.from(imageBuffer));
+      
+    } catch (error: any) {
+      console.error("Image proxy error:", error);
+      res.status(500).json({ error: "Internal server error", message: error.message });
+    }
+  });
+
   // ============ END IMAGE UPLOAD ENDPOINTS ============
 
   // ============ PRODUCT SEARCH ENDPOINTS ============
