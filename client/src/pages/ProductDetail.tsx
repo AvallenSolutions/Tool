@@ -143,28 +143,52 @@ function ProductDetail() {
                     <div className="space-y-4">
                       <div className="text-sm text-gray-500 mb-2">Found {product.product_images.length} images</div>
                       {product.product_images.map((photo: string, index: number) => {
-                        // Use the working object storage path directly
-                        const imagePath = photo.startsWith('/objects/') ? photo : `/objects/uploads/${photo.split('/.private/uploads/')[1] || photo}`;
-                        console.log('Loading image:', { original: photo, path: imagePath });
+                        // Direct port 5000 approach since server is working there
+                        const directImageUrl = `http://localhost:5000/objects/uploads/${photo.split('/.private/uploads/')[1] || photo}`;
+                        const proxyImageUrl = `/objects/uploads/${photo.split('/.private/uploads/')[1] || photo}`;
+                        console.log('Testing both approaches:', { original: photo, direct: directImageUrl, proxy: proxyImageUrl });
                         
-                        console.log('Processing image:', { original: photo, approaches });
+
                         
                         return (
-                          <div key={index} className="space-y-2">
-                            <div className="text-xs text-gray-400">Image {index + 1} - {imagePath}</div>
-                            <img 
-                              src={imagePath}
-                              alt={`${product.name} - Image ${index + 1}`}
-                              className="w-full h-48 object-cover rounded-lg border bg-gray-100"
-                              onError={(e) => {
-                                console.error(`Image failed to load:`, imagePath);
-                                (e.target as HTMLImageElement).style.backgroundColor = '#f3f4f6';
-                                (e.target as HTMLImageElement).style.border = '2px dashed #d1d5db';
-                              }}
-                              onLoad={() => {
-                                console.log(`Image loaded successfully:`, imagePath);
-                              }}
-                            />
+                          <div key={index} className="space-y-3">
+                            <div className="text-xs text-gray-400">Image {index + 1}</div>
+                            
+                            {/* Method 1: Direct port 5000 (confirmed working) */}
+                            <div>
+                              <div className="text-xs text-green-600 mb-1">Direct server (port 5000):</div>
+                              <img 
+                                src={directImageUrl}
+                                alt={`${product.name} - Image ${index + 1} (Direct)`}
+                                className="w-full h-48 object-cover rounded-lg border"
+                                onError={(e) => {
+                                  console.error('Direct server failed:', directImageUrl);
+                                  (e.target as HTMLImageElement).style.backgroundColor = '#fee2e2';
+                                  (e.target as HTMLImageElement).style.border = '2px dashed #dc2626';
+                                }}
+                                onLoad={() => {
+                                  console.log('✅ Direct server image loaded:', directImageUrl);
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Method 2: Proxy through Vite dev server */}
+                            <div>
+                              <div className="text-xs text-blue-600 mb-1">Proxy through Vite:</div>
+                              <img 
+                                src={proxyImageUrl}
+                                alt={`${product.name} - Image ${index + 1} (Proxy)`}
+                                className="w-full h-48 object-cover rounded-lg border"
+                                onError={(e) => {
+                                  console.error('Proxy method failed:', proxyImageUrl);
+                                  (e.target as HTMLImageElement).style.backgroundColor = '#dbeafe';
+                                  (e.target as HTMLImageElement).style.border = '2px dashed #2563eb';
+                                }}
+                                onLoad={() => {
+                                  console.log('✅ Proxy image loaded:', proxyImageUrl);
+                                }}
+                              />
+                            </div>
                           </div>
                         );
                       })}
