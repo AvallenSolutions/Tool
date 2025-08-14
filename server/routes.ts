@@ -1927,28 +1927,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Get individual product by ID
-  app.get('/api/products/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { products } = await import('@shared/schema');
-      
-      const product = await db
-        .select()
-        .from(products)
-        .where(eq(products.id, parseInt(id)))
-        .limit(1);
 
-      if (product.length === 0) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-
-      res.json(product[0]);
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      res.status(500).json({ error: 'Failed to fetch product' });
-    }
-  });
 
   // Client Products API endpoints
   app.post('/api/client-products', async (req, res) => {
