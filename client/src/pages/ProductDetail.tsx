@@ -21,7 +21,7 @@ function ImageDisplay({ photo, productName, index }: { photo: string, productNam
     const loadImage = async () => {
       try {
         const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
-        const response = await fetch(`/api/image/uploads/${uuid}`);
+        const response = await fetch(`/image-data/uploads/${uuid}`);
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);

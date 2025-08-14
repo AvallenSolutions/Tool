@@ -1000,10 +1000,10 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Serve images as base64 data URLs to bypass all proxy issues
-  app.get("/api/image/:objectPath(*)", async (req, res) => {
+  // Serve images as base64 data URLs to bypass all proxy issues  
+  app.get("/image-data/:objectPath(*)", async (req, res) => {
     const objectPath = `/objects/${req.params.objectPath}`;
-    console.log('Image base64 API request for:', objectPath);
+    console.log('Image base64 request for:', objectPath);
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
@@ -1086,7 +1086,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         async function testBase64() {
             try {
                 console.log('Testing base64 API...');
-                const response = await fetch('/api/image/uploads/b0425006-4efb-456c-897e-140a9f9c741d');
+                const response = await fetch('/image-data/uploads/b0425006-4efb-456c-897e-140a9f9c741d');
                 const data = await response.json();
                 
                 if (data.dataUrl) {
