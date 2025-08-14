@@ -1000,22 +1000,43 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Serve uploaded images - API route to bypass Vite
+  // Serve images as base64 data URLs to bypass all proxy issues
   app.get("/api/image/:objectPath(*)", async (req, res) => {
     const objectPath = `/objects/${req.params.objectPath}`;
-    console.log('Image API request for:', objectPath);
+    console.log('Image base64 API request for:', objectPath);
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
         objectPath,
       );
-      objectStorageService.downloadObject(objectFile, res);
+      
+      // Get file metadata and stream
+      const [metadata] = await objectFile.getMetadata();
+      const contentType = metadata.contentType || 'image/jpeg';
+      
+      // Read file as buffer
+      const chunks: Uint8Array[] = [];
+      const stream = objectFile.createReadStream();
+      
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      
+      const buffer = Buffer.concat(chunks);
+      const base64 = buffer.toString('base64');
+      const dataUrl = `data:${contentType};base64,${base64}`;
+      
+      console.log(`Serving image as base64, size: ${buffer.length} bytes, type: ${contentType}`);
+      
+      // Return JSON with data URL
+      res.json({ dataUrl });
+      
     } catch (error) {
       console.error("Error serving image:", error);
       if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
+        return res.status(404).json({ error: 'Image not found' });
       }
-      return res.sendStatus(500);
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 

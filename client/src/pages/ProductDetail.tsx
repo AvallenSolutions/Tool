@@ -10,6 +10,70 @@ import {
   ArrowLeft, Package, Building2, FileText, Globe, Mail,
   Weight, Ruler, Recycle, Award, Info
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
+  const [imageData, setImageData] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
+        const response = await fetch(`/api/image/uploads/${uuid}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setImageData(data.dataUrl);
+        setLoading(false);
+        console.log(`✅ Image ${index + 1} loaded as base64 data URL`);
+      } catch (error) {
+        console.error(`❌ Failed to load image ${index + 1}:`, error);
+        setError(true);
+        setLoading(false);
+      }
+    };
+    
+    loadImage();
+  }, [photo, index]);
+  
+  if (loading) {
+    return (
+      <div className="mb-4">
+        <div className="text-xs text-gray-500 mb-2">Image {index + 1} - Loading...</div>
+        <div className="w-full h-64 bg-gray-200 rounded-lg border animate-pulse flex items-center justify-center">
+          <span className="text-gray-400">Loading image...</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="mb-4">
+        <div className="text-xs text-gray-500 mb-2">Image {index + 1} - Failed to load</div>
+        <div className="w-full h-64 bg-red-50 rounded-lg border-2 border-dashed border-red-200 flex items-center justify-center">
+          <span className="text-red-400">Image failed to load</span>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="mb-4">
+      <div className="text-xs text-gray-500 mb-2">Image {index + 1}</div>
+      <img 
+        src={imageData}
+        alt={`${productName} - Image ${index + 1}`}
+        className="w-full h-64 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow"
+      />
+    </div>
+  );
+}
 
 function ProductDetail() {
   const { id } = useParams();
@@ -139,40 +203,7 @@ function ProductDetail() {
                     <div className="space-y-4">
                       <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
                       {product.product_images.map((photo: string, index: number) => {
-                        // Use API route that bypasses Vite middleware
-                        const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
-                        const imagePath = `/api/image/uploads/${uuid}`;
-                        console.log('DEBUG: Using API image route', { 
-                          original: photo, 
-                          uuid: uuid, 
-                          apiPath: imagePath
-                        });
-                        
-
-                        
-                        return (
-                          <div key={index} className="mb-4">
-                            <div className="text-xs text-gray-500 mb-2">Image {index + 1}</div>
-                            <img 
-                              src={imagePath}
-                              alt={`${product.name} - Image ${index + 1}`}
-                              className="w-full h-64 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow"
-                              onError={(e) => {
-                                console.error('Image failed to load:', imagePath);
-                                const img = e.target as HTMLImageElement;
-                                img.style.backgroundColor = '#f9fafb';
-                                img.style.border = '2px dashed #d1d5db';
-                                img.style.display = 'flex';
-                                img.style.alignItems = 'center';
-                                img.style.justifyContent = 'center';
-                                img.alt = 'Image failed to load';
-                              }}
-                              onLoad={() => {
-                                console.log('Image loaded successfully:', imagePath);
-                              }}
-                            />
-                          </div>
-                        );
+                        return <ImageDisplay key={index} photo={photo} productName={product.name} index={index} />;
                       })}
                     </div>
                   ) : (
