@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
-import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2 } from 'lucide-react';
+import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2, CheckCircle } from 'lucide-react';
 import { TourProvider } from '@/components/tour/TourProvider';
 import { TourButton } from '@/components/tour/TourButton';
 import '@/styles/shepherd.css';
@@ -30,7 +30,12 @@ const enhancedProductSchema = z.object({
   isMainProduct: z.boolean().default(false),
   status: z.string().default('active'),
   
-  // Ingredients Tab
+  // Ingredients Tab  
+  waterDilution: z.object({
+    amount: z.number().min(0, "Water amount must be positive"),
+    unit: z.string().min(1, "Unit is required"),
+  }).optional(),
+  
   ingredients: z.array(z.object({
     name: z.string().min(1, "Ingredient name is required"),
     amount: z.number().min(0, "Amount must be positive"),
@@ -405,6 +410,7 @@ export default function EnhancedProductForm({
       productImage: '',
       isMainProduct: false,
       status: 'active',
+      waterDilution: { amount: 0, unit: 'ml' },
       ingredients: [{ 
         name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '',
         yieldPerHectare: 0, farmingPractice: undefined, nitrogenFertilizer: 0, phosphorusFertilizer: 0,
@@ -874,7 +880,6 @@ export default function EnhancedProductForm({
                                   <SelectItem value="fruit">Fruit</SelectItem>
                                   <SelectItem value="botanical">Botanical</SelectItem>
                                   <SelectItem value="additive">Additive</SelectItem>
-                                  <SelectItem value="water">Water</SelectItem>
                                   <SelectItem value="yeast">Yeast</SelectItem>
                                   <SelectItem value="other">Other</SelectItem>
                                 </SelectContent>
@@ -1247,6 +1252,65 @@ export default function EnhancedProductForm({
                     </div>
                   ))}
                   
+                  {/* Water Dilution Section */}
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Package className="w-4 h-4 text-blue-600" />
+                        Water Dilution
+                      </CardTitle>
+                      <p className="text-xs text-blue-600">
+                        Water used to dilute from distillation/barrel strength to bottling strength
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="waterDilution.amount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Water Amount *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.1"
+                                  placeholder="e.g., 250" 
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="waterDilution.unit"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Unit *</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select unit" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="ml">Milliliters per bottle</SelectItem>
+                                  <SelectItem value="l">Liters per bottle</SelectItem>
+                                  <SelectItem value="l_per_100l">Liters per 100L product</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   {form.watch('ingredients').length < 50 && (
                     <Button 
                       type="button" 
@@ -1574,17 +1638,25 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Recyclability</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="e.g., Fully recyclable" 
-                              {...field} 
-                              onChange={(e) => {
-                                field.onChange(e.target.value);
-                                // Auto-sync to LCA Data
-                                form.setValue('lcaData.packagingDetailed.container.recyclability', e.target.value);
-                              }}
-                            />
-                          </FormControl>
+                          <Select onValueChange={(value) => {
+                            field.onChange(value);
+                            // Auto-sync to LCA Data
+                            form.setValue('lcaData.packagingDetailed.container.recyclability', value);
+                          }} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select recyclability level" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="not-recyclable">Not Recyclable</SelectItem>
+                              <SelectItem value="limited-recycling">Limited Recycling</SelectItem>
+                              <SelectItem value="partially-recyclable">Partially Recyclable</SelectItem>
+                              <SelectItem value="fully-recyclable">Fully Recyclable</SelectItem>
+                              <SelectItem value="reusable">Reusable</SelectItem>
+                              <SelectItem value="fully-circular">Fully Circular</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -2900,6 +2972,9 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Palletization Efficiency (%)</FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            Percentage of container space utilized during palletized transport (typical range: 70-95%)
+                          </FormDescription>
                           <FormControl>
                             <Input 
                               type="number" 
@@ -2967,6 +3042,32 @@ export default function EnhancedProductForm({
                 Collect granular life cycle assessment data points for accurate environmental impact calculations. 
                 This data feeds directly into ISO 14040/14044 compliant LCA reports.
               </p>
+              
+              {/* Auto-fill Status Indicator */}
+              {(selectedIngredientSuppliers.length > 0 || selectedPackagingSupplier || selectedProductionSupplier) && (
+                <div className="mt-3 p-3 bg-green-100 border border-green-200 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-green-800">Auto-filled from Supplier Selection:</p>
+                      <ul className="text-xs text-green-700 space-y-1">
+                        {selectedIngredientSuppliers.length > 0 && (
+                          <li>• Agriculture data from {selectedIngredientSuppliers.length} ingredient supplier(s)</li>
+                        )}
+                        {selectedPackagingSupplier && (
+                          <li>• Packaging data from {selectedPackagingSupplier.supplierName}</li>
+                        )}
+                        {selectedProductionSupplier && (
+                          <li>• Production data from {selectedProductionSupplier.supplierName}</li>
+                        )}
+                      </ul>
+                      <p className="text-xs text-green-600 mt-2">
+                        <strong>Manual Review Required:</strong> Verify auto-filled values and complete missing fields below.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Section 1: Agriculture & Raw Materials */}
@@ -2985,6 +3086,12 @@ export default function EnhancedProductForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Main Crop Type</FormLabel>
+                        <FormDescription className="text-xs text-muted-foreground">
+                          {selectedIngredientSuppliers.length > 0 
+                            ? `Auto-filled from ingredient selection: ${selectedIngredientSuppliers.map(s => s.productName).join(', ')}`
+                            : 'Main agricultural ingredient used in this product'
+                          }
+                        </FormDescription>
                         <FormControl>
                           <Input 
                             placeholder="e.g., Apples, Grapes, Barley" 
