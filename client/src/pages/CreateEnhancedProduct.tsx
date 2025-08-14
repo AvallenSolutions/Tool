@@ -103,6 +103,8 @@ export default function CreateEnhancedProduct() {
           selectedSupplierId: product.packagingSupplierId || '',
           supplierName: product.packagingSupplier || '',
           supplierCategory: product.packagingSupplierCategory || '',
+          selectedProductId: product.packagingSelectedProductId || '',
+          selectedProductName: product.packagingSelectedProductName || '',
         }
       },
       
