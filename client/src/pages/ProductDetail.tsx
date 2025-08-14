@@ -143,16 +143,15 @@ function ProductDetail() {
                     <div className="space-y-4">
                       <div className="text-sm text-gray-500 mb-2">Found {product.product_images.length} images</div>
                       {product.product_images.map((photo: string, index: number) => {
-                        // Extract the UUID from the photo path
-                        const imageId = photo.split('uploads/').pop() || photo.split('/').pop() || photo;
-                        const imagePath = `/objects/uploads/${imageId}`;
-                        console.log('Image processing:', { original: photo, extracted: imageId, final: imagePath });
+                        // Use the full HTTPS URL from the API response directly
+                        const imagePath = photo;
+                        console.log('Using full image URL:', imagePath);
                         
 
                         
                         return (
                           <div key={index} className="mb-4">
-                            <div className="text-xs text-gray-500 mb-2">Image {index + 1}: {imagePath}</div>
+                            <div className="text-xs text-gray-500 mb-2">Image {index + 1}</div>
                             <img 
                               src={imagePath}
                               alt={`${product.name} - Image ${index + 1}`}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Test</title>
+</head>
+<body>
+    <h1>Direct Image Test</h1>
+    <h2>Test 1: Direct Server (Port 5000)</h2>
+    <img src="http://localhost:5000/objects/uploads/4b45c9c2-e36f-427a-b777-be3b283b1b74" 
+         style="width: 300px; border: 1px solid red;" 
+         onload="console.log('Direct server image loaded')" 
+         onerror="console.error('Direct server image failed')">
+    
+    <h2>Test 2: Relative Path</h2>
+    <img src="/objects/uploads/4b45c9c2-e36f-427a-b777-be3b283b1b74" 
+         style="width: 300px; border: 1px solid blue;" 
+         onload="console.log('Relative path image loaded')" 
+         onerror="console.error('Relative path image failed')">
+         
+    <h2>Test 3: API Proxy</h2>
+    <img src="/api/image-proxy?url=http://localhost:5000/objects/uploads/4b45c9c2-e36f-427a-b777-be3b283b1b74" 
+         style="width: 300px; border: 1px solid green;" 
+         onload="console.log('API proxy image loaded')" 
+         onerror="console.error('API proxy image failed')">
+</body>
+</html>
