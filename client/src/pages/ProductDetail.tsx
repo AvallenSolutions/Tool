@@ -297,7 +297,14 @@ function ProductDetail() {
                 <CardContent>
                   {product.ingredients ? (
                     <div className="space-y-4">
-                      {JSON.parse(product.ingredients).map((ingredient: any, index: number) => (
+                      {(() => {
+                        if (Array.isArray(product.ingredients)) return product.ingredients;
+                        try {
+                          return JSON.parse(product.ingredients);
+                        } catch {
+                          return []; // Return empty array if parsing fails
+                        }
+                      })().map((ingredient: any, index: number) => (
                         <div key={index} className="border rounded-lg p-4 space-y-2">
                           <div className="flex justify-between items-start">
                             <h4 className="font-medium text-lg">{ingredient.name}</h4>
@@ -491,7 +498,14 @@ function ProductDetail() {
                 <CardContent>
                   {product.certifications ? (
                     <div className="flex flex-wrap gap-2">
-                      {JSON.parse(product.certifications).map((cert: string, index: number) => (
+                      {(() => {
+                        if (Array.isArray(product.certifications)) return product.certifications;
+                        try {
+                          return JSON.parse(product.certifications);
+                        } catch {
+                          return [product.certifications]; // Treat as single certification if not valid JSON
+                        }
+                      })().map((cert: string, index: number) => (
                         <Badge key={index} variant="outline" className="bg-green-50 text-green-800 border-green-300">
                           <Award className="w-3 h-3 mr-1" />
                           {cert}
