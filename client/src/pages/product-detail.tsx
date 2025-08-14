@@ -27,7 +27,9 @@ import {
   Globe,
   ExternalLink,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  Building2,
+  Trash2
 } from "lucide-react";
 import { Product } from "@shared/schema";
 import LCACalculationCard from "@/components/lca/LCACalculationCard";
@@ -46,9 +48,9 @@ function ImageDisplay({ photo, productName, index, onDelete }: {
     const parts = photo.split('/');
     uuid = parts[parts.length - 1].split('?')[0]; // Remove query params if present
   } else if (photo.includes('uploads/')) {
-    uuid = photo.split('uploads/')[1] || photo.split('uploads/').pop();
+    uuid = photo.split('uploads/')[1] || photo.split('uploads/').pop() || '';
   } else {
-    uuid = photo.split('/').pop();
+    uuid = photo.split('/').pop() || '';
   }
   
   // Force the exact UUID we know works for testing
@@ -340,13 +342,49 @@ export default function ProductDetail() {
 
             {/* Main Content with Tabs */}
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
-                <TabsTrigger value="packaging">Packaging</TabsTrigger>
-                <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-                <TabsTrigger value="certifications">Certifications</TabsTrigger>
-                <TabsTrigger value="impact">Impact</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-6 bg-gradient-to-r from-slate-50 to-slate-100 p-1.5 rounded-xl shadow-sm border">
+                <TabsTrigger 
+                  value="overview" 
+                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                >
+                  <Package className="w-4 h-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="ingredients" 
+                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                >
+                  <ChefHat className="w-4 h-4" />
+                  Ingredients
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="packaging" 
+                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                >
+                  <Package className="w-4 h-4" />
+                  Packaging
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="suppliers" 
+                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                >
+                  <Building2 className="w-4 h-4" />
+                  Suppliers
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="certifications" 
+                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                >
+                  <Award className="w-4 h-4" />
+                  Certifications
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="impact" 
+                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Impact
+                </TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
