@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Save, Loader2, Upload, Package, FileText, X, Check, Image as ImageIcon } from 'lucide-react';
+import { Save, Loader2, Upload, Package, FileText, X, Check, Image as ImageIcon, Shield, RefreshCw, AlertTriangle } from 'lucide-react';
 import { ImageUploader } from "@/components/ImageUploader";
+import { useVerifiedSuppliers } from "@/hooks/useVerifiedSuppliers";
 
 // Dynamic product schema based on supplier category
 const createProductSchema = (supplierCategory: string) => {
@@ -88,9 +89,16 @@ export default function OptimizedProductForm() {
   const [isUploading, setIsUploading] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
 
-  // Fetch verified suppliers
-  const { data: suppliers = [], isLoading: suppliersLoading } = useQuery<Supplier[]>({
-    queryKey: ['/api/verified-suppliers'],
+  // Use centralized verified suppliers hook with real-time sync
+  const { 
+    data: suppliers = [], 
+    isLoading: suppliersLoading,
+    getVerifiedSuppliers,
+    isSupplierVerified,
+    refetch: refetchSuppliers
+  } = useVerifiedSuppliers({ 
+    autoRefresh: true,
+    refetchInterval: 20000 // Refresh every 20 seconds
   });
 
   // Create dynamic form based on selected supplier
@@ -143,9 +151,32 @@ export default function OptimizedProductForm() {
   });
 
   const handleSupplierChange = (supplierId: string) => {
-    const supplier = suppliers.find(s => s.id === supplierId);
-    setSelectedSupplier(supplier || null);
+    // Only allow selection of verified suppliers
+    const supplier = getVerifiedSuppliers().find(s => s.id === supplierId);
+    
+    if (!supplier) {
+      toast({
+        title: "Invalid Selection",
+        description: "Please select a verified supplier from the list.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verify supplier is still verified in real-time
+    if (!isSupplierVerified(supplierId)) {
+      toast({
+        title: "Supplier Not Verified",
+        description: `${supplier.supplierName} is no longer verified. Please refresh and select a different supplier.`,
+        variant: "destructive",
+      });
+      refetchSuppliers(); // Trigger refresh to get latest status
+      return;
+    }
+
+    setSelectedSupplier(supplier);
     form.setValue('supplierId', supplierId);
+    
     // Reset form fields when supplier changes
     form.reset({
       supplierId,
@@ -161,6 +192,11 @@ export default function OptimizedProductForm() {
       recycledContent: undefined,
       unit: '',
       measurement: undefined,
+    });
+
+    toast({
+      title: "Supplier Selected",
+      description: `Selected verified supplier: ${supplier.supplierName}`,
     });
   };
 
@@ -608,23 +644,88 @@ export default function OptimizedProductForm() {
       <CardContent className="space-y-6">
         {/* Supplier Selection */}
         <div className="space-y-2">
-          <Label>Select Supplier</Label>
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-green-600" />
+              Select Verified Supplier
+            </Label>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => refetchSuppliers()}
+              className="text-green-600 hover:text-green-700 h-6 px-2"
+              title="Refresh supplier verification status"
+            >
+              <RefreshCw className="w-3 h-3" />
+            </Button>
+          </div>
           <Select onValueChange={handleSupplierChange} disabled={suppliersLoading}>
             <SelectTrigger>
               <SelectValue placeholder={suppliersLoading ? "Loading suppliers..." : "Choose a verified supplier"} />
             </SelectTrigger>
             <SelectContent>
-              {suppliers.filter(s => s.isVerified).map((supplier) => (
-                <SelectItem key={supplier.id} value={supplier.id}>
-                  {supplier.supplierName} ({supplier.supplierCategory.replace('_', ' ')})
+              {suppliersLoading ? (
+                <SelectItem value="loading" disabled>
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading suppliers...
+                  </div>
                 </SelectItem>
-              ))}
+              ) : getVerifiedSuppliers().length === 0 ? (
+                <SelectItem value="no-verified" disabled>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Shield className="w-4 h-4" />
+                    No verified suppliers available
+                  </div>
+                </SelectItem>
+              ) : (
+                getVerifiedSuppliers().map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id}>
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-green-600" />
+                      <span>{supplier.supplierName}</span>
+                      <span className="text-xs text-gray-500">
+                        ({supplier.supplierCategory.replace(/_/g, ' ')})
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           {selectedSupplier && (
-            <p className="text-sm text-muted-foreground">
-              Selected: {selectedSupplier.supplierName} - {selectedSupplier.supplierCategory.replace('_', ' ')}
-            </p>
+            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="w-4 h-4 text-green-600" />
+                <span className="font-medium text-green-900">Selected Verified Supplier</span>
+              </div>
+              <p className="text-sm text-green-700">
+                {selectedSupplier.supplierName} - {selectedSupplier.supplierCategory.replace(/_/g, ' ')}
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                Status: {selectedSupplier.verificationStatus} | Verified: {selectedSupplier.isVerified ? 'Yes' : 'No'}
+              </p>
+            </div>
+          )}
+          {!suppliersLoading && getVerifiedSuppliers().length === 0 && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                <span className="font-medium text-yellow-900">No Verified Suppliers</span>
+              </div>
+              <p className="text-sm text-yellow-700 mb-2">
+                No verified suppliers are currently available for product registration.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => refetchSuppliers()}
+                className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Check Again
+              </Button>
+            </div>
           )}
         </div>
 

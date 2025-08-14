@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
@@ -7,29 +6,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OptimizedProductForm from "@/components/products/OptimizedProductForm";
-import { Package, Building2, AlertTriangle, ArrowLeft, Plus } from "lucide-react";
-import { ImageUploader } from "@/components/ImageUploader";
-
-interface Supplier {
-  id: number;
-  supplierName: string;
-  supplierCategory: string;
-  verificationStatus: string;
-}
+import { Package, Building2, AlertTriangle, ArrowLeft, Plus, RefreshCw } from "lucide-react";
+import { useVerifiedSuppliers } from "@/hooks/useVerifiedSuppliers";
 
 export default function ProductRegistration() {
   const [, navigate] = useLocation();
   const [showSupplierWarning, setShowSupplierWarning] = useState(false);
 
-  const { data: suppliers, isLoading } = useQuery<Supplier[]>({
-    queryKey: ['/api/verified-suppliers'],
+  // Use the new centralized hook with automatic verification status sync
+  const { 
+    data: suppliers, 
+    isLoading, 
+    getVerifiedSuppliers, 
+    refetch: refetchSuppliers 
+  } = useVerifiedSuppliers({ 
+    autoRefresh: true, 
+    refetchInterval: 15000 // Refresh every 15 seconds for real-time updates
   });
 
   useEffect(() => {
     if (!isLoading && suppliers) {
-      setShowSupplierWarning(suppliers.length === 0);
+      // Only show warning if no verified suppliers are available
+      const verifiedSuppliers = getVerifiedSuppliers();
+      setShowSupplierWarning(verifiedSuppliers.length === 0);
     }
-  }, [suppliers, isLoading]);
+  }, [suppliers, isLoading, getVerifiedSuppliers]);
 
   const handleProductSubmit = (productData: any) => {
     // This will be handled by the OptimizedProductForm
@@ -100,20 +101,36 @@ export default function ProductRegistration() {
               </Alert>
             )}
 
-            {/* Supplier Count Info */}
+            {/* Supplier Count Info with Real-time Status */}
             {!showSupplierWarning && suppliers && (
               <Card className="bg-green-50 border-green-200">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Building2 className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="font-medium text-green-900">
-                        {suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} available
-                      </p>
-                      <p className="text-sm text-green-700">
-                        You can link this product to any of the existing verified suppliers.
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Building2 className="w-5 h-5 text-green-600" />
+                      <div>
+                        <p className="font-medium text-green-900">
+                          {getVerifiedSuppliers().length} verified supplier{getVerifiedSuppliers().length !== 1 ? 's' : ''} available
+                        </p>
+                        <p className="text-sm text-green-700">
+                          You can link this product to any of the existing verified suppliers.
+                        </p>
+                        {suppliers.length > getVerifiedSuppliers().length && (
+                          <p className="text-xs text-green-600 mt-1">
+                            {suppliers.length - getVerifiedSuppliers().length} supplier{(suppliers.length - getVerifiedSuppliers().length) !== 1 ? 's' : ''} pending verification
+                          </p>
+                        )}
+                      </div>
                     </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => refetchSuppliers()}
+                      className="text-green-600 hover:text-green-700"
+                      title="Refresh supplier verification status"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

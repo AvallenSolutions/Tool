@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { VerificationStatusSync } from "./VerificationStatusSync";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -142,12 +143,19 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
       return response.json();
     },
     onSuccess: () => {
+      // Comprehensive cache invalidation for verification status sync
       queryClient.invalidateQueries({ queryKey: ['/api/verified-suppliers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/suppliers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/suppliers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supplier-products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      
+      // Clear any cached verification status data
+      queryClient.removeQueries({ queryKey: ['verified-supplier-ids'] });
+      
       toast({
         title: "Supplier updated successfully",
-        description: "The supplier information has been saved.",
+        description: "The supplier information has been saved and verification status synced across all forms.",
       });
       onClose();
       setHasChanges(false);
@@ -517,6 +525,15 @@ export default function SupplierEditDialog({ supplier, isOpen, onClose }: Suppli
           </div>
         </DialogFooter>
       </DialogContent>
+      
+      {/* Auto-sync verification status changes */}
+      <VerificationStatusSync 
+        supplierId={supplier.id}
+        newStatus={formData.verificationStatus}
+        onStatusChange={(id, status) => {
+          console.log(`Verification status changed for ${id}: ${status}`);
+        }}
+      />
     </Dialog>
   );
 }
