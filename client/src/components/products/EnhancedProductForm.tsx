@@ -563,6 +563,12 @@ export default function EnhancedProductForm({
 
   const handleSaveDraft = () => {
     const currentData = form.getValues();
+    console.log('=== SAVE DRAFT DEBUG ===');
+    console.log('Raw form data:', JSON.stringify(currentData, null, 2));
+    console.log('Packaging data:', JSON.stringify(currentData.packaging, null, 2));
+    console.log('Certifications data:', JSON.stringify(currentData.certifications, null, 2));
+    console.log('Ingredients data:', JSON.stringify(currentData.ingredients, null, 2));
+    console.log('========================');
     onSaveDraft?.(currentData);
   };
 

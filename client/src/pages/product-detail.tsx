@@ -376,50 +376,7 @@ export default function ProductDetail() {
                                 onDelete={handleDeleteImage}
                               />
                             ))}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full mt-2"
-                              onClick={() => {
-                                // Simple upload trigger - we'll need the ObjectUploader component
-                                const input = document.createElement('input');
-                                input.type = 'file';
-                                input.accept = 'image/*';
-                                input.multiple = false;
-                                input.onchange = async (e) => {
-                                  const file = (e.target as HTMLInputElement).files?.[0];
-                                  if (file) {
-                                    try {
-                                      const params = await handleGetUploadParameters();
-                                      const formData = new FormData();
-                                      formData.append('file', file);
-                                      
-                                      const uploadResponse = await fetch(params.url, {
-                                        method: 'PUT',
-                                        body: file,
-                                      });
-                                      
-                                      if (uploadResponse.ok) {
-                                        await handleUploadComplete({
-                                          successful: [{ uploadURL: params.url }]
-                                        });
-                                      } else {
-                                        throw new Error('Upload failed');
-                                      }
-                                    } catch (error) {
-                                      toast({
-                                        title: "Error",
-                                        description: "Failed to upload image",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  }
-                                };
-                                input.click();
-                              }}
-                            >
-                              + Add Image
-                            </Button>
+                            {/* Image upload moved to Enhanced Product Form Basic Info tab */}
                           </div>
                         ) : product.packShotUrl ? (
                           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">

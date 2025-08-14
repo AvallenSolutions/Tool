@@ -2215,9 +2215,10 @@ Be precise and quote actual text from the content, not generic terms.`;
         }),
         
         // Handle supplier selection from packaging
-        ...(packaging?.supplierInformation?.selectedSupplierId && {
-          // Store supplier information - you may want to create a separate relation for this
-          packagingSupplier: packaging.supplierInformation.supplierName,
+        ...(packaging?.supplierInformation && {
+          packagingSupplier: packaging.supplierInformation.supplierName || '',
+          packagingSupplierId: packaging.supplierInformation.selectedSupplierId || '',
+          packagingSupplierCategory: packaging.supplierInformation.supplierCategory || '',
         }),
         
         // Handle production data
