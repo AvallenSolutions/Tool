@@ -103,6 +103,8 @@ const enhancedProductSchema = z.object({
       selectedSupplierId: z.string().optional(),
       supplierName: z.string().optional(),
       supplierCategory: z.string().optional(),
+      selectedProductId: z.string().optional(),
+      selectedProductName: z.string().optional(),
     }).optional(),
   }),
   
@@ -415,10 +417,12 @@ export default function EnhancedProductForm({
       // Create a supplier object from the saved data
       const savedSupplier = {
         id: initialData.packaging.supplierInformation.selectedSupplierId,
-        name: initialData.packaging.supplierInformation.supplierName || 'Unknown Supplier',
-        category: initialData.packaging.supplierInformation.supplierCategory || 'bottle_producer',
+        productId: initialData.packaging.supplierInformation.selectedProductId,
+        productName: initialData.packaging.supplierInformation.selectedProductName || 'Selected Product',
+        supplierName: initialData.packaging.supplierInformation.supplierName || 'Unknown Supplier',
+        supplierCategory: initialData.packaging.supplierInformation.supplierCategory || 'bottle_producer',
       };
-      console.log('🔄 Loading saved packaging supplier:', savedSupplier);
+      console.log('🔄 Loading saved packaging supplier and product:', savedSupplier);
       setSelectedPackagingSupplier(savedSupplier);
     }
   }, [initialData?.packaging?.supplierInformation?.selectedSupplierId, selectedPackagingSupplier]);
@@ -1630,6 +1634,8 @@ export default function EnhancedProductForm({
                               form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.id);
                               form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName);
                               form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory);
+                              form.setValue('packaging.supplierInformation.selectedProductId', supplier.productId);
+                              form.setValue('packaging.supplierInformation.selectedProductName', supplier.productName);
                               
                               // Auto-sync to LCA Data (for calculations)
                               form.setValue('lcaData.packagingDetailed.container.materialType', productAttrs.material?.toLowerCase() as any);

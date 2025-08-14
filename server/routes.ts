@@ -1920,6 +1920,13 @@ Be precise and quote actual text from the content, not generic terms.`;
         boxMaterial: req.body.packaging?.secondaryPackaging?.boxMaterial || req.body.boxMaterial,
         boxWeight: req.body.packaging?.secondaryPackaging?.boxWeight || req.body.boxWeight,
         
+        // Packaging supplier information
+        packagingSupplier: req.body.packaging?.supplierInformation?.supplierName || req.body.packagingSupplier,
+        packagingSupplierId: req.body.packaging?.supplierInformation?.selectedSupplierId || req.body.packagingSupplierId,
+        packagingSupplierCategory: req.body.packaging?.supplierInformation?.supplierCategory || req.body.packagingSupplierCategory,
+        packagingSelectedProductId: req.body.packaging?.supplierInformation?.selectedProductId || req.body.packagingSelectedProductId,
+        packagingSelectedProductName: req.body.packaging?.supplierInformation?.selectedProductName || req.body.packagingSelectedProductName,
+        
         // Production process data
         electricityKwh: req.body.production?.energyConsumption?.electricityKwh || req.body.electricityKwh,
         renewableEnergyPercent: req.body.production?.energyConsumption?.renewableEnergyPercent || req.body.renewableEnergyPercent,
@@ -2223,6 +2230,8 @@ Be precise and quote actual text from the content, not generic terms.`;
           packagingSupplier: packaging.supplierInformation.supplierName || '',
           packagingSupplierId: packaging.supplierInformation.selectedSupplierId || '',
           packagingSupplierCategory: packaging.supplierInformation.supplierCategory || '',
+          packagingSelectedProductId: packaging.supplierInformation.selectedProductId || '',
+          packagingSelectedProductName: packaging.supplierInformation.selectedProductName || '',
         }),
         
         // Handle production data
@@ -2279,7 +2288,9 @@ Be precise and quote actual text from the content, not generic terms.`;
         mappedValues: {
           packagingSupplier: draftData.packagingSupplier,
           packagingSupplierId: draftData.packagingSupplierId,
-          packagingSupplierCategory: draftData.packagingSupplierCategory
+          packagingSupplierCategory: draftData.packagingSupplierCategory,
+          packagingSelectedProductId: draftData.packagingSelectedProductId,
+          packagingSelectedProductName: draftData.packagingSelectedProductName
         }
       });
       

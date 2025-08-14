@@ -153,6 +153,8 @@ export const products = pgTable("products", {
   packagingSupplier: varchar("packaging_supplier"), // Supplier name (e.g., "FrugalPac")
   packagingSupplierId: varchar("packaging_supplier_id"), // UUID of verified supplier product
   packagingSupplierCategory: varchar("packaging_supplier_category"), // Category like "bottle_producer"
+  packagingSelectedProductId: varchar("packaging_selected_product_id"), // UUID of specific product from supplier catalog
+  packagingSelectedProductName: varchar("packaging_selected_product_name"), // Name of specific product (e.g., "Frugal Bottle")
   
   // Production Process - Energy
   electricityKwh: decimal("electricity_kwh", { precision: 10, scale: 3 }),
