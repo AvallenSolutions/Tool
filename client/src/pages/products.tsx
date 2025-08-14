@@ -36,10 +36,35 @@ export default function ProductsPage() {
   const [, navigate] = useLocation();
 
 
-  const { data: products = [], isLoading } = useQuery<ClientProduct[]>({
+  const { data: products = [], isLoading, error } = useQuery<ClientProduct[]>({
     queryKey: ['/api/products'],
     retry: false,
+    queryFn: async () => {
+      console.log('🔄 Fetching products...');
+      const response = await fetch('/api/products', {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Products fetch failed:', response.status, errorText);
+        throw new Error(`Failed to fetch products: ${response.status} ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Products received:', data.length, 'products');
+      console.log('📦 Raw product data:', data);
+      return data;
+    }
   });
+
+  console.log('🔍 Current products state:', products, 'Loading:', isLoading, 'Error:', error);
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -69,11 +94,20 @@ export default function ProductsPage() {
 
   const handleCreateSuccess = () => {
     // Invalidate queries to refresh the products list
+    console.log('🔄 Invalidating products cache after create success');
     queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+    queryClient.refetchQueries({ queryKey: ['/api/products'] });
     toast({
       title: "Success",
       description: "Product created successfully",
     });
+  };
+
+  // Add manual refresh function for debugging
+  const handleRefresh = () => {
+    console.log('🔄 Manual refresh triggered');
+    queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+    queryClient.refetchQueries({ queryKey: ['/api/products'] });
   };
 
   return (
@@ -124,6 +158,19 @@ export default function ProductsPage() {
                   <Badge variant="secondary" className="text-xs">
                     {products.length} {products.length === 1 ? 'product' : 'products'}
                   </Badge>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefresh}
+                    className="text-xs"
+                  >
+                    Refresh
+                  </Button>
+                  {error && (
+                    <Badge variant="destructive" className="text-xs">
+                      Error loading
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -169,11 +216,12 @@ export default function ProductsPage() {
                               </div>
                               <p className="text-sm text-gray-600">
                                 {product.sku && `SKU: ${product.sku} • `}
-                                {product.volume} {product.type} • 
-                                {product.productionModel === 'own' ? ' Own Production' : ' Contract Production'}
+                                {product.volume || 'Volume TBD'} {product.type} • 
+                                {product.productionModel === 'own' ? ' Own Production' : 
+                                 product.productionModel === 'contract' ? ' Contract Production' : ' Production Model TBD'}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
-                                Annual Volume: {product.annualProductionVolume?.toLocaleString()} {product.productionUnit}
+                                Annual Volume: {product.annualProductionVolume?.toLocaleString() || 'TBD'} {product.productionUnit}
                                 {product.componentCount && ` • ${product.componentCount} Components`}
                               </p>
                             </div>
@@ -234,14 +282,12 @@ export default function ProductsPage() {
                                 </div>
                                 <p className="text-sm text-gray-500">
                                   {product.sku && `SKU: ${product.sku} • `}
-                                  {product.volume} • {product.type}
+                                  {product.volume || 'Volume TBD'} • {product.type}
                                 </p>
-                                {product.annualProductionVolume && (
-                                  <p className="text-xs text-gray-500">
-                                    Annual: {product.annualProductionVolume.toLocaleString()} {product.productionUnit}
-                                    {product.componentCount && ` • ${product.componentCount} Components`}
-                                  </p>
-                                )}
+                                <p className="text-xs text-gray-500">
+                                  Annual: {product.annualProductionVolume?.toLocaleString() || 'TBD'} {product.productionUnit}
+                                  {product.componentCount && ` • ${product.componentCount} Components`}
+                                </p>
                               </div>
                             </div>
                             <div className="flex items-center space-x-4">
