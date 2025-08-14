@@ -405,6 +405,12 @@ export default function EnhancedProductForm({
 
   // Initialize selectedPackagingSupplier from existing data
   useEffect(() => {
+    console.log('🔍 useEffect triggered with initialData:', {
+      initialData: initialData?.packaging?.supplierInformation,
+      selectedPackagingSupplier,
+      hasSupplierInfo: !!initialData?.packaging?.supplierInformation?.selectedSupplierId
+    });
+    
     if (initialData?.packaging?.supplierInformation?.selectedSupplierId && !selectedPackagingSupplier) {
       // Create a supplier object from the saved data
       const savedSupplier = {
@@ -415,7 +421,7 @@ export default function EnhancedProductForm({
       console.log('🔄 Loading saved packaging supplier:', savedSupplier);
       setSelectedPackagingSupplier(savedSupplier);
     }
-  }, [initialData, selectedPackagingSupplier]);
+  }, [initialData?.packaging?.supplierInformation?.selectedSupplierId, selectedPackagingSupplier]);
 
 
 

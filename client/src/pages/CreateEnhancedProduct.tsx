@@ -36,8 +36,11 @@ export default function CreateEnhancedProduct() {
     queryKey: ['/api/products', productId],
     queryFn: async () => {
       if (!productId) return null;
+      console.log('📥 Fetching product data for ID:', productId);
       const response = await apiRequest("GET", `/api/products/${productId}`);
-      return response.json();
+      const product = await response.json();
+      console.log('📦 Fetched product:', product);
+      return product;
     },
     enabled: Boolean(isEditMode && productId),
   });
@@ -45,6 +48,12 @@ export default function CreateEnhancedProduct() {
   // Transform database product to form structure for loading
   const transformDatabaseToForm = (product: any) => {
     if (!product) return null;
+    
+    console.log('🔍 Database product data:', {
+      packagingSupplier: product.packagingSupplier,
+      packagingSupplierId: product.packagingSupplierId,
+      packagingSupplierCategory: product.packagingSupplierCategory
+    });
     
     return {
       ...product,
