@@ -149,6 +149,11 @@ export const products = pgTable("products", {
   fillerMaterial: varchar("filler_material"), // foam, paper, plastic, none
   fillerWeight: decimal("filler_weight", { precision: 10, scale: 3 }),
   
+  // Packaging - Supplier Information
+  packagingSupplier: varchar("packaging_supplier"), // Supplier name (e.g., "FrugalPac")
+  packagingSupplierId: varchar("packaging_supplier_id"), // UUID of verified supplier product
+  packagingSupplierCategory: varchar("packaging_supplier_category"), // Category like "bottle_producer"
+  
   // Production Process - Energy
   electricityKwh: decimal("electricity_kwh", { precision: 10, scale: 3 }),
   gasM3: decimal("gas_m3", { precision: 10, scale: 3 }),
