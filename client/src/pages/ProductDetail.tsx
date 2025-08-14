@@ -16,9 +16,9 @@ function ProductDetail() {
   const [, setLocation] = useLocation();
 
   const { data: product, isLoading: productLoading } = useQuery({
-    queryKey: ['/api/supplier-products', id],
+    queryKey: ['/api/products', id],
     queryFn: async () => {
-      const response = await fetch(`/api/supplier-products/${id}`, { credentials: 'include' });
+      const response = await fetch(`/api/products/${id}`, { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to load product');
       return response.json();
     },
@@ -78,17 +78,10 @@ function ProductDetail() {
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => setLocation('/app/supplier-network')}
+                onClick={() => setLocation('/app/products')}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Network
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setLocation(`/app/supplier-network/supplier/${product.supplierId}`)}
-              >
-                <Building2 className="w-4 h-4 mr-2" />
-                View Supplier
+                Back to Products
               </Button>
             </div>
           </div>
@@ -106,7 +99,7 @@ function ProductDetail() {
                       {product.productImages.map((photo: string, index: number) => (
                         <img 
                           key={index} 
-                          src={photo.startsWith('/objects/') ? photo : `/objects/${photo.split('/uploads/')[1]}`}
+                          src={photo.startsWith('/objects/') ? photo : `/objects/uploads/${photo.split('/.private/uploads/')[1]}`}
                           alt={`${product.name} - Image ${index + 1}`}
                           className="w-full h-48 object-cover rounded-lg border"
                           onError={(e) => {
@@ -133,9 +126,9 @@ function ProductDetail() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-2xl">{product.productName}</CardTitle>
+                      <CardTitle className="text-2xl">{product.name}</CardTitle>
                       <CardDescription>
-                        by <span className="font-medium">{product.supplierName}</span>
+                        Product Details
                       </CardDescription>
                     </div>
                     {product.hasPrecalculatedLca && (
@@ -147,10 +140,10 @@ function ProductDetail() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {product.productDescription && (
+                  {product.description && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">Description</label>
-                      <p className="text-gray-800">{product.productDescription}</p>
+                      <p className="text-gray-800">{product.description}</p>
                     </div>
                   )}
 
