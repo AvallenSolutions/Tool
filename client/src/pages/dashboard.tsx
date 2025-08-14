@@ -146,6 +146,26 @@ export default function Dashboard() {
             <MetricsCards />
           </div>
           
+          {/* Phase 2 & 3: Advanced UX Features - Most Frequently Used (Moved to Top) */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+            <div id="whats-next-section">
+              <WhatsNextModule />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div id="kpi-tracking-section">
+              <KPITracking />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div id="smart-goals-section">
+              <SMARTGoals />
+            </div>
+          </div>
+
+          {/* Standard Dashboard Sections */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
             <div id="emissions-chart">
               <EmissionsChart />
@@ -161,26 +181,6 @@ export default function Dashboard() {
             </div>
             <div id="suppliers-section">
               <SupplierList />
-            </div>
-          </div>
-
-          {/* Phase 2: What's Next Module */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-            <div id="whats-next-section">
-              <WhatsNextModule />
-            </div>
-          </div>
-
-          {/* Phase 3: Goals & Progress Dashboard */}
-          <div className="grid grid-cols-1 gap-6 mb-8">
-            <div id="kpi-tracking-section">
-              <KPITracking />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 mb-8">
-            <div id="smart-goals-section">
-              <SMARTGoals />
             </div>
           </div>
         </main>
