@@ -13,6 +13,8 @@ import SupplierList from "@/components/dashboard/supplier-list";
 import ProductsSection from "@/components/dashboard/products-section";
 import DashboardTour from "@/components/dashboard/dashboard-tour";
 import GuidedProductCreation from "@/components/dashboard/guided-product-creation";
+import { WhatsNextModule } from "@/components/dashboard/WhatsNextModule";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -20,6 +22,7 @@ export default function Dashboard() {
   const [, navigate] = useLocation();
   const [showTour, setShowTour] = useState(false);
   const [showProductGuide, setShowProductGuide] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Fetch company data for reporting period
   const { data: company } = useQuery({
@@ -28,10 +31,15 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
-  // Check if user should see the tour (first time visiting dashboard)
+  // Check if user should see onboarding or tour (first time visiting dashboard)
   useEffect(() => {
-    if (company && !localStorage.getItem('dashboard-tour-completed')) {
-      setShowTour(true);
+    if (company) {
+      // Check if onboarding is complete
+      if (!company.onboardingComplete) {
+        setShowOnboarding(true);
+      } else if (!localStorage.getItem('dashboard-tour-completed')) {
+        setShowTour(true);
+      }
     }
   }, [company]);
 
@@ -107,6 +115,16 @@ export default function Dashboard() {
     setShowProductGuide(false);
   };
 
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    // Optionally start the tour after onboarding
+    setTimeout(() => {
+      if (!localStorage.getItem('dashboard-tour-completed')) {
+        setShowTour(true);
+      }
+    }, 500);
+  };
+
   return (
     <div className="flex h-screen bg-lightest-gray">
       <Sidebar />
@@ -143,6 +161,13 @@ export default function Dashboard() {
               <SupplierList />
             </div>
           </div>
+
+          {/* Phase 2: What's Next Module */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+            <div id="whats-next-section">
+              <WhatsNextModule />
+            </div>
+          </div>
         </main>
       </div>
 
@@ -158,6 +183,14 @@ export default function Dashboard() {
         <GuidedProductCreation
           onComplete={handleProductGuideComplete}
           onSkip={handleProductGuideSkip}
+        />
+      )}
+
+      {/* Phase 2: Onboarding Wizard */}
+      {showOnboarding && (
+        <OnboardingWizard
+          isOpen={showOnboarding}
+          onComplete={handleOnboardingComplete}
         />
       )}
     </div>
