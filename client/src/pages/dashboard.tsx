@@ -147,7 +147,7 @@ export default function Dashboard() {
           </div>
           
           {/* Phase 2 & 3: Advanced UX Features - Most Frequently Used (Moved to Top) */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 gap-6 mb-8">
             <div id="whats-next-section">
               <WhatsNextModule />
             </div>
