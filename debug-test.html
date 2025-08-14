@@ -1,81 +1,130 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Image Debug Test</title>
+    <title>Debug Image System</title>
     <style>
-        .test-section { margin: 20px; padding: 20px; border: 1px solid #ccc; }
-        .success { border-color: green; background: #f0fff0; }
-        .error { border-color: red; background: #fff0f0; }
-        img { max-width: 200px; margin: 10px; border: 2px solid #ddd; }
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .test { margin: 20px 0; padding: 20px; border: 1px solid #ddd; background: #f9f9f9; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
     </style>
 </head>
 <body>
-    <h1>Image Loading Test</h1>
+    <h1>Debug Image Upload System</h1>
     
-    <div id="api-test" class="test-section">
-        <h2>Step 1: API Data Test</h2>
-        <button onclick="testAPI()">Test API</button>
-        <div id="api-result"></div>
+    <div class="test">
+        <h3>Test 1: Check Backend Server</h3>
+        <button onclick="testBackend()">Test Backend Connection</button>
+        <div id="backend-result"></div>
     </div>
     
-    <div id="image-test" class="test-section">
-        <h2>Step 2: Image Loading Test</h2>
-        <div id="image-container"></div>
+    <div class="test">
+        <h3>Test 2: Test Upload API</h3>
+        <button onclick="testUploadAPI()">Test Upload URL Generation</button>
+        <div id="upload-result"></div>
     </div>
-
+    
+    <div class="test">
+        <h3>Test 3: Test Image Display</h3>
+        <button onclick="testImageDisplay()">Test Existing Image Display</button>
+        <div id="image-result"></div>
+    </div>
+    
+    <div id="results"></div>
+    
     <script>
-        async function testAPI() {
+        async function logResult(testName, success, message, element) {
+            const status = success ? 'SUCCESS' : 'ERROR';
+            const className = success ? 'success' : 'error';
+            element.innerHTML = `<p class="${className}">${status}: ${message}</p>`;
+            console.log(`${testName} - ${status}: ${message}`);
+        }
+        
+        async function testBackend() {
+            const result = document.getElementById('backend-result');
+            result.innerHTML = '<p>Testing backend connection...</p>';
+            
             try {
-                const response = await fetch('/api/products/2');
-                const data = await response.json();
-                const result = document.getElementById('api-result');
-                result.innerHTML = `
-                    <p><strong>API Response:</strong></p>
-                    <p>Product Name: ${data.name}</p>
-                    <p>Images Count: ${data.productImages ? data.productImages.length : 0}</p>
-                    <p>First Image URL: ${data.productImages ? data.productImages[0] : 'None'}</p>
-                `;
+                // Test if backend server is responding
+                const response = await fetch('http://localhost:5000/api/objects/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors'
+                });
                 
-                if (data.productImages && data.productImages.length > 0) {
-                    document.getElementById('api-test').className = 'test-section success';
-                    testImages(data.productImages);
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult('Backend Test', true, `Backend responded with upload URL: ${data.uploadURL?.substring(0, 50)}...`, result);
                 } else {
-                    document.getElementById('api-test').className = 'test-section error';
+                    logResult('Backend Test', false, `Backend responded with status ${response.status}`, result);
                 }
             } catch (error) {
-                document.getElementById('api-result').innerHTML = `<p style="color: red;">API Error: ${error.message}</p>`;
-                document.getElementById('api-test').className = 'test-section error';
+                logResult('Backend Test', false, `Connection failed: ${error.message}`, result);
             }
         }
         
-        function testImages(imageUrls) {
-            const container = document.getElementById('image-container');
-            container.innerHTML = '';
+        async function testUploadAPI() {
+            const result = document.getElementById('upload-result');
+            result.innerHTML = '<p>Testing upload API...</p>';
             
-            imageUrls.forEach((url, index) => {
-                const img = document.createElement('img');
-                img.src = url;
-                img.alt = `Test Image ${index + 1}`;
+            try {
+                const response = await fetch('http://localhost:5000/api/objects/upload', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Origin': 'http://localhost:5173'
+                    },
+                    mode: 'cors'
+                });
                 
-                img.onload = function() {
-                    console.log(`✅ Image ${index + 1} loaded successfully:`, url);
-                    this.style.borderColor = 'green';
-                    document.getElementById('image-test').className = 'test-section success';
-                };
+                const data = await response.json();
+                logResult('Upload API Test', true, `Got upload URL: ${data.uploadURL}`, result);
                 
-                img.onerror = function() {
-                    console.error(`❌ Image ${index + 1} failed to load:`, url);
-                    this.style.borderColor = 'red';
-                    this.alt = `Failed to load image ${index + 1}`;
-                    document.getElementById('image-test').className = 'test-section error';
-                };
+                // Store the upload URL for further testing
+                window.testUploadURL = data.uploadURL;
                 
-                container.appendChild(img);
-            });
+            } catch (error) {
+                logResult('Upload API Test', false, `Failed: ${error.message}`, result);
+            }
         }
         
-        // Auto-run on page load
-        window.onload = () => testAPI();
+        async function testImageDisplay() {
+            const result = document.getElementById('image-result');
+            result.innerHTML = '<p>Testing image display...</p>';
+            
+            try {
+                // Test with the existing image we know exists
+                const imageURL = 'http://localhost:5000/simple-image/objects/uploads/b0425006-4efb-456c-897e-140a9f9c741d';
+                
+                const response = await fetch(imageURL, { mode: 'cors' });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const objectURL = URL.createObjectURL(blob);
+                    
+                    result.innerHTML = `
+                        <p class="success">SUCCESS: Image loaded (${blob.size} bytes, ${blob.type})</p>
+                        <img src="${objectURL}" style="max-width: 200px; border: 2px solid green;">
+                    `;
+                } else {
+                    logResult('Image Display Test', false, `Image request failed with status ${response.status}`, result);
+                }
+            } catch (error) {
+                logResult('Image Display Test', false, `Failed: ${error.message}`, result);
+            }
+        }
+        
+        // Auto-run all tests on page load
+        window.onload = () => {
+            console.log('Starting debug tests...');
+            setTimeout(testBackend, 500);
+            setTimeout(testUploadAPI, 1000);
+            setTimeout(testImageDisplay, 1500);
+        };
     </script>
 </body>
 </html>

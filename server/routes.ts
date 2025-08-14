@@ -1073,6 +1073,12 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Serve debug test page
+  app.get("/debug-test.html", (req, res) => {
+    const filePath = path.join(process.cwd(), 'debug-test.html');
+    res.sendFile(filePath);
+  });
+
   // Serve simple image test page
   app.get("/simple-image-test.html", (req, res) => {
     const filePath = path.join(process.cwd(), 'simple-image-test.html');
