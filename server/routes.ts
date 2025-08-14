@@ -982,15 +982,11 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       console.log('Setting ACL for image:', req.body.imageURL);
       const objectStorageService = new ObjectStorageService();
-      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        req.body.imageURL,
-        {
-          owner: userId,
-          visibility: "public", // Images are public by default
-        },
-      );
+      
+      // Normalize the path from Google Cloud Storage URL to object path
+      const objectPath = objectStorageService.normalizeObjectEntityPath(req.body.imageURL);
 
-      console.log('Image ACL set, returning object path:', objectPath);
+      console.log('Image processed, returning object path:', objectPath);
       res.status(200).json({
         objectPath: objectPath,
       });
@@ -1901,7 +1897,29 @@ Be precise and quote actual text from the content, not generic terms.`;
       };
 
       console.log('Saving draft with company ID:', companyId);
-      const [product] = await db.insert(products).values(draftData).returning();
+      
+      // Check if this is an update to an existing draft
+      let productId = req.body.id;
+      let product;
+      
+      if (productId) {
+        // Update existing draft
+        console.log('Updating existing draft:', productId);
+        const updateData = { ...draftData };
+        delete updateData.createdAt; // Don't update created timestamp
+        
+        const [updatedProduct] = await db
+          .update(products)
+          .set(updateData)
+          .where(eq(products.id, productId))
+          .returning();
+        product = updatedProduct;
+      } else {
+        // Create new draft
+        console.log('Creating new draft');
+        const [newProduct] = await db.insert(products).values(draftData).returning();
+        product = newProduct;
+      }
       res.json(product);
     } catch (error) {
       console.error('Error saving draft:', error);
