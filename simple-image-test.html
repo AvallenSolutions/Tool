@@ -106,7 +106,7 @@
                 result.innerHTML = '<p>Setting permissions...</p>';
                 
                 // Call ACL endpoint (same origin)
-                const aclResponse = await fetch('/api/admin-images', {
+                const aclResponse = await fetch('/api/admin/images', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
