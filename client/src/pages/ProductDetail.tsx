@@ -139,9 +139,14 @@ function ProductDetail() {
                     <div className="space-y-4">
                       <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
                       {product.product_images.map((photo: string, index: number) => {
-                        // Use the full HTTPS URL from the API response directly
-                        const imagePath = photo;
-                        console.log('Using full image URL:', imagePath);
+                        // Convert Google Cloud Storage URLs to local server paths
+                        let imagePath = photo;
+                        if (photo.includes('storage.googleapis.com')) {
+                          // Extract UUID from Google Cloud Storage URL and convert to local path
+                          const uuid = photo.split('uploads/').pop();
+                          imagePath = `/objects/uploads/${uuid}`;
+                        }
+                        console.log('Image path conversion:', { original: photo, converted: imagePath });
                         
 
                         

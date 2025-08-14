@@ -1,16 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Debug Test</title>
+    <title>Image Debug Test</title>
+    <style>
+        .test-section { margin: 20px; padding: 20px; border: 1px solid #ccc; }
+        .success { border-color: green; background: #f0fff0; }
+        .error { border-color: red; background: #fff0f0; }
+        img { max-width: 200px; margin: 10px; border: 2px solid #ddd; }
+    </style>
 </head>
 <body>
-    <h1>Simple Test Page</h1>
+    <h1>Image Loading Test</h1>
+    
+    <div id="api-test" class="test-section">
+        <h2>Step 1: API Data Test</h2>
+        <button onclick="testAPI()">Test API</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <div id="image-test" class="test-section">
+        <h2>Step 2: Image Loading Test</h2>
+        <div id="image-container"></div>
+    </div>
+
     <script>
-        console.log("Script is running");
-        fetch('/api/company')
-            .then(r => r.json())
-            .then(data => console.log('API Response:', data))
-            .catch(e => console.error('API Error:', e));
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/products/2');
+                const data = await response.json();
+                const result = document.getElementById('api-result');
+                result.innerHTML = `
+                    <p><strong>API Response:</strong></p>
+                    <p>Product Name: ${data.name}</p>
+                    <p>Images Count: ${data.productImages ? data.productImages.length : 0}</p>
+                    <p>First Image URL: ${data.productImages ? data.productImages[0] : 'None'}</p>
+                `;
+                
+                if (data.productImages && data.productImages.length > 0) {
+                    document.getElementById('api-test').className = 'test-section success';
+                    testImages(data.productImages);
+                } else {
+                    document.getElementById('api-test').className = 'test-section error';
+                }
+            } catch (error) {
+                document.getElementById('api-result').innerHTML = `<p style="color: red;">API Error: ${error.message}</p>`;
+                document.getElementById('api-test').className = 'test-section error';
+            }
+        }
+        
+        function testImages(imageUrls) {
+            const container = document.getElementById('image-container');
+            container.innerHTML = '';
+            
+            imageUrls.forEach((url, index) => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = `Test Image ${index + 1}`;
+                
+                img.onload = function() {
+                    console.log(`✅ Image ${index + 1} loaded successfully:`, url);
+                    this.style.borderColor = 'green';
+                    document.getElementById('image-test').className = 'test-section success';
+                };
+                
+                img.onerror = function() {
+                    console.error(`❌ Image ${index + 1} failed to load:`, url);
+                    this.style.borderColor = 'red';
+                    this.alt = `Failed to load image ${index + 1}`;
+                    document.getElementById('image-test').className = 'test-section error';
+                };
+                
+                container.appendChild(img);
+            });
+        }
+        
+        // Auto-run on page load
+        window.onload = () => testAPI();
     </script>
 </body>
 </html>
