@@ -33,7 +33,12 @@ import { Product } from "@shared/schema";
 import LCACalculationCard from "@/components/lca/LCACalculationCard";
 
 // Working Image Display Component
-function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
+function ImageDisplay({ photo, productName, index, onDelete }: { 
+  photo: string, 
+  productName: string, 
+  index: number,
+  onDelete: (index: number) => void 
+}) {
   // Handle full Google Cloud Storage URLs - extract the UUID from the path
   let uuid = '';
   if (photo.includes('storage.googleapis.com')) {
@@ -54,7 +59,7 @@ function ImageDisplay({ photo, productName, index }: { photo: string, productNam
   const imageSrc = `/simple-image/objects/uploads/${uuid}`;
   
   return (
-    <div className="mb-3">
+    <div className="mb-3 relative group">
       <img 
         src={imageSrc}
         alt={`${productName} - Image ${index + 1}`}
@@ -66,6 +71,15 @@ function ImageDisplay({ photo, productName, index }: { photo: string, productNam
           img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
         }}
       />
+      <Button
+        variant="destructive"
+        size="sm"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+        onClick={() => onDelete(index)}
+        title="Delete image"
+      >
+        ×
+      </Button>
     </div>
   );
 }
@@ -104,6 +118,63 @@ export default function ProductDetail() {
     enabled: isAuthenticated && !!id,
     retry: false,
   });
+
+  // Delete image mutation
+  const deleteImageMutation = useMutation({
+    mutationFn: async ({ productId, imageIndex }: { productId: string; imageIndex: number }) => {
+      const response = await apiRequest("DELETE", `/api/products/${productId}/images/${imageIndex}`, {});
+      if (!response.ok) {
+        throw new Error("Failed to delete image");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products", id] });
+      toast({ title: "Success", description: "Image deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete image",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Upload image functions
+  const handleGetUploadParameters = async () => {
+    const response = await fetch("/api/objects/upload", { method: "POST" });
+    if (!response.ok) throw new Error("Failed to get upload URL");
+    const data = await response.json();
+    return { method: "PUT" as const, url: data.uploadURL };
+  };
+
+  const handleUploadComplete = async (result: any) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadURL = result.successful[0].uploadURL;
+      const response = await apiRequest("POST", `/api/products/${id}/images`, {
+        imageUrl: uploadURL
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/products", id] });
+        toast({ title: "Success", description: "Image uploaded successfully" });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save image to product",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Delete image handler
+  const handleDeleteImage = (imageIndex: number) => {
+    if (confirm("Are you sure you want to delete this image?")) {
+      deleteImageMutation.mutate({ productId: id!, imageIndex });
+    }
+  };
 
   // Create LCA mutation with job tracking
   const createLCAMutation = useMutation({
@@ -294,11 +365,61 @@ export default function ProductDetail() {
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-600">Product Images</label>
                         {(product as any).productImages && (product as any).productImages.length > 0 ? (
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             <div className="text-xs text-gray-500">Found {(product as any).productImages?.length || 0} images</div>
                             {(product as any).productImages.map((photo: string, index: number) => (
-                              <ImageDisplay key={index} photo={photo} productName={product.name} index={index} />
+                              <ImageDisplay 
+                                key={index} 
+                                photo={photo} 
+                                productName={product.name} 
+                                index={index}
+                                onDelete={handleDeleteImage}
+                              />
                             ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full mt-2"
+                              onClick={() => {
+                                // Simple upload trigger - we'll need the ObjectUploader component
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.multiple = false;
+                                input.onchange = async (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (file) {
+                                    try {
+                                      const params = await handleGetUploadParameters();
+                                      const formData = new FormData();
+                                      formData.append('file', file);
+                                      
+                                      const uploadResponse = await fetch(params.url, {
+                                        method: 'PUT',
+                                        body: file,
+                                      });
+                                      
+                                      if (uploadResponse.ok) {
+                                        await handleUploadComplete({
+                                          successful: [{ uploadURL: params.url }]
+                                        });
+                                      } else {
+                                        throw new Error('Upload failed');
+                                      }
+                                    } catch (error) {
+                                      toast({
+                                        title: "Error",
+                                        description: "Failed to upload image",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }
+                                };
+                                input.click();
+                              }}
+                            >
+                              + Add Image
+                            </Button>
                           </div>
                         ) : product.packShotUrl ? (
                           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">

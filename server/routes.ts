@@ -1987,6 +1987,108 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Delete image from product
+  app.delete('/api/products/:id/images/:imageIndex', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { db } = await import('./db');
+      const productId = parseInt(req.params.id);
+      const imageIndex = parseInt(req.params.imageIndex);
+      
+      if (isNaN(productId) || isNaN(imageIndex)) {
+        return res.status(400).json({ error: 'Invalid product ID or image index' });
+      }
+
+      // Get current product
+      const [product] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Remove image at specified index
+      let currentImages = [];
+      try {
+        currentImages = product.productImages ? JSON.parse(product.productImages) : [];
+      } catch {
+        currentImages = Array.isArray(product.productImages) ? product.productImages : [];
+      }
+
+      if (imageIndex < 0 || imageIndex >= currentImages.length) {
+        return res.status(400).json({ error: 'Invalid image index' });
+      }
+
+      // Remove the image at the specified index
+      currentImages.splice(imageIndex, 1);
+
+      // Update product with remaining images
+      await db
+        .update(products)
+        .set({ 
+          productImages: JSON.stringify(currentImages),
+          updatedAt: new Date()
+        })
+        .where(eq(products.id, productId));
+
+      res.json({ success: true, remainingImages: currentImages.length });
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      res.status(500).json({ error: 'Failed to delete image' });
+    }
+  });
+
+  // Add image to product
+  app.post('/api/products/:id/images', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { db } = await import('./db');
+      const productId = parseInt(req.params.id);
+      const { imageUrl } = req.body;
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+
+      if (!imageUrl) {
+        return res.status(400).json({ error: 'Image URL is required' });
+      }
+
+      // Get current product
+      const [product] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Get current images and add new one
+      let currentImages = [];
+      try {
+        currentImages = product.productImages ? JSON.parse(product.productImages) : [];
+      } catch {
+        currentImages = Array.isArray(product.productImages) ? product.productImages : [];
+      }
+
+      // Add new image
+      currentImages.push(imageUrl);
+
+      // Update product with new images
+      await db
+        .update(products)
+        .set({ 
+          productImages: JSON.stringify(currentImages),
+          updatedAt: new Date()
+        })
+        .where(eq(products.id, productId));
+
+      res.json({ success: true, totalImages: currentImages.length, imageUrl });
+    } catch (error) {
+      console.error('Error adding image:', error);
+      res.status(500).json({ error: 'Failed to add image' });
+    }
+  });
+
   // DELETE product endpoint
   app.delete('/api/products/:id', async (req, res) => {
     try {
