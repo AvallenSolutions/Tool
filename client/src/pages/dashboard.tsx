@@ -15,6 +15,8 @@ import DashboardTour from "@/components/dashboard/dashboard-tour";
 import GuidedProductCreation from "@/components/dashboard/guided-product-creation";
 import { WhatsNextModule } from "@/components/dashboard/WhatsNextModule";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { KPITracking } from "@/components/dashboard/KPITracking";
+import { SMARTGoals } from "@/components/dashboard/SMARTGoals";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -166,6 +168,19 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
             <div id="whats-next-section">
               <WhatsNextModule />
+            </div>
+          </div>
+
+          {/* Phase 3: Goals & Progress Dashboard */}
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div id="kpi-tracking-section">
+              <KPITracking />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div id="smart-goals-section">
+              <SMARTGoals />
             </div>
           </div>
         </main>

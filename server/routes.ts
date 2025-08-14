@@ -2704,16 +2704,16 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const kpiData = await kpiService.getDashboardKPIs(company.id);
-      res.json({ kpiData });
+      const kpiData = await kpiService.getKPIData(company.id);
+      res.json(kpiData);
     } catch (error) {
       console.error('Error getting KPI data:', error);
       res.status(500).json({ error: 'Failed to get KPI data' });
     }
   });
 
-  // POST /api/goals - Create a new SMART goal
-  app.post('/api/goals', isAuthenticated, async (req, res) => {
+  // GET /api/smart-goals - Get SMART goals for the company
+  app.get('/api/smart-goals', isAuthenticated, async (req, res) => {
     try {
       const user = req.user;
       if (!user?.id) {
@@ -2726,12 +2726,33 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const goalData = { ...req.body, companyId: company.id };
-      const goal = await dbStorage.createGoal(goalData);
-      res.json({ goal });
+      const goalsData = await kpiService.getSMARTGoals(company.id);
+      res.json(goalsData);
     } catch (error) {
-      console.error('Error creating goal:', error);
-      res.status(500).json({ error: 'Failed to create goal' });
+      console.error('Error getting SMART goals:', error);
+      res.status(500).json({ error: 'Failed to get SMART goals' });
+    }
+  });
+
+  // POST /api/smart-goals - Create a new SMART goal
+  app.post('/api/smart-goals', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // Get company by owner ID
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const goal = await kpiService.createSMARTGoal(company.id, req.body);
+      res.json(goal);
+    } catch (error) {
+      console.error('Error creating SMART goal:', error);
+      res.status(500).json({ error: 'Failed to create SMART goal' });
     }
   });
 

@@ -23,6 +23,128 @@ export interface DashboardKPIs {
 export class KPIService {
   
   /**
+   * Phase 3: Get KPI data in the format expected by the KPITracking component
+   */
+  async getKPIData(companyId: number) {
+    // Mock data for Phase 3 demonstration
+    return {
+      kpis: [
+        {
+          id: '1',
+          name: 'Carbon Footprint Reduction',
+          current: 750,
+          target: 1000,
+          unit: 'tCO2e',
+          category: 'emissions' as const,
+          trend: 'down' as const,
+          trendValue: -15,
+          deadline: '2025-12-31',
+          status: 'on-track' as const,
+        },
+        {
+          id: '2',
+          name: 'Energy Efficiency',
+          current: 85,
+          target: 90,
+          unit: '%',
+          category: 'efficiency' as const,
+          trend: 'up' as const,
+          trendValue: 8,
+          deadline: '2025-06-30',
+          status: 'on-track' as const,
+        },
+        {
+          id: '3',
+          name: 'Renewable Energy Usage',
+          current: 45,
+          target: 80,
+          unit: '%',
+          category: 'sustainability' as const,
+          trend: 'up' as const,
+          trendValue: 12,
+          deadline: '2025-09-30',
+          status: 'behind' as const,
+        }
+      ],
+      overallProgress: 73,
+      summary: {
+        total: 3,
+        onTrack: 2,
+        atRisk: 0,
+        achieved: 0,
+      }
+    };
+  }
+
+  /**
+   * Phase 3: Get SMART goals for the company
+   */
+  async getSMARTGoals(companyId: number) {
+    // Mock data for Phase 3 demonstration
+    return {
+      goals: [
+        {
+          id: '1',
+          title: 'Reduce Packaging Waste by 30%',
+          description: 'Implement sustainable packaging solutions across all product lines',
+          specific: 'Reduce packaging waste by 30% through biodegradable materials and optimized design',
+          measurable: 'Track packaging weight per unit and waste generation metrics monthly',
+          achievable: 'Partner with sustainable packaging suppliers and redesign current solutions',
+          relevant: 'Aligns with company sustainability goals and customer expectations',
+          timeBound: 'Complete by December 31, 2025 with quarterly milestones',
+          status: 'active' as const,
+          priority: 'high' as const,
+          progress: 35,
+          targetDate: '2025-12-31',
+          category: 'sustainability' as const,
+          createdAt: '2024-11-15',
+          updatedAt: '2025-01-15',
+        },
+        {
+          id: '2',
+          title: 'Achieve Carbon Neutrality',
+          description: 'Offset all operational carbon emissions through verified programs',
+          specific: 'Achieve net-zero carbon emissions for all scope 1 and 2 operations',
+          measurable: 'Monthly carbon footprint tracking with verified offset purchases',
+          achievable: 'Invest in renewable energy and purchase verified carbon offsets',
+          relevant: 'Critical for meeting industry sustainability standards and regulations',
+          timeBound: 'Achieve carbon neutrality by June 30, 2025',
+          status: 'active' as const,
+          priority: 'high' as const,
+          progress: 68,
+          targetDate: '2025-06-30',
+          category: 'emissions' as const,
+          createdAt: '2024-10-01',
+          updatedAt: '2025-01-10',
+        }
+      ],
+      summary: {
+        total: 2,
+        active: 2,
+        completed: 0,
+        overdue: 0,
+      }
+    };
+  }
+
+  /**
+   * Phase 3: Create a new SMART goal
+   */
+  async createSMARTGoal(companyId: number, goalData: any) {
+    // In a real implementation, this would save to the database
+    const newGoal = {
+      id: Date.now().toString(),
+      ...goalData,
+      status: 'draft',
+      progress: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    return newGoal;
+  }
+  
+  /**
    * Calculates and returns all dashboard KPIs for a company
    */
   async getDashboardKPIs(companyId: number): Promise<DashboardKPIs> {
