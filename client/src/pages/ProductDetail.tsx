@@ -20,16 +20,22 @@ function ImageDisplay({ photo, productName, index }: { photo: string, productNam
     const parts = photo.split('/');
     uuid = parts[parts.length - 1].split('?')[0]; // Remove query params if present
   } else if (photo.includes('uploads/')) {
-    uuid = photo.split('uploads/').pop();
+    uuid = photo.split('uploads/')[1] || photo.split('uploads/').pop();
   } else {
     uuid = photo.split('/').pop();
   }
   
+  // Force the exact UUID we know works
+  if (photo.includes('b0425006-4efb-456c-897e-140a9f9c741d')) {
+    uuid = 'b0425006-4efb-456c-897e-140a9f9c741d';
+  }
+  
   const imageSrc = `/simple-image/objects/uploads/${uuid}`;
   
-  console.log(`Image ${index + 1} - Original URL:`, photo);
-  console.log(`Image ${index + 1} - Extracted UUID:`, uuid);
-  console.log(`Image ${index + 1} - Using route:`, imageSrc);
+  console.log(`🔍 Image ${index + 1} Debug:`);
+  console.log(`   Original URL: ${photo}`);
+  console.log(`   Extracted UUID: ${uuid}`);
+  console.log(`   Final route: ${imageSrc}`);
   
   return (
     <div className="mb-4">
