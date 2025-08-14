@@ -98,7 +98,7 @@ function Router() {
       <Route path="/app/products/create/enhanced" component={CreateEnhancedProduct} />
       <Route path="/app/products/:id/enhanced" component={CreateEnhancedProduct} />
       <Route path="/app/products/:id/edit" component={ProductEdit} />
-      <Route path="/app/products/:id" component={ProductDetailOld} />
+      <Route path="/app/products/:id" component={ProductDetail} />
       <Route path="/app/reports" component={Reports} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />
       <Route path="/app/supplier-network/supplier/:id" component={SupplierDetail} />
