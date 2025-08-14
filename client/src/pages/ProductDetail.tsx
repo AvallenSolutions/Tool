@@ -20,21 +20,17 @@ function ProductDetail() {
     queryKey: ['product', id],
     queryFn: async () => {
       console.log('Fetching product with ID:', id);
-      // Always return the uploaded image data directly (bypassing API issues)
-      console.log('Displaying uploaded images directly');
+      const response = await fetch(`/api/products/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch product');
+      }
+      const data = await response.json();
+      console.log('Product data from API:', data);
+      
+      // Map API response to expected format
       return {
-        id: parseInt(id as string),
-        name: 'Avallen Test Product', 
-        description: 'Product with 5 successfully uploaded images. Using direct image paths.',
-        type: 'spirits',
-        status: 'draft',
-        product_images: [
-          "/objects/uploads/8b4b5ccc-c899-46f9-a683-0ae37456d907",
-          "/objects/uploads/9d821968-64c1-478d-976b-88a2ce9ce2dc",
-          "/objects/uploads/5c809a68-0770-4614-9aa5-82c2173e2ed1", 
-          "/objects/uploads/853027cc-a854-455d-8713-6950e8946206",
-          "/objects/uploads/f31bc7d2-6e3f-4c5a-80cd-1be3ef4344af"
-        ]
+        ...data,
+        product_images: data.productImages || []
       };
     },
     enabled: !!id,
@@ -141,7 +137,7 @@ function ProductDetail() {
                 <CardContent>
                   {product.product_images && product.product_images.length > 0 ? (
                     <div className="space-y-4">
-                      <div className="text-sm text-gray-500 mb-2">Found {product.product_images.length} images</div>
+                      <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
                       {product.product_images.map((photo: string, index: number) => {
                         // Use the full HTTPS URL from the API response directly
                         const imagePath = photo;
