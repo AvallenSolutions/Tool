@@ -360,10 +360,14 @@ function ProductDetail() {
                       <CardDescription>Supplier information for packaging components</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                           <label className="text-sm font-medium text-gray-600">Supplier Name</label>
                           <p className="text-gray-800">{product.packagingSupplier || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Supplier Product</label>
+                          <p className="text-gray-800">{product.packagingSelectedProductName || 'Not specified'}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-600">Supplier ID</label>
