@@ -294,6 +294,13 @@ export default function CreateEnhancedProduct() {
       fillerMaterial: data.packaging.secondaryPackaging.fillerMaterial,
       fillerWeight: data.packaging.secondaryPackaging.fillerWeight,
       
+      // Packaging - Supplier Information (CRITICAL - this was missing!)
+      packagingSupplier: data.packaging.supplierInformation.supplierName,
+      packagingSupplierId: data.packaging.supplierInformation.selectedSupplierId,
+      packagingSupplierCategory: data.packaging.supplierInformation.supplierCategory,
+      packagingSelectedProductId: data.packaging.supplierInformation.selectedProductId,
+      packagingSelectedProductName: data.packaging.supplierInformation.selectedProductName,
+      
       // Production Process - Energy
       electricityKwh: data.production.energyConsumption.electricityKwh,
       gasM3: data.production.energyConsumption.gasM3,

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers, Eye } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 interface ClientProduct {
@@ -250,10 +250,18 @@ export default function ProductsPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                onClick={() => navigate(`/app/products/${product.id}`)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
                               >
                                 <Edit className="w-4 h-4 mr-1" />
-                                Edit Product
+                                Edit
                               </Button>
                               <Button
                                 variant="outline"
@@ -314,10 +322,18 @@ export default function ProductsPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  onClick={() => navigate(`/app/products/${product.id}`)}
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  View
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
                                 >
                                   <Edit className="w-4 h-4 mr-1" />
-                                  Edit Product
+                                  Edit
                                 </Button>
                                 <Button
                                   variant="outline"
