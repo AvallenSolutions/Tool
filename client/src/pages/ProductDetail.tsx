@@ -13,11 +13,23 @@ import {
 import { useState, useEffect } from 'react';
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
-  // Use same-origin route (no CORS issues)
-  const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
+  // Handle full Google Cloud Storage URLs - extract the UUID from the path
+  let uuid = '';
+  if (photo.includes('storage.googleapis.com')) {
+    // Extract UUID from full URL: https://storage.googleapis.com/bucket/.private/uploads/UUID
+    const parts = photo.split('/');
+    uuid = parts[parts.length - 1].split('?')[0]; // Remove query params if present
+  } else if (photo.includes('uploads/')) {
+    uuid = photo.split('uploads/').pop();
+  } else {
+    uuid = photo.split('/').pop();
+  }
+  
   const imageSrc = `/simple-image/objects/uploads/${uuid}`;
   
-  console.log(`Image ${index + 1} using simple route:`, imageSrc);
+  console.log(`Image ${index + 1} - Original URL:`, photo);
+  console.log(`Image ${index + 1} - Extracted UUID:`, uuid);
+  console.log(`Image ${index + 1} - Using route:`, imageSrc);
   
   return (
     <div className="mb-4">
