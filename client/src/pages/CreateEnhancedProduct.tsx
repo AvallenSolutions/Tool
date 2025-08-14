@@ -47,7 +47,11 @@ export default function CreateEnhancedProduct() {
 
   // Transform database product to form structure for loading
   const transformDatabaseToForm = (product: any) => {
-    if (!product) return null;
+    console.log('🔧 transformDatabaseToForm called with:', product);
+    if (!product) {
+      console.log('❌ No product data - returning null');
+      return null;
+    }
     
     console.log('🔍 Database product data:', {
       packagingSupplier: product.packagingSupplier,
@@ -372,7 +376,10 @@ export default function CreateEnhancedProduct() {
       </div>
 
       <EnhancedProductForm
-        initialData={transformDatabaseToForm(existingProduct)}
+        initialData={(() => {
+          console.log('🎯 Rendering form with existingProduct:', existingProduct);
+          return transformDatabaseToForm(existingProduct);
+        })()}
         onSubmit={handleSubmit}
         onSaveDraft={(data) => saveDraftMutation.mutate(data)}
         isEditing={Boolean(isEditMode)}
