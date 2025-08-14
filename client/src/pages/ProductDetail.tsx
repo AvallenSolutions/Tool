@@ -65,7 +65,8 @@ function ProductDetail() {
       const data = await response.json();
       console.log('Product data from API:', data);
       
-      // Map API response to expected format
+      // Map API response to expected format - productImages from API
+      console.log('Raw productImages from API:', data.productImages);
       return {
         ...data,
         product_images: data.productImages || []
@@ -94,6 +95,7 @@ function ProductDetail() {
   // Add debugging information
   console.log('Product data from API:', product);
   console.log('Product ID:', id);
+  console.log('Product images to display:', product?.product_images);
   
   if (error) {
     return (
