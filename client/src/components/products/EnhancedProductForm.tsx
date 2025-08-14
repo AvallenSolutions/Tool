@@ -1706,6 +1706,8 @@ export default function EnhancedProductForm({
                           form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.id);
                           form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName);
                           form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory);
+                          form.setValue('packaging.supplierInformation.selectedProductId', supplier.productId);
+                          form.setValue('packaging.supplierInformation.selectedProductName', supplier.productName);
                           
                           // Auto-sync to LCA Data (for calculations)
                           form.setValue('lcaData.packagingDetailed.container.materialType', productAttrs.material?.toLowerCase() as any);
