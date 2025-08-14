@@ -70,8 +70,8 @@
                 progressBar.style.width = '25%';
                 result.innerHTML = '<p>Getting upload URL...</p>';
                 
-                // Call upload endpoint on backend server directly (port 5000)
-                const uploadResponse = await fetch('http://localhost:5000/api/objects/upload', {
+                // Call upload endpoint (same origin)
+                const uploadResponse = await fetch('/api/objects/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -105,8 +105,8 @@
                 progressBar.style.width = '75%';
                 result.innerHTML = '<p>Setting permissions...</p>';
                 
-                // Call ACL endpoint on the backend server directly (port 5000)
-                const aclResponse = await fetch('http://localhost:5000/api/admin-images', {
+                // Call ACL endpoint (same origin)
+                const aclResponse = await fetch('/api/admin-images', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -125,8 +125,8 @@
                 progressBar.style.width = '100%';
                 result.innerHTML = '<p class="success">Upload complete! Displaying image...</p>';
                 
-                // Try to load the image using our simple route on backend server
-                const imageResponse = await fetch(`http://localhost:5000/simple-image${aclData.objectPath}`);
+                // Try to load the image using our simple route (same origin)
+                const imageResponse = await fetch(`/simple-image${aclData.objectPath}`);
                 
                 if (imageResponse.ok) {
                     const imageBlob = await imageResponse.blob();

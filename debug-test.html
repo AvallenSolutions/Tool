@@ -49,11 +49,10 @@
             result.innerHTML = '<p>Testing backend connection...</p>';
             
             try {
-                // Test if backend server is responding
-                const response = await fetch('http://localhost:5000/api/objects/upload', {
+                // Test if API is responding (same origin)
+                const response = await fetch('/api/objects/upload', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    mode: 'cors'
+                    headers: { 'Content-Type': 'application/json' }
                 });
                 
                 if (response.ok) {
@@ -72,13 +71,9 @@
             result.innerHTML = '<p>Testing upload API...</p>';
             
             try {
-                const response = await fetch('http://localhost:5000/api/objects/upload', {
+                const response = await fetch('/api/objects/upload', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Origin': 'http://localhost:5173'
-                    },
-                    mode: 'cors'
+                    headers: { 'Content-Type': 'application/json' }
                 });
                 
                 const data = await response.json();
@@ -98,9 +93,9 @@
             
             try {
                 // Test with the existing image we know exists
-                const imageURL = 'http://localhost:5000/simple-image/objects/uploads/b0425006-4efb-456c-897e-140a9f9c741d';
+                const imageURL = '/simple-image/objects/uploads/b0425006-4efb-456c-897e-140a9f9c741d';
                 
-                const response = await fetch(imageURL, { mode: 'cors' });
+                const response = await fetch(imageURL);
                 
                 if (response.ok) {
                     const blob = await response.blob();
