@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -400,6 +400,8 @@ export default function EnhancedProductForm({
   const [selectedPackagingSupplier, setSelectedPackagingSupplier] = useState<any>(null);
   const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
 
+
+
   const form = useForm<EnhancedProductFormData>({
     resolver: zodResolver(enhancedProductSchema),
     defaultValues: initialData || {
@@ -556,12 +558,175 @@ export default function EnhancedProductForm({
     onSaveDraft?.(currentData);
   };
 
+  // Auto-fill LCA Data from all tabs when moving to LCA Data Collection tab
+  useEffect(() => {
+    if (activeTab === 'lcadata') {
+      const currentData = form.getValues();
+      
+      // 1. Auto-fill Main Crop Type from Ingredients tab
+      if (currentData.ingredients && currentData.ingredients.length > 0) {
+        const primaryIngredient = currentData.ingredients[0];
+        if (primaryIngredient?.ingredientName && !currentData.lcaData?.agriculture?.mainCropType) {
+          form.setValue('lcaData.agriculture.mainCropType', primaryIngredient.ingredientName);
+        }
+        
+        // Auto-fill agricultural data from ingredients
+        if (primaryIngredient?.yieldPerHectare) {
+          form.setValue('lcaData.agriculture.yieldTonPerHectare', primaryIngredient.yieldPerHectare);
+        }
+        if (primaryIngredient?.dieselConsumption) {
+          form.setValue('lcaData.agriculture.dieselLPerHectare', primaryIngredient.dieselConsumption);
+        }
+        if (primaryIngredient?.carbonSequestration) {
+          form.setValue('lcaData.agriculture.sequestrationTonCo2PerTonCrop', primaryIngredient.carbonSequestration);
+        }
+        if (primaryIngredient?.transportDistance) {
+          form.setValue('lcaData.inboundTransport.distanceKm', primaryIngredient.transportDistance);
+        }
+        if (primaryIngredient?.waterUsage) {
+          form.setValue('lcaData.processing.waterM3PerTonCrop', primaryIngredient.waterUsage);
+        }
+      }
+      
+      // 2. Auto-fill Packaging data (Material fix for Frugal Bottle)
+      if (currentData.packaging?.primaryContainer) {
+        const container = currentData.packaging.primaryContainer;
+        if (container.material && !currentData.lcaData?.packagingDetailed?.container?.materialType) {
+          // Fix for Frugal Bottle "Mixed" material
+          let materialType = container.material.toLowerCase();
+          if (materialType === 'mixed') {
+            materialType = 'glass'; // Default mixed material to glass for LCA calculations
+          }
+          form.setValue('lcaData.packagingDetailed.container.materialType', materialType as any);
+        }
+        if (container.weight) {
+          form.setValue('lcaData.packagingDetailed.container.weightGrams', container.weight);
+        }
+        if (container.recycledContent) {
+          form.setValue('lcaData.packagingDetailed.container.recycledContentPercentage', container.recycledContent);
+        }
+      }
+      
+      // Auto-fill label specifications
+      if (currentData.packaging?.label) {
+        const label = currentData.packaging.label;
+        if (label.materialType) {
+          form.setValue('lcaData.packagingDetailed.label.materialType', label.materialType);
+        }
+        if (label.weightGrams) {
+          form.setValue('lcaData.packagingDetailed.label.weightGrams', label.weightGrams);
+        }
+      }
+      
+      // Auto-fill closure system
+      if (currentData.packaging?.closure) {
+        const closure = currentData.packaging.closure;
+        if (closure.materialType) {
+          form.setValue('lcaData.packagingDetailed.closure.materialType', closure.materialType);
+        }
+        if (closure.weightGrams) {
+          form.setValue('lcaData.packagingDetailed.closure.weightGrams', closure.weightGrams);
+        }
+      }
+      
+      // Auto-fill secondary packaging
+      if (currentData.packaging?.secondaryPackaging) {
+        const secondary = currentData.packaging.secondaryPackaging;
+        if (secondary.hasBox && secondary.boxMaterial) {
+          form.setValue('lcaData.packagingDetailed.secondaryPackaging.hasBox', true);
+          form.setValue('lcaData.packagingDetailed.secondaryPackaging.boxMaterial', secondary.boxMaterial);
+        }
+        if (secondary.boxWeightGrams) {
+          form.setValue('lcaData.packagingDetailed.secondaryPackaging.boxWeightGrams', secondary.boxWeightGrams);
+        }
+      }
+      
+      // 3. Auto-fill Production data
+      if (currentData.production) {
+        const production = currentData.production;
+        
+        // Barrel Type and Maturation
+        if (production.maturation?.barrelType) {
+          form.setValue('lcaData.processing.maturation.barrelType', production.maturation.barrelType);
+        }
+        if (production.maturation?.maturationTimeMonths) {
+          form.setValue('lcaData.processing.maturation.maturationTimeMonths', production.maturation.maturationTimeMonths);
+        }
+        
+        // Angels Share (Evaporation Loss)
+        if (production.processing?.angelsSharePercentage) {
+          form.setValue('lcaData.processing.maturation.evaporationLossPercent', production.processing.angelsSharePercentage);
+        }
+        
+        // Energy consumption
+        if (production.processing?.electricityKwhPerTonCrop) {
+          form.setValue('lcaData.processing.electricityKwhPerTonCrop', production.processing.electricityKwhPerTonCrop);
+        }
+        if (production.processing?.renewableEnergyPercent) {
+          form.setValue('lcaData.processing.renewableEnergyPercent', production.processing.renewableEnergyPercent);
+        }
+        
+        // Water usage
+        if (production.processing?.waterM3PerTonCrop) {
+          form.setValue('lcaData.processing.waterM3PerTonCrop', production.processing.waterM3PerTonCrop);
+        }
+        
+        // Distillation data
+        if (production.distillation?.distillationRounds) {
+          form.setValue('lcaData.processing.distillation.distillationRounds', production.distillation.distillationRounds);
+        }
+        if (production.distillation?.energySourceType) {
+          form.setValue('lcaData.processing.distillation.energySourceType', production.distillation.energySourceType);
+        }
+        if (production.distillation?.heatRecoverySystem) {
+          form.setValue('lcaData.processing.distillation.heatRecoverySystem', production.distillation.heatRecoverySystem);
+        }
+        if (production.distillation?.copperUsageKg) {
+          form.setValue('lcaData.processing.distillation.copperUsageKg', production.distillation.copperUsageKg);
+        }
+        
+        // Fermentation data
+        if (production.fermentation?.fermentationTime) {
+          form.setValue('lcaData.processing.fermentation.fermentationTime', production.fermentation.fermentationTime);
+        }
+      }
+      
+      // 4. Auto-fill Distribution data
+      if (currentData.distribution) {
+        const distribution = currentData.distribution;
+        if (distribution.averageTransportDistance) {
+          form.setValue('lcaData.distribution.avgDistanceToDcKm', distribution.averageTransportDistance);
+        }
+        if (distribution.primaryTransportMode) {
+          form.setValue('lcaData.distribution.primaryTransportMode', distribution.primaryTransportMode as any);
+        }
+        if (distribution.palletizationEfficiency) {
+          form.setValue('lcaData.distribution.palletizationEfficiency', distribution.palletizationEfficiency);
+        }
+      }
+      
+      // 5. Auto-fill End of Life data
+      if (currentData.endOfLife) {
+        const endOfLife = currentData.endOfLife;
+        if (endOfLife.recyclingRate) {
+          form.setValue('lcaData.endOfLifeDetailed.recyclingRatePercentage', endOfLife.recyclingRate);
+        }
+        if (endOfLife.disposalMethod) {
+          form.setValue('lcaData.endOfLifeDetailed.primaryDisposalMethod', endOfLife.disposalMethod as any);
+        }
+        if (endOfLife.returnableContainer !== undefined) {
+          form.setValue('lcaData.endOfLifeDetailed.containerRecyclability.isRecyclable', endOfLife.returnableContainer);
+        }
+      }
+    }
+  }, [activeTab, form]);
+
   return (
     <TourProvider>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full" onKeyDown={(e) => {
           // Prevent form submission on Enter key unless we're on the last tab
-          if (e.key === 'Enter' && activeTab !== 'endoflife') {
+          if (e.key === 'Enter' && activeTab !== 'lcadata') {
             e.preventDefault();
           }
         }}>
@@ -571,10 +736,10 @@ export default function EnhancedProductForm({
             <TabsTrigger value="ingredients" className="text-xs">Ingredients</TabsTrigger>
             <TabsTrigger value="packaging" className="text-xs">Packaging</TabsTrigger>
             <TabsTrigger value="production" className="text-xs">Production</TabsTrigger>
-            <TabsTrigger value="lcadata" className="text-xs">LCA Data</TabsTrigger>
             <TabsTrigger value="certifications" className="text-xs">Certifications</TabsTrigger>
             <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
             <TabsTrigger value="endoflife" className="text-xs">End of Life</TabsTrigger>
+            <TabsTrigger value="lcadata" className="text-xs">LCA Data</TabsTrigger>
           </TabsList>
 
           {/* Basic Info Tab */}
@@ -3131,6 +3296,116 @@ export default function EnhancedProductForm({
               )}
             </div>
 
+            {/* Comprehensive Autofill Status Summary */}
+            <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200 mb-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-green-800 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Auto-Fill Status Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-gray-700">Ingredients Tab</h4>
+                    <div className="space-y-1 text-xs">
+                      {form.getValues('ingredients')?.length > 0 && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Main crop: {form.getValues('ingredients')?.[0]?.ingredientName}</span>
+                        </div>
+                      )}
+                      {!form.getValues('ingredients')?.length && (
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <span className="w-3 h-3 border border-gray-300 rounded-full" />
+                          <span>No ingredient data yet</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-gray-700">Packaging Tab</h4>
+                    <div className="space-y-1 text-xs">
+                      {form.getValues('packaging.primaryContainer.material') && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Container: {form.getValues('packaging.primaryContainer.material')}</span>
+                        </div>
+                      )}
+                      {form.getValues('packaging.primaryContainer.weight') && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Weight: {form.getValues('packaging.primaryContainer.weight')}g</span>
+                        </div>
+                      )}
+                      {!form.getValues('packaging.primaryContainer.material') && (
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <span className="w-3 h-3 border border-gray-300 rounded-full" />
+                          <span>No packaging data yet</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-gray-700">Production Tab</h4>
+                    <div className="space-y-1 text-xs">
+                      {form.getValues('production.maturation.barrelType') && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Barrel: {form.getValues('production.maturation.barrelType')}</span>
+                        </div>
+                      )}
+                      {form.getValues('production.maturation.maturationTimeMonths') && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Maturation: {form.getValues('production.maturation.maturationTimeMonths')} months</span>
+                        </div>
+                      )}
+                      {!form.getValues('production.maturation.barrelType') && (
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <span className="w-3 h-3 border border-gray-300 rounded-full" />
+                          <span>No production data yet</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-gray-700">Distribution & End-of-Life</h4>
+                    <div className="space-y-1 text-xs">
+                      {form.getValues('distribution.averageTransportDistance') && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Transport: {form.getValues('distribution.averageTransportDistance')}km</span>
+                        </div>
+                      )}
+                      {form.getValues('endOfLife.recyclingRate') && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Recycling: {form.getValues('endOfLife.recyclingRate')}%</span>
+                        </div>
+                      )}
+                      {!form.getValues('distribution.averageTransportDistance') && !form.getValues('endOfLife.recyclingRate') && (
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <span className="w-3 h-3 border border-gray-300 rounded-full" />
+                          <span>No distribution data yet</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-green-100 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    <strong>💡 Auto-Fill Tip:</strong> Fields marked with 🔄 are automatically populated when you complete other tabs. 
+                    Green highlighted fields show data synced from previous tabs. To modify these values, edit them in their source tabs.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Section 1: Agriculture & Raw Materials */}
             <Card data-testid="agriculture-section">
               <CardHeader>
@@ -3154,8 +3429,8 @@ export default function EnhancedProductForm({
                           />
                         </FormLabel>
                         <FormDescription className="text-xs text-muted-foreground">
-                          {selectedIngredientSuppliers.length > 0 
-                            ? `Auto-filled from ingredient selection: ${selectedIngredientSuppliers.map(s => s.productName).join(', ')}`
+                          {form.getValues('ingredients')?.length > 0 
+                            ? `🔄 Auto-filled from Ingredients tab: ${form.getValues('ingredients')?.[0]?.ingredientName || 'Primary ingredient'}`
                             : 'Main agricultural ingredient used in this product'
                           }
                         </FormDescription>
@@ -3163,9 +3438,15 @@ export default function EnhancedProductForm({
                           <Input 
                             placeholder="e.g., Apples, Grapes, Barley" 
                             {...field}
+                            className={form.getValues('ingredients')?.length > 0 ? "bg-green-50 border-green-200" : ""}
                             name="lcaData.agriculture.mainCrop.cropType"
                           />
                         </FormControl>
+                        {form.getValues('ingredients')?.length > 0 && (
+                          <p className="text-xs text-green-600 mt-1">
+                            ℹ️ This field is auto-filled from the Ingredients tab. To change, edit the primary ingredient there.
+                          </p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -3791,15 +4072,27 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Maturation Time (months)</FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            {form.getValues('production.maturation.maturationTimeMonths') 
+                              ? `🔄 Auto-filled from Production tab: ${form.getValues('production.maturation.maturationTimeMonths')} months`
+                              : 'Duration of maturation affects evaporation and energy calculations'
+                            }
+                          </FormDescription>
                           <FormControl>
                             <Input 
                               type="number" 
                               step="1"
                               placeholder="24" 
                               {...field} 
+                              className={form.getValues('production.maturation.maturationTimeMonths') ? "bg-green-50 border-green-200" : ""}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
                           </FormControl>
+                          {form.getValues('production.maturation.maturationTimeMonths') && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ℹ️ Auto-filled from Production tab. To change, edit the maturation time there.
+                            </p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -3811,9 +4104,15 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Barrel Type</FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            {form.getValues('production.maturation.barrelType') 
+                              ? `🔄 Auto-filled from Production tab: ${form.getValues('production.maturation.barrelType')}`
+                              : 'Type of barrel used for maturation (affects CO2 calculations)'
+                            }
+                          </FormDescription>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className={form.getValues('production.maturation.barrelType') ? "bg-green-50 border-green-200" : ""}>
                                 <SelectValue placeholder="Select barrel type" />
                               </SelectTrigger>
                             </FormControl>
@@ -3824,6 +4123,11 @@ export default function EnhancedProductForm({
                               <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
+                          {form.getValues('production.maturation.barrelType') && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ℹ️ Auto-filled from Production tab. To change, edit the maturation barrel type there.
+                            </p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -3899,9 +4203,15 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Material Type</FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            {form.getValues('packaging.primaryContainer.material') 
+                              ? `🔄 Auto-filled from Packaging tab: ${form.getValues('packaging.primaryContainer.material')}`
+                              : 'Primary container material for LCA calculations'
+                            }
+                          </FormDescription>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className={form.getValues('packaging.primaryContainer.material') ? "bg-green-50 border-green-200" : ""}>
                                 <SelectValue placeholder="Select material" />
                               </SelectTrigger>
                             </FormControl>
@@ -3914,6 +4224,11 @@ export default function EnhancedProductForm({
                               <SelectItem value="mixed">Mixed</SelectItem>
                             </SelectContent>
                           </Select>
+                          {form.getValues('packaging.primaryContainer.material') && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ℹ️ This field is auto-filled from the Packaging tab. To change, edit the primary container material there.
+                            </p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -3925,15 +4240,27 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Weight (grams)</FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            {form.getValues('packaging.primaryContainer.weight') 
+                              ? `🔄 Auto-filled from Packaging tab: ${form.getValues('packaging.primaryContainer.weight')}g`
+                              : 'Container weight for material impact calculations'
+                            }
+                          </FormDescription>
                           <FormControl>
                             <Input 
                               type="number" 
                               step="0.1"
                               placeholder="500" 
                               {...field} 
+                              className={form.getValues('packaging.primaryContainer.weight') ? "bg-green-50 border-green-200" : ""}
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             />
                           </FormControl>
+                          {form.getValues('packaging.primaryContainer.weight') && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ℹ️ Auto-filled from Packaging tab. To change, edit the primary container weight there.
+                            </p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -4928,7 +5255,7 @@ export default function EnhancedProductForm({
           {/* Submit Button */}
           <div className="flex justify-between pt-6">
             <div className="text-sm text-gray-500">
-              Tab {activeTab === 'basic' ? '1' : activeTab === 'ingredients' ? '2' : activeTab === 'packaging' ? '3' : activeTab === 'production' ? '4' : activeTab === 'certifications' ? '5' : activeTab === 'distribution' ? '6' : '7'} of 7
+              Tab {activeTab === 'basic' ? '1' : activeTab === 'ingredients' ? '2' : activeTab === 'packaging' ? '3' : activeTab === 'production' ? '4' : activeTab === 'certifications' ? '5' : activeTab === 'distribution' ? '6' : activeTab === 'endoflife' ? '7' : '8'} of 8
             </div>
             
             <div className="flex gap-3">
@@ -4959,7 +5286,7 @@ export default function EnhancedProductForm({
                   type="button" 
                   variant="outline"
                   onClick={() => {
-                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'lcadata', 'certifications', 'distribution', 'endoflife'];
+                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'certifications', 'distribution', 'endoflife', 'lcadata'];
                     const currentIndex = tabs.indexOf(activeTab);
                     if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1]);
                   }}
@@ -4968,13 +5295,13 @@ export default function EnhancedProductForm({
                 </Button>
               )}
               
-              {activeTab !== 'endoflife' ? (
+              {activeTab !== 'lcadata' ? (
                 <Button 
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'lcadata', 'certifications', 'distribution', 'endoflife'];
+                    const tabs = ['basic', 'ingredients', 'packaging', 'production', 'certifications', 'distribution', 'endoflife', 'lcadata'];
                     const currentIndex = tabs.indexOf(activeTab);
                     if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1]);
                   }}
