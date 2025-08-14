@@ -13,63 +13,25 @@ import {
 import { useState, useEffect } from 'react';
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
-  const [imageData, setImageData] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  // Simple direct approach - use the simple image route
+  const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
+  const imageSrc = `/simple-image/objects/uploads/${uuid}`;
   
-  useEffect(() => {
-    const loadImage = async () => {
-      try {
-        const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
-        const response = await fetch(`/image-data/uploads/${uuid}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setImageData(data.dataUrl);
-        setLoading(false);
-        console.log(`✅ Image ${index + 1} loaded as base64 data URL`);
-      } catch (error) {
-        console.error(`❌ Failed to load image ${index + 1}:`, error);
-        setError(true);
-        setLoading(false);
-      }
-    };
-    
-    loadImage();
-  }, [photo, index]);
-  
-  if (loading) {
-    return (
-      <div className="mb-4">
-        <div className="text-xs text-gray-500 mb-2">Image {index + 1} - Loading...</div>
-        <div className="w-full h-64 bg-gray-200 rounded-lg border animate-pulse flex items-center justify-center">
-          <span className="text-gray-400">Loading image...</span>
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="mb-4">
-        <div className="text-xs text-gray-500 mb-2">Image {index + 1} - Failed to load</div>
-        <div className="w-full h-64 bg-red-50 rounded-lg border-2 border-dashed border-red-200 flex items-center justify-center">
-          <span className="text-red-400">Image failed to load</span>
-        </div>
-      </div>
-    );
-  }
+  console.log(`Image ${index + 1} using simple route:`, imageSrc);
   
   return (
     <div className="mb-4">
       <div className="text-xs text-gray-500 mb-2">Image {index + 1}</div>
       <img 
-        src={imageData}
+        src={imageSrc}
         alt={`${productName} - Image ${index + 1}`}
         className="w-full h-64 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow"
+        onLoad={() => console.log(`✅ Simple image ${index + 1} loaded successfully`)}
+        onError={(e) => {
+          console.error(`❌ Simple image ${index + 1} failed to load`);
+          const img = e.target as HTMLImageElement;
+          img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
+        }}
       />
     </div>
   );

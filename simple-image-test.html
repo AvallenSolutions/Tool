@@ -1,20 +1,160 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Image Test</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https: http://localhost:5000 http://localhost:5173;">
+    <title>Simple Image Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; margin: 20px 0; }
+        .upload-area.dragover { border-color: #007bff; background: #f0f8ff; }
+        .progress { background: #f0f0f0; height: 20px; margin: 10px 0; }
+        .progress-bar { background: #007bff; height: 100%; width: 0%; transition: width 0.3s; }
+        .image-preview { max-width: 300px; margin: 10px; border: 2px solid #ddd; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h1>Direct Image Test</h1>
-    <img src="/objects/uploads/4b45c9c2-e36f-427a-b777-be3b283b1b74" 
-         style="max-width: 400px; border: 2px solid red;" 
-         onload="this.style.borderColor='green'; console.log('SUCCESS: Image loaded')" 
-         onerror="this.style.borderColor='red'; console.error('FAILED: Image did not load')">
+    <h1>Simple Image Upload & Display Test</h1>
     
-    <p>If you see a green border, the image works. Red border means it failed.</p>
+    <div class="upload-area" id="uploadArea">
+        <p>Click to select an image or drag and drop</p>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    </div>
+    
+    <div class="progress" id="progressContainer" style="display: none;">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    
+    <div id="result"></div>
     
     <script>
-        console.log('Testing image load at:', '/objects/uploads/4b45c9c2-e36f-427a-b777-be3b283b1b74');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const result = document.getElementById('result');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        async function handleFile(file) {
+            console.log('Handling file:', file.name, file.type, file.size);
+            result.innerHTML = '<p>Starting upload...</p>';
+            progressContainer.style.display = 'block';
+            
+            try {
+                // Step 1: Get upload URL
+                progressBar.style.width = '25%';
+                result.innerHTML = '<p>Getting upload URL...</p>';
+                
+                const uploadResponse = await fetch('/api/objects/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error(`Upload URL request failed: ${uploadResponse.status}`);
+                }
+                
+                const { uploadURL } = await uploadResponse.json();
+                console.log('Got upload URL:', uploadURL);
+                
+                // Step 2: Upload file directly to storage
+                progressBar.style.width = '50%';
+                result.innerHTML = '<p>Uploading file...</p>';
+                
+                const fileUploadResponse = await fetch(uploadURL, {
+                    method: 'PUT',
+                    body: file,
+                    headers: {
+                        'Content-Type': file.type
+                    }
+                });
+                
+                if (!fileUploadResponse.ok) {
+                    throw new Error(`File upload failed: ${fileUploadResponse.status}`);
+                }
+                
+                console.log('File uploaded successfully');
+                
+                // Step 3: Set ACL policy
+                progressBar.style.width = '75%';
+                result.innerHTML = '<p>Setting permissions...</p>';
+                
+                const aclResponse = await fetch('/api/admin-images', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        imageURL: uploadURL.split('?')[0] // Remove query params
+                    })
+                });
+                
+                if (!aclResponse.ok) {
+                    throw new Error(`ACL setting failed: ${aclResponse.status}`);
+                }
+                
+                const aclData = await aclResponse.json();
+                console.log('ACL set, got path:', aclData.objectPath);
+                
+                // Step 4: Display the image
+                progressBar.style.width = '100%';
+                result.innerHTML = '<p class="success">Upload complete! Displaying image...</p>';
+                
+                // Try to load the image using our simple route
+                const imageResponse = await fetch(`/simple-image${aclData.objectPath}`);
+                
+                if (imageResponse.ok) {
+                    const imageBlob = await imageResponse.blob();
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    
+                    result.innerHTML = `
+                        <p class="success">✓ Upload and display successful!</p>
+                        <p>Object path: ${aclData.objectPath}</p>
+                        <img src="${imageUrl}" class="image-preview" alt="Uploaded image">
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <p class="success">✓ Upload successful!</p>
+                        <p class="error">✗ Image display failed (HTTP ${imageResponse.status})</p>
+                        <p>Object path: ${aclData.objectPath}</p>
+                    `;
+                }
+                
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Upload failed:', error);
+                result.innerHTML = `<p class="error">Upload failed: ${error.message}</p>`;
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+            }
+        }
     </script>
 </body>
 </html>

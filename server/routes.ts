@@ -1073,6 +1073,48 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Serve simple image test page
+  app.get("/simple-image-test.html", (req, res) => {
+    const filePath = path.join(process.cwd(), 'simple-image-test.html');
+    res.sendFile(filePath);
+  });
+
+  // Simple image serving route - no fancy processing
+  app.get("/simple-image/objects/:objectPath(*)", async (req, res) => {
+    const objectPath = `/objects/${req.params.objectPath}`;
+    console.log('Simple image request for:', objectPath);
+    
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+      
+      // Set basic headers and stream the file
+      const [metadata] = await objectFile.getMetadata();
+      res.set({
+        'Content-Type': metadata.contentType || 'image/jpeg',
+        'Content-Length': metadata.size,
+        'Cache-Control': 'public, max-age=3600'
+      });
+      
+      const stream = objectFile.createReadStream();
+      stream.pipe(res);
+      
+      stream.on('error', (err) => {
+        console.error('Stream error:', err);
+        if (!res.headersSent) {
+          res.status(500).send('Error streaming image');
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error serving simple image:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).send('Image not found');
+      }
+      return res.status(500).send('Internal server error');
+    }
+  });
+
   // Serve test page
   app.get("/test-base64.html", (req, res) => {
     res.send(`<!DOCTYPE html>
