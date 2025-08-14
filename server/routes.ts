@@ -1128,12 +1128,33 @@ Be precise and quote actual text from the content, not generic terms.`;
         conditions.push(eq(supplierProducts.supplierId, supplier_id));
       }
 
-      // Apply all conditions
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
-      }
+      // Apply all conditions using AND logic
+      const baseQuery = db
+        .select({
+          id: supplierProducts.id,
+          productName: supplierProducts.productName,
+          productDescription: supplierProducts.productDescription,
+          sku: supplierProducts.sku,
+          supplierId: supplierProducts.supplierId,
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory,
+          isVerified: supplierProducts.isVerified,
+          productAttributes: supplierProducts.productAttributes,
+          basePrice: supplierProducts.basePrice,
+          currency: supplierProducts.currency,
+          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+          leadTimeDays: supplierProducts.leadTimeDays,
+          certifications: supplierProducts.certifications,
+          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+          lcaDataJson: supplierProducts.lcaDataJson,
+          createdAt: supplierProducts.createdAt
+        })
+        .from(supplierProducts)
+        .leftJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id));
+        
+      const finalQuery = conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
-      const products = await query;
+      const products = await finalQuery;
       
       res.json({
         products,
@@ -1508,7 +1529,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       const newSupplier = await db
         .insert(verifiedSuppliers)
         .values({
-          supplierName,
+          supplierName: supplierName,
           supplierCategory: inv.expectedSupplierCategory,
           description,
           website,
@@ -1560,10 +1581,13 @@ Be precise and quote actual text from the content, not generic terms.`;
         .where(eq(verifiedSuppliers.verificationStatus, 'verified'));
         
       if (category) {
-        query = query.where(and(
-          eq(verifiedSuppliers.verificationStatus, 'verified'),
-          eq(verifiedSuppliers.supplierCategory, category)
-        ));
+        query = db
+          .select()
+          .from(verifiedSuppliers) 
+          .where(and(
+            eq(verifiedSuppliers.verificationStatus, 'verified'),
+            eq(verifiedSuppliers.supplierCategory, category)
+          ));
       }
       
       const suppliers = await query.orderBy(verifiedSuppliers.supplierName);
@@ -1654,7 +1678,7 @@ Be precise and quote actual text from the content, not generic terms.`;
 
       const products = await query;
       
-      console.log(`Products fetched: ${products.length} for company ${req.user?.companyId || 'unknown'}`);
+      console.log(`Products fetched: ${products.length} for company ${(req.user as any)?.companyId || 'unknown'}`);
       
       res.json(products);
     } catch (error) {
@@ -1708,7 +1732,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       const { products } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
       const { db } = await import('./db');
-      const companyId = req.session?.user?.companyId || 1; // Fallback for development
+      const companyId = (req.session as any)?.user?.companyId || 1; // Fallback for development
       
       const results = await db.select().from(products).where(eq(products.companyId, companyId));
       console.log('Products fetched:', results.length, 'for company', companyId);
