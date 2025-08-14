@@ -143,41 +143,28 @@ function ProductDetail() {
                     <div className="space-y-4">
                       <div className="text-sm text-gray-500 mb-2">Found {product.product_images.length} images</div>
                       {product.product_images.map((photo: string, index: number) => {
-                        // Try different approaches to serve the image
-                        const approaches = [
-                          photo.startsWith('/objects/') ? photo : `/objects/uploads/${photo.split('/.private/uploads/')[1]}`,
-                          `/api/image-proxy?url=${encodeURIComponent(photo)}`,
-                          photo // Direct GCS URL as fallback
-                        ];
+                        // Use the working object storage path directly
+                        const imagePath = photo.startsWith('/objects/') ? photo : `/objects/uploads/${photo.split('/.private/uploads/')[1] || photo}`;
+                        console.log('Loading image:', { original: photo, path: imagePath });
                         
                         console.log('Processing image:', { original: photo, approaches });
                         
                         return (
                           <div key={index} className="space-y-2">
-                            <div className="text-xs text-gray-400">Image {index + 1}</div>
-                            {approaches.map((url, urlIndex) => (
-                              <img 
-                                key={`${index}-${urlIndex}`}
-                                src={url}
-                                alt={`${product.name} - Image ${index + 1} (Method ${urlIndex + 1})`}
-                                className="w-full h-48 object-cover rounded-lg border"
-                                onError={(e) => {
-                                  console.error(`Method ${urlIndex + 1} failed:`, url);
-                                  if (urlIndex === approaches.length - 1) {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }
-                                }}
-                                onLoad={() => {
-                                  console.log(`Method ${urlIndex + 1} worked:`, url);
-                                  // Hide other attempts once one works
-                                  const container = (e.target as HTMLElement).parentElement;
-                                  const imgs = container?.querySelectorAll('img');
-                                  imgs?.forEach((img, i) => {
-                                    if (i !== urlIndex) img.style.display = 'none';
-                                  });
-                                }}
-                              />
-                            ))}
+                            <div className="text-xs text-gray-400">Image {index + 1} - {imagePath}</div>
+                            <img 
+                              src={imagePath}
+                              alt={`${product.name} - Image ${index + 1}`}
+                              className="w-full h-48 object-cover rounded-lg border bg-gray-100"
+                              onError={(e) => {
+                                console.error(`Image failed to load:`, imagePath);
+                                (e.target as HTMLImageElement).style.backgroundColor = '#f3f4f6';
+                                (e.target as HTMLImageElement).style.border = '2px dashed #d1d5db';
+                              }}
+                              onLoad={() => {
+                                console.log(`Image loaded successfully:`, imagePath);
+                              }}
+                            />
                           </div>
                         );
                       })}
