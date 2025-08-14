@@ -16,17 +16,27 @@ function ProductDetail() {
   const [, setLocation] = useLocation();
 
   // Use actual API to fetch product data
-  const { data: product, isLoading: productLoading } = useQuery({
+  const { data: product, isLoading: productLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
+      console.log('Fetching product with ID:', id);
       const response = await fetch(`/api/products/${id}`);
+      console.log('API response status:', response.status);
       if (!response.ok) {
-        throw new Error('Failed to fetch product');
+        console.error('API error:', response.status, response.statusText);
+        throw new Error(`Failed to fetch product: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Product data received:', data);
+      return data;
     },
     enabled: !!id,
   });
+  
+  // Add error logging
+  if (error) {
+    console.error('Query error:', error);
+  }
 
   if (productLoading) {
     return (
@@ -49,6 +59,31 @@ function ProductDetail() {
   console.log('Product data from API:', product);
   console.log('Product ID:', id);
   
+  if (error) {
+    return (
+      <div className="flex h-screen bg-lightest-gray">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header title="Error Loading Product" subtitle="There was an issue fetching the product data" />
+          <main className="flex-1 p-6 overflow-y-auto">
+            <Card>
+              <CardContent className="text-center py-12">
+                <Package className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Product</h3>
+                <p className="text-gray-600 mb-2">Error: {error.message}</p>
+                <p className="text-gray-500 mb-6">Check the console for more details</p>
+                <Button onClick={() => setLocation('/app/products')}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Products
+                </Button>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="flex h-screen bg-lightest-gray">

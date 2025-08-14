@@ -1,0 +1,37 @@
+> rest-express@1.0.0 dev
+Products fetched: 1 for company 1/index.ts
+Getting upload URL for object storage...
+Getting upload URL for object storage...
+Getting upload URL for object storage...
+Getting upload URL for object storage...
+Getting upload URL for object storage...
+Upload URL generated successfully: https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/896cd1ee-825f-4a8d-87ce-625073f26369?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=heimdall-production%40replit-user-deployments.iam.gserviceaccount.com%2F20250814%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250814T134203Z&X-Goog-Expires=899&X-Goog-Signature=3f7c2516be69a3d97030163eebd3398e32274142a2888e94d02d10bbb915c2218521cb6a794de9954b30e9396e4a7b9c66508fb4f512fb361f62cd6256e0eccdf19a528bdb7298b9d30a54e36af70d300cfde0e3b3276c8c61c8424f4236c06d6cccde2ce3a62061fafc4265e2f9f4489026d33bc1e80fb79950d5240635af5b00098aec5a723204096aa168e0dd3b4bf7b14066fc5c0e83a2abee1b13edda9a9beaa776407973530d126ea8b820fbdd843b62ae77ebe916fd064d00195546930d8d727b01968533a507f59b0615db2d006a961bb1986b70d6f50c7de7f8847bdd5cfdd8e826d175fc32998d2b7a0c5603767ea724c3940fb303687760818917&X-Goog-SignedHeaders=host
+Upload URL generated successfully: https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/047c4ab5-313e-4760-8b09-d7f21c04d0fe?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=heimdall-production%40replit-user-deployments.iam.gserviceaccount.com%2F20250814%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250814T134203Z&X-Goog-Expires=899&X-Goog-Signature=71198679fd2b3694d6c8766d4e97fa250ec6b8d7d3136080492c8f4bdc0701ced87c4b060f64f73e1c49497a6593a4a912e7a6d2c30708bc43d091991ef3fc9ac1edc5200f0e1fb0bf4907437562d0bbd2f0cca8c781f0c15ff56f7c682b667f83443c11bc1498231857b1fbd123b9cc6f13dbe67f1e00cf5f8c848fe9244ed92f696320e410f2f4b533cc63940939a8be129a45d154ce3c32e0c6c91c05bd248cb7fc167133f82e35bf705a28b32cf107d65d090b4e1e8f99d7a4e245a87214e2a311702e0436aa2a6ab799b241e64da8b27573059338f02c65cd7e93e366f341a586133e8c3fa74bcb81b4f6564fe872c4513fa291d1387f9f241e8abbaddb&X-Goog-SignedHeaders=host
+Upload URL generated successfully: https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/79285279-0dfb-4271-a5ac-075c70ca33ac?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=heimdall-production%40replit-user-deployments.iam.gserviceaccount.com%2F20250814%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250814T134203Z&X-Goog-Expires=899&X-Goog-Signature=0784cf64175c9ea04e582c0ccb3a32e9f51557fbd02df951ff076c691391a495a6ddf136799a9e923d8850259d2c440227d58ded35bdea9153d523b82cf345a180a099b9e7199d6c22b1728d4a64469beb501174f5b0e378e2278c40aa6035516b64695145cf0163dba031d5201549cddc78c3a1853fe2e1c54433eec92d8430c6592e927da04f5dbfcdaf6e3df7fd36b597aef1ba5c9a9e7cc45976d646b9f5cd5d45e8395220a2d56633a5e047c65299563ec56b745e85500653d3327da6c52b28dec7d2a2aa77bab42f4828c9f86bd9eb45d8076be51e4dabd5f8a07f42f4216cbff952d2fec65a7ce56f0d180ee86f7bc76e728502bb8031723eb312cf5a&X-Goog-SignedHeaders=host
+Upload URL generated successfully: https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/2d7055b5-c0c7-40ed-8981-bee353f7e6a4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=heimdall-production%40replit-user-deployments.iam.gserviceaccount.com%2F20250814%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250814T134203Z&X-Goog-Expires=899&X-Goog-Signature=8469631db27343504c666aa21f4a7ca1d47f6764986457fcbb135a1d5c32a7d33e560810e9e923efe5ce2a92efc3c5af8f3e6a739b72a7b35c3e35c99f5a5445632abfb25649af06b5df7df8128a6e7587b89eeb64cd3d98f93535dc3771d9aa2ae93a866e0ebd6c11037cf95c33744a53007b5ecdfdc3d4db367cbeaf7fb8b1e619b9163448f26e8634eacceb0729b9df11224027d4ac088dec104c75fefaad72905710e07dbcc2a824cfb2031e9e0c99ea8998a3e667b9e60c2240d70bb81a2fc6dd7400e5d6dcdeec024b492c805ff326c4213f4e47976d17c239b62a2979c6874346192bdbf7f8c771a770d816e5390b0218cf11291c94b17139e3452633&X-Goog-SignedHeaders=host
+Upload URL generated successfully: https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/f9fc1f69-25d9-4ee4-ab28-46a8a70cafa3?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=heimdall-production%40replit-user-deployments.iam.gserviceaccount.com%2F20250814%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250814T134203Z&X-Goog-Expires=899&X-Goog-Signature=ca036383c2a1dd98301c8c89175ac039ebd0a2c86df84ed2c73f02969c556490c526aab2f6c37427a0cdfbbbe1acde48091e6eab882326cdc02a77a8e0741a31a0b566be449a7bbc7ed4692ef9f582f6196e712159807c1f0b3283ab6ead05d1fe283a499be398ee8d54c2076ed3fa3b35d17bc6abea500e80e6a47b547bcf8738e1c99a7f2b13cb1e8b3f62a861380d2e12a73869d9c0461694edda2edeb7aa4a40f1634b699f597686349134479057d213fa9c5e7d0950284f1d3f511650a16894e58ffe4bff9eb11c7aec25caaab00fe94a0f5d3eed3f77c898452c9730804dd14d95dddab9e904de4326bfb87e3bedd32fc1241880ef53d091ac06d1807f&X-Goog-SignedHeaders=host
+Setting ACL for image: https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/896cd1ee-825f-4a8d-87ce-625073f26369
+Image processed, returning object path: /objects/uploads/896cd1ee-825f-4a8d-87ce-625073f26369
+Looking for object at path: /objects/896cd1ee-825f-4a8d-87ce-625073f26369
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/896cd1ee-825f-4a8d-87ce-625073f26369
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/896cd1ee-825f-4a8d-87ce-625073f26369
+Looking for object at path: /objects/f9fc1f69-25d9-4ee4-ab28-46a8a70cafa3
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/f9fc1f69-25d9-4ee4-ab28-46a8a70cafa3
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/f9fc1f69-25d9-4ee4-ab28-46a8a70cafa3
+Looking for object at path: /objects/047c4ab5-313e-4760-8b09-d7f21c04d0fe
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/047c4ab5-313e-4760-8b09-d7f21c04d0fe
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/047c4ab5-313e-4760-8b09-d7f21c04d0fe
+Looking for object at path: /objects/2d7055b5-c0c7-40ed-8981-bee353f7e6a4
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/2d7055b5-c0c7-40ed-8981-bee353f7e6a4
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/2d7055b5-c0c7-40ed-8981-bee353f7e6a4
+Looking for object at path: /objects/79285279-0dfb-4271-a5ac-075c70ca33ac
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/79285279-0dfb-4271-a5ac-075c70ca33ac
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/79285279-0dfb-4271-a5ac-075c70ca33ac
+Object exists: true
+Object exists: true
+Object exists: true
+Object exists: true
+Object exists: true
+Using existing company: 1
+Saving draft with company ID: 1
+Updating existing draft: 2
