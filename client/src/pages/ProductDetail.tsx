@@ -13,11 +13,11 @@ import {
 import { useState, useEffect } from 'react';
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
-  // Simple direct approach - use the simple image route
+  // Use backend server directly to bypass Vite routing issues
   const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
-  const imageSrc = `/simple-image/objects/uploads/${uuid}`;
+  const imageSrc = `http://localhost:5000/simple-image/objects/uploads/${uuid}`;
   
-  console.log(`Image ${index + 1} using simple route:`, imageSrc);
+  console.log(`Image ${index + 1} using backend route:`, imageSrc);
   
   return (
     <div className="mb-4">
