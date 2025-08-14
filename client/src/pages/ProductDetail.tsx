@@ -15,23 +15,18 @@ function ProductDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
 
-  // Hardcoded test data for product ID 2 while server is having issues
-  const product = id === '2' ? {
-    id: 2,
-    name: 'Avallen Test',
-    description: 'Avallen Product Test',
-    type: 'spirits',
-    status: 'draft',
-    product_images: [
-      "https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/b3260734-c84e-4882-8332-f241751ef2eb",
-      "https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/02f8e54f-e7f0-4b39-9cb1-38a2cecd5f38",
-      "https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/b6b6ab49-2dd0-4bab-ab35-24158411aec4",
-      "https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/47c7bc07-0bdc-410c-a183-845906a4439d",
-      "https://storage.googleapis.com/replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/67388a5c-862a-45be-9416-75cc4835a9e6"
-    ]
-  } : null;
-  
-  const productLoading = false;
+  // Use actual API to fetch product data
+  const { data: product, isLoading: productLoading } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/products/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch product');
+      }
+      return response.json();
+    },
+    enabled: !!id,
+  });
 
   if (productLoading) {
     return (
@@ -50,6 +45,10 @@ function ProductDetail() {
     );
   }
 
+  // Add debugging information
+  console.log('Product data from API:', product);
+  console.log('Product ID:', id);
+  
   if (!product) {
     return (
       <div className="flex h-screen bg-lightest-gray">
