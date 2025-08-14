@@ -152,6 +152,7 @@ export default function CreateEnhancedProduct() {
       status: data.status,
       isMainProduct: data.isMainProduct,
       packShotUrl: data.productImage,
+      productImages: data.productImages || [],
       
       // Ingredients array
       ingredients: data.ingredients,

@@ -101,13 +101,13 @@ function ProductDetail() {
                   <CardTitle>Product Images</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {product.productAttributes?.imageUrls && product.productAttributes.imageUrls.length > 0 ? (
+                  {product.productImages && product.productImages.length > 0 ? (
                     <div className="space-y-4">
-                      {product.productAttributes.imageUrls.map((photo: string, index: number) => (
+                      {product.productImages.map((photo: string, index: number) => (
                         <img 
                           key={index} 
-                          src={photo.startsWith('http') ? `/objects/${photo.split('/uploads/')[1]}` : photo}
-                          alt={`${product.productName} - Image ${index + 1}`}
+                          src={photo.startsWith('/objects/') ? photo : `/objects/${photo.split('/uploads/')[1]}`}
+                          alt={`${product.name} - Image ${index + 1}`}
                           className="w-full h-48 object-cover rounded-lg border"
                           onError={(e) => {
                             console.error('Image failed to load:', photo);

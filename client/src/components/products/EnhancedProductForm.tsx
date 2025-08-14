@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
 import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2, CheckCircle } from 'lucide-react';
+import { ImageUploader } from '@/components/ImageUploader';
 import { TourProvider } from '@/components/tour/TourProvider';
 import { TourButton } from '@/components/tour/TourButton';
 import { HelpBubble } from '@/components/ui/help-bubble';
@@ -28,6 +29,7 @@ const enhancedProductSchema = z.object({
   volume: z.string().min(1, "Volume is required"),
   description: z.string().optional(),
   productImage: z.string().optional(),
+  productImages: z.array(z.string()).default([]),
   isMainProduct: z.boolean().default(false),
   status: z.string().default('active'),
   
@@ -399,6 +401,7 @@ export default function EnhancedProductForm({
   const [selectedIngredientSuppliers, setSelectedIngredientSuppliers] = useState<any[]>([]);
   const [selectedPackagingSupplier, setSelectedPackagingSupplier] = useState<any>(null);
   const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
+  const [productImages, setProductImages] = useState<string[]>([]);
 
 
 
@@ -411,6 +414,7 @@ export default function EnhancedProductForm({
       volume: '',
       description: '',
       productImage: '',
+      productImages: [],
       isMainProduct: false,
       status: 'active',
       waterDilution: { amount: 0, unit: 'ml' },
@@ -550,7 +554,11 @@ export default function EnhancedProductForm({
   });
 
   const handleSubmit = (data: EnhancedProductFormData) => {
-    onSubmit(data);
+    const submissionData = {
+      ...data,
+      productImages
+    };
+    onSubmit(submissionData);
   };
 
   const handleSaveDraft = () => {
@@ -842,31 +850,55 @@ export default function EnhancedProductForm({
                   )}
                 />
 
-                {/* Pack Shot Upload */}
+                {/* Product Images Upload */}
                 <div className="space-y-4">
                   <FormLabel>Product Images (Pack Shots)</FormLabel>
-                  <p className="text-sm text-gray-600">Upload up to 3 product images. Maximum 10MB each.</p>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      max={3}
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (files.length > 3) {
-                          alert('Maximum 3 images allowed');
-                          return;
-                        }
-                        // Handle file upload logic here
-                        console.log('Files selected:', files);
-                      }}
-                      className="w-full"
-                    />
-                    <div className="text-center text-sm text-gray-500 mt-2">
-                      Drag and drop images here, or click to select
+                  <p className="text-sm text-gray-600">Upload up to 5 product images. Maximum 10MB each.</p>
+                  
+                  <ImageUploader
+                    maxImages={5}
+                    existingImages={productImages}
+                    onUpload={(uploadedUrls) => {
+                      const newImages = [...productImages, ...uploadedUrls].slice(0, 5);
+                      setProductImages(newImages);
+                      form.setValue('productImages', newImages);
+                    }}
+                    onComplete={(objectPath) => {
+                      // Object path is already handled by onUpload
+                      console.log('Image upload complete:', objectPath);
+                    }}
+                    placeholder={`Upload Product Images (${productImages.length}/5)`}
+                  >
+                    Upload Product Images ({productImages.length}/5)
+                  </ImageUploader>
+
+                  {/* Display uploaded images with delete option */}
+                  {productImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      {productImages.map((imageUrl, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={imageUrl.startsWith('/objects/') ? imageUrl : `/objects/${imageUrl.split('/uploads/')[1]}`}
+                            alt={`Product image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              const newImages = productImages.filter((_, i) => i !== index);
+                              setProductImages(newImages);
+                              form.setValue('productImages', newImages);
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <FormField

@@ -97,6 +97,7 @@ export const products = pgTable("products", {
   volume: varchar("volume"), // e.g., 500ml, 750ml
   description: text("description"),
   packShotUrl: text("pack_shot_url"), // Product photo URL
+  productImages: jsonb("product_images").$type<string[]>(), // Multiple product image URLs
   
   // Production Information
   productionModel: varchar("production_model"), // own, contract, hybrid
