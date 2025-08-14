@@ -1865,31 +1865,61 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Draft product endpoint
   app.post('/api/products/draft', async (req, res) => {
     try {
-      const { products } = await import('@shared/schema');
+      const { products, companies } = await import('@shared/schema');
+      
+      // Get or create a default company
+      let companyId = 1;
+      const existingCompanies = await db.select().from(companies).limit(1);
+      
+      if (existingCompanies.length === 0) {
+        console.log('No companies found, creating default company');
+        const [newCompany] = await db.insert(companies).values({
+          name: 'Demo Company',
+          industry: 'Spirits & Distilleries',
+          size: 'SME (10-250 employees)',
+          address: '123 Demo Street',
+          country: 'United Kingdom',
+          website: 'https://demo.company',
+          ownerId: 44886248, // Use existing user ID
+          onboardingComplete: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }).returning();
+        companyId = newCompany.id;
+        console.log('Created default company:', newCompany);
+      } else {
+        companyId = existingCompanies[0].id;
+        console.log('Using existing company:', companyId);
+      }
       
       const draftData = {
-        companyId: 1, // TODO: Get from session
+        companyId,
         ...req.body,
         status: 'draft',
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
+      console.log('Saving draft with company ID:', companyId);
       const [product] = await db.insert(products).values(draftData).returning();
       res.json(product);
     } catch (error) {
       console.error('Error saving draft:', error);
-      res.status(500).json({ error: 'Failed to save draft' });
+      res.status(500).json({ error: 'Failed to save draft', details: error.message });
     }
   });
 
   // Client Products API endpoints
   app.post('/api/client-products', async (req, res) => {
     try {
-      const { products, productInputs } = await import('@shared/schema');
+      const { products, productInputs, companies } = await import('@shared/schema');
+      
+      // Get the first available company (should exist from previous setup)
+      const existingCompanies = await db.select().from(companies).limit(1);
+      const companyId = existingCompanies.length > 0 ? existingCompanies[0].id : 1;
       
       const productData = {
-        companyId: 1, // TODO: Get from session
+        companyId,
         name: req.body.name,
         sku: req.body.sku || `CP-${Date.now()}`,
         type: req.body.type,
