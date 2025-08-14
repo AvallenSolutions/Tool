@@ -121,7 +121,7 @@ export function registerRoutes(app: Express): Server {
   ];
 
   // GreenwashGuardian API Routes - AI-powered analysis
-  app.post('/api/greenwash-guardian/analyze', validateAnalysisInput, async (req, res) => {
+  app.post('/api/greenwash-guardian/analyze', validateAnalysisInput, async (req: any, res: any) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -265,7 +265,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       let result;
       try {
         result = JSON.parse(cleanedJson);
-      } catch (parseError) {
+      } catch (parseError: any) {
         console.error('JSON parse failed, trying alternative approach:', parseError.message);
         
         // Fallback: try to find valid JSON more aggressively
@@ -273,7 +273,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         if (jsonMatches && jsonMatches[0]) {
           try {
             result = JSON.parse(jsonMatches[0]);
-          } catch (secondError) {
+          } catch (secondError: any) {
             console.error('Secondary JSON parse also failed:', secondError.message);
             throw new Error('Could not parse AI response as JSON');
           }
@@ -305,7 +305,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('GreenwashGuardian AI analysis error:', error);
       
       // Fallback response with error indication
@@ -977,7 +977,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       return res.status(400).json({ error: 'imageURL is required' });
     }
 
-    const userId = (req.user as any)?.id || req.user?.id || 'dev-user';
+    const userId = (req.user as any)?.claims?.sub || 'dev-user';
 
     try {
       console.log('Setting ACL for image:', req.body.imageURL);
@@ -1185,7 +1185,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Get company sustainability data
   app.get('/api/company/sustainability-data', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
