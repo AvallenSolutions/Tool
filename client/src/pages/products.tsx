@@ -250,10 +250,10 @@ export default function ProductsPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => navigate(`/app/products/${product.id}`)}
+                                onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
                               >
                                 <Edit className="w-4 h-4 mr-1" />
-                                View
+                                Edit Product
                               </Button>
                               <Button
                                 variant="outline"
@@ -314,10 +314,10 @@ export default function ProductsPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => navigate(`/app/products/${product.id}`)}
+                                  onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
                                 >
                                   <Edit className="w-4 h-4 mr-1" />
-                                  View
+                                  Edit Product
                                 </Button>
                                 <Button
                                   variant="outline"
