@@ -2186,6 +2186,10 @@ Be precise and quote actual text from the content, not generic terms.`;
         ...basicFields
       } = req.body;
 
+      // Debug packaging supplier information specifically
+      console.log('🔍 Packaging object:', JSON.stringify(packaging, null, 2));
+      console.log('🎯 Supplier Info:', packaging?.supplierInformation);
+
       const draftData = {
         companyId,
         ...basicFields,
@@ -2264,6 +2268,20 @@ Be precise and quote actual text from the content, not generic terms.`;
       };
 
       console.log('Processed draft data:', JSON.stringify(draftData, null, 2));
+      
+      // Debug packaging supplier information specifically
+      console.log('📦 Packaging Supplier Debug:', {
+        hasPackaging: !!packaging,
+        hasSupplierInfo: !!packaging?.supplierInformation,
+        supplierName: packaging?.supplierInformation?.supplierName,
+        selectedSupplierId: packaging?.supplierInformation?.selectedSupplierId,
+        supplierCategory: packaging?.supplierInformation?.supplierCategory,
+        mappedValues: {
+          packagingSupplier: draftData.packagingSupplier,
+          packagingSupplierId: draftData.packagingSupplierId,
+          packagingSupplierCategory: draftData.packagingSupplierCategory
+        }
+      });
       
       // Check if this is an update to an existing draft
       let productId = req.body.id;
