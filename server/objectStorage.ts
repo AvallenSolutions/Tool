@@ -162,8 +162,16 @@ export class ObjectStorageService {
       entityDir = `${entityDir}/`;
     }
     
-    // Files are uploaded to uploads/ subdirectory, so we need to include it
-    const objectEntityPath = `${entityDir}uploads/${entityId}`;
+    // Check if entityId already includes 'uploads/' to avoid duplication
+    let objectEntityPath;
+    if (entityId.startsWith('uploads/')) {
+      // entityId already includes uploads/, so just append to entityDir
+      objectEntityPath = `${entityDir}${entityId}`;
+    } else {
+      // entityId doesn't include uploads/, so add it
+      objectEntityPath = `${entityDir}uploads/${entityId}`;
+    }
+    
     console.log('Full object path:', objectEntityPath);
     
     const { bucketName, objectName } = parseObjectPath(objectEntityPath);
@@ -201,12 +209,8 @@ export class ObjectStorageService {
     // Extract the entity ID from the path, removing the objectEntityDir prefix
     const entityId = rawObjectPath.slice(objectEntityDir.length);
     
-    // Always include uploads/ in the path for proper resolution
-    if (entityId.startsWith('uploads/')) {
-      return `/objects/${entityId}`;
-    }
-    
-    return `/objects/uploads/${entityId}`;
+    // Return the path with /objects/ prefix, entityId should already include uploads/
+    return `/objects/${entityId}`;
   }
 }
 

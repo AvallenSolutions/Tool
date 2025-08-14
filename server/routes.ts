@@ -1004,7 +1004,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Serve uploaded images
+  // Serve uploaded images - CONSOLIDATED ROUTE
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
@@ -1942,20 +1942,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Serve private objects (for uploaded files)
-  app.get('/objects/:objectPath(*)', async (req, res) => {
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      await objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error('Error serving object:', error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.status(404).json({ error: 'Object not found' });
-      }
-      res.status(500).json({ error: 'Failed to serve object' });
-    }
-  });
+  // DUPLICATE ROUTE REMOVED - using consolidated route above
 
   // Serve public objects (for static assets)
   app.get('/public-objects/:filePath(*)', async (req, res) => {
@@ -2247,24 +2234,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  app.get('/api/objects/:objectPath(*)', async (req, res) => {
-    try {
-      const objectPath = `/objects/${req.params.objectPath}`;
-      const objectStorageService = new ObjectStorageService();
-      
-      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
-      await objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error('Error serving object:', error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.status(404).json({ error: 'Object not found' });
-      }
-      res.status(500).json({ 
-        error: 'Failed to serve object',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
+  // DUPLICATE ROUTE REMOVED - using /objects/ route directly instead of /api/objects/
 
   const server = createServer(app);
   
