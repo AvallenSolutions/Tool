@@ -8,8 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   ArrowLeft, Package, Building2, FileText, Globe, Mail,
-  Weight, Ruler, Recycle, Award, Info
+  Weight, Ruler, Recycle, Award, Info, Wheat, Box, Factory, 
+  Leaf, Truck, Edit
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
@@ -173,72 +175,455 @@ function ProductDetail() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Product Images */}
-            <div className="lg:col-span-1">
+          {/* 8-Tab Product Detail Interface matching the creation form */}
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-8 mb-6">
+              <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+              <TabsTrigger value="ingredients" className="text-xs">Ingredients</TabsTrigger>
+              <TabsTrigger value="packaging" className="text-xs">Packaging</TabsTrigger>
+              <TabsTrigger value="production" className="text-xs">Production</TabsTrigger>
+              <TabsTrigger value="certifications" className="text-xs">Certifications</TabsTrigger>
+              <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
+              <TabsTrigger value="endoflife" className="text-xs">End of Life</TabsTrigger>
+              <TabsTrigger value="suppliers" className="text-xs">Suppliers</TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Product Images */}
+                <div className="lg:col-span-1">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="w-5 h-5" />
+                        Product Images
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {product.product_images && product.product_images.length > 0 ? (
+                        <div className="space-y-4">
+                          <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
+                          {product.product_images.map((photo: string, index: number) => {
+                            return <ImageDisplay key={index} photo={photo} productName={product.name} index={index} />;
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">No product images available</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Basic Product Information */}
+                <div className="lg:col-span-2 space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-2xl">{product.name}</CardTitle>
+                          <CardDescription>Basic Product Information</CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                          {product.status === 'draft' && (
+                            <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+                              Draft
+                            </Badge>
+                          )}
+                          {product.hasPrecalculatedLca && (
+                            <Badge className="bg-green-100 text-green-800 border-green-300">
+                              <FileText className="w-3 h-3 mr-1" />
+                              LCA Data Available
+                            </Badge>
+                          )}
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setLocation(`/create-enhanced-product?id=${product.id}`)}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Product
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">SKU</label>
+                          <p className="text-gray-800">{product.sku || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Type</label>
+                          <p className="text-gray-800 capitalize">{product.type}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Volume</label>
+                          <p className="text-gray-800">{product.volume || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Status</label>
+                          <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                            {product.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      {product.description && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Description</label>
+                          <p className="text-gray-800 mt-1">{product.description}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Ingredients Tab */}
+            <TabsContent value="ingredients">
               <Card>
                 <CardHeader>
-                  <CardTitle>Product Images</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wheat className="w-5 h-5" />
+                    Key Ingredients
+                  </CardTitle>
+                  <CardDescription>Primary ingredients and their specifications</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {product.product_images && product.product_images.length > 0 ? (
+                  {product.ingredients ? (
                     <div className="space-y-4">
-                      <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
-                      {product.product_images.map((photo: string, index: number) => {
-                        return <ImageDisplay key={index} photo={photo} productName={product.name} index={index} />;
-                      })}
+                      {JSON.parse(product.ingredients).map((ingredient: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-medium text-lg">{ingredient.name}</h4>
+                            <Badge variant="outline">{ingredient.type || 'Ingredient'}</Badge>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium text-gray-600">Amount:</span>
+                              <p>{ingredient.amount} {ingredient.unit}</p>
+                            </div>
+                            {ingredient.origin && (
+                              <div>
+                                <span className="font-medium text-gray-600">Origin:</span>
+                                <p>{ingredient.origin}</p>
+                              </div>
+                            )}
+                            {ingredient.organic && (
+                              <div>
+                                <Badge className="bg-green-100 text-green-800">Organic</Badge>
+                              </div>
+                            )}
+                            {ingredient.supplier && (
+                              <div>
+                                <span className="font-medium text-gray-600">Supplier:</span>
+                                <p>{ingredient.supplier}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No product images available</p>
+                      <Wheat className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No ingredient information available</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </div>
+            </TabsContent>
 
-            {/* Product Information */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Basic Information */}
+            {/* Packaging Tab */}
+            <TabsContent value="packaging">
+              <div className="space-y-6">
+                {/* Selected Supplier Information */}
+                {(product.packagingSupplier || product.packagingSupplierId) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Building2 className="w-5 h-5" />
+                        Selected Packaging Supplier
+                      </CardTitle>
+                      <CardDescription>Supplier information for packaging components</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Supplier Name</label>
+                          <p className="text-gray-800">{product.packagingSupplier || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Supplier ID</label>
+                          <p className="text-gray-800 font-mono text-sm">{product.packagingSupplierId || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Category</label>
+                          <Badge variant="outline" className="capitalize">
+                            {product.packagingSupplierCategory?.replace('_', ' ') || 'Not specified'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Packaging Specifications */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Box className="w-5 h-5" />
+                      Packaging Specifications
+                    </CardTitle>
+                    <CardDescription>Primary container and packaging materials</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Primary Container */}
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-gray-900">Primary Container</h4>
+                        <div className="space-y-3">
+                          {product.bottleMaterial && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Material</label>
+                              <p className="text-gray-800 capitalize">{product.bottleMaterial}</p>
+                            </div>
+                          )}
+                          {product.bottleWeight && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Weight</label>
+                              <p className="text-gray-800">{product.bottleWeight}g</p>
+                            </div>
+                          )}
+                          {product.bottleRecycledContent && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Recycled Content</label>
+                              <p className="text-gray-800">{product.bottleRecycledContent}%</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Closure */}
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-gray-900">Closure</h4>
+                        <div className="space-y-3">
+                          {product.closureType && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Type</label>
+                              <p className="text-gray-800 capitalize">{product.closureType}</p>
+                            </div>
+                          )}
+                          {product.closureMaterial && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Material</label>
+                              <p className="text-gray-800 capitalize">{product.closureMaterial}</p>
+                            </div>
+                          )}
+                          {product.closureWeight && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Weight</label>
+                              <p className="text-gray-800">{product.closureWeight}g</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Production Tab */}
+            <TabsContent value="production">
               <Card>
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-2xl">{product.name}</CardTitle>
-                      <CardDescription>
-                        Product Details
-                      </CardDescription>
-                    </div>
-                    {product.hasPrecalculatedLca && (
-                      <Badge className="bg-green-100 text-green-800 border-green-300">
-                        <FileText className="w-3 h-3 mr-1" />
-                        LCA Data Available
-                      </Badge>
-                    )}
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Factory className="w-5 h-5" />
+                    Production Information
+                  </CardTitle>
+                  <CardDescription>Manufacturing and production details</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {product.description && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Description</label>
-                      <p className="text-gray-800">{product.description}</p>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Production Model</label>
+                        <p className="text-gray-800">{product.productionModel || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Annual Production Volume</label>
+                        <p className="text-gray-800">
+                          {product.annualProductionVolume ? `${product.annualProductionVolume.toLocaleString()} ${product.productionUnit || 'units'}` : 'Not specified'}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Type</label>
-                    <p className="text-gray-800 capitalize">{product.type}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Status</label>
-                    <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                      {product.status}
-                    </Badge>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Facility Location</label>
+                        <p className="text-gray-800">{product.facilityLocation || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Energy Source</label>
+                        <p className="text-gray-800">{product.energySource || 'Not specified'}</p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </div>
+            </TabsContent>
+
+            {/* Certifications Tab */}
+            <TabsContent value="certifications">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="w-5 h-5" />
+                    Certifications & Standards
+                  </CardTitle>
+                  <CardDescription>Quality and environmental certifications</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {product.certifications ? (
+                    <div className="flex flex-wrap gap-2">
+                      {JSON.parse(product.certifications).map((cert: string, index: number) => (
+                        <Badge key={index} variant="outline" className="bg-green-50 text-green-800 border-green-300">
+                          <Award className="w-3 h-3 mr-1" />
+                          {cert}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Award className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No certifications specified</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Distribution Tab */}
+            <TabsContent value="distribution">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Truck className="w-5 h-5" />
+                    Distribution & Logistics
+                  </CardTitle>
+                  <CardDescription>Transportation and distribution information</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {product.averageTransportDistance && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Average Transport Distance</label>
+                        <p className="text-gray-800">{product.averageTransportDistance} km</p>
+                      </div>
+                    )}
+                    {product.primaryTransportMode && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Primary Transport Mode</label>
+                        <p className="text-gray-800 capitalize">{product.primaryTransportMode}</p>
+                      </div>
+                    )}
+                    {product.coldChainRequired !== null && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Cold Chain Required</label>
+                        <Badge variant={product.coldChainRequired ? "default" : "outline"}>
+                          {product.coldChainRequired ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* End of Life Tab */}
+            <TabsContent value="endoflife">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Recycle className="w-5 h-5" />
+                    End of Life Management
+                  </CardTitle>
+                  <CardDescription>Recycling and disposal information</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {product.returnableContainer !== null && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Returnable Container</label>
+                        <Badge variant={product.returnableContainer ? "default" : "outline"}>
+                          {product.returnableContainer ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                    )}
+                    {product.recyclingRate && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Recycling Rate</label>
+                        <p className="text-gray-800">{product.recyclingRate}%</p>
+                      </div>
+                    )}
+                    {product.disposalMethod && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Disposal Method</label>
+                        <p className="text-gray-800 capitalize">{product.disposalMethod}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Suppliers Tab */}
+            <TabsContent value="suppliers">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5" />
+                    Supplier Information
+                  </CardTitle>
+                  <CardDescription>All suppliers associated with this product</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(product.packagingSupplier || product.packagingSupplierId) ? (
+                    <div className="space-y-4">
+                      <div className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-medium text-lg">Packaging Supplier</h4>
+                          <Badge variant="outline" className="capitalize">
+                            {product.packagingSupplierCategory?.replace('_', ' ') || 'Packaging'}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-600">Name:</span>
+                            <p>{product.packagingSupplier}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">ID:</span>
+                            <p className="font-mono text-sm">{product.packagingSupplierId}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No supplier information available</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </div>
