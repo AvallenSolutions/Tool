@@ -36,9 +36,12 @@ export default function ProductsPage() {
   const [, navigate] = useLocation();
 
 
-  const { data: products = [], isLoading, error } = useQuery<ClientProduct[]>({
+  const { data: rawProducts, isLoading, error } = useQuery<ClientProduct[]>({
     queryKey: ['/api/products'],
     retry: false,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       console.log('🔄 Fetching products...');
       const response = await fetch('/api/products', {
@@ -57,14 +60,18 @@ export default function ProductsPage() {
         throw new Error(`Failed to fetch products: ${response.status} ${errorText}`);
       }
       
-      const data = await response.json();
+      const data = await response.json() as ClientProduct[];
       console.log('✅ Products received:', data.length, 'products');
       console.log('📦 Raw product data:', data);
       return data;
     }
   });
 
+  const products: ClientProduct[] = rawProducts || [];
+
   console.log('🔍 Current products state:', products, 'Loading:', isLoading, 'Error:', error);
+  console.log('🔍 Products array length:', products.length);
+  console.log('🔍 Products array contents:', JSON.stringify(products, null, 2));
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -104,10 +111,14 @@ export default function ProductsPage() {
   };
 
   // Add manual refresh function for debugging
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     console.log('🔄 Manual refresh triggered');
-    queryClient.invalidateQueries({ queryKey: ['/api/products'] });
-    queryClient.refetchQueries({ queryKey: ['/api/products'] });
+    await queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+    await queryClient.refetchQueries({ queryKey: ['/api/products'] });
+    
+    // Force a hard refresh by clearing cache and re-fetching
+    queryClient.removeQueries({ queryKey: ['/api/products'] });
+    window.location.reload();
   };
 
   return (
