@@ -59,6 +59,8 @@ export default function CreateEnhancedProduct() {
       packagingSupplierCategory: product.packagingSupplierCategory
     });
     
+    console.log('📋 All product keys:', Object.keys(product));
+    
     return {
       ...product,
       // Reconstruct nested structures from flattened database fields
