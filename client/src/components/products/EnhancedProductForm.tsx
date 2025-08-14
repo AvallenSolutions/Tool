@@ -403,6 +403,20 @@ export default function EnhancedProductForm({
   const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
 
+  // Initialize selectedPackagingSupplier from existing data
+  useEffect(() => {
+    if (initialData?.packaging?.supplierInformation?.selectedSupplierId && !selectedPackagingSupplier) {
+      // Create a supplier object from the saved data
+      const savedSupplier = {
+        id: initialData.packaging.supplierInformation.selectedSupplierId,
+        name: initialData.packaging.supplierInformation.supplierName || 'Unknown Supplier',
+        category: initialData.packaging.supplierInformation.supplierCategory || 'bottle_producer',
+      };
+      console.log('🔄 Loading saved packaging supplier:', savedSupplier);
+      setSelectedPackagingSupplier(savedSupplier);
+    }
+  }, [initialData, selectedPackagingSupplier]);
+
 
 
   const form = useForm<EnhancedProductFormData>({

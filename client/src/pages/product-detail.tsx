@@ -345,42 +345,42 @@ export default function ProductDetail() {
               <TabsList className="grid w-full grid-cols-6 bg-gradient-to-r from-slate-50 to-slate-100 p-1.5 rounded-xl shadow-sm border">
                 <TabsTrigger 
                   value="overview" 
-                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                  className="data-[state=active]:bg-[hsl(148,57%,23%)] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
                 >
                   <Package className="w-4 h-4" />
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="ingredients" 
-                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                  className="data-[state=active]:bg-[hsl(148,57%,23%)] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
                 >
                   <ChefHat className="w-4 h-4" />
                   Ingredients
                 </TabsTrigger>
                 <TabsTrigger 
                   value="packaging" 
-                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                  className="data-[state=active]:bg-[hsl(148,57%,23%)] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
                 >
                   <Package className="w-4 h-4" />
                   Packaging
                 </TabsTrigger>
                 <TabsTrigger 
                   value="suppliers" 
-                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                  className="data-[state=active]:bg-[hsl(148,57%,23%)] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
                 >
                   <Building2 className="w-4 h-4" />
                   Suppliers
                 </TabsTrigger>
                 <TabsTrigger 
                   value="certifications" 
-                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                  className="data-[state=active]:bg-[hsl(148,57%,23%)] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
                 >
                   <Award className="w-4 h-4" />
                   Certifications
                 </TabsTrigger>
                 <TabsTrigger 
                   value="impact" 
-                  className="data-[state=active]:bg-avallen-green data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
+                  className="data-[state=active]:bg-[hsl(148,57%,23%)] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 flex items-center gap-2 rounded-lg font-medium"
                 >
                   <TrendingUp className="w-4 h-4" />
                   Impact
@@ -602,7 +602,12 @@ export default function ProductDetail() {
                     <CardContent className="space-y-4">
                       <div>
                         <label className="text-sm font-medium text-gray-600">Container Name</label>
-                        <p className="font-medium text-slate-gray">{product.bottleName || 'Primary Container'}</p>
+                        <p className="font-medium text-slate-gray">
+                          {product.packagingSupplier === 'FrugalPac' 
+                            ? 'Frugal Bottle' 
+                            : product.bottleName || 'Primary Container'
+                          }
+                        </p>
                       </div>
                       {product.bottleMaterial && (
                         <div>
