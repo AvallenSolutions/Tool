@@ -145,12 +145,12 @@ export default function AdminSupplierDashboard() {
   // Filter functions
   const filteredSuppliers = suppliers?.filter((supplier: any) =>
     supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedCategory === "" || supplier.supplierCategory === selectedCategory)
+    (selectedCategory === "" || selectedCategory === "all" || supplier.supplierCategory === selectedCategory)
   ) || [];
 
   const filteredProducts = products?.filter((product: any) =>
     product.productName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedCategory === "" || product.supplierCategory === selectedCategory)
+    (selectedCategory === "" || selectedCategory === "all" || product.supplierCategory === selectedCategory)
   ) || [];
 
   return (
@@ -191,7 +191,7 @@ export default function AdminSupplierDashboard() {
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All categories</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
                 {CATEGORY_OPTIONS.map(option => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}

@@ -665,19 +665,19 @@ export default function OptimizedProductForm() {
             </SelectTrigger>
             <SelectContent>
               {suppliersLoading ? (
-                <SelectItem value="loading" disabled>
-                  <div className="flex items-center gap-2">
+                <div className="p-2 text-center text-gray-500">
+                  <div className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Loading suppliers...
                   </div>
-                </SelectItem>
+                </div>
               ) : getVerifiedSuppliers().length === 0 ? (
-                <SelectItem value="no-verified" disabled>
-                  <div className="flex items-center gap-2 text-gray-500">
+                <div className="p-2 text-center text-gray-500">
+                  <div className="flex items-center justify-center gap-2">
                     <Shield className="w-4 h-4" />
                     No verified suppliers available
                   </div>
-                </SelectItem>
+                </div>
               ) : (
                 getVerifiedSuppliers().map((supplier) => (
                   <SelectItem key={supplier.id} value={supplier.id}>

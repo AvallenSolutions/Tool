@@ -65,11 +65,11 @@ export function SearchAndFilterBar({
       filters.name = debouncedSearch.trim();
     }
     
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== "all") {
       filters.category = selectedCategory;
     }
     
-    if (selectedSupplier) {
+    if (selectedSupplier && selectedSupplier !== "all") {
       filters.supplier_id = selectedSupplier;
     }
 
@@ -82,7 +82,7 @@ export function SearchAndFilterBar({
     setSelectedSupplier("");
   };
 
-  const hasActiveFilters = searchName || selectedCategory || selectedSupplier;
+  const hasActiveFilters = searchName || (selectedCategory && selectedCategory !== "all") || (selectedSupplier && selectedSupplier !== "all");
 
   return (
     <div className={`flex flex-col sm:flex-row gap-4 p-4 bg-muted/50 rounded-lg ${className}`}>
@@ -106,7 +106,7 @@ export function SearchAndFilterBar({
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories?.map((category) => (
               <SelectItem key={category.category} value={category.category}>
                 {category.category} ({category.count})
@@ -123,7 +123,7 @@ export function SearchAndFilterBar({
             <SelectValue placeholder="All Suppliers" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Suppliers</SelectItem>
+            <SelectItem value="all">All Suppliers</SelectItem>
             {suppliers.map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id}>
                 {supplier.supplierName}

@@ -149,10 +149,7 @@ export default function ProductRegistration() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <OptimizedProductForm
-                    onSubmit={handleProductSubmit}
-                    isEditing={false}
-                  />
+                  <OptimizedProductForm />
                 </CardContent>
               </Card>
             )}

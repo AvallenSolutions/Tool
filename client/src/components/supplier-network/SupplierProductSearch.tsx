@@ -122,7 +122,7 @@ export default function SupplierProductSearch({
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All categories</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
                 {CATEGORY_OPTIONS.map(option => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
