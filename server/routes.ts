@@ -1000,7 +1000,26 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Serve uploaded images - CONSOLIDATED ROUTE
+  // Serve uploaded images - API route to bypass Vite
+  app.get("/api/image/:objectPath(*)", async (req, res) => {
+    const objectPath = `/objects/${req.params.objectPath}`;
+    console.log('Image API request for:', objectPath);
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        objectPath,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving image:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Keep original route for direct server access
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {

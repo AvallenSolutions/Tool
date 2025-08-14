@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Image Test</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https: http://localhost:5000 http://localhost:5173;">
+</head>
+<body>
+    <h1>Direct Image Test</h1>
+    <img src="/objects/uploads/4b45c9c2-e36f-427a-b777-be3b283b1b74" 
+         style="max-width: 400px; border: 2px solid red;" 
+         onload="this.style.borderColor='green'; console.log('SUCCESS: Image loaded')" 
+         onerror="this.style.borderColor='red'; console.error('FAILED: Image did not load')">
+    
+    <p>If you see a green border, the image works. Red border means it failed.</p>
+    
+    <script>
+        console.log('Testing image load at:', '/objects/uploads/4b45c9c2-e36f-427a-b777-be3b283b1b74');
+    </script>
+</body>
+</html>

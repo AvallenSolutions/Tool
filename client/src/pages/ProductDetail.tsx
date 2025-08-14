@@ -139,14 +139,14 @@ function ProductDetail() {
                     <div className="space-y-4">
                       <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
                       {product.product_images.map((photo: string, index: number) => {
-                        // Convert Google Cloud Storage URLs to local server paths
-                        let imagePath = photo;
-                        if (photo.includes('storage.googleapis.com')) {
-                          // Extract UUID from Google Cloud Storage URL and convert to local path
-                          const uuid = photo.split('uploads/').pop();
-                          imagePath = `/objects/uploads/${uuid}`;
-                        }
-                        console.log('Image path conversion:', { original: photo, converted: imagePath });
+                        // Use API route that bypasses Vite middleware
+                        const uuid = photo.includes('uploads/') ? photo.split('uploads/').pop() : photo.split('/').pop();
+                        const imagePath = `/api/image/uploads/${uuid}`;
+                        console.log('DEBUG: Using API image route', { 
+                          original: photo, 
+                          uuid: uuid, 
+                          apiPath: imagePath
+                        });
                         
 
                         
