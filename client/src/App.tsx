@@ -31,6 +31,7 @@ import SupplierInvitations from "@/pages/admin/SupplierInvitations";
 import SupplierNetwork from "@/pages/SupplierNetwork";
 import SupplierDetail from "@/pages/SupplierDetail";
 import ProductDetail from "@/pages/ProductDetail";
+import SupplierProductDetailPage from "@/pages/SupplierProductDetail";
 import SupplierOnboarding from "@/pages/SupplierOnboarding";
 import SupplierRegistration from "@/pages/SupplierRegistration";
 import ProductRegistration from "@/pages/ProductRegistration";
@@ -102,7 +103,7 @@ function Router() {
       <Route path="/app/reports" component={Reports} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />
       <Route path="/app/supplier-network/supplier/:id" component={SupplierDetail} />
-      <Route path="/app/supplier-network/product/:id" component={ProductDetail} />
+      <Route path="/app/supplier-network/product/:id" component={SupplierProductDetailPage} />
       <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
       <Route path="/app/supplier-registration" component={SupplierRegistration} />
       <Route path="/app/product-registration" component={ProductRegistration} />

@@ -1,0 +1,1004 @@
+
+> rest-express@1.0.0 dev
+Products fetched: 2 for company 1/index.ts
+Simple image request for: /objects/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Looking for object at path: /objects/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Object exists: true
+Simple image request for: /objects/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Looking for object at path: /objects/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Simple image request for: /objects/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Looking for object at path: /objects/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Simple image request for: /objects/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Looking for object at path: /objects/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Simple image request for: /objects/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Looking for object at path: /objects/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Object exists: true
+Object exists: true
+Object exists: true
+Object exists: true
+Using existing company: 1
+Raw request body: {
+  "name": "",
+  "sku": "",
+  "type": "",
+  "volume": "",
+  "description": "",
+  "productImage": "",
+  "productImages": [],
+  "isMainProduct": false,
+  "status": "draft",
+  "waterDilution": {
+    "amount": 0,
+    "unit": "ml"
+  },
+  "ingredients": [
+    {
+      "name": "",
+      "amount": 0,
+      "unit": "ml",
+      "type": "",
+      "origin": "",
+      "organic": false,
+      "supplier": "",
+      "yieldPerHectare": 0,
+      "nitrogenFertilizer": 0,
+      "phosphorusFertilizer": 0,
+      "dieselUsage": 0,
+      "transportDistance": 0,
+      "processingEnergy": 0,
+      "waterUsage": 0
+    }
+  ],
+  "packaging": {
+    "primaryContainer": {
+      "material": "cardboard",
+      "weight": 82,
+      "recycledContent": 94,
+      "recyclability": "",
+      "color": "",
+      "thickness": 0,
+      "origin": "Ipswich, United Kingdom"
+    },
+    "labeling": {
+      "labelMaterial": "",
+      "labelWeight": 0,
+      "printingMethod": "",
+      "inkType": "",
+      "labelSize": 0,
+      "origin": ""
+    },
+    "closure": {
+      "closureType": "",
+      "material": "",
+      "weight": 0,
+      "hasLiner": false,
+      "linerMaterial": "",
+      "origin": ""
+    },
+    "secondaryPackaging": {
+      "hasSecondaryPackaging": false,
+      "boxMaterial": "",
+      "boxWeight": 0,
+      "fillerMaterial": "",
+      "fillerWeight": 0,
+      "origin": ""
+    },
+    "packagingNotes": "",
+    "qualityStandards": [],
+    "supplierInformation": {
+      "selectedSupplierId": "245e1e36-70fe-4a73-b7a4-25360b1bbd9b",
+      "supplierName": "FrugalPac",
+      "supplierCategory": "bottle_producer",
+      "selectedProductName": "Frugal Bottle"
+    }
+  },
+  "production": {
+    "productionModel": "",
+    "annualProductionVolume": 0,
+    "productionUnit": "units",
+    "facilityLocation": "",
+    "facilityAddress": "",
+    "energyConsumption": {
+      "electricityKwh": 0,
+      "gasM3": 0,
+      "steamKg": 0,
+      "fuelLiters": 0,
+      "renewableEnergyPercent": 0
+    },
+    "waterUsage": {
+      "processWaterLiters": 0,
+      "cleaningWaterLiters": 0,
+      "coolingWaterLiters": 0,
+      "wasteWaterTreatment": ""
+    },
+    "wasteGeneration": {
+      "organicWasteKg": 0,
+      "packagingWasteKg": 0,
+      "hazardousWasteKg": 0,
+      "wasteRecycledPercent": 0
+    },
+    "productionMethods": [],
+    "processing": {
+      "electricityKwhPerTonCrop": 0,
+      "lpgKgPerLAlcohol": 0,
+      "angelsSharePercentage": 0,
+      "waterM3PerTonCrop": 0,
+      "renewableEnergyPercent": 0
+    },
+    "fermentation": {
+      "fermentationTime": 0,
+      "yeastType": "",
+      "temperatureControl": false,
+      "sugarAddedKg": 0
+    },
+    "distillation": {
+      "distillationRounds": 0,
+      "heatRecoverySystem": false,
+      "copperUsageKg": 0
+    },
+    "maturation": {
+      "maturationTimeMonths": 0,
+      "barrelOrigin": "",
+      "barrelReuseCycles": 0
+    }
+  },
+  "environmentalImpact": {
+    "calculationMethod": "",
+    "co2Emissions": 0.092,
+    "waterFootprint": 0,
+    "landUse": 0,
+    "biodiversityImpact": ""
+  },
+  "certifications": [],
+  "awards": [],
+  "distribution": {
+    "averageTransportDistance": 0,
+    "primaryTransportMode": "",
+    "distributionCenters": 0,
+    "coldChainRequired": false,
+    "packagingEfficiency": 0
+  },
+  "endOfLife": {
+    "returnableContainer": false,
+    "recyclingRate": 0,
+    "disposalMethod": "",
+    "consumerEducation": ""
+  },
+  "lcaData": {
+    "agriculture": {
+      "mainCropType": "",
+      "yieldTonPerHectare": 0,
+      "dieselLPerHectare": 0,
+      "sequestrationTonCo2PerTonCrop": 0,
+      "fertilizer": {
+        "nitrogenKgPerHectare": 0,
+        "phosphorusKgPerHectare": 0,
+        "potassiumKgPerHectare": 0,
+        "organicFertilizerTonPerHectare": 0
+      },
+      "landUse": {
+        "biodiversityIndex": 0,
+        "soilQualityIndex": 0
+      }
+    },
+    "inboundTransport": {
+      "distanceKm": 0,
+      "fuelEfficiencyLper100km": 0,
+      "loadFactor": 0,
+      "refrigerationRequired": false
+    },
+    "processing": {
+      "waterM3PerTonCrop": 0,
+      "electricityKwhPerTonCrop": 0,
+      "lpgKgPerLAlcohol": 0,
+      "netWaterUseLPerBottle": 0,
+      "angelsSharePercentage": 0,
+      "renewableEnergyPercent": 0,
+      "fermentation": {
+        "fermentationTime": 0,
+        "temperatureControl": false,
+        "yeastType": "",
+        "sugarAddedKg": 0
+      },
+      "distillation": {
+        "distillationRounds": 0,
+        "heatRecoverySystem": false,
+        "copperUsageKg": 0
+      },
+      "maturation": {
+        "maturationTimeMonths": 0,
+        "evaporationLossPercentage": 0
+      }
+    },
+    "packagingDetailed": {
+      "container": {
+        "materialType": "cardboard",
+        "weightGrams": 82,
+        "recycledContentPercentage": 94,
+        "manufacturingLocation": "Ipswich, United Kingdom",
+        "transportDistanceKm": 0,
+        "color": "",
+        "thickness": 0,
+        "recyclability": "",
+        "co2EmissionsKg": 0.092,
+        "hasSupplierLcaData": true
+      },
+      "label": {
+        "weightGrams": 0,
+        "printingMethod": "",
+        "labelSize": 0
+      },
+      "closure": {
+        "weightGrams": 0,
+        "hasLiner": false,
+        "linerMaterial": ""
+      },
+      "secondaryPackaging": {
+        "hasBox": false,
+        "boxWeightGrams": 0,
+        "protectiveMaterial": "",
+        "protectiveMaterialWeightGrams": 0,
+        "fillerMaterial": "",
+        "fillerWeight": 0
+      }
+    },
+    "distribution": {
+      "avgDistanceToDcKm": 0,
+      "palletizationEfficiency": 0,
+      "coldChainRequirement": false,
+      "temperatureRangeCelsius": {
+        "min": 0,
+        "max": 0
+      },
+      "distributionCenters": []
+    },
+    "endOfLifeDetailed": {
+      "recyclingRatePercentage": 0,
+      "containerRecyclability": {
+        "isRecyclable": true,
+        "recyclingInfrastructureAvailable": true,
+        "contaminationRate": 0
+      },
+      "labelRemovalRequired": false,
+      "consumerEducationProgram": false,
+      "takeback_program": false
+    }
+  }
+}
+🔍 Packaging object: {
+  "primaryContainer": {
+    "material": "cardboard",
+    "weight": 82,
+    "recycledContent": 94,
+    "recyclability": "",
+    "color": "",
+    "thickness": 0,
+    "origin": "Ipswich, United Kingdom"
+  },
+  "labeling": {
+    "labelMaterial": "",
+    "labelWeight": 0,
+    "printingMethod": "",
+    "inkType": "",
+    "labelSize": 0,
+    "origin": ""
+  },
+  "closure": {
+    "closureType": "",
+    "material": "",
+    "weight": 0,
+    "hasLiner": false,
+    "linerMaterial": "",
+    "origin": ""
+  },
+  "secondaryPackaging": {
+    "hasSecondaryPackaging": false,
+    "boxMaterial": "",
+    "boxWeight": 0,
+    "fillerMaterial": "",
+    "fillerWeight": 0,
+    "origin": ""
+  },
+  "packagingNotes": "",
+  "qualityStandards": [],
+  "supplierInformation": {
+    "selectedSupplierId": "245e1e36-70fe-4a73-b7a4-25360b1bbd9b",
+    "supplierName": "FrugalPac",
+    "supplierCategory": "bottle_producer",
+    "selectedProductName": "Frugal Bottle"
+  }
+}
+🎯 Supplier Info: {
+  selectedSupplierId: '245e1e36-70fe-4a73-b7a4-25360b1bbd9b',
+  supplierName: 'FrugalPac',
+  supplierCategory: 'bottle_producer',
+  selectedProductName: 'Frugal Bottle'
+}
+Processed draft data: {
+  "companyId": 1,
+  "name": "",
+  "sku": "",
+  "type": "",
+  "volume": "",
+  "description": "",
+  "productImage": "",
+  "productImages": [],
+  "isMainProduct": false,
+  "status": "draft",
+  "waterDilution": {
+    "amount": 0,
+    "unit": "ml"
+  },
+  "environmentalImpact": {
+    "calculationMethod": "",
+    "co2Emissions": 0.092,
+    "waterFootprint": 0,
+    "landUse": 0,
+    "biodiversityImpact": ""
+  },
+  "awards": [],
+  "lcaData": {
+    "agriculture": {
+      "mainCropType": "",
+      "yieldTonPerHectare": 0,
+      "dieselLPerHectare": 0,
+      "sequestrationTonCo2PerTonCrop": 0,
+      "fertilizer": {
+        "nitrogenKgPerHectare": 0,
+        "phosphorusKgPerHectare": 0,
+        "potassiumKgPerHectare": 0,
+        "organicFertilizerTonPerHectare": 0
+      },
+      "landUse": {
+        "biodiversityIndex": 0,
+        "soilQualityIndex": 0
+      }
+    },
+    "inboundTransport": {
+      "distanceKm": 0,
+      "fuelEfficiencyLper100km": 0,
+      "loadFactor": 0,
+      "refrigerationRequired": false
+    },
+    "processing": {
+      "waterM3PerTonCrop": 0,
+      "electricityKwhPerTonCrop": 0,
+      "lpgKgPerLAlcohol": 0,
+      "netWaterUseLPerBottle": 0,
+      "angelsSharePercentage": 0,
+      "renewableEnergyPercent": 0,
+      "fermentation": {
+        "fermentationTime": 0,
+        "temperatureControl": false,
+        "yeastType": "",
+        "sugarAddedKg": 0
+      },
+      "distillation": {
+        "distillationRounds": 0,
+        "heatRecoverySystem": false,
+        "copperUsageKg": 0
+      },
+      "maturation": {
+        "maturationTimeMonths": 0,
+        "evaporationLossPercentage": 0
+      }
+    },
+    "packagingDetailed": {
+      "container": {
+        "materialType": "cardboard",
+        "weightGrams": 82,
+        "recycledContentPercentage": 94,
+        "manufacturingLocation": "Ipswich, United Kingdom",
+        "transportDistanceKm": 0,
+        "color": "",
+        "thickness": 0,
+        "recyclability": "",
+        "co2EmissionsKg": 0.092,
+        "hasSupplierLcaData": true
+      },
+      "label": {
+        "weightGrams": 0,
+        "printingMethod": "",
+        "labelSize": 0
+      },
+      "closure": {
+        "weightGrams": 0,
+        "hasLiner": false,
+        "linerMaterial": ""
+      },
+      "secondaryPackaging": {
+        "hasBox": false,
+        "boxWeightGrams": 0,
+        "protectiveMaterial": "",
+        "protectiveMaterialWeightGrams": 0,
+        "fillerMaterial": "",
+        "fillerWeight": 0
+      }
+    },
+    "distribution": {
+      "avgDistanceToDcKm": 0,
+      "palletizationEfficiency": 0,
+      "coldChainRequirement": false,
+      "temperatureRangeCelsius": {
+        "min": 0,
+        "max": 0
+      },
+      "distributionCenters": []
+    },
+    "endOfLifeDetailed": {
+      "recyclingRatePercentage": 0,
+      "containerRecyclability": {
+        "isRecyclable": true,
+        "recyclingInfrastructureAvailable": true,
+        "contaminationRate": 0
+      },
+      "labelRemovalRequired": false,
+      "consumerEducationProgram": false,
+      "takeback_program": false
+    }
+  },
+  "ingredients": "[{\"name\":\"\",\"amount\":0,\"unit\":\"ml\",\"type\":\"\",\"origin\":\"\",\"organic\":false,\"supplier\":\"\",\"yieldPerHectare\":0,\"nitrogenFertilizer\":0,\"phosphorusFertilizer\":0,\"dieselUsage\":0,\"transportDistance\":0,\"processingEnergy\":0,\"waterUsage\":0}]",
+  "bottleMaterial": "cardboard",
+  "bottleWeight": 82,
+  "bottleRecycledContent": 94,
+  "bottleColor": "",
+  "bottleThickness": null,
+  "labelMaterial": "",
+  "labelWeight": null,
+  "labelSize": null,
+  "closureType": "",
+  "closureMaterial": "",
+  "closureWeight": null,
+  "packagingSupplier": "FrugalPac",
+  "packagingSupplierId": "245e1e36-70fe-4a73-b7a4-25360b1bbd9b",
+  "packagingSupplierCategory": "bottle_producer",
+  "packagingSelectedProductId": "",
+  "packagingSelectedProductName": "Frugal Bottle",
+  "productionModel": "",
+  "annualProductionVolume": null,
+  "productionUnit": "units",
+  "facilityLocation": "",
+  "heatRecoverySystem": false,
+  "productionMethods": null,
+  "certifications": "[]",
+  "averageTransportDistance": null,
+  "primaryTransportMode": "",
+  "coldChainRequired": false,
+  "returnableContainer": false,
+  "recyclingRate": null,
+  "disposalMethod": "",
+  "createdAt": "2025-08-14T18:10:38.674Z",
+  "updatedAt": "2025-08-14T18:10:38.674Z"
+}
+📦 Packaging Supplier Debug: {
+  hasPackaging: true,
+  hasSupplierInfo: true,
+  supplierName: 'FrugalPac',
+  selectedSupplierId: '245e1e36-70fe-4a73-b7a4-25360b1bbd9b',
+  supplierCategory: 'bottle_producer',
+  mappedValues: {
+    packagingSupplier: 'FrugalPac',
+    packagingSupplierId: '245e1e36-70fe-4a73-b7a4-25360b1bbd9b',
+    packagingSupplierCategory: 'bottle_producer',
+    packagingSelectedProductId: '',
+    packagingSelectedProductName: 'Frugal Bottle'
+  }
+}
+Creating new draft
+Simple image request for: /objects/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Looking for object at path: /objects/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/bfd16342-cefb-4fb7-b51f-e38895407f85
+Object exists: true
+Simple image request for: /objects/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Looking for object at path: /objects/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/3c759003-03f7-4a5a-a177-55a664686dbd
+Simple image request for: /objects/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Looking for object at path: /objects/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/e98a09af-7ead-4ad0-9448-b6c13c2b0216
+Simple image request for: /objects/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Looking for object at path: /objects/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/f38e3188-be6e-4dab-b972-4881e189a9ea
+Simple image request for: /objects/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Looking for object at path: /objects/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/2fb78d57-ceae-42a2-bc0e-e6b89b544741
+Object exists: true
+Object exists: true
+Object exists: true
+Object exists: true
+Using existing company: 1
+Raw request body: {
+  "name": "",
+  "sku": "",
+  "type": "",
+  "volume": "",
+  "description": "",
+  "productImage": "",
+  "productImages": [],
+  "isMainProduct": false,
+  "status": "draft",
+  "waterDilution": {
+    "amount": 0,
+    "unit": "ml"
+  },
+  "ingredients": [
+    {
+      "name": "",
+      "amount": 0,
+      "unit": "ml",
+      "type": "",
+      "origin": "",
+      "organic": false,
+      "supplier": "",
+      "yieldPerHectare": 0,
+      "nitrogenFertilizer": 0,
+      "phosphorusFertilizer": 0,
+      "dieselUsage": 0,
+      "transportDistance": 0,
+      "processingEnergy": 0,
+      "waterUsage": 0
+    }
+  ],
+  "packaging": {
+    "primaryContainer": {
+      "material": "cardboard",
+      "weight": 82,
+      "recycledContent": 94,
+      "recyclability": "",
+      "color": "",
+      "thickness": 0,
+      "origin": "Ipswich, United Kingdom"
+    },
+    "labeling": {
+      "labelMaterial": "",
+      "labelWeight": 0,
+      "printingMethod": "",
+      "inkType": "",
+      "labelSize": 0,
+      "origin": ""
+    },
+    "closure": {
+      "closureType": "",
+      "material": "",
+      "weight": 0,
+      "hasLiner": false,
+      "linerMaterial": "",
+      "origin": ""
+    },
+    "secondaryPackaging": {
+      "hasSecondaryPackaging": false,
+      "boxMaterial": "",
+      "boxWeight": 0,
+      "fillerMaterial": "",
+      "fillerWeight": 0,
+      "origin": ""
+    },
+    "packagingNotes": "",
+    "qualityStandards": [],
+    "supplierInformation": {
+      "selectedSupplierId": "245e1e36-70fe-4a73-b7a4-25360b1bbd9b",
+      "supplierName": "FrugalPac",
+      "supplierCategory": "bottle_producer",
+      "selectedProductName": "Frugal Bottle"
+    }
+  },
+  "production": {
+    "productionModel": "",
+    "annualProductionVolume": 0,
+    "productionUnit": "units",
+    "facilityLocation": "",
+    "facilityAddress": "",
+    "energyConsumption": {
+      "electricityKwh": 0,
+      "gasM3": 0,
+      "steamKg": 0,
+      "fuelLiters": 0,
+      "renewableEnergyPercent": 0
+    },
+    "waterUsage": {
+      "processWaterLiters": 0,
+      "cleaningWaterLiters": 0,
+      "coolingWaterLiters": 0,
+      "wasteWaterTreatment": ""
+    },
+    "wasteGeneration": {
+      "organicWasteKg": 0,
+      "packagingWasteKg": 0,
+      "hazardousWasteKg": 0,
+      "wasteRecycledPercent": 0
+    },
+    "productionMethods": [],
+    "processing": {
+      "electricityKwhPerTonCrop": 0,
+      "lpgKgPerLAlcohol": 0,
+      "angelsSharePercentage": 0,
+      "waterM3PerTonCrop": 0,
+      "renewableEnergyPercent": 0
+    },
+    "fermentation": {
+      "fermentationTime": 0,
+      "yeastType": "",
+      "temperatureControl": false,
+      "sugarAddedKg": 0
+    },
+    "distillation": {
+      "distillationRounds": 0,
+      "heatRecoverySystem": false,
+      "copperUsageKg": 0
+    },
+    "maturation": {
+      "maturationTimeMonths": 0,
+      "barrelOrigin": "",
+      "barrelReuseCycles": 0
+    }
+  },
+  "environmentalImpact": {
+    "calculationMethod": "",
+    "co2Emissions": 0.092,
+    "waterFootprint": 0,
+    "landUse": 0,
+    "biodiversityImpact": ""
+  },
+  "certifications": [],
+  "awards": [],
+  "distribution": {
+    "averageTransportDistance": 0,
+    "primaryTransportMode": "",
+    "distributionCenters": 0,
+    "coldChainRequired": false,
+    "packagingEfficiency": 0
+  },
+  "endOfLife": {
+    "returnableContainer": false,
+    "recyclingRate": 0,
+    "disposalMethod": "",
+    "consumerEducation": ""
+  },
+  "lcaData": {
+    "agriculture": {
+      "mainCropType": "",
+      "yieldTonPerHectare": 0,
+      "dieselLPerHectare": 0,
+      "sequestrationTonCo2PerTonCrop": 0,
+      "fertilizer": {
+        "nitrogenKgPerHectare": 0,
+        "phosphorusKgPerHectare": 0,
+        "potassiumKgPerHectare": 0,
+        "organicFertilizerTonPerHectare": 0
+      },
+      "landUse": {
+        "biodiversityIndex": 0,
+        "soilQualityIndex": 0
+      }
+    },
+    "inboundTransport": {
+      "distanceKm": 0,
+      "fuelEfficiencyLper100km": 0,
+      "loadFactor": 0,
+      "refrigerationRequired": false
+    },
+    "processing": {
+      "waterM3PerTonCrop": 0,
+      "electricityKwhPerTonCrop": 0,
+      "lpgKgPerLAlcohol": 0,
+      "netWaterUseLPerBottle": 0,
+      "angelsSharePercentage": 0,
+      "renewableEnergyPercent": 0,
+      "fermentation": {
+        "fermentationTime": 0,
+        "temperatureControl": false,
+        "yeastType": "",
+        "sugarAddedKg": 0
+      },
+      "distillation": {
+        "distillationRounds": 0,
+        "heatRecoverySystem": false,
+        "copperUsageKg": 0
+      },
+      "maturation": {
+        "maturationTimeMonths": 0,
+        "evaporationLossPercentage": 0
+      }
+    },
+    "packagingDetailed": {
+      "container": {
+        "materialType": "cardboard",
+        "weightGrams": 82,
+        "recycledContentPercentage": 94,
+        "manufacturingLocation": "Ipswich, United Kingdom",
+        "transportDistanceKm": 0,
+        "color": "",
+        "thickness": 0,
+        "recyclability": "",
+        "co2EmissionsKg": 0.092,
+        "hasSupplierLcaData": true
+      },
+      "label": {
+        "weightGrams": 0,
+        "printingMethod": "",
+        "labelSize": 0
+      },
+      "closure": {
+        "weightGrams": 0,
+        "hasLiner": false,
+        "linerMaterial": ""
+      },
+      "secondaryPackaging": {
+        "hasBox": false,
+        "boxWeightGrams": 0,
+        "protectiveMaterial": "",
+        "protectiveMaterialWeightGrams": 0,
+        "fillerMaterial": "",
+        "fillerWeight": 0
+      }
+    },
+    "distribution": {
+      "avgDistanceToDcKm": 0,
+      "palletizationEfficiency": 0,
+      "coldChainRequirement": false,
+      "temperatureRangeCelsius": {
+        "min": 0,
+        "max": 0
+      },
+      "distributionCenters": []
+    },
+    "endOfLifeDetailed": {
+      "recyclingRatePercentage": 0,
+      "containerRecyclability": {
+        "isRecyclable": true,
+        "recyclingInfrastructureAvailable": true,
+        "contaminationRate": 0
+      },
+      "labelRemovalRequired": false,
+      "consumerEducationProgram": false,
+      "takeback_program": false
+    }
+  }
+}
+🔍 Packaging object: {
+  "primaryContainer": {
+    "material": "cardboard",
+    "weight": 82,
+    "recycledContent": 94,
+    "recyclability": "",
+    "color": "",
+    "thickness": 0,
+    "origin": "Ipswich, United Kingdom"
+  },
+  "labeling": {
+    "labelMaterial": "",
+    "labelWeight": 0,
+    "printingMethod": "",
+    "inkType": "",
+    "labelSize": 0,
+    "origin": ""
+  },
+  "closure": {
+    "closureType": "",
+    "material": "",
+    "weight": 0,
+    "hasLiner": false,
+    "linerMaterial": "",
+    "origin": ""
+  },
+  "secondaryPackaging": {
+    "hasSecondaryPackaging": false,
+    "boxMaterial": "",
+    "boxWeight": 0,
+    "fillerMaterial": "",
+    "fillerWeight": 0,
+    "origin": ""
+  },
+  "packagingNotes": "",
+  "qualityStandards": [],
+  "supplierInformation": {
+    "selectedSupplierId": "245e1e36-70fe-4a73-b7a4-25360b1bbd9b",
+    "supplierName": "FrugalPac",
+    "supplierCategory": "bottle_producer",
+    "selectedProductName": "Frugal Bottle"
+  }
+}
+🎯 Supplier Info: {
+  selectedSupplierId: '245e1e36-70fe-4a73-b7a4-25360b1bbd9b',
+  supplierName: 'FrugalPac',
+  supplierCategory: 'bottle_producer',
+  selectedProductName: 'Frugal Bottle'
+}
+Processed draft data: {
+  "companyId": 1,
+  "name": "",
+  "sku": "",
+  "type": "",
+  "volume": "",
+  "description": "",
+  "productImage": "",
+  "productImages": [],
+  "isMainProduct": false,
+  "status": "draft",
+  "waterDilution": {
+    "amount": 0,
+    "unit": "ml"
+  },
+  "environmentalImpact": {
+    "calculationMethod": "",
+    "co2Emissions": 0.092,
+    "waterFootprint": 0,
+    "landUse": 0,
+    "biodiversityImpact": ""
+  },
+  "awards": [],
+  "lcaData": {
+    "agriculture": {
+      "mainCropType": "",
+      "yieldTonPerHectare": 0,
+      "dieselLPerHectare": 0,
+      "sequestrationTonCo2PerTonCrop": 0,
+      "fertilizer": {
+        "nitrogenKgPerHectare": 0,
+        "phosphorusKgPerHectare": 0,
+        "potassiumKgPerHectare": 0,
+        "organicFertilizerTonPerHectare": 0
+      },
+      "landUse": {
+        "biodiversityIndex": 0,
+        "soilQualityIndex": 0
+      }
+    },
+    "inboundTransport": {
+      "distanceKm": 0,
+      "fuelEfficiencyLper100km": 0,
+      "loadFactor": 0,
+      "refrigerationRequired": false
+    },
+    "processing": {
+      "waterM3PerTonCrop": 0,
+      "electricityKwhPerTonCrop": 0,
+      "lpgKgPerLAlcohol": 0,
+      "netWaterUseLPerBottle": 0,
+      "angelsSharePercentage": 0,
+      "renewableEnergyPercent": 0,
+      "fermentation": {
+        "fermentationTime": 0,
+        "temperatureControl": false,
+        "yeastType": "",
+        "sugarAddedKg": 0
+      },
+      "distillation": {
+        "distillationRounds": 0,
+        "heatRecoverySystem": false,
+        "copperUsageKg": 0
+      },
+      "maturation": {
+        "maturationTimeMonths": 0,
+        "evaporationLossPercentage": 0
+      }
+    },
+    "packagingDetailed": {
+      "container": {
+        "materialType": "cardboard",
+        "weightGrams": 82,
+        "recycledContentPercentage": 94,
+        "manufacturingLocation": "Ipswich, United Kingdom",
+        "transportDistanceKm": 0,
+        "color": "",
+        "thickness": 0,
+        "recyclability": "",
+        "co2EmissionsKg": 0.092,
+        "hasSupplierLcaData": true
+      },
+      "label": {
+        "weightGrams": 0,
+        "printingMethod": "",
+        "labelSize": 0
+      },
+      "closure": {
+        "weightGrams": 0,
+        "hasLiner": false,
+        "linerMaterial": ""
+      },
+      "secondaryPackaging": {
+        "hasBox": false,
+        "boxWeightGrams": 0,
+        "protectiveMaterial": "",
+        "protectiveMaterialWeightGrams": 0,
+        "fillerMaterial": "",
+        "fillerWeight": 0
+      }
+    },
+    "distribution": {
+      "avgDistanceToDcKm": 0,
+      "palletizationEfficiency": 0,
+      "coldChainRequirement": false,
+      "temperatureRangeCelsius": {
+        "min": 0,
+        "max": 0
+      },
+      "distributionCenters": []
+    },
+    "endOfLifeDetailed": {
+      "recyclingRatePercentage": 0,
+      "containerRecyclability": {
+        "isRecyclable": true,
+        "recyclingInfrastructureAvailable": true,
+        "contaminationRate": 0
+      },
+      "labelRemovalRequired": false,
+      "consumerEducationProgram": false,
+      "takeback_program": false
+    }
+  },
+  "ingredients": "[{\"name\":\"\",\"amount\":0,\"unit\":\"ml\",\"type\":\"\",\"origin\":\"\",\"organic\":false,\"supplier\":\"\",\"yieldPerHectare\":0,\"nitrogenFertilizer\":0,\"phosphorusFertilizer\":0,\"dieselUsage\":0,\"transportDistance\":0,\"processingEnergy\":0,\"waterUsage\":0}]",
+  "bottleMaterial": "cardboard",
+  "bottleWeight": 82,
+  "bottleRecycledContent": 94,
+  "bottleColor": "",
+  "bottleThickness": null,
+  "labelMaterial": "",
+  "labelWeight": null,
+  "labelSize": null,
+  "closureType": "",
+  "closureMaterial": "",
+  "closureWeight": null,
+  "packagingSupplier": "FrugalPac",
+  "packagingSupplierId": "245e1e36-70fe-4a73-b7a4-25360b1bbd9b",
+  "packagingSupplierCategory": "bottle_producer",
+  "packagingSelectedProductId": "",
+  "packagingSelectedProductName": "Frugal Bottle",
+  "productionModel": "",
+  "annualProductionVolume": null,
+  "productionUnit": "units",
+  "facilityLocation": "",
+  "heatRecoverySystem": false,
+  "productionMethods": null,
+  "certifications": "[]",
+  "averageTransportDistance": null,
+  "primaryTransportMode": "",
+  "coldChainRequired": false,
+  "returnableContainer": false,
+  "recyclingRate": null,
+  "disposalMethod": "",
+  "createdAt": "2025-08-14T19:23:50.060Z",
+  "updatedAt": "2025-08-14T19:23:50.060Z"
+}
+📦 Packaging Supplier Debug: {
+  hasPackaging: true,
+  hasSupplierInfo: true,
+  supplierName: 'FrugalPac',
+  selectedSupplierId: '245e1e36-70fe-4a73-b7a4-25360b1bbd9b',
+  supplierCategory: 'bottle_producer',
+  mappedValues: {
+    packagingSupplier: 'FrugalPac',
+    packagingSupplierId: '245e1e36-70fe-4a73-b7a4-25360b1bbd9b',
+    packagingSupplierCategory: 'bottle_producer',
+    packagingSelectedProductId: '',
+    packagingSelectedProductName: 'Frugal Bottle'
+  }
+}
+Creating new draft
+Products fetched: 3 for company unknown
+Looking for object at path: /objects/uploads/8650e5b3-f7d6-46d1-a0e1-fb7930040bda
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/8650e5b3-f7d6-46d1-a0e1-fb7930040bda
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/8650e5b3-f7d6-46d1-a0e1-fb7930040bda
+Looking for object at path: /objects/uploads/4e211f92-6420-4ffd-a80d-5678bc4d14e3
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/4e211f92-6420-4ffd-a80d-5678bc4d14e3
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/4e211f92-6420-4ffd-a80d-5678bc4d14e3
+Object exists: true
+Object exists: true
+Looking for object at path: /objects/uploads/d62b19db-d4c6-4908-80ce-cd9bb183fa23
+Full object path: /replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6/.private/uploads/d62b19db-d4c6-4908-80ce-cd9bb183fa23
+Bucket: replit-objstore-e2accb01-0b2e-43b0-aa98-3aebaaefd5b6 Object: .private/uploads/d62b19db-d4c6-4908-80ce-cd9bb183fa23
+Object exists: true

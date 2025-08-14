@@ -413,11 +413,11 @@ export default function EnhancedProductForm({
       hasSupplierInfo: !!initialData?.packaging?.supplierInformation?.selectedSupplierId
     });
     
-    if (initialData?.packaging?.supplierInformation?.selectedSupplierId && !selectedPackagingSupplier) {
+    if (initialData?.packaging?.supplierInformation?.selectedProductId && !selectedPackagingSupplier) {
       // Create a supplier object from the saved data
       const savedSupplier = {
-        id: initialData.packaging.supplierInformation.selectedSupplierId,
-        productId: initialData.packaging.supplierInformation.selectedProductId,
+        id: initialData.packaging.supplierInformation.selectedProductId,
+        supplierId: initialData.packaging.supplierInformation.selectedSupplierId,
         productName: initialData.packaging.supplierInformation.selectedProductName || 'Selected Product',
         supplierName: initialData.packaging.supplierInformation.supplierName || 'Unknown Supplier',
         supplierCategory: initialData.packaging.supplierInformation.supplierCategory || 'bottle_producer',
@@ -425,7 +425,7 @@ export default function EnhancedProductForm({
       console.log('🔄 Loading saved packaging supplier and product:', savedSupplier);
       setSelectedPackagingSupplier(savedSupplier);
     }
-  }, [initialData?.packaging?.supplierInformation?.selectedSupplierId, selectedPackagingSupplier]);
+  }, [initialData?.packaging?.supplierInformation?.selectedProductId, selectedPackagingSupplier]);
 
 
 
@@ -1631,10 +1631,10 @@ export default function EnhancedProductForm({
                               }
                               
                               // Update supplier information
-                              form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.id);
+                              form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.supplierId);
                               form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName);
                               form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory);
-                              form.setValue('packaging.supplierInformation.selectedProductId', supplier.productId);
+                              form.setValue('packaging.supplierInformation.selectedProductId', supplier.id);
                               form.setValue('packaging.supplierInformation.selectedProductName', supplier.productName);
                               
                               // Auto-sync to LCA Data (for calculations)
@@ -1703,10 +1703,10 @@ export default function EnhancedProductForm({
                           }
                           
                           // Update supplier information
-                          form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.id);
+                          form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.supplierId);
                           form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName);
                           form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory);
-                          form.setValue('packaging.supplierInformation.selectedProductId', supplier.productId);
+                          form.setValue('packaging.supplierInformation.selectedProductId', supplier.id);
                           form.setValue('packaging.supplierInformation.selectedProductName', supplier.productName);
                           
                           // Auto-sync to LCA Data (for calculations)
