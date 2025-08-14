@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><title>Base64 Test</title></head>
+<body>
+    <h1>Base64 Image Test</h1>
+    <button onclick="testBase64()">Test New Image</button>
+    <div id="result"></div>
+    <script>
+        async function testBase64() {
+            try {
+                console.log('Testing base64 API...');
+                const response = await fetch('/api/image/uploads/b0425006-4efb-456c-897e-140a9f9c741d');
+                const data = await response.json();
+                
+                if (data.dataUrl) {
+                    document.getElementById('result').innerHTML = `
+                        <p>SUCCESS! Base64 data URL received (length: ${data.dataUrl.length})</p>
+                        <img src="${data.dataUrl}" style="max-width: 300px; border: 2px solid green;">
+                    `;
+                    console.log('✅ Base64 image loaded successfully');
+                } else {
+                    document.getElementById('result').innerHTML = '<p>Failed: No dataUrl in response</p>';
+                }
+            } catch (error) {
+                console.error('Base64 test failed:', error);
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
