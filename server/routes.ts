@@ -24,6 +24,7 @@ import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { suggestionService } from "./services/suggestionService";
 import { kpiService } from "./services/kpiService";
+import { setupOnboardingRoutes } from "./routes/onboarding";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-06-30.basil",
@@ -71,6 +72,9 @@ export function registerRoutes(app: Express): Server {
 
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Phase 2: Onboarding routes
+  setupOnboardingRoutes(app);
 
   // Auth user endpoint - must come BEFORE greenwash guardian routes
   app.get('/api/auth/user', async (req, res) => {
@@ -2668,11 +2672,17 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.get('/api/suggestions/next-steps', isAuthenticated, async (req, res) => {
     try {
       const user = req.user;
-      if (!user?.companyId) {
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // Get company by owner ID
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const suggestions = await suggestionService.getNextSteps(user.companyId);
+      const suggestions = await suggestionService.getNextSteps(company.id);
       res.json({ suggestions });
     } catch (error) {
       console.error('Error getting next steps:', error);
@@ -2684,11 +2694,17 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.get('/api/kpi-data', isAuthenticated, async (req, res) => {
     try {
       const user = req.user;
-      if (!user?.companyId) {
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // Get company by owner ID
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const kpiData = await kpiService.getDashboardKPIs(user.companyId);
+      const kpiData = await kpiService.getDashboardKPIs(company.id);
       res.json({ kpiData });
     } catch (error) {
       console.error('Error getting KPI data:', error);
@@ -2700,11 +2716,17 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.post('/api/goals', isAuthenticated, async (req, res) => {
     try {
       const user = req.user;
-      if (!user?.companyId) {
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // Get company by owner ID
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const goalData = { ...req.body, companyId: user.companyId };
+      const goalData = { ...req.body, companyId: company.id };
       const goal = await dbStorage.createGoal(goalData);
       res.json({ goal });
     } catch (error) {
@@ -2717,11 +2739,17 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.get('/api/goals', isAuthenticated, async (req, res) => {
     try {
       const user = req.user;
-      if (!user?.companyId) {
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // Get company by owner ID
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const goals = await dbStorage.getGoalsByCompany(user.companyId);
+      const goals = await dbStorage.getGoalsByCompany(company.id);
       res.json({ goals });
     } catch (error) {
       console.error('Error getting goals:', error);
