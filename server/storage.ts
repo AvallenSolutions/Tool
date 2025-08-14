@@ -15,6 +15,8 @@ import {
   lcaQuestionnaires,
   uploadedSupplierLcas,
   companySustainabilityData,
+  companyGoals,
+  customReports,
   type User,
   type UpsertUser,
   type Company,
@@ -45,6 +47,10 @@ import {
   type InsertUploadedSupplierLca,
   type CompanySustainabilityData,
   type InsertCompanySustainabilityData,
+  type CompanyGoal,
+  type InsertCompanyGoal,
+  type CustomReport,
+  type InsertCustomReport,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ilike, or } from "drizzle-orm";
@@ -136,6 +142,16 @@ export interface IStorage {
   // Uploaded Supplier LCA operations
   createUploadedSupplierLca(upload: InsertUploadedSupplierLca): Promise<UploadedSupplierLca>;
   getUploadedSupplierLcasByQuestionnaire(questionnaireId: string): Promise<UploadedSupplierLca[]>;
+
+  // Company Goals operations
+  getGoalsByCompany(companyId: number): Promise<CompanyGoal[]>;
+  createGoal(goal: InsertCompanyGoal): Promise<CompanyGoal>;
+  updateGoal(id: string, updates: Partial<InsertCompanyGoal>): Promise<CompanyGoal>;
+
+  // Custom Reports operations  
+  getReportsByCompanyCustom(companyId: number): Promise<CustomReport[]>;
+  createCustomReport(report: InsertCustomReport): Promise<CustomReport>;
+  updateCustomReport(id: string, updates: Partial<InsertCustomReport>): Promise<CustomReport>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -767,6 +783,58 @@ export class DatabaseStorage implements IStorage {
       .from(uploadedSupplierLcas)
       .where(eq(uploadedSupplierLcas.questionnaireId, questionnaireId))
       .orderBy(desc(uploadedSupplierLcas.createdAt));
+  }
+
+  // Company Goals operations
+  async getGoalsByCompany(companyId: number): Promise<CompanyGoal[]> {
+    return await db
+      .select()
+      .from(companyGoals)
+      .where(eq(companyGoals.companyId, companyId))
+      .orderBy(desc(companyGoals.createdAt));
+  }
+
+  async createGoal(goal: InsertCompanyGoal): Promise<CompanyGoal> {
+    const [newGoal] = await db
+      .insert(companyGoals)
+      .values(goal)
+      .returning();
+    return newGoal;
+  }
+
+  async updateGoal(id: string, updates: Partial<InsertCompanyGoal>): Promise<CompanyGoal> {
+    const [goal] = await db
+      .update(companyGoals)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(companyGoals.id, id))
+      .returning();
+    return goal;
+  }
+
+  // Custom Reports operations
+  async getReportsByCompanyCustom(companyId: number): Promise<CustomReport[]> {
+    return await db
+      .select()
+      .from(customReports)
+      .where(eq(customReports.companyId, companyId))
+      .orderBy(desc(customReports.createdAt));
+  }
+
+  async createCustomReport(report: InsertCustomReport): Promise<CustomReport> {
+    const [newReport] = await db
+      .insert(customReports)
+      .values(report)
+      .returning();
+    return newReport;
+  }
+
+  async updateCustomReport(id: string, updates: Partial<InsertCustomReport>): Promise<CustomReport> {
+    const [report] = await db
+      .update(customReports)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customReports.id, id))
+      .returning();
+    return report;
   }
 }
 

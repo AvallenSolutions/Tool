@@ -52,6 +52,7 @@ export const companies = pgTable("companies", {
   website: varchar("website"),
   ownerId: varchar("owner_id").references(() => users.id),
   onboardingComplete: boolean("onboarding_complete").default(false),
+  primaryMotivation: varchar("primary_motivation", { length: 255 }),
   currentReportingPeriodStart: date("current_reporting_period_start"),
   currentReportingPeriodEnd: date("current_reporting_period_end"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -1106,6 +1107,45 @@ export const insertLcaQuestionnaireSchema = createInsertSchema(lcaQuestionnaires
 export type UploadedSupplierLca = typeof uploadedSupplierLcas.$inferSelect;
 export type InsertUploadedSupplierLca = typeof uploadedSupplierLcas.$inferInsert;
 export const insertUploadedSupplierLcaSchema = createInsertSchema(uploadedSupplierLcas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Company Goals table for SMART goal setting
+export const companyGoals = pgTable("company_goals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  kpiName: varchar("kpi_name", { length: 100 }).notNull(),
+  targetValue: decimal("target_value", { precision: 15, scale: 4 }).notNull(),
+  targetDate: date("target_date").notNull(),
+  startValue: decimal("start_value", { precision: 15, scale: 4 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Custom Reports table for flexible reporting system
+export const customReports = pgTable("custom_reports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  reportTitle: varchar("report_title", { length: 255 }).notNull(),
+  reportLayout: jsonb("report_layout").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Export types and insert schemas for new tables
+export type CompanyGoal = typeof companyGoals.$inferSelect;
+export type InsertCompanyGoal = typeof companyGoals.$inferInsert;
+export const insertCompanyGoalSchema = createInsertSchema(companyGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CustomReport = typeof customReports.$inferSelect;
+export type InsertCustomReport = typeof customReports.$inferInsert;
+export const insertCustomReportSchema = createInsertSchema(customReports).omit({
   id: true,
   createdAt: true,
   updatedAt: true,

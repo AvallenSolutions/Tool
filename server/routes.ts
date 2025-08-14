@@ -22,6 +22,8 @@ import { adminRouter } from "./routes/admin";
 import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { suggestionService } from "./services/suggestionService";
+import { kpiService } from "./services/kpiService";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-06-30.basil",
@@ -2657,6 +2659,73 @@ Be precise and quote actual text from the content, not generic terms.`;
         error: 'Failed to generate PDF report',
         details: error.message
       });
+    }
+  });
+
+  // Phase 1: Advanced UX Features - Suggestion and KPI endpoints
+  
+  // GET /api/suggestions/next-steps - Get prioritized "What's Next?" actions
+  app.get('/api/suggestions/next-steps', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.companyId) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const suggestions = await suggestionService.getNextSteps(user.companyId);
+      res.json({ suggestions });
+    } catch (error) {
+      console.error('Error getting next steps:', error);
+      res.status(500).json({ error: 'Failed to get suggestions' });
+    }
+  });
+
+  // GET /api/kpi-data - Get current KPI dashboard data
+  app.get('/api/kpi-data', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.companyId) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const kpiData = await kpiService.getDashboardKPIs(user.companyId);
+      res.json({ kpiData });
+    } catch (error) {
+      console.error('Error getting KPI data:', error);
+      res.status(500).json({ error: 'Failed to get KPI data' });
+    }
+  });
+
+  // POST /api/goals - Create a new SMART goal
+  app.post('/api/goals', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.companyId) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const goalData = { ...req.body, companyId: user.companyId };
+      const goal = await dbStorage.createGoal(goalData);
+      res.json({ goal });
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      res.status(500).json({ error: 'Failed to create goal' });
+    }
+  });
+
+  // GET /api/goals - Get all goals for the company
+  app.get('/api/goals', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.companyId) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const goals = await dbStorage.getGoalsByCompany(user.companyId);
+      res.json({ goals });
+    } catch (error) {
+      console.error('Error getting goals:', error);
+      res.status(500).json({ error: 'Failed to get goals' });
     }
   });
 
