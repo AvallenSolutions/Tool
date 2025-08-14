@@ -42,10 +42,102 @@ export default function CreateEnhancedProduct() {
     enabled: Boolean(isEditMode && productId),
   });
 
+  // Transform database product to form structure for loading
+  const transformDatabaseToForm = (product: any) => {
+    if (!product) return null;
+    
+    return {
+      ...product,
+      // Reconstruct nested structures from flattened database fields
+      ingredients: typeof product.ingredients === 'string' 
+        ? JSON.parse(product.ingredients) 
+        : product.ingredients || [],
+        
+      packaging: {
+        primaryContainer: {
+          material: product.bottleMaterial || '',
+          weight: product.bottleWeight || 0,
+          recycledContent: product.bottleRecycledContent || 0,
+          recyclability: product.bottleRecyclability || '',
+          color: product.bottleColor || '',
+          thickness: product.bottleThickness || 0,
+          origin: product.bottleOrigin || '',
+        },
+        labeling: {
+          labelMaterial: product.labelMaterial || '',
+          labelWeight: product.labelWeight || 0,
+          printingMethod: product.labelPrintingMethod || '',
+          inkType: product.labelInkType || '',
+          labelSize: product.labelSize || 0,
+        },
+        closure: {
+          closureType: product.closureType || '',
+          material: product.closureMaterial || '',
+          weight: product.closureWeight || 0,
+          hasLiner: product.hasBuiltInClosure || false,
+          linerMaterial: product.linerMaterial || '',
+        },
+        secondaryPackaging: {
+          hasSecondaryPackaging: product.hasSecondaryPackaging || false,
+          boxMaterial: product.boxMaterial || '',
+          boxWeight: product.boxWeight || 0,
+          fillerMaterial: product.fillerMaterial || '',
+          fillerWeight: product.fillerWeight || 0,
+        },
+        supplierInformation: {
+          selectedSupplierId: product.packagingSupplierId || '',
+          supplierName: product.packagingSupplier || '',
+          supplierCategory: product.packagingSupplierCategory || '',
+        }
+      },
+      
+      production: {
+        productionModel: product.productionModel || '',
+        annualProductionVolume: product.annualProductionVolume || 0,
+        productionUnit: product.productionUnit || 'bottles',
+        facilityLocation: product.facilityLocation || '',
+        energySource: product.energySource || '',
+        waterSourceType: product.waterSourceType || '',
+        heatRecoverySystem: product.heatRecoverySystem || false,
+        wasteManagement: product.wasteManagement || '',
+        processSteps: typeof product.productionMethods === 'string'
+          ? JSON.parse(product.productionMethods)?.processSteps || []
+          : product.productionMethods?.processSteps || [],
+      },
+      
+      environmental: {
+        carbonFootprint: product.carbonFootprint || 0,
+        waterFootprint: product.waterFootprint || 0,
+      },
+      
+      certifications: typeof product.certifications === 'string'
+        ? JSON.parse(product.certifications)
+        : product.certifications || [],
+        
+      distribution: {
+        averageTransportDistance: product.averageTransportDistance || 0,
+        primaryTransportMode: product.primaryTransportMode || '',
+        coldChainRequired: product.coldChainRequired || false,
+      },
+      
+      endOfLife: {
+        returnableContainer: product.returnableContainer || false,
+        recyclingRate: product.recyclingRate || 0,
+        disposalMethod: product.disposalMethod || '',
+      }
+    };
+  };
+
   // Draft saving mutation
   const saveDraftMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/products/draft", { ...data, status: 'draft' });
+      // Add the product ID if we're editing an existing product
+      const draftData = {
+        ...data,
+        id: productId ? parseInt(productId) : undefined,
+        status: 'draft'
+      };
+      const response = await apiRequest("POST", "/api/products/draft", draftData);
       return response.json();
     },
     onSuccess: () => {
@@ -271,7 +363,7 @@ export default function CreateEnhancedProduct() {
       </div>
 
       <EnhancedProductForm
-        initialData={existingProduct}
+        initialData={transformDatabaseToForm(existingProduct)}
         onSubmit={handleSubmit}
         onSaveDraft={(data) => saveDraftMutation.mutate(data)}
         isEditing={Boolean(isEditMode)}

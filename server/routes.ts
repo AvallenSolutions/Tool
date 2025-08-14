@@ -2171,15 +2171,98 @@ Be precise and quote actual text from the content, not generic terms.`;
         console.log('Using existing company:', companyId);
       }
       
+      // Process the complex form data structure properly
+      console.log('Raw request body:', JSON.stringify(req.body, null, 2));
+      
+      // Extract nested objects and convert them to proper database format
+      const {
+        ingredients,
+        packaging,
+        production,
+        environmental,
+        certifications,
+        distribution,
+        endOfLife,
+        ...basicFields
+      } = req.body;
+
       const draftData = {
         companyId,
-        ...req.body,
+        ...basicFields,
+        
+        // Handle ingredients array (convert from form structure to DB structure)
+        ingredients: ingredients ? JSON.stringify(ingredients) : null,
+        
+        // Handle nested packaging data - flatten to individual fields
+        ...(packaging?.primaryContainer && {
+          bottleMaterial: packaging.primaryContainer.material,
+          bottleWeight: packaging.primaryContainer.weight ? parseFloat(packaging.primaryContainer.weight) : null,
+          bottleRecycledContent: packaging.primaryContainer.recycledContent ? parseFloat(packaging.primaryContainer.recycledContent) : null,
+          bottleColor: packaging.primaryContainer.color,
+          bottleThickness: packaging.primaryContainer.thickness ? parseFloat(packaging.primaryContainer.thickness) : null,
+        }),
+        
+        ...(packaging?.labeling && {
+          labelMaterial: packaging.labeling.labelMaterial,
+          labelWeight: packaging.labeling.labelWeight ? parseFloat(packaging.labeling.labelWeight) : null,
+          labelSize: packaging.labeling.labelSize ? parseFloat(packaging.labeling.labelSize) : null,
+        }),
+        
+        ...(packaging?.closure && {
+          closureType: packaging.closure.closureType,
+          closureMaterial: packaging.closure.material,
+          closureWeight: packaging.closure.weight ? parseFloat(packaging.closure.weight) : null,
+        }),
+        
+        // Handle supplier selection from packaging
+        ...(packaging?.supplierInformation?.selectedSupplierId && {
+          // Store supplier information - you may want to create a separate relation for this
+          packagingSupplier: packaging.supplierInformation.supplierName,
+        }),
+        
+        // Handle production data
+        ...(production && {
+          productionModel: production.productionModel,
+          annualProductionVolume: production.annualProductionVolume ? parseFloat(production.annualProductionVolume) : null,
+          productionUnit: production.productionUnit || 'bottles',
+          facilityLocation: production.facilityLocation,
+          energySource: production.energySource,
+          waterSourceType: production.waterSourceType,
+          heatRecoverySystem: production.heatRecoverySystem || false,
+          wasteManagement: production.wasteManagement,
+          // Store complex production data as JSONB if the field exists
+          productionMethods: production.processSteps ? JSON.stringify(production) : null,
+        }),
+        
+        // Handle environmental data
+        ...(environmental && {
+          carbonFootprint: environmental.carbonFootprint ? parseFloat(environmental.carbonFootprint) : null,
+          waterFootprint: environmental.waterFootprint ? parseFloat(environmental.waterFootprint) : null,
+        }),
+        
+        // Handle certifications array
+        certifications: certifications ? JSON.stringify(certifications) : null,
+        
+        // Handle distribution data
+        ...(distribution && {
+          averageTransportDistance: distribution.averageTransportDistance ? parseFloat(distribution.averageTransportDistance) : null,
+          primaryTransportMode: distribution.primaryTransportMode,
+          coldChainRequired: distribution.coldChainRequired || false,
+        }),
+        
+        // Handle end of life data
+        ...(endOfLife && {
+          returnableContainer: endOfLife.returnableContainer || false,
+          recyclingRate: endOfLife.recyclingRate ? parseFloat(endOfLife.recyclingRate) : null,
+          disposalMethod: endOfLife.disposalMethod,
+        }),
+        
         status: 'draft',
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
-      console.log('Saving draft with company ID:', companyId);
+      console.log('Processed draft data:', JSON.stringify(draftData, null, 2));
       
       // Check if this is an update to an existing draft
       let productId = req.body.id;
