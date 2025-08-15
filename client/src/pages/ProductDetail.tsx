@@ -602,41 +602,248 @@ function ProductDetail() {
 
             {/* Production Tab */}
             <TabsContent value="production">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Factory className="w-5 h-5" />
-                    Production Information
-                  </CardTitle>
-                  <CardDescription>Manufacturing and production details</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Production Model</label>
-                        <p className="text-gray-800">{product.productionModel || 'Not specified'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Annual Production Volume</label>
-                        <p className="text-gray-800">
-                          {product.annualProductionVolume ? `${product.annualProductionVolume.toLocaleString()} ${product.productionUnit || 'units'}` : 'Not specified'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Facility Location</label>
-                        <p className="text-gray-800">{product.facilityLocation || 'Not specified'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Energy Source</label>
-                        <p className="text-gray-800">{product.energySource || 'Not specified'}</p>
-                      </div>
-                    </div>
+              {(() => {
+                // Parse production methods JSON data
+                let productionData: any = {};
+                try {
+                  if (product.productionMethods) {
+                    productionData = typeof product.productionMethods === 'string' 
+                      ? JSON.parse(product.productionMethods) 
+                      : product.productionMethods;
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse production methods:', e);
+                }
+
+                return (
+                  <div className="space-y-6">
+                    {/* Basic Production Information */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Factory className="w-5 h-5" />
+                          Production Information
+                        </CardTitle>
+                        <CardDescription>Manufacturing and production details</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Production Model</label>
+                              <p className="text-gray-800 capitalize">{product.productionModel || productionData.productionModel || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Annual Production Volume</label>
+                              <p className="text-gray-800">
+                                {product.annualProductionVolume || productionData.annualProductionVolume ? 
+                                  `${(product.annualProductionVolume || productionData.annualProductionVolume).toLocaleString()} ${product.productionUnit || productionData.productionUnit || 'units'}` : 
+                                  'Not specified'}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Facility Location</label>
+                              <p className="text-gray-800">{productionData.facilityLocation || 'Not specified'}</p>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Energy Source</label>
+                              <p className="text-gray-800">{productionData.energySource || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Water Source Type</label>
+                              <p className="text-gray-800">{productionData.waterSourceType || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Waste Management</label>
+                              <p className="text-gray-800">{productionData.wasteManagement || 'Not specified'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Energy Consumption */}
+                    {productionData.energyConsumption && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Factory className="w-5 h-5" />
+                            Energy Consumption
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {productionData.energyConsumption.electricityKwh > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Electricity</label>
+                                <p className="text-gray-800">{productionData.energyConsumption.electricityKwh} kWh</p>
+                              </div>
+                            )}
+                            {productionData.energyConsumption.gasM3 > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Gas</label>
+                                <p className="text-gray-800">{productionData.energyConsumption.gasM3} m³</p>
+                              </div>
+                            )}
+                            {productionData.energyConsumption.steamKg > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Steam</label>
+                                <p className="text-gray-800">{productionData.energyConsumption.steamKg} kg</p>
+                              </div>
+                            )}
+                            {productionData.energyConsumption.fuelLiters > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Fuel</label>
+                                <p className="text-gray-800">{productionData.energyConsumption.fuelLiters} L</p>
+                              </div>
+                            )}
+                            {productionData.energyConsumption.renewableEnergyPercent > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Renewable Energy</label>
+                                <p className="text-gray-800">{productionData.energyConsumption.renewableEnergyPercent}%</p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Water Usage */}
+                    {productionData.waterUsage && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Droplets className="w-5 h-5" />
+                            Water Usage
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {productionData.waterUsage.processWaterLiters > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Process Water</label>
+                                <p className="text-gray-800">{productionData.waterUsage.processWaterLiters} L</p>
+                              </div>
+                            )}
+                            {productionData.waterUsage.cleaningWaterLiters > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Cleaning Water</label>
+                                <p className="text-gray-800">{productionData.waterUsage.cleaningWaterLiters} L</p>
+                              </div>
+                            )}
+                            {productionData.waterUsage.coolingWaterLiters > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Cooling Water</label>
+                                <p className="text-gray-800">{productionData.waterUsage.coolingWaterLiters} L</p>
+                              </div>
+                            )}
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Waste Water Treatment</label>
+                              <p className="text-gray-800">{productionData.waterUsage.wasteWaterTreatment ? 'Yes' : 'No'}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Process Specific Data */}
+                    {productionData.processing && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Factory className="w-5 h-5" />
+                            Processing Details
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {productionData.processing.electricityKwhPerTonCrop > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Electricity per Ton Crop</label>
+                                <p className="text-gray-800">{productionData.processing.electricityKwhPerTonCrop} kWh/ton</p>
+                              </div>
+                            )}
+                            {productionData.processing.lpgKgPerLAlcohol > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">LPG per L Alcohol</label>
+                                <p className="text-gray-800">{productionData.processing.lpgKgPerLAlcohol} kg/L</p>
+                              </div>
+                            )}
+                            {productionData.processing.angelsSharePercentage > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Angels' Share</label>
+                                <p className="text-gray-800">{productionData.processing.angelsSharePercentage}%</p>
+                              </div>
+                            )}
+                            {productionData.processing.waterM3PerTonCrop > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Water per Ton Crop</label>
+                                <p className="text-gray-800">{productionData.processing.waterM3PerTonCrop} m³/ton</p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Fermentation & Distillation */}
+                    {(productionData.fermentation || productionData.distillation) && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Factory className="w-5 h-5" />
+                            Fermentation & Distillation
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {productionData.fermentation && (
+                              <div className="space-y-3">
+                                <h4 className="font-medium text-gray-900">Fermentation</h4>
+                                {productionData.fermentation.fermentationTime && (
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Fermentation Time</label>
+                                    <p className="text-gray-800">{productionData.fermentation.fermentationTime} days</p>
+                                  </div>
+                                )}
+                                {productionData.fermentation.yeastType && (
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Yeast Type</label>
+                                    <p className="text-gray-800">{productionData.fermentation.yeastType}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {productionData.distillation && (
+                              <div className="space-y-3">
+                                <h4 className="font-medium text-gray-900">Distillation</h4>
+                                {productionData.distillation.distillationRounds && (
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Distillation Rounds</label>
+                                    <p className="text-gray-800">{productionData.distillation.distillationRounds}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* If no production data available */}
+                    {!productionData || Object.keys(productionData).length === 0 && (
+                      <Card>
+                        <CardContent className="text-center py-8">
+                          <Factory className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">No production information available</p>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                );
+              })()}
             </TabsContent>
 
             {/* Certifications Tab */}
