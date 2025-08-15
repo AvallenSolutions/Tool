@@ -728,6 +728,7 @@ export const insertUploadedDocumentSchema = createInsertSchema(uploadedDocuments
 
 export const insertCompanySustainabilityDataSchema = createInsertSchema(companySustainabilityData).omit({
   id: true,
+  companyId: true,
   createdAt: true,
   updatedAt: true,
   lastUpdated: true,

@@ -1399,32 +1399,48 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Update company sustainability data
   app.put('/api/company/sustainability-data', isAuthenticated, async (req, res) => {
     try {
+      console.log('PUT /api/company/sustainability-data - Start');
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      
       const user = req.user as any;
+      console.log('User object:', user);
+      
       const userId = user?.claims?.sub;
+      console.log('User ID:', userId);
+      
       if (!userId) {
+        console.log('No user ID found');
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
       const company = await dbStorage.getCompanyByOwner(userId);
+      console.log('Company found:', company);
+      
       if (!company) {
+        console.log('No company found for user');
         return res.status(404).json({ error: 'Company not found' });
       }
 
       // Validate the request body
+      console.log('Validating request body...');
       const validatedData = insertCompanySustainabilityDataSchema.parse(req.body);
+      console.log('Validation successful');
 
       // Calculate completion percentage
       const completionPercentage = calculateSustainabilityCompletionPercentage(validatedData);
+      console.log('Completion percentage:', completionPercentage);
 
       const updatedData = await dbStorage.upsertCompanySustainabilityData(company.id, {
         ...validatedData,
         completionPercentage
       });
+      console.log('Database update successful:', updatedData);
 
       res.json(updatedData);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating sustainability data:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error('Error stack:', (error as Error).stack);
+      res.status(500).json({ error: 'Internal server error', details: (error as Error).message });
     }
   });
 
