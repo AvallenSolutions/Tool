@@ -1150,3 +1150,142 @@ export const insertCustomReportSchema = createInsertSchema(customReports).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+// Collaboration and messaging tables
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }),
+  type: varchar("type").notNull().default("supplier_collaboration"), // supplier_collaboration, project_discussion, support
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  supplierId: integer("supplier_id").references(() => suppliers.id),
+  participants: jsonb("participants").$type<string[]>().notNull().default([]), // User IDs
+  status: varchar("status").default("active"), // active, archived, closed
+  lastMessageAt: timestamp("last_message_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+  senderId: varchar("sender_id").notNull().references(() => users.id),
+  senderRole: varchar("sender_role").notNull().default("user"), // user, admin, supplier
+  messageType: varchar("message_type").notNull().default("text"), // text, file, image, system
+  content: text("content"),
+  attachments: jsonb("attachments").$type<{
+    fileName: string;
+    originalName: string;
+    fileUrl: string;
+    mimeType: string;
+    fileSize: number;
+  }[]>().default([]),
+  metadata: jsonb("metadata").$type<{
+    edited?: boolean;
+    editedAt?: string;
+    replyToId?: number;
+    readBy?: string[];
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+  }>().default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const collaborationTasks = pgTable("collaboration_tasks", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  assignedTo: varchar("assigned_to").references(() => users.id),
+  assignedBy: varchar("assigned_by").notNull().references(() => users.id),
+  status: varchar("status").notNull().default("pending"), // pending, in_progress, completed, cancelled
+  priority: varchar("priority").default("normal"), // low, normal, high, urgent
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  attachments: jsonb("attachments").$type<{
+    fileName: string;
+    originalName: string;
+    fileUrl: string;
+    mimeType: string;
+    fileSize: number;
+  }[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const supplierCollaborationSessions = pgTable("supplier_collaboration_sessions", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+  supplierId: integer("supplier_id").notNull().references(() => suppliers.id),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  sessionType: varchar("session_type").notNull().default("data_collection"), // data_collection, product_review, contract_discussion
+  status: varchar("status").notNull().default("active"), // active, paused, completed
+  agenda: jsonb("agenda").$type<{
+    topics: string[];
+    documents: string[];
+    objectives: string[];
+  }>().default({ topics: [], documents: [], objectives: [] }),
+  progress: jsonb("progress").$type<{
+    documentsReviewed: string[];
+    dataSubmitted: boolean;
+    nextSteps: string[];
+  }>().default({ documentsReviewed: [], dataSubmitted: false, nextSteps: [] }),
+  scheduledAt: timestamp("scheduled_at"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  messageNotifications: boolean("message_notifications").default(true),
+  taskNotifications: boolean("task_notifications").default(true),
+  supplierUpdates: boolean("supplier_updates").default(true),
+  systemUpdates: boolean("system_updates").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Export types and insert schemas for collaboration tables
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CollaborationTask = typeof collaborationTasks.$inferSelect;
+export type InsertCollaborationTask = typeof collaborationTasks.$inferInsert;
+export const insertCollaborationTaskSchema = createInsertSchema(collaborationTasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SupplierCollaborationSession = typeof supplierCollaborationSessions.$inferSelect;
+export type InsertSupplierCollaborationSession = typeof supplierCollaborationSessions.$inferInsert;
+export const insertSupplierCollaborationSessionSchema = createInsertSchema(supplierCollaborationSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
+export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});

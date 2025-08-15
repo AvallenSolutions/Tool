@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare } from "lucide-react";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
@@ -19,6 +19,7 @@ export default function Sidebar() {
     { path: "/app/reports", label: "Reports", icon: FileText },
     { path: "/app/greenwash-guardian", label: "GreenwashGuardian", icon: Shield },
     { path: "/app/supplier-network", label: "Supplier Network", icon: Users },
+    { path: "/app/collaboration", label: "Collaboration Hub", icon: MessageSquare },
     { path: "/app/settings", label: "Settings", icon: Settings },
     // Admin-only items
     ...(user && user.role === 'admin' ? [

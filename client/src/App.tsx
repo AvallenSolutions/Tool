@@ -39,6 +39,7 @@ import Suppliers from "@/pages/suppliers";
 import GreenwashGuardian from "@/pages/GreenwashGuardian";
 import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
+import CollaborationDashboard from "@/components/collaboration/CollaborationDashboard";
 
 function SimpleTestComponent() {
   return (
@@ -85,6 +86,12 @@ function SimpleTestComponent() {
             >
               Go to Dashboard
             </button>
+            <button 
+              onClick={() => window.location.href = '/app/collaboration'}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Test Collaboration Dashboard
+            </button>
           </div>
         </div>
       </div>
@@ -123,6 +130,7 @@ function Router() {
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
       <Route path="/app/admin/supplier-management" component={SupplierManagement} />
       <Route path="/app/admin/products" component={ProductManagement} />
+      <Route path="/app/collaboration" component={CollaborationDashboard} />
       <Route path="/app/admin/product-management" component={ProductManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />

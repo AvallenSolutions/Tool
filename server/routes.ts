@@ -26,6 +26,8 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { suggestionService } from "./services/suggestionService";
 import { kpiService } from "./services/kpiService";
 import { setupOnboardingRoutes } from "./routes/onboarding";
+import { WebSocketService } from "./services/websocketService";
+import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences } from "@shared/schema";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-06-30.basil",
@@ -2823,7 +2825,206 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // DUPLICATE ROUTE REMOVED - using /objects/ route directly instead of /api/objects/
 
+  // Collaboration and messaging endpoints
+  
+  // GET /api/conversations - Get user's conversations
+  app.get('/api/conversations', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+
+      const userConversations = await db.select({
+        id: conversations.id,
+        title: conversations.title,
+        type: conversations.type,
+        supplierId: conversations.supplierId,
+        participants: conversations.participants,
+        status: conversations.status,
+        lastMessageAt: conversations.lastMessageAt,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt
+      })
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.companyId, company.id),
+          eq(conversations.status, 'active')
+        )
+      )
+      .orderBy(desc(conversations.lastMessageAt));
+
+      res.json({ conversations: userConversations });
+    } catch (error) {
+      console.error('Error getting conversations:', error);
+      res.status(500).json({ error: 'Failed to get conversations' });
+    }
+  });
+
+  // POST /api/conversations - Create new conversation
+  app.post('/api/conversations', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+
+      const { title, type, supplierId, participants } = req.body;
+      
+      const [conversation] = await db.insert(conversations).values({
+        title,
+        type: type || 'supplier_collaboration',
+        companyId: company.id,
+        supplierId: supplierId || null,
+        participants: participants || [user.id],
+        status: 'active',
+        lastMessageAt: new Date()
+      }).returning();
+
+      res.json({ conversation });
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      res.status(500).json({ error: 'Failed to create conversation' });
+    }
+  });
+
+  // GET /api/conversations/:id/messages - Get messages for a conversation
+  app.get('/api/conversations/:id/messages', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const conversationId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      // Check if user has access to this conversation
+      const [conversation] = await db.select()
+        .from(conversations)
+        .where(eq(conversations.id, conversationId))
+        .limit(1);
+
+      if (!conversation) {
+        return res.status(404).json({ error: 'Conversation not found' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company || conversation.companyId !== company.id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const conversationMessages = await db.select({
+        id: messages.id,
+        senderId: messages.senderId,
+        senderRole: messages.senderRole,
+        messageType: messages.messageType,
+        content: messages.content,
+        attachments: messages.attachments,
+        metadata: messages.metadata,
+        createdAt: messages.createdAt,
+        updatedAt: messages.updatedAt
+      })
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+      res.json({ messages: conversationMessages.reverse() });
+    } catch (error) {
+      console.error('Error getting messages:', error);
+      res.status(500).json({ error: 'Failed to get messages' });
+    }
+  });
+
+  // POST /api/conversations/:id/tasks - Create collaboration task
+  app.post('/api/conversations/:id/tasks', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user;
+      if (!user?.id) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const conversationId = parseInt(req.params.id);
+      const { title, description, assignedTo, priority, dueDate } = req.body;
+
+      const [task] = await db.insert(collaborationTasks).values({
+        conversationId,
+        title,
+        description,
+        assignedTo: assignedTo || null,
+        assignedBy: user.id,
+        priority: priority || 'normal',
+        dueDate: dueDate ? new Date(dueDate) : null,
+        status: 'pending'
+      }).returning();
+
+      res.json({ task });
+    } catch (error) {
+      console.error('Error creating task:', error);
+      res.status(500).json({ error: 'Failed to create task' });
+    }
+  });
+
+  // GET /api/conversations/:id/tasks - Get tasks for a conversation
+  app.get('/api/conversations/:id/tasks', isAuthenticated, async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      
+      const tasks = await db.select()
+        .from(collaborationTasks)
+        .where(eq(collaborationTasks.conversationId, conversationId))
+        .orderBy(desc(collaborationTasks.createdAt));
+
+      res.json({ tasks });
+    } catch (error) {
+      console.error('Error getting tasks:', error);
+      res.status(500).json({ error: 'Failed to get tasks' });
+    }
+  });
+
+  // PATCH /api/tasks/:id - Update task status
+  app.patch('/api/tasks/:id', isAuthenticated, async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const { status, completedAt } = req.body;
+
+      const [task] = await db.update(collaborationTasks)
+        .set({
+          status,
+          completedAt: status === 'completed' ? new Date() : null,
+          updatedAt: new Date()
+        })
+        .where(eq(collaborationTasks.id, taskId))
+        .returning();
+
+      res.json({ task });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      res.status(500).json({ error: 'Failed to update task' });
+    }
+  });
+
   const server = createServer(app);
+  
+  // Initialize WebSocket service
+  const wsService = new WebSocketService(server);
+  
+  // Make WebSocket service available to other modules
+  (app as any).wsService = wsService;
   
   return server;
 }
