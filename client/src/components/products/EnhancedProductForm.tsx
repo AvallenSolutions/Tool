@@ -405,6 +405,19 @@ export default function EnhancedProductForm({
   const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
 
+  // Reset form when initialData changes (critical for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      console.log('🔄 Resetting form with initialData:', initialData);
+      form.reset(initialData);
+      
+      // Also set product images if they exist
+      if (initialData.productImages && Array.isArray(initialData.productImages)) {
+        setProductImages(initialData.productImages);
+      }
+    }
+  }, [initialData, form]);
+
   // Initialize selectedPackagingSupplier from existing data
   useEffect(() => {
     console.log('🔍 useEffect triggered with initialData:', {
@@ -431,7 +444,7 @@ export default function EnhancedProductForm({
 
   const form = useForm<EnhancedProductFormData>({
     resolver: zodResolver(enhancedProductSchema),
-    defaultValues: initialData || {
+    defaultValues: {
       name: '',
       sku: '',
       type: '',
