@@ -23,6 +23,13 @@ export function setupOnboardingRoutes(app: Express) {
         }
 
         const user = req.user as any;
+        console.log('Onboarding auth check:', { 
+          hasUser: !!user, 
+          hasClaims: !!user?.claims, 
+          hasSub: !!user?.claims?.sub,
+          userId: user?.claims?.sub 
+        });
+        
         if (!user?.claims?.sub) {
           return res.status(401).json({ error: 'User not authenticated' });
         }
