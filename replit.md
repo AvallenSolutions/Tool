@@ -6,10 +6,15 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 ## Recent Changes (August 2025)
 
-### Product Edit Bug Fix & Ingredient Expansion Complete (August 15, 2025) ✅
+### Packaging Data Display & Product Edit Bug Fix Complete (August 15, 2025) ✅
 - **Critical Bug Fix**: Resolved product editing creating duplicates instead of updating existing products
 - **API Endpoint Correction**: Fixed ProductEditDialog to use correct `PATCH /api/products/{id}` instead of `PUT /api/supplier-products/{id}`
 - **Query Cache Fix**: Updated cache invalidation to use proper `/api/products` endpoint for consistency
+- **Packaging Data Integration**: Added comprehensive packaging fields to admin ProductEditDialog interface
+  - **Closure System**: Type, material, weight fields with proper data loading and saving
+  - **Label Information**: Material and weight specifications with dropdown selections
+  - **Secondary Packaging**: Conditional box material and weight fields with checkbox control
+  - **Database Mapping**: Correct field mapping between flat database columns and form structure
 - **Ingredient Options Expansion**: Added "Sugar Product" and "Agave" to ingredient dropdown menus across all forms
 - **Schema Updates**: Enhanced ingredient type validation to include new sugar-based and agave options
 - **LCA Integration**: Added agave crop defaults for accurate environmental impact calculations
