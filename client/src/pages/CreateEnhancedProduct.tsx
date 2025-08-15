@@ -125,6 +125,31 @@ export default function CreateEnhancedProduct() {
         processSteps: typeof product.productionMethods === 'string'
           ? JSON.parse(product.productionMethods)?.processSteps || []
           : product.productionMethods?.processSteps || [],
+        
+        // Reconstruct nested energy consumption structure
+        energyConsumption: {
+          electricityKwh: product.electricityKwh || 0,
+          gasM3: product.gasM3 || 0,
+          steamKg: product.steamKg || 0,
+          fuelLiters: product.fuelLiters || 0,
+          renewableEnergyPercent: product.renewableEnergyPercent || 0,
+        },
+        
+        // Reconstruct nested water usage structure
+        waterUsage: {
+          processWaterLiters: product.processWaterLiters || 0,
+          cleaningWaterLiters: product.cleaningWaterLiters || 0,
+          coolingWaterLiters: product.coolingWaterLiters || 0,
+          wasteWaterTreatment: product.wasteWaterTreatment || false,
+        },
+        
+        // Reconstruct nested waste generation structure
+        wasteGeneration: {
+          organicWasteKg: product.organicWasteKg || 0,
+          packagingWasteKg: product.packagingWasteKg || 0,
+          hazardousWasteKg: product.hazardousWasteKg || 0,
+          wasteRecycledPercent: product.wasteRecycledPercent || 0,
+        },
       },
       
       environmental: {
@@ -252,7 +277,7 @@ export default function CreateEnhancedProduct() {
     
     const startTime = Date.now();
     
-    // Transform the enhanced form data to match the database schema columns
+    // Transform the enhanced form data to match the database schema columns with null safety
     const transformedData = {
       // Basic fields
       name: data.name,
@@ -268,83 +293,97 @@ export default function CreateEnhancedProduct() {
       packShotUrl: data.productImage,
       productImages: data.productImages || [],
       
-      // Ingredients array
-      ingredients: data.ingredients,
+      // Water dilution (serialize as JSON)
+      waterDilution: data.waterDilution ? JSON.stringify(data.waterDilution) : null,
       
-      // Packaging - Primary Container
-      bottleName: data.packaging.primaryContainer.name,
-      bottleMaterial: data.packaging.primaryContainer.material,
-      bottleWeight: data.packaging.primaryContainer.weight,
-      bottleRecycledContent: data.packaging.primaryContainer.recycledContent,
-      bottleRecyclability: data.packaging.primaryContainer.recyclability,
-      bottleColor: data.packaging.primaryContainer.color,
-      bottleThickness: data.packaging.primaryContainer.thickness,
+      // Ingredients array (serialize as JSON)
+      ingredients: data.ingredients ? JSON.stringify(data.ingredients) : null,
       
-      // Packaging - Labels & Printing
-      labelMaterial: data.packaging.labeling.labelMaterial,
-      labelWeight: data.packaging.labeling.labelWeight,
-      labelPrintingMethod: data.packaging.labeling.printingMethod,
-      labelInkType: data.packaging.labeling.inkType,
-      labelSize: data.packaging.labeling.labelSize,
+      // Packaging - Primary Container (with null safety)
+      bottleName: data.packaging?.primaryContainer?.name || null,
+      bottleMaterial: data.packaging?.primaryContainer?.material || '',
+      bottleWeight: data.packaging?.primaryContainer?.weight || null,
+      bottleRecycledContent: data.packaging?.primaryContainer?.recycledContent || null,
+      bottleRecyclability: data.packaging?.primaryContainer?.recyclability || null,
+      bottleColor: data.packaging?.primaryContainer?.color || '',
+      bottleThickness: data.packaging?.primaryContainer?.thickness || null,
       
-      // Packaging - Closure System
-      closureType: data.packaging.closure.closureType,
-      closureMaterial: data.packaging.closure.material,
-      closureWeight: data.packaging.closure.weight,
-      hasBuiltInClosure: data.packaging.closure.hasLiner,
-      linerMaterial: data.packaging.closure.linerMaterial,
+      // Packaging - Labels & Printing (with null safety)
+      labelMaterial: data.packaging?.labeling?.labelMaterial || '',
+      labelWeight: data.packaging?.labeling?.labelWeight || null,
+      labelPrintingMethod: data.packaging?.labeling?.printingMethod || null,
+      labelInkType: data.packaging?.labeling?.inkType || null,
+      labelSize: data.packaging?.labeling?.labelSize || null,
       
-      // Packaging - Secondary
-      hasSecondaryPackaging: data.packaging.secondaryPackaging.hasSecondaryPackaging,
-      boxMaterial: data.packaging.secondaryPackaging.boxMaterial,
-      boxWeight: data.packaging.secondaryPackaging.boxWeight,
-      fillerMaterial: data.packaging.secondaryPackaging.fillerMaterial,
-      fillerWeight: data.packaging.secondaryPackaging.fillerWeight,
+      // Packaging - Closure System (with null safety)
+      closureType: data.packaging?.closure?.closureType || '',
+      closureMaterial: data.packaging?.closure?.material || '',
+      closureWeight: data.packaging?.closure?.weight || null,
+      hasBuiltInClosure: data.packaging?.closure?.hasLiner || false,
+      linerMaterial: data.packaging?.closure?.linerMaterial || null,
       
-      // Packaging - Supplier Information (CRITICAL - this was missing!)
-      packagingSupplier: data.packaging.supplierInformation.supplierName,
-      packagingSupplierId: data.packaging.supplierInformation.selectedSupplierId,
-      packagingSupplierCategory: data.packaging.supplierInformation.supplierCategory,
-      packagingSelectedProductId: data.packaging.supplierInformation.selectedProductId,
-      packagingSelectedProductName: data.packaging.supplierInformation.selectedProductName,
+      // Packaging - Secondary (with null safety)
+      hasSecondaryPackaging: data.packaging?.secondaryPackaging?.hasSecondaryPackaging || false,
+      boxMaterial: data.packaging?.secondaryPackaging?.boxMaterial || null,
+      boxWeight: data.packaging?.secondaryPackaging?.boxWeight || null,
+      fillerMaterial: data.packaging?.secondaryPackaging?.fillerMaterial || null,
+      fillerWeight: data.packaging?.secondaryPackaging?.fillerWeight || null,
       
-      // Production Process - Energy
-      electricityKwh: data.production.energyConsumption.electricityKwh,
-      gasM3: data.production.energyConsumption.gasM3,
-      steamKg: data.production.energyConsumption.steamKg,
-      fuelLiters: data.production.energyConsumption.fuelLiters,
-      renewableEnergyPercent: data.production.energyConsumption.renewableEnergyPercent,
+      // Packaging - Supplier Information (with null safety)
+      packagingSupplier: data.packaging?.supplierInformation?.supplierName || '',
+      packagingSupplierId: data.packaging?.supplierInformation?.selectedSupplierId || '',
+      packagingSupplierCategory: data.packaging?.supplierInformation?.supplierCategory || '',
+      packagingSelectedProductId: data.packaging?.supplierInformation?.selectedProductId || '',
+      packagingSelectedProductName: data.packaging?.supplierInformation?.selectedProductName || '',
       
-      // Production Process - Water
-      processWaterLiters: data.production.waterUsage.processWaterLiters,
-      cleaningWaterLiters: data.production.waterUsage.cleaningWaterLiters,
-      coolingWaterLiters: data.production.waterUsage.coolingWaterLiters,
-      wasteWaterTreatment: data.production.waterUsage.wasteWaterTreatment,
+      // Production Process - Energy (with null safety)
+      electricityKwh: data.production?.energyConsumption?.electricityKwh || null,
+      gasM3: data.production?.energyConsumption?.gasM3 || null,
+      steamKg: data.production?.energyConsumption?.steamKg || null,
+      fuelLiters: data.production?.energyConsumption?.fuelLiters || null,
+      renewableEnergyPercent: data.production?.energyConsumption?.renewableEnergyPercent || null,
       
-      // Production Process - Waste
-      organicWasteKg: data.production.wasteGeneration.organicWasteKg,
-      packagingWasteKg: data.production.wasteGeneration.packagingWasteKg,
-      hazardousWasteKg: data.production.wasteGeneration.hazardousWasteKg,
-      wasteRecycledPercent: data.production.wasteGeneration.wasteRecycledPercent,
+      // Production Process - Water (with null safety)
+      processWaterLiters: data.production?.waterUsage?.processWaterLiters || null,
+      cleaningWaterLiters: data.production?.waterUsage?.cleaningWaterLiters || null,
+      coolingWaterLiters: data.production?.waterUsage?.coolingWaterLiters || null,
+      wasteWaterTreatment: data.production?.waterUsage?.wasteWaterTreatment || false,
       
-      // Production Methods (as JSONB)
-      productionMethods: data.production.productionMethods,
+      // Production Process - Waste (with null safety)
+      organicWasteKg: data.production?.wasteGeneration?.organicWasteKg || null,
+      packagingWasteKg: data.production?.wasteGeneration?.packagingWasteKg || null,
+      hazardousWasteKg: data.production?.wasteGeneration?.hazardousWasteKg || null,
+      wasteRecycledPercent: data.production?.wasteGeneration?.wasteRecycledPercent || null,
       
-      // Distribution
-      averageTransportDistance: data.distribution.averageTransportDistance,
-      primaryTransportMode: data.distribution.primaryTransportMode,
-      distributionCenters: data.distribution.distributionCenters,
-      coldChainRequired: data.distribution.coldChainRequired,
-      packagingEfficiency: data.distribution.packagingEfficiency,
+      // Production Basic Fields (with null safety)
+      facilityLocation: data.production?.facilityLocation || '',
+      energySource: data.production?.energySource || '',
+      waterSourceType: data.production?.waterSourceType || '',
+      heatRecoverySystem: data.production?.heatRecoverySystem || false,
+      wasteManagement: data.production?.wasteManagement || '',
       
-      // End of Life
-      returnableContainer: data.endOfLife.returnableContainer,
-      recyclingRate: data.endOfLife.recyclingRate,
-      disposalMethod: data.endOfLife.disposalMethod,
-      consumerEducation: data.endOfLife.consumerEducation,
+      // Production Methods (serialize as JSON with null safety)
+      productionMethods: data.production ? JSON.stringify(data.production) : null,
       
-      // Certifications
-      certifications: data.certifications,
+      // Distribution (with null safety)
+      averageTransportDistance: data.distribution?.averageTransportDistance || null,
+      primaryTransportMode: data.distribution?.primaryTransportMode || '',
+      distributionCenters: data.distribution?.distributionCenters || null,
+      coldChainRequired: data.distribution?.coldChainRequired || false,
+      packagingEfficiency: data.distribution?.packagingEfficiency || null,
+      
+      // End of Life (with null safety)
+      returnableContainer: data.endOfLife?.returnableContainer || false,
+      recyclingRate: data.endOfLife?.recyclingRate || null,
+      disposalMethod: data.endOfLife?.disposalMethod || '',
+      consumerEducation: data.endOfLife?.consumerEducation || null,
+      
+      // Environmental (with null safety)
+      carbonFootprint: data.environmental?.carbonFootprint || null,
+      waterFootprint: data.environmental?.waterFootprint || null,
+      
+      // Certifications (serialize as JSON with null safety)
+      certifications: data.certifications ? JSON.stringify(data.certifications) : null,
     };
     
     const transformTime = Date.now() - startTime;
