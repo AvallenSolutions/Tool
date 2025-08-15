@@ -1,0 +1,164 @@
+
+> rest-express@1.0.0 dev
+isAuthenticated middleware check for: /api/conversations {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+New WebSocket connection
+User dev-user disconnected
+isAuthenticated middleware check for: /api/suggestions/next-steps {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/kpi-data {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/smart-goals {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+Products fetched: 2 for company 1
+isAuthenticated middleware check for: /api/company/sustainability-data {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+PUT /api/company/sustainability-data - Start
+Request body: {
+  "certifications": [
+    "Bonsucro",
+    "B-Corp Certified"
+  ],
+  "philanthropicMemberships": [],
+  "environmentalPolicies": {
+    "wasteManagement": "",
+    "energyEfficiency": "",
+    "waterConservation": "",
+    "carbonReduction": ""
+  },
+  "facilitiesData": {
+    "energySource": "",
+    "waterTreatment": "",
+    "transportationMethods": []
+  },
+  "sustainabilityReporting": {
+    "hasAnnualReport": false,
+    "reportingStandards": [],
+    "thirdPartyVerification": false,
+    "scopeEmissions": {
+      "scope1": false,
+      "scope2": false,
+      "scope3": false
+    }
+  },
+  "goals": {
+    "carbonNeutralTarget": "",
+    "sustainabilityGoals": "",
+    "circularEconomyInitiatives": ""
+  }
+}
+User object: {
+  claims: { sub: 'dev-user' },
+  expires_at: 1755281364,
+  access_token: 'dev-token',
+  refresh_token: 'dev-refresh'
+}
+User ID: dev-user
+Company found: undefined
+No company found for user
+isAuthenticated middleware check for: /api/suggestions/next-steps {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/smart-goals {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/kpi-data {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/sustainability-data {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+PUT /api/company/sustainability-data - Start
+Request body: {
+  "certifications": [
+    "B-Corp Certified",
+    "Bonsucro"
+  ],
+  "philanthropicMemberships": [],
+  "environmentalPolicies": {
+    "wasteManagement": "",
+    "energyEfficiency": "",
+    "waterConservation": "",
+    "carbonReduction": ""
+  },
+  "facilitiesData": {
+    "energySource": "",
+    "waterTreatment": "",
+    "transportationMethods": []
+  },
+  "sustainabilityReporting": {
+    "hasAnnualReport": false,
+    "reportingStandards": [],
+    "thirdPartyVerification": false,
+    "scopeEmissions": {
+      "scope1": false,
+      "scope2": false,
+      "scope3": false
+    }
+  },
+  "goals": {
+    "carbonNeutralTarget": "",
+    "sustainabilityGoals": "",
+    "circularEconomyInitiatives": ""
+  }
+}
+User object: {
+  claims: { sub: 'dev-user' },
+  expires_at: 1755281654,
+  access_token: 'dev-token',
+  refresh_token: 'dev-refresh'
+}
+User ID: dev-user
+Company found: undefined
+No company found for user

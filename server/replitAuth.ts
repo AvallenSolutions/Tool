@@ -141,30 +141,36 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (process.env.NODE_ENV === 'development' && !req.isAuthenticated()) {
     console.log('Development mode: Creating mock user for testing');
     
-    // Ensure dev user exists
-    await storage.upsertUser({
-      id: 'dev-user',
-      email: 'dev@example.com',
-      firstName: 'Dev',
-      lastName: 'User',
-      role: 'admin'
-    });
-    
-    // Ensure dev company exists
-    let company = await storage.getCompanyByOwner('dev-user');
-    if (!company) {
-      console.log('Creating mock company for dev user');
-      company = await storage.createCompany({
-        name: 'Demo Company',
-        industry: 'Beverages',
-        size: 'Medium',
-        country: 'United Kingdom',
-        ownerId: 'dev-user',
-        onboardingComplete: true,
-        address: '123 Demo Street, London, UK',
-        website: 'https://demo.company.com'
+    try {
+      // Ensure dev user exists
+      await storage.upsertUser({
+        id: 'dev-user',
+        email: 'dev@example.com',
+        firstName: 'Dev',
+        lastName: 'User',
+        role: 'admin'
       });
-      console.log('Mock company created:', company);
+      
+      // Ensure dev company exists
+      let company = await storage.getCompanyByOwner('dev-user');
+      if (!company) {
+        console.log('Creating mock company for dev user');
+        company = await storage.createCompany({
+          name: 'Demo Company',
+          industry: 'Beverages',
+          size: 'Medium',
+          country: 'United Kingdom',
+          ownerId: 'dev-user',
+          onboardingComplete: true,
+          address: '123 Demo Street, London, UK',
+          website: 'https://demo.company.com'
+        });
+        console.log('Mock company created:', company);
+      } else {
+        console.log('Existing company found for dev user:', company.name);
+      }
+    } catch (error: unknown) {
+      console.error('Error creating mock user/company:', error);
     }
     
     (req as any).user = {
