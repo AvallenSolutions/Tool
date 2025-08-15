@@ -185,7 +185,7 @@ function ProductDetail() {
               <TabsTrigger value="certifications" className="text-xs">Certifications</TabsTrigger>
               <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
               <TabsTrigger value="endoflife" className="text-xs">End of Life</TabsTrigger>
-              <TabsTrigger value="suppliers" className="text-xs">Suppliers</TabsTrigger>
+              <TabsTrigger value="lca" className="text-xs">LCA</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -1082,46 +1082,179 @@ function ProductDetail() {
               </div>
             </TabsContent>
 
-            {/* Suppliers Tab */}
-            <TabsContent value="suppliers">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5" />
-                    Supplier Information
-                  </CardTitle>
-                  <CardDescription>All suppliers associated with this product</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {(product.packagingSupplier || product.packagingSupplierId) ? (
-                    <div className="space-y-4">
-                      <div className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-medium text-lg">Packaging Supplier</h4>
-                          <Badge variant="outline" className="capitalize">
-                            {product.packagingSupplierCategory?.replace('_', ' ') || 'Packaging'}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="font-medium text-gray-600">Name:</span>
-                            <p>{product.packagingSupplier}</p>
+            {/* LCA Tab */}
+            <TabsContent value="lca">
+              {(() => {
+                // Parse LCA data if available
+                let lcaData: any = {};
+                try {
+                  if (product.lcaData) {
+                    lcaData = typeof product.lcaData === 'string' 
+                      ? JSON.parse(product.lcaData) 
+                      : product.lcaData;
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse LCA data:', e);
+                }
+
+                return (
+                  <div className="space-y-6">
+                    {/* LCA Overview */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Leaf className="w-5 h-5" />
+                          Life Cycle Assessment Overview
+                        </CardTitle>
+                        <CardDescription>Environmental impact analysis and carbon footprint calculation</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {product.carbonFootprint && (
+                            <div className="text-center p-4 bg-green-50 rounded-lg">
+                              <Leaf className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                              <h4 className="font-medium text-gray-900">Carbon Footprint</h4>
+                              <p className="text-2xl font-bold text-green-600">{product.carbonFootprint}</p>
+                              <p className="text-sm text-gray-600">kg CO₂e</p>
+                            </div>
+                          )}
+                          {product.waterFootprint && (
+                            <div className="text-center p-4 bg-blue-50 rounded-lg">
+                              <Droplets className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                              <h4 className="font-medium text-gray-900">Water Footprint</h4>
+                              <p className="text-2xl font-bold text-blue-600">{product.waterFootprint}</p>
+                              <p className="text-sm text-gray-600">Liters</p>
+                            </div>
+                          )}
+                          <div className="text-center p-4 bg-gray-50 rounded-lg">
+                            <FileText className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                            <h4 className="font-medium text-gray-900">LCA Status</h4>
+                            <Badge variant={product.hasPrecalculatedLca ? "default" : "outline"}>
+                              {product.hasPrecalculatedLca ? "Available" : "Pending"}
+                            </Badge>
                           </div>
-                          <div>
-                            <span className="font-medium text-gray-600">ID:</span>
-                            <p className="font-mono text-sm">{product.packagingSupplierId}</p>
-                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No supplier information available</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </Card>
+
+                    {/* LCA Distribution Data */}
+                    {lcaData.distribution && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Truck className="w-5 h-5" />
+                            Distribution LCA Data
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {lcaData.distribution.avgDistanceToDcKm && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Average Distance to DC</label>
+                                <p className="text-gray-800">{lcaData.distribution.avgDistanceToDcKm} km</p>
+                              </div>
+                            )}
+                            {lcaData.distribution.palletizationEfficiency && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Palletization Efficiency</label>
+                                <p className="text-gray-800">{lcaData.distribution.palletizationEfficiency}%</p>
+                              </div>
+                            )}
+                            {lcaData.distribution.primaryTransportMode && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Primary Transport Mode</label>
+                                <p className="text-gray-800 capitalize">{lcaData.distribution.primaryTransportMode}</p>
+                              </div>
+                            )}
+                            {lcaData.distribution.temperatureRangeCelsius && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Temperature Range</label>
+                                <p className="text-gray-800">
+                                  {lcaData.distribution.temperatureRangeCelsius.min}°C to {lcaData.distribution.temperatureRangeCelsius.max}°C
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Ingredient LCA Impact */}
+                    {product.ingredients && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Wheat className="w-5 h-5" />
+                            Ingredient Environmental Impact
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {(() => {
+                              const ingredients = Array.isArray(product.ingredients) 
+                                ? product.ingredients 
+                                : JSON.parse(product.ingredients || '[]');
+                              
+                              return ingredients.map((ingredient: any, index: number) => (
+                                <div key={index} className="border rounded-lg p-4">
+                                  <h4 className="font-medium text-lg mb-3">{ingredient.name}</h4>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                      <label className="text-gray-600">Origin</label>
+                                      <p className="font-medium">{ingredient.origin || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-gray-600">Transport Distance</label>
+                                      <p className="font-medium">{ingredient.transportDistance || 0} km</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-gray-600">Water Usage</label>
+                                      <p className="font-medium">{ingredient.waterUsage || 0} L</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-gray-600">Carbon Sequestration</label>
+                                      <p className="font-medium">{ingredient.carbonSequestration || 0} kg CO₂</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-gray-600">Farming Practice</label>
+                                      <Badge variant={ingredient.organic ? "default" : "outline"}>
+                                        {ingredient.farmingPractice || 'conventional'}
+                                      </Badge>
+                                    </div>
+                                    <div>
+                                      <label className="text-gray-600">Biodiversity Impact</label>
+                                      <p className="font-medium">{ingredient.biodiversityImpact || 0}/10</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-gray-600">Soil Quality Index</label>
+                                      <p className="font-medium">{ingredient.soilQualityIndex || 0}/10</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-gray-600">Processing Energy</label>
+                                      <p className="font-medium">{ingredient.processingEnergy || 0} kWh</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* If no LCA data available */}
+                    {!product.carbonFootprint && !product.waterFootprint && !lcaData.distribution && (!product.ingredients || product.ingredients.length === 0) && (
+                      <Card>
+                        <CardContent className="text-center py-8">
+                          <Leaf className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">No LCA data available</p>
+                          <p className="text-sm text-gray-400 mt-2">Life Cycle Assessment data will appear here once calculated</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                );
+              })()}
             </TabsContent>
           </Tabs>
         </main>
