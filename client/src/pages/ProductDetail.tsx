@@ -537,6 +537,66 @@ function ProductDetail() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Labels & Printing */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-avallen-green" />
+                      Labels & Printing
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {product.labelMaterial && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Label Material</label>
+                        <p className="font-medium text-slate-gray capitalize">{product.labelMaterial}</p>
+                      </div>
+                    )}
+                    {product.labelWeight && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Label Weight</label>
+                        <p className="font-medium text-slate-gray">{product.labelWeight} g</p>
+                      </div>
+                    )}
+                    {!product.labelMaterial && !product.labelWeight && (
+                      <p className="text-sm text-gray-500">No label information recorded</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Secondary Packaging */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-avallen-green" />
+                      Secondary Packaging
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {product.hasSecondaryPackaging && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Has Secondary Packaging</label>
+                        <p className="font-medium text-slate-gray">Yes</p>
+                      </div>
+                    )}
+                    {product.boxMaterial && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Box Material</label>
+                        <p className="font-medium text-slate-gray capitalize">{product.boxMaterial}</p>
+                      </div>
+                    )}
+                    {product.boxWeight && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Box Weight</label>
+                        <p className="font-medium text-slate-gray">{product.boxWeight} g</p>
+                      </div>
+                    )}
+                    {!product.hasSecondaryPackaging && !product.boxMaterial && !product.boxWeight && (
+                      <p className="text-sm text-gray-500">No secondary packaging recorded</p>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
 
