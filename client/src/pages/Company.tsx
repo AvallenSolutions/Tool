@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Leaf, Target, BarChart3, Save, Loader2, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { Building2, Leaf, Target, BarChart3, Save, Loader2, CheckCircle, AlertCircle, Info, Calculator } from "lucide-react";
+import { FootprintWizard } from "@/components/footprint/FootprintWizard";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -299,40 +300,52 @@ export default function Company() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-gray-100">
+            <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-gray-100">
               <TabsTrigger 
                 value="overview" 
-                className="flex flex-col items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
               >
                 <Building2 className="w-5 h-5" />
                 <span className="text-sm font-medium">Overview</span>
-                <span className="text-xs text-gray-500">Company & Certifications</span>
+                <span className="text-xs text-gray-500">Company Info</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="footprint" 
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+              >
+                <Calculator className="w-5 h-5" />
+                <span className="text-sm font-medium">Footprint</span>
+                <span className="text-xs text-gray-500">Carbon Calculator</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="operations" 
-                className="flex flex-col items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
               >
                 <Leaf className="w-5 h-5" />
                 <span className="text-sm font-medium">Operations</span>
-                <span className="text-xs text-gray-500">Facilities & Practices</span>
+                <span className="text-xs text-gray-500">Facilities</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="goals" 
-                className="flex flex-col items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
               >
                 <Target className="w-5 h-5" />
                 <span className="text-sm font-medium">Goals</span>
-                <span className="text-xs text-gray-500">Targets & Planning</span>
+                <span className="text-xs text-gray-500">Targets</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="impact" 
-                className="flex flex-col items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
               >
                 <BarChart3 className="w-5 h-5" />
                 <span className="text-sm font-medium">Impact</span>
-                <span className="text-xs text-gray-500">Progress & Results</span>
+                <span className="text-xs text-gray-500">Progress</span>
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="footprint" className="space-y-6">
+              <FootprintWizard />
+            </TabsContent>
 
             <TabsContent value="overview" className="space-y-6">
               {/* Enhanced Company Basic Info */}

@@ -6,6 +6,19 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 ## Recent Changes (August 2025)
 
+### Carbon Footprint Calculator Wizard Framework Complete (August 15, 2025) ✅
+- **Phase 2 Complete**: Comprehensive FootprintWizard framework with production-grade engineering standards
+- **Multi-Step Wizard Architecture**: 4-step guided process (Scope 1, Scope 2, Scope 3, Summary) with step navigation and progress tracking
+- **Company Page Integration**: Added new "Carbon Footprint Calculator" tab to Company page with 5-column layout
+- **Scope-Specific Step Components**: Individual step components with educational guidance and real emission factors
+  - **Scope 1 Step**: Direct emissions with 6 data types (natural gas, heating oil, LPG, petrol, diesel, refrigerant leaks)
+  - **Scope 2 Step**: Electricity consumption with renewable energy market-based reporting approach
+  - **Scope 3 Step**: 4 categories (waste, business travel, commuting, distribution) with spend-based factors
+  - **Summary Step**: Complete analysis with charts, benchmarking, and reduction recommendations
+- **Auto-Save Functionality**: Form data automatically saved with visual feedback and error handling
+- **Production-Ready Components**: Built with shadcn/ui, comprehensive TypeScript interfaces, and proper error states
+- **API Integration**: Connected to existing backend footprint endpoints for data persistence
+
 ### Packaging Data Display & Product Edit Bug Fix Complete (August 15, 2025) ✅
 - **Critical Bug Fix**: Resolved product editing creating duplicates instead of updating existing products
 - **API Endpoint Correction**: Fixed ProductEditDialog to use correct `PATCH /api/products/{id}` instead of `PUT /api/supplier-products/{id}`
