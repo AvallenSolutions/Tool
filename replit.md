@@ -18,6 +18,10 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 - **Auto-Save Functionality**: Form data automatically saved with visual feedback and error handling
 - **Production-Ready Components**: Built with shadcn/ui, comprehensive TypeScript interfaces, and proper error states
 - **API Integration**: Connected to existing backend footprint endpoints for data persistence
+- **Framework Testing Complete**: Backend APIs verified working with real emission factor calculations
+  - **Server Running**: Application successfully deployed on port 5000 with mock authentication for development
+  - **Data Persistence**: Confirmed data storage and retrieval with accurate calculations (Natural Gas: 2.03, Electricity: 0.193, Waste: 0.47 kg CO₂e factors)
+  - **URL Access**: Carbon footprint calculator accessible at `http://localhost:5000/app/company` → "Footprint" tab
 
 ### Packaging Data Display & Product Edit Bug Fix Complete (August 15, 2025) ✅
 - **Critical Bug Fix**: Resolved product editing creating duplicates instead of updating existing products
