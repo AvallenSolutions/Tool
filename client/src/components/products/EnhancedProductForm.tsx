@@ -557,7 +557,21 @@ export default function EnhancedProductForm({
   useEffect(() => {
     if (initialData) {
       console.log('🔄 Resetting form with initialData:', initialData);
+      console.log('🔍 Water dilution in initialData:', initialData.waterDilution);
       form.reset(initialData);
+      
+      // Force update waterDilution specifically after reset
+      if (initialData.waterDilution) {
+        console.log('🔧 Setting waterDilution manually:', initialData.waterDilution);
+        setTimeout(() => {
+          form.setValue('waterDilution.amount', initialData.waterDilution.amount);
+          form.setValue('waterDilution.unit', initialData.waterDilution.unit);
+          console.log('✅ Form values after manual set:', {
+            amount: form.getValues('waterDilution.amount'),
+            unit: form.getValues('waterDilution.unit')
+          });
+        }, 100);
+      }
       
       // Also set product images if they exist
       if (initialData.productImages && Array.isArray(initialData.productImages)) {
