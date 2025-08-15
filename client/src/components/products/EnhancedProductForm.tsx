@@ -832,7 +832,7 @@ export default function EnhancedProductForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Product Type *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select product type" />
@@ -1074,7 +1074,7 @@ export default function EnhancedProductForm({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Unit *</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select unit" />
@@ -1102,7 +1102,7 @@ export default function EnhancedProductForm({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Ingredient Type</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select type" />
@@ -1195,7 +1195,7 @@ export default function EnhancedProductForm({
                                   field.onChange(value);
                                   // Auto-sync to LCA Data
                                   form.setValue('lcaData.agriculture.landUse.farmingPractice', value as any);
-                                }} defaultValue={field.value}>
+                                }} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select practice" />
@@ -1547,7 +1547,7 @@ export default function EnhancedProductForm({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Unit *</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select unit" />
@@ -2045,7 +2045,7 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Label Material</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select material" />
@@ -2183,7 +2183,7 @@ export default function EnhancedProductForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Closure Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select closure type" />
@@ -3193,7 +3193,7 @@ export default function EnhancedProductForm({
                           // Auto-sync to LCA Data
                           const lcaMapping: Record<string, string> = { road: 'truck', rail: 'rail', sea: 'ship', air: 'air', multimodal: 'multimodal' };
                           form.setValue('lcaData.distribution.primaryTransportMode', lcaMapping[value] as any);
-                        }} defaultValue={field.value}>
+                        }} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select transport mode" />
@@ -5075,7 +5075,7 @@ export default function EnhancedProductForm({
                         <Select onValueChange={(value) => {
                           field.onChange(value);
                           form.setValue('lcaData.endOfLifeDetailed.primaryDisposalMethod', value as any);
-                        }} defaultValue={field.value}>
+                        }} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select disposal method" />
