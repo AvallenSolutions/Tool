@@ -64,16 +64,10 @@ export default function Dashboard() {
     window.location.reload();
   };
 
-  // Development helper - test onboarding flow
+  // Development helper - test new 5-step onboarding flow
   const testOnboardingFlow = () => {
-    // Clear all onboarding states
-    localStorage.removeItem('dashboard-tour-completed');
-    localStorage.removeItem('product-guide-completed');
-    
-    // Force show onboarding by setting the state directly
-    setShowOnboarding(true);
-    setShowTour(false);
-    setShowProductGuide(false);
+    // Navigate to the new 5-step onboarding wizard
+    window.location.href = '/app/onboarding';
   };
 
   useEffect(() => {
@@ -152,7 +146,7 @@ export default function Dashboard() {
               Reset Tour (Dev Only)
             </button>
             <button onClick={testOnboardingFlow} className="underline">
-              Test Onboarding Flow
+              Test New 5-Step Onboarding
             </button>
           </div>
         )}
