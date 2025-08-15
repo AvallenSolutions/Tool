@@ -74,6 +74,12 @@ function SimpleTestComponent() {
               Test GreenwashGuardian AI
             </button>
             <button 
+              onClick={() => window.location.href = '/app/onboarding'}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Test New 5-Step Onboarding
+            </button>
+            <button 
               onClick={() => window.location.href = '/app/dashboard'}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
