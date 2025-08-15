@@ -140,6 +140,33 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   // Development mode bypass for testing
   if (process.env.NODE_ENV === 'development' && !req.isAuthenticated()) {
     console.log('Development mode: Creating mock user for testing');
+    
+    // Ensure dev user exists
+    await storage.upsertUser({
+      id: 'dev-user',
+      email: 'dev@example.com',
+      firstName: 'Dev',
+      lastName: 'User',
+      role: 'admin'
+    });
+    
+    // Ensure dev company exists
+    let company = await storage.getCompanyByOwner('dev-user');
+    if (!company) {
+      console.log('Creating mock company for dev user');
+      company = await storage.createCompany({
+        name: 'Demo Company',
+        industry: 'Beverages',
+        size: 'Medium',
+        country: 'United Kingdom',
+        ownerId: 'dev-user',
+        onboardingComplete: true,
+        address: '123 Demo Street, London, UK',
+        website: 'https://demo.company.com'
+      });
+      console.log('Mock company created:', company);
+    }
+    
     (req as any).user = {
       claims: { sub: 'dev-user' },
       expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
