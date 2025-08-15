@@ -97,10 +97,11 @@ export function OnboardingWizard({ isOpen, onComplete }: OnboardingWizardProps) 
       });
       onComplete();
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Onboarding error:', error);
       toast({
         title: 'Setup incomplete',
-        description: 'There was an error completing your setup. Please try again.',
+        description: `Error: ${error.message || 'There was an error completing your setup. Please try again.'}`,
         variant: 'destructive',
       });
     },

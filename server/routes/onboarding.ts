@@ -50,7 +50,15 @@ export function setupOnboardingRoutes(app: Express) {
         });
       } catch (error) {
         console.error('Error updating company onboarding:', error);
-        res.status(500).json({ error: 'Failed to update company information' });
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : 'No stack trace',
+          updateData: req.body
+        });
+        res.status(500).json({ 
+          error: 'Failed to update company information',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
     }
   );
