@@ -36,10 +36,11 @@ export default function CreateEnhancedProduct() {
     queryKey: ['/api/products', productId],
     queryFn: async () => {
       if (!productId) return null;
-      console.log('📥 Fetching product data for ID:', productId);
+      console.log('📥 EDIT MODE: Fetching product data for ID:', productId);
       const response = await apiRequest("GET", `/api/products/${productId}`);
       const product = await response.json();
-      console.log('📦 Fetched product:', product);
+      console.log('📦 EDIT MODE: Fetched product raw data:', product);
+      console.log('🔍 EDIT MODE: waterDilution in raw data:', product.waterDilution, 'Type:', typeof product.waterDilution);
       return product;
     },
     enabled: Boolean(isEditMode && productId),
@@ -466,8 +467,15 @@ export default function CreateEnhancedProduct() {
 
       <EnhancedProductForm
         initialData={(() => {
-          console.log('🎯 Rendering form with existingProduct:', existingProduct);
-          return transformDatabaseToForm(existingProduct);
+          console.log('🎯 RENDER: About to transform existingProduct:', !!existingProduct);
+          if (!existingProduct) {
+            console.log('🎯 RENDER: No existingProduct, returning null');
+            return null;
+          }
+          console.log('🎯 RENDER: Calling transformDatabaseToForm...');
+          const transformed = transformDatabaseToForm(existingProduct);
+          console.log('🎯 RENDER: Transformation complete, result:', transformed?.waterDilution);
+          return transformed;
         })()}
         onSubmit={handleSubmit}
         onSaveDraft={(data) => saveDraftMutation.mutate(data)}
