@@ -7,6 +7,7 @@ import {
   supplierProducts,
   reports,
   companyData,
+  companyFootprintData,
   productInputs,
   uploadedDocuments,
   olcaFlowMappings,
@@ -34,6 +35,8 @@ import {
   type UploadedDocument,
   type InsertUploadedDocument,
   type CompanyData,
+  type CompanyFootprintData,
+  type InsertCompanyFootprintData,
   type ProductInput,
   type OlcaFlowMapping,
   type InsertOlcaFlowMapping,
@@ -70,6 +73,12 @@ export interface IStorage {
   // Company sustainability data operations
   getCompanySustainabilityData(companyId: number): Promise<CompanySustainabilityData | undefined>;
   upsertCompanySustainabilityData(companyId: number, data: Partial<InsertCompanySustainabilityData>): Promise<CompanySustainabilityData>;
+  
+  // Company footprint data operations
+  getCompanyFootprintData(companyId: number, scope?: number, dataType?: string): Promise<CompanyFootprintData[]>;
+  createFootprintData(data: InsertCompanyFootprintData): Promise<CompanyFootprintData>;
+  updateFootprintData(id: number, data: Partial<InsertCompanyFootprintData>): Promise<CompanyFootprintData>;
+  deleteFootprintData(id: number): Promise<void>;
   
   // Product operations
   getProductsByCompany(companyId: number): Promise<Product[]>;
@@ -594,6 +603,46 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Company footprint data operations
+  async getCompanyFootprintData(companyId: number, scope?: number, dataType?: string): Promise<CompanyFootprintData[]> {
+    let whereConditions = [eq(companyFootprintData.companyId, companyId)];
+    
+    if (scope) {
+      whereConditions.push(eq(companyFootprintData.scope, scope));
+    }
+    
+    if (dataType) {
+      whereConditions.push(eq(companyFootprintData.dataType, dataType));
+    }
+    
+    return await db
+      .select()
+      .from(companyFootprintData)
+      .where(and(...whereConditions))
+      .orderBy(desc(companyFootprintData.createdAt));
+  }
+
+  async createFootprintData(data: InsertCompanyFootprintData): Promise<CompanyFootprintData> {
+    const [footprintData] = await db
+      .insert(companyFootprintData)
+      .values(data)
+      .returning();
+    return footprintData;
+  }
+
+  async updateFootprintData(id: number, data: Partial<InsertCompanyFootprintData>): Promise<CompanyFootprintData> {
+    const [updated] = await db
+      .update(companyFootprintData)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(companyFootprintData.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFootprintData(id: number): Promise<void> {
+    await db.delete(companyFootprintData).where(eq(companyFootprintData.id, id));
   }
 
   // Document upload operations

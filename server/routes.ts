@@ -1508,6 +1508,159 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ END COMPANY SUSTAINABILITY DATA ENDPOINTS ============
 
+  // ============ COMPANY FOOTPRINT DATA ENDPOINTS ============
+  
+  // Get company footprint data
+  app.get('/api/company/footprint', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      const scope = req.query.scope ? parseInt(req.query.scope as string) : undefined;
+      const dataType = req.query.dataType as string | undefined;
+      
+      const footprintData = await dbStorage.getCompanyFootprintData(company.id, scope, dataType);
+      
+      res.json({ success: true, data: footprintData });
+    } catch (error) {
+      console.error('Error fetching company footprint data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Create/update company footprint data
+  app.post('/api/company/footprint', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      const { dataType, scope, value, unit, metadata } = req.body;
+      
+      if (!dataType || !scope || !value || !unit) {
+        return res.status(400).json({ error: 'dataType, scope, value, and unit are required' });
+      }
+      
+      // Calculate emissions based on emission factors (simplified for now)
+      const emissionsFactor = getEmissionsFactor(dataType, unit);
+      const calculatedEmissions = parseFloat(value) * emissionsFactor;
+      
+      const footprintData = await dbStorage.createFootprintData({
+        companyId: company.id,
+        dataType,
+        scope,
+        value: value.toString(),
+        unit,
+        emissionsFactor: emissionsFactor.toString(),
+        calculatedEmissions: calculatedEmissions.toString(),
+        metadata: metadata || {},
+        reportingPeriodStart: company.currentReportingPeriodStart,
+        reportingPeriodEnd: company.currentReportingPeriodEnd,
+      });
+      
+      res.json({ success: true, data: footprintData });
+    } catch (error) {
+      console.error('Error creating company footprint data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Update company footprint data entry
+  app.put('/api/company/footprint/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      const { value, unit, metadata } = req.body;
+      
+      if (!value || !unit) {
+        return res.status(400).json({ error: 'value and unit are required' });
+      }
+      
+      // Recalculate emissions
+      const currentData = await dbStorage.getCompanyFootprintData(0, undefined, undefined);
+      const existingRecord = currentData.find(d => d.id === parseInt(id));
+      
+      if (!existingRecord) {
+        return res.status(404).json({ error: 'Footprint data not found' });
+      }
+      
+      const emissionsFactor = getEmissionsFactor(existingRecord.dataType, unit);
+      const calculatedEmissions = parseFloat(value) * emissionsFactor;
+      
+      const updatedData = await dbStorage.updateFootprintData(parseInt(id), {
+        value: value.toString(),
+        unit,
+        emissionsFactor: emissionsFactor.toString(),
+        calculatedEmissions: calculatedEmissions.toString(),
+        metadata: metadata || existingRecord.metadata,
+      });
+      
+      res.json({ success: true, data: updatedData });
+    } catch (error) {
+      console.error('Error updating company footprint data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Delete company footprint data entry
+  app.delete('/api/company/footprint/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      await dbStorage.deleteFootprintData(parseInt(id));
+      res.json({ success: true, message: 'Footprint data deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting company footprint data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Helper function for emission factors (simplified - in production this would be a proper database/service)
+  function getEmissionsFactor(dataType: string, unit: string): number {
+    const emissionFactors: Record<string, Record<string, number>> = {
+      // Scope 1 factors (kg CO2e per unit)
+      natural_gas: { 'm3': 2.03, 'kWh': 0.18 },
+      heating_oil: { 'litres': 2.94, 'kg': 3.15 },
+      lpg: { 'litres': 1.51, 'kg': 2.98 },
+      petrol: { 'litres': 2.31 },
+      diesel: { 'litres': 2.65 },
+      refrigerant_gas: { 'kg': 1400 }, // Average GWP
+      
+      // Scope 2 factors (kg CO2e per kWh) - UK grid average
+      electricity: { 'kWh': 0.193 },
+      
+      // Scope 3 factors (kg CO2e per unit)
+      waste_landfill: { 'kg': 0.47 },
+      waste_recycling: { 'kg': 0.02 },
+      waste_composting: { 'kg': 0.01 },
+      travel_flights: { '£': 0.25 }, // Per £ spend
+      travel_rail_spend: { '£': 0.04 },
+      travel_vehicle_spend: { '£': 0.17 },
+      travel_hotel_spend: { '£': 0.09 },
+      employee_commuting: { 'miles': 0.19 }, // Per mile
+      downstream_distribution_spend: { '£': 0.15 },
+    };
+    
+    return emissionFactors[dataType]?.[unit] || 0;
+  }
+
+  // ============ END COMPANY FOOTPRINT DATA ENDPOINTS ============
+
   // ============ SUPPLIER INVITATION ENDPOINTS ============
 
   // Validation for supplier invitations

@@ -59,6 +59,23 @@ export const companies = pgTable("companies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Company footprint data for carbon emissions tracking
+export const companyFootprintData = pgTable("company_footprint_data", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  dataType: varchar("data_type", { length: 50 }).notNull(), // e.g., 'natural_gas', 'electricity', 'waste_landfill'
+  scope: integer("scope").notNull(), // 1, 2, or 3
+  value: decimal("value", { precision: 15, scale: 4 }).notNull(), // Consumption amount
+  unit: varchar("unit", { length: 20 }).notNull(), // e.g., 'kWh', 'litres', 'kg', '£'
+  emissionsFactor: decimal("emissions_factor", { precision: 15, scale: 8 }), // tCO2e per unit
+  calculatedEmissions: decimal("calculated_emissions", { precision: 15, scale: 4 }), // tCO2e
+  metadata: jsonb("metadata"), // Additional data like site names, tariff info, etc.
+  reportingPeriodStart: date("reporting_period_start"),
+  reportingPeriodEnd: date("reporting_period_end"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Company operational data (Scope 1 & 2)
 export const companyData = pgTable("company_data", {
   id: serial("id").primaryKey(),
@@ -668,6 +685,13 @@ export const companyDataRelations = relations(companyData, ({ one }) => ({
   }),
 }));
 
+export const companyFootprintDataRelations = relations(companyFootprintData, ({ one }) => ({
+  company: one(companies, {
+    fields: [companyFootprintData.companyId],
+    references: [companies.id],
+  }),
+}));
+
 export const reportRelations = relations(reports, ({ one }) => ({
   company: one(companies, {
     fields: [reports.companyId],
@@ -734,6 +758,12 @@ export const insertCompanySustainabilityDataSchema = createInsertSchema(companyS
   lastUpdated: true,
 });
 
+export const insertCompanyFootprintDataSchema = createInsertSchema(companyFootprintData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -787,6 +817,8 @@ export type InsertReport = z.infer<typeof insertReportSchema>;
 export type UploadedDocument = typeof uploadedDocuments.$inferSelect;
 export type InsertUploadedDocument = z.infer<typeof insertUploadedDocumentSchema>;
 export type CompanyData = typeof companyData.$inferSelect;
+export type CompanyFootprintData = typeof companyFootprintData.$inferSelect;
+export type InsertCompanyFootprintData = z.infer<typeof insertCompanyFootprintDataSchema>;
 export type ProductInput = typeof productInputs.$inferSelect;
 
 // OpenLCA Types
