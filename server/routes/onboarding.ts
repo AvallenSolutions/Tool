@@ -6,7 +6,6 @@ import { storage } from "../storage";
 export function setupOnboardingRoutes(app: Express) {
   // PATCH /api/companies/update-onboarding - Update company with onboarding data
   app.patch('/api/companies/update-onboarding', 
-    isAuthenticated,
     [
       body('primaryMotivation').optional().isString(),
       body('productCategory').optional().isString(),
@@ -17,25 +16,25 @@ export function setupOnboardingRoutes(app: Express) {
     ],
     async (req: Request, res: Response) => {
       try {
+        // Check authentication the same way as /api/auth/user
+        if (!req.isAuthenticated() || !req.user) {
+          return res.status(401).json({ error: 'User not authenticated' });
+        }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
           return res.status(400).json({ error: 'Validation failed', details: errors.array() });
         }
 
         const user = req.user as any;
-        console.log('Onboarding auth check:', { 
-          hasUser: !!user, 
-          hasClaims: !!user?.claims, 
-          hasSub: !!user?.claims?.sub,
-          userId: user?.claims?.sub 
-        });
+        const userId = user.claims?.sub;
         
-        if (!user?.claims?.sub) {
-          return res.status(401).json({ error: 'User not authenticated' });
+        if (!userId) {
+          return res.status(401).json({ error: 'User ID not found' });
         }
 
         // Get company by owner ID
-        const company = await storage.getCompanyByOwner(user.claims.sub);
+        const company = await storage.getCompanyByOwner(userId);
         if (!company) {
           return res.status(400).json({ error: 'User not associated with a company' });
         }
@@ -71,15 +70,21 @@ export function setupOnboardingRoutes(app: Express) {
   );
 
   // GET /api/companies/current - Get current company information
-  app.get('/api/companies/current', isAuthenticated, async (req, res) => {
+  app.get('/api/companies/current', async (req, res) => {
     try {
-      const user = req.user as any;
-      if (!user?.claims?.sub) {
+      if (!req.isAuthenticated() || !req.user) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User ID not found' });
+      }
+
       // Get company by owner ID
-      const company = await storage.getCompanyByOwner(user.claims.sub);
+      const company = await storage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ error: 'Company not found' });
