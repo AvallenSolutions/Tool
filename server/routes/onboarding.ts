@@ -12,6 +12,8 @@ export function setupOnboardingRoutes(app: Express) {
       body('numberOfEmployees').optional().isString(),
       body('industry').optional().isString(),
       body('country').optional().isString(),
+      body('currentReportingPeriodStart').optional().isString(),
+      body('currentReportingPeriodEnd').optional().isString(),
       body('onboardingComplete').optional().isBoolean(),
     ],
     async (req: Request, res: Response) => {

@@ -23,6 +23,8 @@ interface OnboardingData {
   companySize: string;
   country: string;
   primaryMotivations: string[];
+  reportingPeriodStart: string;
+  reportingPeriodEnd: string;
 }
 
 interface CleanOnboardingWizardProps {
@@ -93,10 +95,12 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
     industry: '',
     companySize: '',
     country: '',
-    primaryMotivations: []
+    primaryMotivations: [],
+    reportingPeriodStart: '',
+    reportingPeriodEnd: ''
   });
 
-  const totalSteps = 4;
+  const totalSteps = 5;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -107,6 +111,8 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
         numberOfEmployees: data.companySize,
         country: data.country,
         primaryMotivation: data.primaryMotivations.join(', '),
+        currentReportingPeriodStart: data.reportingPeriodStart,
+        currentReportingPeriodEnd: data.reportingPeriodEnd,
         onboardingComplete: true
       });
     },
@@ -152,6 +158,8 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
         return formData.companySize.length > 0 && formData.country.length > 0;
       case 4:
         return formData.primaryMotivations.length > 0;
+      case 5:
+        return formData.reportingPeriodStart && formData.reportingPeriodEnd;
       default:
         return false;
     }
@@ -169,7 +177,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
                 Welcome to your sustainability journey!
               </h3>
               <p className="text-gray-600 max-w-lg mx-auto">
-                Let's start by getting to know you. This will help us personalize your experience.
+                Let's start by setting up your basic company profile. This will help us personalize your sustainability tools and reporting.
               </p>
             </div>
             
@@ -196,7 +204,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
                 Tell us about your company
               </h3>
               <p className="text-gray-600 max-w-lg mx-auto">
-                We need some basic information to set up your sustainability dashboard.
+                We'll set up your basic company profile for sustainability tracking and reporting.
               </p>
             </div>
             
@@ -243,7 +251,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
                 More about {formData.companyName}
               </h3>
               <p className="text-gray-600 max-w-lg mx-auto">
-                A few more details to help us set up your sustainability dashboard.
+                A few more details to complete your basic company profile setup.
               </p>
             </div>
             
@@ -336,6 +344,52 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
                 </p>
               </div>
             )}
+          </div>
+        );
+
+      case 5:
+        // Step 5: Reporting Period
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <CheckCircle className="w-16 h-16 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-slate-gray mb-2">
+                Set your reporting period
+              </h3>
+              <p className="text-gray-600 max-w-lg mx-auto">
+                Choose the time period for your sustainability reporting and LCA assessments. This will be used for all your environmental impact measurements.
+              </p>
+            </div>
+            
+            <div className="max-w-md mx-auto space-y-4">
+              <div>
+                <Label htmlFor="reportingPeriodStart">Reporting Period Start Date</Label>
+                <Input
+                  id="reportingPeriodStart"
+                  type="date"
+                  value={formData.reportingPeriodStart}
+                  onChange={(e) => setFormData(prev => ({ ...prev, reportingPeriodStart: e.target.value }))}
+                  className="text-lg mt-2"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="reportingPeriodEnd">Reporting Period End Date</Label>
+                <Input
+                  id="reportingPeriodEnd"
+                  type="date"
+                  value={formData.reportingPeriodEnd}
+                  onChange={(e) => setFormData(prev => ({ ...prev, reportingPeriodEnd: e.target.value }))}
+                  className="text-lg mt-2"
+                />
+              </div>
+              
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  💡 <strong>Tip:</strong> Most companies choose a 12-month period that aligns with their financial year or calendar year for easier data collection and reporting.
+                </p>
+              </div>
+            </div>
           </div>
         );
       
