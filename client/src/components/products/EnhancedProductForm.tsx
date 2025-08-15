@@ -598,16 +598,16 @@ export default function EnhancedProductForm({
       // 1. Auto-fill Main Crop Type from Ingredients tab
       if (currentData.ingredients && currentData.ingredients.length > 0) {
         const primaryIngredient = currentData.ingredients[0];
-        if (primaryIngredient?.ingredientName && !currentData.lcaData?.agriculture?.mainCropType) {
-          form.setValue('lcaData.agriculture.mainCropType', primaryIngredient.ingredientName);
+        if (primaryIngredient?.name && !currentData.lcaData?.agriculture?.mainCropType) {
+          form.setValue('lcaData.agriculture.mainCropType', primaryIngredient.name);
         }
         
         // Auto-fill agricultural data from ingredients
         if (primaryIngredient?.yieldPerHectare) {
           form.setValue('lcaData.agriculture.yieldTonPerHectare', primaryIngredient.yieldPerHectare);
         }
-        if (primaryIngredient?.dieselConsumption) {
-          form.setValue('lcaData.agriculture.dieselLPerHectare', primaryIngredient.dieselConsumption);
+        if (primaryIngredient?.dieselUsage) {
+          form.setValue('lcaData.agriculture.dieselLPerHectare', primaryIngredient.dieselUsage);
         }
         if (primaryIngredient?.carbonSequestration) {
           form.setValue('lcaData.agriculture.sequestrationTonCo2PerTonCrop', primaryIngredient.carbonSequestration);
@@ -640,36 +640,36 @@ export default function EnhancedProductForm({
       }
       
       // Auto-fill label specifications
-      if (currentData.packaging?.label) {
-        const label = currentData.packaging.label;
-        if (label.materialType) {
-          form.setValue('lcaData.packagingDetailed.label.materialType', label.materialType);
+      if (currentData.packaging?.labeling) {
+        const label = currentData.packaging.labeling;
+        if (label.labelMaterial) {
+          form.setValue('lcaData.packagingDetailed.label.materialType', label.labelMaterial);
         }
-        if (label.weightGrams) {
-          form.setValue('lcaData.packagingDetailed.label.weightGrams', label.weightGrams);
+        if (label.labelWeight) {
+          form.setValue('lcaData.packagingDetailed.label.weightGrams', label.labelWeight);
         }
       }
       
       // Auto-fill closure system
       if (currentData.packaging?.closure) {
         const closure = currentData.packaging.closure;
-        if (closure.materialType) {
-          form.setValue('lcaData.packagingDetailed.closure.materialType', closure.materialType);
+        if (closure.material) {
+          form.setValue('lcaData.packagingDetailed.closure.materialType', closure.material);
         }
-        if (closure.weightGrams) {
-          form.setValue('lcaData.packagingDetailed.closure.weightGrams', closure.weightGrams);
+        if (closure.weight) {
+          form.setValue('lcaData.packagingDetailed.closure.weightGrams', closure.weight);
         }
       }
       
       // Auto-fill secondary packaging
       if (currentData.packaging?.secondaryPackaging) {
         const secondary = currentData.packaging.secondaryPackaging;
-        if (secondary.hasBox && secondary.boxMaterial) {
+        if (secondary.hasSecondaryPackaging && secondary.boxMaterial) {
           form.setValue('lcaData.packagingDetailed.secondaryPackaging.hasBox', true);
           form.setValue('lcaData.packagingDetailed.secondaryPackaging.boxMaterial', secondary.boxMaterial);
         }
-        if (secondary.boxWeightGrams) {
-          form.setValue('lcaData.packagingDetailed.secondaryPackaging.boxWeightGrams', secondary.boxWeightGrams);
+        if (secondary.boxWeight) {
+          form.setValue('lcaData.packagingDetailed.secondaryPackaging.boxWeightGrams', secondary.boxWeight);
         }
       }
       
@@ -3377,7 +3377,7 @@ export default function EnhancedProductForm({
                       {form.getValues('ingredients')?.length > 0 && (
                         <div className="flex items-center gap-1 text-green-600">
                           <CheckCircle className="w-3 h-3" />
-                          <span>Main crop: {form.getValues('ingredients')?.[0]?.ingredientName}</span>
+                          <span>Main crop: {form.getValues('ingredients')?.[0]?.name}</span>
                         </div>
                       )}
                       {!form.getValues('ingredients')?.length && (
@@ -3495,7 +3495,7 @@ export default function EnhancedProductForm({
                         </FormLabel>
                         <FormDescription className="text-xs text-muted-foreground">
                           {form.getValues('ingredients')?.length > 0 
-                            ? `🔄 Auto-filled from Ingredients tab: ${form.getValues('ingredients')?.[0]?.ingredientName || 'Primary ingredient'}`
+                            ? `🔄 Auto-filled from Ingredients tab: ${form.getValues('ingredients')?.[0]?.name || 'Primary ingredient'}`
                             : 'Main agricultural ingredient used in this product'
                           }
                         </FormDescription>

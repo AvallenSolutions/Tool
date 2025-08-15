@@ -67,6 +67,11 @@ export default function CreateEnhancedProduct() {
       ingredients: typeof product.ingredients === 'string' 
         ? JSON.parse(product.ingredients) 
         : product.ingredients || [],
+      
+      // Water dilution
+      waterDilution: typeof product.waterDilution === 'string' 
+        ? JSON.parse(product.waterDilution) 
+        : product.waterDilution || { amount: 0, unit: 'ml' },
         
       packaging: {
         primaryContainer: {

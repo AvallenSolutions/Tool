@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   ArrowLeft, Package, Building2, FileText, Globe, Mail,
   Weight, Ruler, Recycle, Award, Info, Wheat, Box, Factory, 
-  Leaf, Truck, Edit
+  Leaf, Truck, Edit, Droplets
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
@@ -22,9 +22,9 @@ function ImageDisplay({ photo, productName, index }: { photo: string, productNam
     const parts = photo.split('/');
     uuid = parts[parts.length - 1].split('?')[0]; // Remove query params if present
   } else if (photo.includes('uploads/')) {
-    uuid = photo.split('uploads/')[1] || photo.split('uploads/').pop();
+    uuid = photo.split('uploads/')[1] || photo.split('uploads/').pop() || '';
   } else {
-    uuid = photo.split('/').pop();
+    uuid = photo.split('/').pop() || '';
   }
   
   // Force the exact UUID we know works
@@ -333,6 +333,51 @@ function ProductDetail() {
                               </div>
                             )}
                           </div>
+                          
+                          {/* Agriculture & Sourcing Details */}
+                          {(ingredient.yieldPerHectare || ingredient.farmingPractice || ingredient.dieselUsage || ingredient.transportDistance) && (
+                            <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                              <h5 className="font-medium text-green-900 mb-2">Agriculture & Sourcing Details</h5>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                {ingredient.yieldPerHectare > 0 && (
+                                  <div>
+                                    <span className="font-medium text-gray-600">Yield:</span>
+                                    <p>{ingredient.yieldPerHectare} tons/hectare</p>
+                                  </div>
+                                )}
+                                {ingredient.farmingPractice && (
+                                  <div>
+                                    <span className="font-medium text-gray-600">Farming:</span>
+                                    <p className="capitalize">{ingredient.farmingPractice}</p>
+                                  </div>
+                                )}
+                                {ingredient.dieselUsage > 0 && (
+                                  <div>
+                                    <span className="font-medium text-gray-600">Diesel:</span>
+                                    <p>{ingredient.dieselUsage} L/hectare</p>
+                                  </div>
+                                )}
+                                {ingredient.transportDistance > 0 && (
+                                  <div>
+                                    <span className="font-medium text-gray-600">Transport:</span>
+                                    <p>{ingredient.transportDistance} km</p>
+                                  </div>
+                                )}
+                                {ingredient.waterUsage > 0 && (
+                                  <div>
+                                    <span className="font-medium text-gray-600">Water:</span>
+                                    <p>{ingredient.waterUsage} m³/ton</p>
+                                  </div>
+                                )}
+                                {ingredient.biodiversityImpact > 0 && (
+                                  <div>
+                                    <span className="font-medium text-gray-600">Biodiversity:</span>
+                                    <p>{ingredient.biodiversityImpact}/10</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -340,6 +385,25 @@ function ProductDetail() {
                     <div className="text-center py-8">
                       <Wheat className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-500">No ingredient information available</p>
+                    </div>
+                  )}
+                  
+                  {/* Water Dilution Section */}
+                  {product.waterDilution && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                        <Droplets className="w-4 h-4" />
+                        Water Dilution
+                      </h4>
+                      <div className="text-sm">
+                        <span className="font-medium text-gray-600">Amount: </span>
+                        {(() => {
+                          const dilution = typeof product.waterDilution === 'string' 
+                            ? JSON.parse(product.waterDilution) 
+                            : product.waterDilution;
+                          return `${dilution.amount} ${dilution.unit}`;
+                        })()}
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -394,6 +458,32 @@ function ProductDetail() {
                     <CardDescription>Primary container and packaging materials</CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {/* Supplier Product Information - Move to top of specifications */}
+                    {product.packagingSelectedProductName && (
+                      <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          Selected Supplier Product: {product.packagingSelectedProductName}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-blue-700">Supplier</label>
+                            <p className="text-blue-900">{product.packagingSupplier || 'Not specified'}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-blue-700">Category</label>
+                            <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+                              {product.packagingSupplierCategory?.replace('_', ' ') || 'Not specified'}
+                            </Badge>
+                          </div>
+                        </div>
+                        {/* TODO: Add supplier product image here when available */}
+                        <div className="mt-3 text-xs text-blue-600">
+                          📦 Bottle specifications below are from this supplier product
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Primary Container */}
                       <div className="space-y-4">

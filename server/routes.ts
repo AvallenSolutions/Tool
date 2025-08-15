@@ -2215,6 +2215,9 @@ Be precise and quote actual text from the content, not generic terms.`;
         // Handle ingredients array (convert from form structure to DB structure)
         ingredients: ingredients ? JSON.stringify(ingredients) : null,
         
+        // Handle water dilution
+        waterDilution: req.body.waterDilution ? req.body.waterDilution : null,
+        
         // Handle nested packaging data - flatten to individual fields
         ...(packaging?.primaryContainer && {
           bottleMaterial: packaging.primaryContainer.material,
