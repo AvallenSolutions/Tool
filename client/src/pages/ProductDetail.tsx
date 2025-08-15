@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
+import LCACalculationCard from '@/components/lca/LCACalculationCard';
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
   // Handle full Google Cloud Storage URLs - extract the UUID from the path
@@ -1084,68 +1085,36 @@ function ProductDetail() {
 
             {/* LCA Tab */}
             <TabsContent value="lca">
-              {(() => {
-                // Parse all JSON data sources
-                let lcaData: any = {};
-                let productionData: any = {};
-                let ingredients: any[] = [];
+              <div className="space-y-6">
+                {/* LCA Calculation Card - Real-time LCA Results */}
+                <LCACalculationCard product={product} />
                 
-                try {
-                  if (product.lcaData) {
-                    lcaData = typeof product.lcaData === 'string' ? JSON.parse(product.lcaData) : product.lcaData;
+                {/* Additional LCA Data Display */}
+                {(() => {
+                  // Parse all JSON data sources for additional context
+                  let lcaData: any = {};
+                  let productionData: any = {};
+                  let ingredients: any[] = [];
+                  
+                  try {
+                    if (product.lcaData) {
+                      lcaData = typeof product.lcaData === 'string' ? JSON.parse(product.lcaData) : product.lcaData;
+                    }
+                    if (product.productionMethods) {
+                      productionData = typeof product.productionMethods === 'string' ? JSON.parse(product.productionMethods) : product.productionMethods;
+                    }
+                    if (product.ingredients) {
+                      ingredients = Array.isArray(product.ingredients) ? product.ingredients : JSON.parse(product.ingredients || '[]');
+                    }
+                  } catch (e) {
+                    console.warn('Failed to parse LCA data:', e);
                   }
-                  if (product.productionMethods) {
-                    productionData = typeof product.productionMethods === 'string' ? JSON.parse(product.productionMethods) : product.productionMethods;
-                  }
-                  if (product.ingredients) {
-                    ingredients = Array.isArray(product.ingredients) ? product.ingredients : JSON.parse(product.ingredients || '[]');
-                  }
-                } catch (e) {
-                  console.warn('Failed to parse LCA data:', e);
-                }
 
-                // Convert string numbers to actual numbers for display
-                const toNum = (val: any) => val ? (typeof val === 'string' ? parseFloat(val) : val) : 0;
+                  // Convert string numbers to actual numbers for display
+                  const toNum = (val: any) => val ? (typeof val === 'string' ? parseFloat(val) : val) : 0;
 
-                return (
-                  <div className="space-y-6">
-                    {/* LCA Overview & Key Metrics */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Leaf className="w-5 h-5" />
-                          Life Cycle Assessment Overview
-                        </CardTitle>
-                        <CardDescription>Environmental impact analysis and carbon footprint calculation</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="text-center p-4 bg-green-50 rounded-lg">
-                            <Leaf className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                            <h4 className="font-medium text-gray-900">Carbon Footprint</h4>
-                            <p className="text-2xl font-bold text-green-600">
-                              {product.carbonFootprint ? `${toNum(product.carbonFootprint)}` : 'Calculating...'}
-                            </p>
-                            <p className="text-sm text-gray-600">kg CO₂e</p>
-                          </div>
-                          <div className="text-center p-4 bg-blue-50 rounded-lg">
-                            <Droplets className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                            <h4 className="font-medium text-gray-900">Water Footprint</h4>
-                            <p className="text-2xl font-bold text-blue-600">
-                              {product.waterFootprint ? `${toNum(product.waterFootprint)}` : 'Calculating...'}
-                            </p>
-                            <p className="text-sm text-gray-600">Liters</p>
-                          </div>
-                          <div className="text-center p-4 bg-gray-50 rounded-lg">
-                            <FileText className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                            <h4 className="font-medium text-gray-900">LCA Status</h4>
-                            <Badge variant={product.hasPrecalculatedLca ? "default" : "outline"}>
-                              {product.hasPrecalculatedLca ? "Available" : "Pending"}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  return (
+                    <div className="space-y-6">
 
                     {/* Raw Materials & Ingredients Impact */}
                     <Card>
@@ -1512,9 +1481,10 @@ function ProductDetail() {
                         )}
                       </CardContent>
                     </Card>
-                  </div>
-                );
-              })()}
+                    </div>
+                  );
+                })()}
+              </div>
             </TabsContent>
           </Tabs>
         </main>

@@ -20,6 +20,12 @@ export default function Reports() {
     retry: false,
   });
 
+  // Fetch LCA calculation reports
+  const { data: lcaReports, isLoading: lcaReportsLoading } = useQuery({
+    queryKey: ["/api/lca/reports"],
+    retry: false,
+  });
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -176,6 +182,70 @@ export default function Reports() {
                     </Button>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* LCA Calculation Reports Section */}
+              {lcaReports && lcaReports.length > 0 && (
+                <div className="mt-8">
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-slate-gray mb-2">LCA Calculation Reports</h2>
+                    <p className="text-gray-600">Product-specific environmental impact calculations</p>
+                  </div>
+                  <div className="grid gap-4">
+                    {lcaReports.map((lcaReport: any) => (
+                      <Card key={lcaReport.jobId} className="border-light-gray">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {getStatusIcon(lcaReport.status)}
+                              <div>
+                                <CardTitle className="text-slate-gray">
+                                  {lcaReport.productName || `Product ID: ${lcaReport.productId}`}
+                                </CardTitle>
+                                <p className="text-sm text-gray-500">
+                                  LCA Calculation • Job ID: {lcaReport.jobId}
+                                </p>
+                              </div>
+                            </div>
+                            {getStatusBadge(lcaReport.status)}
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {lcaReport.results && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="text-center p-4 bg-green-50 rounded-lg">
+                                <div className="text-2xl font-bold text-green-600">
+                                  {lcaReport.results.carbonFootprint?.toFixed(2) || 'N/A'}
+                                </div>
+                                <div className="text-sm text-gray-600">kg CO₂e</div>
+                              </div>
+                              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                                <div className="text-2xl font-bold text-blue-600">
+                                  {lcaReport.results.waterFootprint?.toFixed(2) || 'N/A'}
+                                </div>
+                                <div className="text-sm text-gray-600">Liters</div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                              Calculated: {new Date(lcaReport.createdAt).toLocaleDateString()}
+                            </div>
+                            <div className="flex space-x-2">
+                              {lcaReport.status === 'completed' && (
+                                <Button size="sm" className="bg-avallen-green hover:bg-avallen-green-light text-white">
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download PDF
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}

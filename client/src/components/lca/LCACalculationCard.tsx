@@ -81,8 +81,13 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
     }
   });
 
-  // Provide safe default validation object
+  // Provide safe default validation object with proper typing
   const safeValidation = validation || { valid: true, errors: [], warnings: [] };
+  
+  // Type-safe accessors for validation
+  const validationErrors = (safeValidation as any)?.errors || [];
+  const validationWarnings = (safeValidation as any)?.warnings || [];
+  const isValidationValid = (safeValidation as any)?.valid !== false;
 
   // Start LCA calculation
   const startCalculationMutation = useMutation({
@@ -175,7 +180,7 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
   }, [activeJob, currentJobId]);
 
   const handleStartCalculation = () => {
-    startCalculationMutation.mutate();
+    startCalculationMutation.mutate({});
   };
 
   const handleCancelCalculation = () => {
@@ -240,9 +245,9 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
               <Settings className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium">Product Validation</span>
             </div>
-            {safeValidation.errors?.length > 0 && (
+            {validationErrors?.length > 0 && (
               <div className="space-y-1">
-                {safeValidation.errors.map((error: string, index: number) => (
+                {validationErrors.map((error: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 text-sm text-red-600">
                     <XCircle className="w-3 h-3" />
                     {error}
@@ -250,9 +255,9 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
                 ))}
               </div>
             )}
-            {safeValidation.warnings?.length > 0 && (
+            {validationWarnings?.length > 0 && (
               <div className="space-y-1">
-                {safeValidation.warnings.map((warning: string, index: number) => (
+                {validationWarnings.map((warning: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 text-sm text-yellow-600">
                     <AlertCircle className="w-3 h-3" />
                     {warning}
@@ -268,24 +273,24 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {getStatusIcon(currentJob?.status || activeJob?.status)}
+                {getStatusIcon((currentJob as any)?.status || (activeJob as any)?.status)}
                 <span className="text-sm font-medium">Current Calculation</span>
               </div>
-              <Badge className={getStatusColor(currentJob?.status || activeJob?.status)}>
-                {currentJob?.status || activeJob?.status}
+              <Badge className={getStatusColor((currentJob as any)?.status || (activeJob as any)?.status)}>
+                {(currentJob as any)?.status || (activeJob as any)?.status}
               </Badge>
             </div>
 
-            {(currentJob?.status === 'processing' || activeJob?.status === 'processing') && (
+            {((currentJob as any)?.status === 'processing' || (activeJob as any)?.status === 'processing') && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Progress</span>
-                  <span>{currentJob?.progress || activeJob?.progress || 0}%</span>
+                  <span>{(currentJob as any)?.progress || (activeJob as any)?.progress || 0}%</span>
                 </div>
-                <Progress value={currentJob?.progress || activeJob?.progress || 0} className="h-2" />
-                {currentJob?.estimatedTimeRemaining && (
+                <Progress value={(currentJob as any)?.progress || (activeJob as any)?.progress || 0} className="h-2" />
+                {(currentJob as any)?.estimatedTimeRemaining && (
                   <div className="text-sm text-gray-500">
-                    Estimated time remaining: {formatDuration(currentJob.estimatedTimeRemaining)}
+                    Estimated time remaining: {formatDuration((currentJob as any).estimatedTimeRemaining)}
                   </div>
                 )}
               </div>
@@ -382,7 +387,7 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
           <div className="flex gap-2">
             <Button
               onClick={handleStartCalculation}
-              disabled={startCalculationMutation.isPending || !safeValidation?.valid}
+              disabled={startCalculationMutation.isPending || !isValidationValid}
               className="flex-1"
             >
               <Calculator className="w-4 h-4 mr-2" />
@@ -403,7 +408,7 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
         )}
 
         {/* Validation Errors */}
-        {safeValidation && !safeValidation.valid && (
+        {!isValidationValid && (
           <div className="p-3 bg-red-50 rounded-lg">
             <p className="text-sm text-red-600 font-medium">
               Cannot calculate LCA: Please fix the validation errors above.
