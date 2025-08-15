@@ -1480,6 +1480,12 @@ Be precise and quote actual text from the content, not generic terms.`;
       completedFields++;
     }
 
+    // Count philanthropic memberships
+    totalFields += 1;
+    if (data.philanthropicMemberships && data.philanthropicMemberships.length > 0) {
+      completedFields++;
+    }
+
     return totalFields > 0 ? Math.round((completedFields / totalFields) * 100) : 0;
   }
 

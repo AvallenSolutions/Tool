@@ -28,7 +28,20 @@ const certificationOptions = [
   'Fair Trade',
   'B-Corp Certified',
   'LEED Certified',
+  'Bonsucro',
+  'Rainforest Alliance',
+  'EcoVadis',
+  'Alliance for Water Stewardship',
+  'Global G.A.P',
+  'ReGenified',
   'Other'
+];
+
+// Philanthropic memberships options
+const philanthropicMembershipOptions = [
+  '1% For The Planet',
+  'The Drinks Trust',
+  'Equal Measures'
 ];
 
 const energySourceOptions = [
@@ -81,6 +94,7 @@ export default function Settings() {
   // Initialize sustainability data with proper types
   const [sustainabilityData, setSustainabilityData] = useState({
     certifications: [] as string[],
+    philanthropicMemberships: [] as string[],
     environmentalPolicies: {
       wasteManagement: '',
       energyEfficiency: '',

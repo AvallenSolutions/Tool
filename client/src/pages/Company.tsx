@@ -28,7 +28,20 @@ const certificationOptions = [
   'Fair Trade',
   'B-Corp Certified',
   'LEED Certified',
+  'Bonsucro',
+  'Rainforest Alliance',
+  'EcoVadis',
+  'Alliance for Water Stewardship',
+  'Global G.A.P',
+  'ReGenified',
   'Other'
+];
+
+// Philanthropic memberships options
+const philanthropicMembershipOptions = [
+  '1% For The Planet',
+  'The Drinks Trust',
+  'Equal Measures'
 ];
 
 const energySourceOptions = [
@@ -88,10 +101,10 @@ export default function Company() {
 
   // Update sustainability data mutation
   const sustainabilityMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/company/sustainability-data", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", "/api/company/sustainability-data", data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company/sustainability-data"] });
       toast({
@@ -111,6 +124,7 @@ export default function Company() {
   // Initialize sustainability data with proper types
   const [sustainabilityData, setSustainabilityData] = useState({
     certifications: [] as string[],
+    philanthropicMemberships: [] as string[],
     environmentalPolicies: {
       wasteManagement: '',
       energyEfficiency: '',
@@ -168,10 +182,11 @@ export default function Company() {
 
   // Use backend completion percentage if available, otherwise calculate locally
   const completionPercentage = backendSustainabilityData?.completionPercentage ?? (() => {
-    const totalFields = 17; // Updated count for more accurate tracking
+    const totalFields = 18; // Updated count for more accurate tracking
     let completedFields = 0;
 
     if (sustainabilityData.certifications.length > 0) completedFields++;
+    if (sustainabilityData.philanthropicMemberships.length > 0) completedFields++;
     if (sustainabilityData.environmentalPolicies.wasteManagement) completedFields++;
     if (sustainabilityData.environmentalPolicies.energyEfficiency) completedFields++;
     if (sustainabilityData.environmentalPolicies.waterConservation) completedFields++;
@@ -447,6 +462,80 @@ export default function Company() {
                       </div>
                       <p className="text-sm text-amber-600 mt-1">
                         Adding certifications helps demonstrate your environmental commitments to stakeholders
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Philanthropic Memberships */}
+              <Card className="border-l-4 border-l-blue-500">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-gray-50">
+                  <CardTitle className="flex items-center text-slate-gray">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                      <Target className="w-5 h-5 text-blue-600" />
+                    </div>
+                    Philanthropic Memberships
+                    {sustainabilityData.philanthropicMemberships.length > 0 && (
+                      <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                        {sustainabilityData.philanthropicMemberships.length} selected
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Select philanthropic organizations and memberships your company supports. These demonstrate your commitment to social responsibility.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {philanthropicMembershipOptions.map((membership) => (
+                      <div 
+                        key={membership} 
+                        className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
+                          sustainabilityData.philanthropicMemberships.includes(membership)
+                            ? 'bg-blue-50 border-blue-200 shadow-sm'
+                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        <Checkbox
+                          id={`membership-${membership}`}
+                          checked={sustainabilityData.philanthropicMemberships.includes(membership)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSustainabilityData(prev => ({
+                                ...prev,
+                                philanthropicMemberships: [...prev.philanthropicMemberships, membership]
+                              }));
+                            } else {
+                              setSustainabilityData(prev => ({
+                                ...prev,
+                                philanthropicMemberships: prev.philanthropicMemberships.filter(m => m !== membership)
+                              }));
+                            }
+                          }}
+                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                        <Label 
+                          htmlFor={`membership-${membership}`} 
+                          className={`text-sm font-medium cursor-pointer ${
+                            sustainabilityData.philanthropicMemberships.includes(membership)
+                              ? 'text-blue-700'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          {membership}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {sustainabilityData.philanthropicMemberships.length === 0 && (
+                    <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Info className="w-4 h-4" />
+                        <span className="text-sm font-medium">No memberships selected</span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Adding philanthropic memberships showcases your company's social responsibility commitments
                       </p>
                     </div>
                   )}

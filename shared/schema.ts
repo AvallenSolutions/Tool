@@ -513,6 +513,9 @@ export const companySustainabilityData = pgTable("company_sustainability_data", 
   // Environmental Certifications
   certifications: jsonb("certifications").$type<string[]>().default([]),
   
+  // Philanthropic Memberships
+  philanthropicMemberships: jsonb("philanthropic_memberships").$type<string[]>().default([]),
+  
   // Environmental Policies
   environmentalPolicies: jsonb("environmental_policies").$type<{
     wasteManagement: string;
