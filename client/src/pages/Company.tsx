@@ -181,7 +181,7 @@ export default function Company() {
   }, [sustainabilityData, backendSustainabilityData, sustainabilityLoading, sustainabilityMutation]);
 
   // Use backend completion percentage if available, otherwise calculate locally
-  const completionPercentage = backendSustainabilityData?.completionPercentage ?? (() => {
+  const completionPercentage = (backendSustainabilityData as any)?.completionPercentage ?? (() => {
     const totalFields = 18; // Updated count for more accurate tracking
     let completedFields = 0;
 
@@ -254,11 +254,11 @@ export default function Company() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {backendSustainabilityData?.lastUpdated && (
+                  {(backendSustainabilityData as any)?.lastUpdated && (
                     <div className="text-right">
                       <div className="text-xs text-gray-500">Last saved</div>
                       <div className="text-xs font-medium">
-                        {new Date(backendSustainabilityData.lastUpdated).toLocaleTimeString()}
+                        {new Date((backendSustainabilityData as any).lastUpdated).toLocaleTimeString()}
                       </div>
                     </div>
                   )}
@@ -1174,9 +1174,9 @@ export default function Company() {
                       <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                       Auto-saving changes...
                     </span>
-                  ) : backendSustainabilityData?.lastUpdated ? (
+                  ) : (backendSustainabilityData as any)?.lastUpdated ? (
                     <span>
-                      Last updated: {new Date(backendSustainabilityData.lastUpdated).toLocaleString()}
+                      Last updated: {new Date((backendSustainabilityData as any).lastUpdated).toLocaleString()}
                     </span>
                   ) : (
                     <span>Changes are automatically saved</span>

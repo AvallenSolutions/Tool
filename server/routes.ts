@@ -1399,7 +1399,8 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Update company sustainability data
   app.put('/api/company/sustainability-data', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
