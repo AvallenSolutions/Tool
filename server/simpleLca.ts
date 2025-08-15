@@ -70,7 +70,7 @@ export class SimpleLCAService {
         await new Promise(resolve => setTimeout(resolve, step.delay));
         
         // Update progress in database
-        await storage.updateLcaCalculationJob(jobId, {
+        await storage.updateLcaCalculationJobByJobId(jobId, {
           progress: step.progress,
           status: step.status,
           ...(step.status === 'completed' && {
@@ -95,7 +95,7 @@ export class SimpleLCAService {
     } catch (error) {
       console.error('Error in progressive calculation:', error);
       // Mark job as failed
-      await storage.updateLcaCalculationJob(jobId, {
+      await storage.updateLcaCalculationJobByJobId(jobId, {
         status: 'failed',
         errorMessage: (error as Error).message
       });
@@ -157,7 +157,7 @@ export class SimpleLCAService {
   // Cancel LCA calculation
   async cancelCalculation(jobId: string): Promise<boolean> {
     try {
-      await storage.updateLcaCalculationJob(jobId, {
+      await storage.updateLcaCalculationJobByJobId(jobId, {
         status: 'failed',
         errorMessage: 'Cancelled by user'
       });
