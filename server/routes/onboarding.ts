@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
 import { isAuthenticated } from "../replitAuth";
 import { storage } from "../storage";
@@ -15,20 +15,20 @@ export function setupOnboardingRoutes(app: Express) {
       body('country').optional().isString(),
       body('onboardingComplete').optional().isBoolean(),
     ],
-    async (req, res) => {
+    async (req: Request, res: Response) => {
       try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
           return res.status(400).json({ error: 'Validation failed', details: errors.array() });
         }
 
-        const user = req.user;
-        if (!user?.id) {
+        const user = req.user as any;
+        if (!user?.claims?.sub) {
           return res.status(401).json({ error: 'User not authenticated' });
         }
 
         // Get company by owner ID
-        const company = await storage.getCompanyByOwner(user.id);
+        const company = await storage.getCompanyByOwner(user.claims.sub);
         if (!company) {
           return res.status(400).json({ error: 'User not associated with a company' });
         }
@@ -58,13 +58,13 @@ export function setupOnboardingRoutes(app: Express) {
   // GET /api/companies/current - Get current company information
   app.get('/api/companies/current', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
-      if (!user?.id) {
+      const user = req.user as any;
+      if (!user?.claims?.sub) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
       // Get company by owner ID
-      const company = await storage.getCompanyByOwner(user.id);
+      const company = await storage.getCompanyByOwner(user.claims.sub);
       
       if (!company) {
         return res.status(404).json({ error: 'Company not found' });
