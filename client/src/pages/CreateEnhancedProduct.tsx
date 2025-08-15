@@ -486,6 +486,7 @@ export default function CreateEnhancedProduct() {
         isEditing={Boolean(isEditMode)}
         isSubmitting={createProductMutation.isPending}
         isDraftSaving={saveDraftMutation.isPending}
+        productId={productId}
       />
       
       {/* Loading Timer Popup */}

@@ -13,11 +13,14 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
-import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2, CheckCircle } from 'lucide-react';
+import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2, CheckCircle, Activity, Calculator } from 'lucide-react';
 import { ImageUploader } from '@/components/ImageUploader';
 import { TourProvider } from '@/components/tour/TourProvider';
 import { TourButton } from '@/components/tour/TourButton';
 import { HelpBubble } from '@/components/ui/help-bubble';
+import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import '@/styles/shepherd.css';
 
 // Enhanced Product Schema with all 8 tabs including LCA Data Collection
@@ -500,6 +503,7 @@ interface EnhancedProductFormProps {
   isEditing?: boolean;
   isSubmitting?: boolean;
   isDraftSaving?: boolean;
+  productId?: string | number;
 }
 
 export default function EnhancedProductForm({ 
@@ -508,13 +512,22 @@ export default function EnhancedProductForm({
   onSaveDraft,
   isEditing = false, 
   isSubmitting = false,
-  isDraftSaving = false
+  isDraftSaving = false,
+  productId
 }: EnhancedProductFormProps) {
   const [activeTab, setActiveTab] = useState('basic');
   const [selectedIngredientSuppliers, setSelectedIngredientSuppliers] = useState<any[]>([]);
   const [selectedPackagingSupplier, setSelectedPackagingSupplier] = useState<any>(null);
   const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
+  
+  // LCA calculation state
+  const [lcaJobId, setLcaJobId] = useState<string | null>(null);
+  const [lcaProgress, setLcaProgress] = useState<number>(0);
+  const [lcaStatus, setLcaStatus] = useState<'idle' | 'calculating' | 'completed' | 'failed'>('idle');
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const form = useForm<EnhancedProductFormData>({
     resolver: zodResolver(enhancedProductSchema),
@@ -787,6 +800,120 @@ export default function EnhancedProductForm({
   const handleSaveDraft = () => {
     const currentData = form.getValues();
     onSaveDraft?.(currentData);
+  };
+
+  // LCA calculation mutations
+  const startLcaCalculation = useMutation({
+    mutationFn: async () => {
+      if (!productId) {
+        throw new Error('Product ID is required for LCA calculation');
+      }
+      
+      const response = await apiRequest('POST', `/api/lca/calculate/${productId}`, {
+        options: {
+          includeTransport: true,
+          includeProcessing: true,
+          allocationMethod: 'economic'
+        }
+      });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setLcaJobId(data.jobId);
+      setLcaStatus('calculating');
+      setLcaProgress(10);
+      
+      toast({
+        title: "LCA Calculation Started",
+        description: `Estimated completion time: ${Math.round(data.estimatedDuration / 1000)} seconds`,
+      });
+      
+      // Start polling for status updates
+      pollLcaStatus(data.jobId);
+    },
+    onError: (error: any) => {
+      setLcaStatus('failed');
+      toast({
+        title: "LCA Calculation Failed",
+        description: error.message || "Unable to start LCA calculation",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Poll LCA calculation status
+  const pollLcaStatus = async (jobId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await apiRequest('GET', `/api/lca/calculation/${jobId}`);
+        const status = await response.json();
+        
+        setLcaProgress(status.progress || 0);
+        
+        if (status.status === 'completed') {
+          setLcaStatus('completed');
+          clearInterval(pollInterval);
+          
+          toast({
+            title: "LCA Calculation Complete!",
+            description: "Environmental impact assessment has been generated successfully.",
+          });
+          
+          // Invalidate product queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+          
+        } else if (status.status === 'failed') {
+          setLcaStatus('failed');
+          clearInterval(pollInterval);
+          
+          toast({
+            title: "LCA Calculation Failed",
+            description: status.errorMessage || "Calculation encountered an error",
+            variant: "destructive",
+          });
+        }
+        
+      } catch (error) {
+        console.error('Error polling LCA status:', error);
+        clearInterval(pollInterval);
+        setLcaStatus('failed');
+      }
+    }, 2000); // Poll every 2 seconds
+    
+    // Auto-cleanup after 5 minutes
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      if (lcaStatus === 'calculating') {
+        setLcaStatus('failed');
+        toast({
+          title: "LCA Calculation Timeout",
+          description: "Calculation took longer than expected",
+          variant: "destructive",
+        });
+      }
+    }, 300000);
+  };
+
+  const handleCalculateLCA = () => {
+    if (!productId) {
+      toast({
+        title: "Save Product First",
+        description: "Please save the product before calculating LCA",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!isEditing) {
+      toast({
+        title: "Product Not Saved",
+        description: "Please save the product before calculating LCA",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    startLcaCalculation.mutate();
   };
 
   // Auto-fill LCA Data from all tabs when moving to LCA Data Collection tab
@@ -5546,6 +5673,39 @@ export default function EnhancedProductForm({
                     <>
                       <Save className="w-4 h-4 mr-2" />
                       Save as Draft
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {/* LCA Calculate Button - Only show when editing existing product */}
+              {isEditing && productId && activeTab === 'lcadata' && (
+                <Button 
+                  type="button"
+                  onClick={handleCalculateLCA}
+                  disabled={lcaStatus === 'calculating' || startLcaCalculation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  variant="default"
+                >
+                  {lcaStatus === 'calculating' || startLcaCalculation.isPending ? (
+                    <>
+                      <Activity className="w-4 h-4 mr-2 animate-pulse" />
+                      Calculating... {lcaProgress}%
+                    </>
+                  ) : lcaStatus === 'completed' ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      LCA Complete
+                    </>
+                  ) : lcaStatus === 'failed' ? (
+                    <>
+                      <Calculator className="w-4 h-4 mr-2" />
+                      Retry LCA
+                    </>
+                  ) : (
+                    <>
+                      <Calculator className="w-4 h-4 mr-2" />
+                      Calculate LCA
                     </>
                   )}
                 </Button>
