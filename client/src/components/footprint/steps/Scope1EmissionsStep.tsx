@@ -128,8 +128,62 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
     }, 0);
   };
 
-  // Add new entry
+  // Enhanced validation for entry data
+  const validateEntry = (entry: EmissionEntry): { isValid: boolean; errors: string[]; warnings: string[] } => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    if (!entry.value) {
+      errors.push('Value is required');
+    } else {
+      const numValue = parseFloat(entry.value);
+      if (isNaN(numValue) || numValue < 0) {
+        errors.push('Value must be a positive number');
+      } else if (numValue === 0) {
+        warnings.push('Zero consumption detected - ensure all emission sources are captured');
+      } else if (numValue > 1000000) {
+        errors.push('Value seems unusually high - please verify');
+      }
+      
+      // Industry benchmarking for validation warnings
+      const benchmarks: Record<string, { typical: number, high: number, unit: string }> = {
+        'natural_gas': { typical: 50000, high: 150000, unit: 'm3' },
+        'heating_oil': { typical: 10000, high: 30000, unit: 'litres' },
+        'petrol': { typical: 5000, high: 15000, unit: 'litres' },
+        'diesel': { typical: 8000, high: 25000, unit: 'litres' },
+        'lpg': { typical: 2000, high: 8000, unit: 'litres' },
+        'refrigerant_gas': { typical: 5, high: 20, unit: 'kg' }
+      };
+
+      const benchmark = benchmarks[entry.dataType];
+      if (benchmark && entry.unit === benchmark.unit) {
+        if (numValue > benchmark.high) {
+          warnings.push(`High consumption detected (${numValue} ${entry.unit}) - above typical industry levels for SME drinks companies`);
+        } else if (numValue < benchmark.typical * 0.1) {
+          warnings.push(`Low consumption detected - ensure all ${entry.dataType.replace('_', ' ')} sources are captured`);
+        }
+      }
+    }
+    
+    if (!entry.dataType) errors.push('Emission source type is required');
+    if (!entry.unit) errors.push('Unit is required');
+    
+    return { isValid: errors.length === 0, errors, warnings };
+  };
+
+  // Add new entry with enhanced validation
   const addEntry = () => {
+    const validation = validateEntry(newEntry);
+    
+    if (!validation.isValid) {
+      console.warn('Validation errors:', validation.errors);
+      return;
+    }
+    
+    if (validation.warnings.length > 0) {
+      console.info('Validation warnings:', validation.warnings);
+    }
+
     if (newEntry.dataType && newEntry.value && newEntry.unit) {
       const updatedEntries = [...entries, { ...newEntry }];
       setEntries(updatedEntries);
@@ -144,13 +198,32 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
           scope: 1,
           value: newEntry.value,
           unit: newEntry.unit,
-          metadata: { description: newEntry.description }
+          metadata: { 
+            description: newEntry.description || (dataType?.description || ''),
+            emissionFactor: unitInfo.factor,
+            validationWarnings: validation.warnings,
+            industryBenchmark: `Typical SME range: ${getBenchmarkRange(newEntry.dataType, newEntry.unit)}`
+          }
         });
       }
 
       // Reset form
       setNewEntry({ dataType: '', value: '', unit: '', description: '' });
     }
+  };
+
+  // Get benchmark range for display
+  const getBenchmarkRange = (dataType: string, unit: string): string => {
+    const benchmarks: Record<string, Record<string, string>> = {
+      'natural_gas': { 'm3': '5,000 - 150,000 m³/year' },
+      'heating_oil': { 'litres': '1,000 - 30,000 L/year' },
+      'petrol': { 'litres': '500 - 15,000 L/year' },
+      'diesel': { 'litres': '800 - 25,000 L/year' },
+      'lpg': { 'litres': '200 - 8,000 L/year' },
+      'refrigerant_gas': { 'kg': '1 - 20 kg/year' }
+    };
+    
+    return benchmarks[dataType]?.[unit] || 'Industry data not available';
   };
 
   // Remove entry
@@ -262,19 +335,37 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
             </Select>
           </div>
 
-          {/* Selected Type Info */}
+          {/* Selected Type Info with Industry Benchmarks */}
           {selectedDataType && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <div>
-                  <p className="font-medium">{selectedDataType.description}</p>
-                  <p className="text-sm mt-1">
-                    <strong>Examples:</strong> {selectedDataType.examples}
-                  </p>
-                </div>
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-3">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <div>
+                    <p className="font-medium">{selectedDataType.description}</p>
+                    <p className="text-sm mt-1">
+                      <strong>Examples:</strong> {selectedDataType.examples}
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+              
+              {/* Industry Benchmark Information */}
+              <Alert className="bg-blue-50 border-blue-200">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <div>
+                    <p className="font-medium">Industry Benchmark (SME Drinks Companies)</p>
+                    <p className="text-sm mt-1">
+                      <strong>Typical Annual Range:</strong> {getBenchmarkRange(selectedDataType.id, selectedDataType.units[0]?.value)}
+                    </p>
+                    <p className="text-xs mt-1 text-blue-600">
+                      Values outside this range will trigger validation warnings to help ensure data accuracy.
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

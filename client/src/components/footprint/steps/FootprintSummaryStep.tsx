@@ -68,54 +68,99 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
 
   const intensityMetrics = calculateIntensityMetrics();
 
-  // Determine industry benchmark comparison
+  // Determine industry benchmark comparison with actionable insights
   const getBenchmarkComparison = () => {
     const benchmark = INDUSTRY_BENCHMARKS['Food & Beverage']; // Default for drinks industry
     const perEmployee = intensityMetrics.perEmployee;
     
-    if (perEmployee <= benchmark.low) return { level: 'excellent', color: 'text-green-600', message: 'Excellent - Below industry low benchmark' };
-    if (perEmployee <= benchmark.average) return { level: 'good', color: 'text-green-500', message: 'Good - Below industry average' };
-    if (perEmployee <= benchmark.high) return { level: 'average', color: 'text-yellow-600', message: 'Average - Within typical industry range' };
-    return { level: 'high', color: 'text-red-600', message: 'Above average - Opportunities for improvement' };
+    let performance = 'average';
+    let message = '';
+    let recommendations: string[] = [];
+    
+    if (perEmployee < benchmark.low) {
+      performance = 'excellent';
+      message = `Outstanding performance! ${perEmployee.toFixed(0)} kg CO₂e per employee is well below industry standards.`;
+      recommendations = [
+        'Document and share your best practices',
+        'Consider setting science-based targets for further reductions',
+        'Explore carbon-negative initiatives'
+      ];
+    } else if (perEmployee > benchmark.high) {
+      performance = 'needs-improvement';
+      message = `Above industry average at ${perEmployee.toFixed(0)} kg CO₂e per employee. Significant opportunities for improvement.`;
+      recommendations = [
+        'Prioritize energy efficiency improvements',
+        'Switch to renewable electricity contracts',
+        'Optimize transportation and logistics',
+        'Implement waste reduction programs'
+      ];
+    } else {
+      performance = 'average';
+      message = `Within industry range at ${perEmployee.toFixed(0)} kg CO₂e per employee.`;
+      recommendations = [
+        'Set reduction targets to move toward industry best practice',
+        'Focus on highest-impact emission sources',
+        'Consider renewable energy procurement'
+      ];
+    }
+    
+    return { performance, message, recommendations, benchmark };
   };
-
-  const benchmarkComparison = getBenchmarkComparison();
-
-  // Generate recommendations
-  const getRecommendations = () => {
-    const recommendations = [];
+  
+  // Get specific reduction recommendations by scope
+  const getReductionRecommendations = () => {
+    const recommendations: { scope: number; title: string; actions: string[]; impact: 'high' | 'medium' | 'low' }[] = [];
     
-    if (scopeEmissions.scope3 > (scopeEmissions.scope1 + scopeEmissions.scope2) * 2) {
+    // Scope 1 recommendations
+    if (scopeEmissions.scope1 > 0) {
       recommendations.push({
-        priority: 'high',
-        title: 'Focus on Supply Chain',
-        description: 'Scope 3 represents the majority of your emissions. Engage with suppliers on their carbon reduction initiatives.',
-        action: 'Develop supplier engagement strategy'
+        scope: 1,
+        title: 'Direct Emissions Reduction',
+        actions: [
+          'Switch to electric or hybrid company vehicles',
+          'Improve building insulation and heating efficiency',
+          'Regular maintenance of refrigeration systems to prevent leaks',
+          'Consider renewable heating systems (heat pumps, solar thermal)'
+        ],
+        impact: 'high'
       });
     }
     
-    if (scopeEmissions.scope2 > scopeEmissions.scope1 * 1.5) {
+    // Scope 2 recommendations
+    if (scopeEmissions.scope2 > 0) {
       recommendations.push({
-        priority: 'medium',
-        title: 'Switch to Renewable Energy',
-        description: 'Your electricity emissions are significant. Consider renewable energy contracts or on-site solar.',
-        action: 'Investigate renewable energy options'
+        scope: 2,
+        title: 'Electricity & Energy Procurement',
+        actions: [
+          'Switch to renewable electricity tariff (100% impact on Scope 2)',
+          'Install LED lighting throughout facilities',
+          'Upgrade to energy-efficient equipment and HVAC systems',
+          'Consider on-site renewable energy (solar panels)'
+        ],
+        impact: 'high'
       });
     }
     
-    if (scopeEmissions.scope1 > 1000) {
+    // Scope 3 recommendations
+    if (scopeEmissions.scope3 > 0) {
       recommendations.push({
-        priority: 'medium',
-        title: 'Improve Energy Efficiency',
-        description: 'Direct emissions from fuel use can be reduced through efficiency measures and electrification.',
-        action: 'Conduct energy audit'
+        scope: 3,
+        title: 'Supply Chain & Operations',
+        actions: [
+          'Work with suppliers to reduce their emissions',
+          'Optimize packaging design and materials',
+          'Reduce business travel through virtual meetings',
+          'Implement circular economy principles in product design'
+        ],
+        impact: 'medium'
       });
     }
     
     return recommendations;
   };
 
-  const recommendations = getRecommendations();
+  const benchmarkComparison = getBenchmarkComparison();
+  const reductionRecommendations = getReductionRecommendations();
 
   const handleDownloadReport = () => {
     // TODO: Implement PDF report generation
@@ -243,7 +288,11 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
                 {intensityMetrics.perEmployee.toLocaleString()} kg CO₂e
               </div>
               <p className="text-sm text-slate-600">Per Employee</p>
-              <div className={`text-sm font-medium ${benchmarkComparison.color} mt-1`}>
+              <div className={`text-sm font-medium ${
+                benchmarkComparison.performance === 'excellent' ? 'text-green-600' : 
+                benchmarkComparison.performance === 'average' ? 'text-yellow-600' :
+                'text-red-600'
+              } mt-1`}>
                 {benchmarkComparison.message}
               </div>
             </div>
@@ -269,36 +318,80 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
         </CardContent>
       </Card>
 
-      {/* Recommendations */}
-      {recommendations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Target className="h-5 w-5" />
-              <span>Reduction Recommendations</span>
-            </CardTitle>
-            <CardDescription>
-              Based on your footprint analysis, here are priority actions to reduce emissions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recommendations.map((rec, index) => (
+      {/* Industry Benchmarking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Target className="h-5 w-5" />
+            <span>Industry Benchmarking & Recommendations</span>
+          </CardTitle>
+          <CardDescription>
+            Performance comparison with drinks industry peers and specific reduction strategies
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Benchmark Performance */}
+          <div className={`p-4 rounded-lg border-l-4 ${
+            benchmarkComparison.performance === 'excellent' ? 'bg-green-50 border-green-500' : 
+            benchmarkComparison.performance === 'average' ? 'bg-yellow-50 border-yellow-500' :
+            'bg-red-50 border-red-500'
+          }`}>
+            <div className="flex items-start space-x-3">
+              <Award className={`h-5 w-5 mt-1 ${
+                benchmarkComparison.performance === 'excellent' ? 'text-green-600' : 
+                benchmarkComparison.performance === 'average' ? 'text-yellow-600' :
+                'text-red-600'
+              }`} />
+              <div>
+                <h4 className="font-semibold text-slate-900 mb-2">Industry Performance</h4>
+                <p className="text-sm text-slate-700 mb-3">{benchmarkComparison.message}</p>
+                
+                {/* General Recommendations */}
+                <div className="space-y-1">
+                  {benchmarkComparison.recommendations.map((rec, idx) => (
+                    <div key={idx} className="flex items-center text-sm text-slate-600">
+                      <span className="mr-2">•</span>
+                      <span>{rec}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Scope-specific Recommendations */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-slate-900">Targeted Reduction Strategies</h4>
+            <div className="grid gap-4">
+              {reductionRecommendations.map((rec, index) => (
                 <div key={index} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold text-slate-900">{rec.title}</h4>
-                    <Badge variant={rec.priority === 'high' ? 'destructive' : 'secondary'}>
-                      {rec.priority} priority
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        rec.scope === 1 ? 'bg-red-500' : 
+                        rec.scope === 2 ? 'bg-orange-500' : 'bg-green-500'
+                      }`}></div>
+                      <h5 className="font-medium text-slate-900">Scope {rec.scope}: {rec.title}</h5>
+                    </div>
+                    <Badge variant={rec.impact === 'high' ? 'destructive' : 'secondary'}>
+                      {rec.impact} impact
                     </Badge>
                   </div>
-                  <p className="text-sm text-slate-600 mb-2">{rec.description}</p>
-                  <p className="text-sm font-medium text-green-600">→ {rec.action}</p>
+                  
+                  <div className="space-y-2">
+                    {rec.actions.map((action, idx) => (
+                      <div key={idx} className="flex items-start text-sm text-slate-600">
+                        <span className="mr-2 text-green-600">→</span>
+                        <span>{action}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Action Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

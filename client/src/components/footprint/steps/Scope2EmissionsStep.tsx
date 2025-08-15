@@ -67,13 +67,52 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     }, 0);
   };
 
-  // Add new entry
+  // Enhanced validation for Scope 2 entries
+  const validateElectricityEntry = (entry: ElectricityEntry): { isValid: boolean; errors: string[]; warnings: string[] } => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    if (!entry.value) {
+      errors.push('Electricity consumption value is required');
+    } else {
+      const numValue = parseFloat(entry.value);
+      if (isNaN(numValue) || numValue < 0) {
+        errors.push('Value must be a positive number');
+      } else if (numValue === 0) {
+        warnings.push('Zero electricity consumption - ensure all facilities and equipment are accounted for');
+      } else if (numValue > 500000) {
+        warnings.push('Very high electricity consumption detected - please verify this figure');
+      }
+      
+      // Industry benchmarking for SME drinks companies (annual kWh consumption)
+      if (numValue > 200000) {
+        warnings.push(`High electricity consumption (${numValue.toLocaleString()} kWh) - above typical levels for SME drinks companies`);
+      } else if (numValue < 5000) {
+        warnings.push('Low electricity consumption detected - ensure all facilities and equipment are captured');
+      }
+    }
+    
+    return { isValid: errors.length === 0, errors, warnings };
+  };
+
+  // Add new entry with validation
   const addEntry = () => {
+    const validation = validateElectricityEntry(newEntry);
+    
+    if (!validation.isValid) {
+      console.warn('Scope 2 validation errors:', validation.errors);
+      return;
+    }
+    
+    if (validation.warnings.length > 0) {
+      console.info('Scope 2 validation warnings:', validation.warnings);
+    }
+
     if (newEntry.value) {
       const updatedEntries = [...entries, { ...newEntry }];
       setEntries(updatedEntries);
       
-      // Save to backend
+      // Save to backend with enhanced metadata
       onSave({
         dataType: 'electricity',
         scope: 2,
@@ -81,7 +120,10 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
         unit: 'kWh',
         metadata: { 
           description: newEntry.description,
-          isRenewable: newEntry.isRenewable 
+          isRenewable: newEntry.isRenewable,
+          emissionFactor: newEntry.isRenewable ? 0 : ELECTRICITY_EMISSION_FACTOR,
+          validationWarnings: validation.warnings,
+          industryBenchmark: 'Typical SME drinks companies: 10,000 - 200,000 kWh/year'
         }
       });
 
