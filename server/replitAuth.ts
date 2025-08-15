@@ -137,6 +137,18 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     userObject: user ? Object.keys(user) : 'no user'
   });
 
+  // Development mode bypass for testing
+  if (process.env.NODE_ENV === 'development' && !req.isAuthenticated()) {
+    console.log('Development mode: Creating mock user for testing');
+    (req as any).user = {
+      claims: { sub: 'dev-user' },
+      expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+      access_token: 'dev-token',
+      refresh_token: 'dev-refresh'
+    };
+    return next();
+  }
+
   if (!req.isAuthenticated() || !user?.expires_at) {
     console.log('Authentication failed - missing auth or expires_at');
     return res.status(401).json({ message: "Unauthorized" });
