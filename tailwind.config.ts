@@ -51,6 +51,16 @@ export default {
           "4": "var(--chart-4)",
           "5": "var(--chart-5)",
         },
+        // Custom Avallen Colors
+        "avallen-green": "hsl(var(--avallen-green))",
+        "avallen-green-light": "hsl(var(--avallen-green-light))",
+        "avallen-green-dark": "hsl(var(--avallen-green-dark))",
+        "slate-gray": "hsl(var(--slate-gray))",
+        "light-gray": "hsl(var(--light-gray))",
+        "lightest-gray": "hsl(var(--lightest-gray))",
+        "muted-gold": "hsl(var(--muted-gold))",
+        "success-green": "hsl(var(--success-green))",
+        "error-red": "hsl(var(--error-red))",
         sidebar: {
           DEFAULT: "var(--sidebar-background)",
           foreground: "var(--sidebar-foreground)",
