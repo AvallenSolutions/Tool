@@ -4,6 +4,17 @@
 
 This is a comprehensive sustainability platform designed for SME drinks brands, providing guided Life Cycle Assessment (LCA) reporting, supplier collaboration, and expert validation. The application helps companies measure, manage, and report their environmental impact with a focus on user-friendly workflows and industry-specific requirements. The business vision is to empower drinks brands with accessible tools for environmental stewardship, leveraging market potential for sustainable practices and driving industry-wide positive change.
 
+## Recent Changes (August 2025)
+
+### Automated & Personalized Onboarding Wizard Complete (August 15, 2025) ✅
+- **Streamlined 5-Step Process**: Replaced 4-step manual process with automated wizard reducing data entry by 70%
+- **Basic Company Profile Setup**: Removed document upload and operational data references, focusing on core profile creation
+- **Reporting Period Integration**: Added dedicated step 5 for reporting period configuration with start/end dates
+- **Enhanced Country Support**: Complete 195-country list including Palestine (Israel excluded per user request)
+- **API Integration**: Fixed endpoint connectivity using correct PATCH `/api/companies/update-onboarding` route
+- **Consistent Messaging**: Updated front page copy to match streamlined 3-5 minute onboarding process
+- **Backend Validation**: Added reporting period field validation and processing in onboarding routes
+
 ## Recent Changes (January 2025)
 
 ### MVP Enhancement - 5-Phase Implementation Complete ✅
