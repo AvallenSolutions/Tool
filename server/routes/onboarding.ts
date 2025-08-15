@@ -23,9 +23,19 @@ export function setupOnboardingRoutes(app: Express) {
           userObject: req.user ? Object.keys(req.user) : 'no user'
         });
         
-        // Check authentication the same way as /api/auth/user
-        if (!req.isAuthenticated() || !req.user) {
-          console.log('Onboarding auth failed in route handler');
+        // Try a different approach - check if session exists
+        console.log('Session details:', {
+          sessionID: req.sessionID,
+          session: req.session ? Object.keys(req.session) : 'no session',
+          isAuthenticated: req.isAuthenticated(),
+          passport: req.session?.passport
+        });
+        
+        // Use the same pattern as working products route
+        const userId = (req.session as any)?.user?.id || (req.user as any)?.claims?.sub;
+        
+        if (!userId) {
+          console.log('Onboarding auth failed - no user ID found');
           return res.status(401).json({ error: 'User not authenticated' });
         }
 
@@ -34,12 +44,7 @@ export function setupOnboardingRoutes(app: Express) {
           return res.status(400).json({ error: 'Validation failed', details: errors.array() });
         }
 
-        const user = req.user as any;
-        const userId = user.claims?.sub;
-        
-        if (!userId) {
-          return res.status(401).json({ error: 'User ID not found' });
-        }
+        console.log('Using userId:', userId);
 
         // Get company by owner ID
         const company = await storage.getCompanyByOwner(userId);
@@ -80,12 +85,8 @@ export function setupOnboardingRoutes(app: Express) {
   // GET /api/companies/current - Get current company information
   app.get('/api/companies/current', async (req, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
-
-      const user = req.user as any;
-      const userId = user.claims?.sub;
+      // Use the same pattern as working products route
+      const userId = (req.session as any)?.user?.id || (req.user as any)?.claims?.sub;
       
       if (!userId) {
         return res.status(401).json({ error: 'User ID not found' });
