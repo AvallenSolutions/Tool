@@ -50,6 +50,15 @@ const productEditSchema = z.object({
   co2Emissions: z.coerce.number().min(0).optional(),
   certifications: z.string().optional(),
   lcaDocumentPath: z.string().optional(),
+  // Packaging fields
+  closureType: z.string().optional(),
+  closureMaterial: z.string().optional(),
+  closureWeight: z.coerce.number().optional(),
+  labelMaterial: z.string().optional(),
+  labelWeight: z.coerce.number().optional(),
+  hasSecondaryPackaging: z.boolean().optional(),
+  boxMaterial: z.string().optional(),
+  boxWeight: z.coerce.number().optional(),
 });
 
 type ProductEditFormData = z.infer<typeof productEditSchema>;
@@ -81,25 +90,55 @@ export default function ProductEditDialog({ product, isOpen, onClose }: ProductE
       co2Emissions: undefined,
       certifications: '',
       lcaDocumentPath: '',
+      // Packaging defaults
+      closureType: '',
+      closureMaterial: '',
+      closureWeight: undefined,
+      labelMaterial: '',
+      labelWeight: undefined,
+      hasSecondaryPackaging: false,
+      boxMaterial: '',
+      boxWeight: undefined,
     },
   });
 
   // Update form when product changes
   useEffect(() => {
     if (product && isOpen) {
+      console.log('🔧 ProductEditDialog - Loading product data:', product);
       const attributes = product.productAttributes || {};
       form.reset({
-        productName: product.productName || '',
-        productDescription: product.productDescription || '',
+        productName: product.productName || product.name || '',
+        productDescription: product.productDescription || product.description || '',
         sku: product.sku || '',
-        type: attributes.type || '',
-        material: attributes.material || '',
-        weight: attributes.weight || undefined,
-        volume: attributes.volume || '',
-        recycledContent: attributes.recycledContent || undefined,
-        co2Emissions: attributes.co2Emissions || undefined,
-        certifications: attributes.certifications || '',
+        type: attributes.type || product.type || '',
+        material: attributes.material || product.bottleMaterial || '',
+        weight: attributes.weight || product.bottleWeight || undefined,
+        volume: attributes.volume || product.volume || '',
+        recycledContent: attributes.recycledContent || product.bottleRecycledContent || undefined,
+        co2Emissions: attributes.co2Emissions || product.carbonFootprint || undefined,
+        certifications: attributes.certifications || product.certifications || '',
         lcaDocumentPath: attributes.lcaDocumentPath || '',
+        // Load packaging data from flat database fields
+        closureType: product.closureType || '',
+        closureMaterial: product.closureMaterial || '',
+        closureWeight: product.closureWeight || undefined,
+        labelMaterial: product.labelMaterial || '',
+        labelWeight: product.labelWeight || undefined,
+        hasSecondaryPackaging: product.hasSecondaryPackaging || false,
+        boxMaterial: product.boxMaterial || '',
+        boxWeight: product.boxWeight || undefined,
+      });
+      
+      console.log('📦 ProductEditDialog - Packaging data loaded:', {
+        closureType: product.closureType,
+        closureMaterial: product.closureMaterial,
+        closureWeight: product.closureWeight,
+        labelMaterial: product.labelMaterial,
+        labelWeight: product.labelWeight,
+        hasSecondaryPackaging: product.hasSecondaryPackaging,
+        boxMaterial: product.boxMaterial,
+        boxWeight: product.boxWeight,
       });
       
       // Set existing images
@@ -119,21 +158,37 @@ export default function ProductEditDialog({ product, isOpen, onClose }: ProductE
       if (!product?.id) throw new Error('Product ID is required');
       
       const updateData = {
-        ...data,
+        // Basic product data
+        name: data.productName,
+        description: data.productDescription,
+        sku: data.sku,
+        type: data.type,
+        volume: data.volume,
+        productImages: productImages,
+        // Packaging data - save to flat database fields
+        closureType: data.closureType,
+        closureMaterial: data.closureMaterial,
+        closureWeight: data.closureWeight,
+        labelMaterial: data.labelMaterial,
+        labelWeight: data.labelWeight,
+        hasSecondaryPackaging: data.hasSecondaryPackaging,
+        boxMaterial: data.boxMaterial,
+        boxWeight: data.boxWeight,
+        // Container data
+        bottleMaterial: data.material,
+        bottleWeight: data.weight,
+        bottleRecycledContent: data.recycledContent,
+        // Environmental data
+        carbonFootprint: data.co2Emissions,
+        certifications: data.certifications,
         productAttributes: {
           ...product.productAttributes,
-          type: data.type,
-          material: data.material,
-          weight: data.weight,
-          volume: data.volume,
-          recycledContent: data.recycledContent,
-          co2Emissions: data.co2Emissions,
-          certifications: data.certifications,
           lcaDocumentPath: uploadedDocument || data.lcaDocumentPath,
           imageUrls: productImages,
         }
       };
 
+      console.log('🚀 ProductEditDialog - Sending update data:', updateData);
       return apiRequest('PATCH', `/api/products/${product.id}`, updateData);
     },
     onSuccess: () => {
@@ -375,6 +430,197 @@ export default function ProductEditDialog({ product, isOpen, onClose }: ProductE
                 </FormItem>
               )}
             />
+
+            {/* Packaging Data Section */}
+            <div className="border-t pt-6 mt-6">
+              <h3 className="text-lg font-semibold mb-4">Packaging Information</h3>
+              
+              {/* Closure System */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <FormField
+                  control={form.control}
+                  name="closureType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Closure Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select closure type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="cork">Cork</SelectItem>
+                          <SelectItem value="screw-cap">Screw Cap</SelectItem>
+                          <SelectItem value="crown-cap">Crown Cap</SelectItem>
+                          <SelectItem value="synthetic-cork">Synthetic Cork</SelectItem>
+                          <SelectItem value="swing-top">Swing Top</SelectItem>
+                          <SelectItem value="wax-seal">Wax Seal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="closureMaterial"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Closure Material</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., aluminum, cork, plastic" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="closureWeight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Closure Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Weight in grams" 
+                          step="0.1"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Label Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <FormField
+                  control={form.control}
+                  name="labelMaterial"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Label Material</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select label material" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="paper">Paper</SelectItem>
+                          <SelectItem value="plastic">Plastic</SelectItem>
+                          <SelectItem value="vinyl">Vinyl</SelectItem>
+                          <SelectItem value="foil">Foil</SelectItem>
+                          <SelectItem value="waterproof-paper">Waterproof Paper</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="labelWeight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Label Weight (g)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Weight in grams" 
+                          step="0.1"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Secondary Packaging */}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="hasSecondaryPackaging"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="w-4 h-4"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Has Secondary Packaging</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Check if product includes additional packaging (box, case, etc.)
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch('hasSecondaryPackaging') && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+                    <FormField
+                      control={form.control}
+                      name="boxMaterial"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Box Material</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select box material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="cardboard">Cardboard</SelectItem>
+                              <SelectItem value="paperboard">Paperboard</SelectItem>
+                              <SelectItem value="wood">Wood</SelectItem>
+                              <SelectItem value="plastic">Plastic</SelectItem>
+                              <SelectItem value="metal">Metal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="boxWeight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Box Weight (g)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="Weight in grams" 
+                              step="0.1"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Product Images */}
             <div className="space-y-4">
