@@ -45,9 +45,18 @@ export function setupOnboardingRoutes(app: Express) {
         console.log('Using userId:', userId);
 
         // Get company by owner ID
-        const company = await storage.getCompanyByOwner(userId);
+        let company = await storage.getCompanyByOwner(userId);
         if (!company) {
-          return res.status(400).json({ error: 'User not associated with a company' });
+          console.log('No company found for userId:', userId, 'Creating new company...');
+          // Create a company for the user
+          const newCompany = await storage.createCompany({
+            name: 'Default Company',
+            ownerId: userId,
+            businessType: 'drinks',
+            onboardingComplete: false
+          });
+          company = newCompany;
+          console.log('Created new company:', company);
         }
 
         // Update company with onboarding data
@@ -59,8 +68,12 @@ export function setupOnboardingRoutes(app: Express) {
         if (req.body.numberOfEmployees) updateData.size = req.body.numberOfEmployees; // Map to existing 'size' field
         if (req.body.onboardingComplete !== undefined) updateData.onboardingComplete = req.body.onboardingComplete;
 
+        console.log('Update data being sent:', updateData);
+        console.log('Company found:', company);
+        
         const updatedCompany = await storage.updateCompany(company.id, updateData);
 
+        console.log('Company updated successfully:', updatedCompany);
         res.json({ 
           success: true, 
           company: updatedCompany 
@@ -70,7 +83,8 @@ export function setupOnboardingRoutes(app: Express) {
         console.error('Error details:', {
           message: error instanceof Error ? error.message : 'Unknown error',
           stack: error instanceof Error ? error.stack : 'No stack trace',
-          updateData: req.body
+          userId,
+          updateData
         });
         res.status(500).json({ 
           error: 'Failed to update company information',
