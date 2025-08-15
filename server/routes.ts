@@ -2216,7 +2216,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         ingredients: ingredients ? JSON.stringify(ingredients) : null,
         
         // Handle water dilution
-        waterDilution: req.body.waterDilution ? req.body.waterDilution : null,
+        waterDilution: req.body.waterDilution ? JSON.stringify(req.body.waterDilution) : null,
         
         // Handle nested packaging data - flatten to individual fields
         ...(packaging?.primaryContainer && {
@@ -2274,7 +2274,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         // Handle distribution data
         ...(distribution && {
           averageTransportDistance: distribution.averageTransportDistance ? parseFloat(distribution.averageTransportDistance) : null,
-          primaryTransportMode: distribution.primaryTransportMode,
+          primaryTransportMode: distribution.primaryTransportMode || '',
           coldChainRequired: distribution.coldChainRequired || false,
         }),
         
@@ -2282,7 +2282,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         ...(endOfLife && {
           returnableContainer: endOfLife.returnableContainer || false,
           recyclingRate: endOfLife.recyclingRate ? parseFloat(endOfLife.recyclingRate) : null,
-          disposalMethod: endOfLife.disposalMethod,
+          disposalMethod: endOfLife.disposalMethod || '',
         }),
         
         status: 'draft',
