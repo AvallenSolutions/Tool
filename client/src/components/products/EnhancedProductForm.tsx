@@ -405,43 +405,6 @@ export default function EnhancedProductForm({
   const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
 
-  // Reset form when initialData changes (critical for edit mode)
-  useEffect(() => {
-    if (initialData) {
-      console.log('🔄 Resetting form with initialData:', initialData);
-      form.reset(initialData);
-      
-      // Also set product images if they exist
-      if (initialData.productImages && Array.isArray(initialData.productImages)) {
-        setProductImages(initialData.productImages);
-      }
-    }
-  }, [initialData, form]);
-
-  // Initialize selectedPackagingSupplier from existing data
-  useEffect(() => {
-    console.log('🔍 useEffect triggered with initialData:', {
-      initialData: initialData?.packaging?.supplierInformation,
-      selectedPackagingSupplier,
-      hasSupplierInfo: !!initialData?.packaging?.supplierInformation?.selectedSupplierId
-    });
-    
-    if (initialData?.packaging?.supplierInformation?.selectedProductId && !selectedPackagingSupplier) {
-      // Create a supplier object from the saved data
-      const savedSupplier = {
-        id: initialData.packaging.supplierInformation.selectedProductId,
-        supplierId: initialData.packaging.supplierInformation.selectedSupplierId,
-        productName: initialData.packaging.supplierInformation.selectedProductName || 'Selected Product',
-        supplierName: initialData.packaging.supplierInformation.supplierName || 'Unknown Supplier',
-        supplierCategory: initialData.packaging.supplierInformation.supplierCategory || 'bottle_producer',
-      };
-      console.log('🔄 Loading saved packaging supplier and product:', savedSupplier);
-      setSelectedPackagingSupplier(savedSupplier);
-    }
-  }, [initialData?.packaging?.supplierInformation?.selectedProductId, selectedPackagingSupplier]);
-
-
-
   const form = useForm<EnhancedProductFormData>({
     resolver: zodResolver(enhancedProductSchema),
     defaultValues: {
@@ -589,6 +552,41 @@ export default function EnhancedProductForm({
       },
     },
   });
+
+  // Reset form when initialData changes (critical for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      console.log('🔄 Resetting form with initialData:', initialData);
+      form.reset(initialData);
+      
+      // Also set product images if they exist
+      if (initialData.productImages && Array.isArray(initialData.productImages)) {
+        setProductImages(initialData.productImages);
+      }
+    }
+  }, [initialData, form]);
+
+  // Initialize selectedPackagingSupplier from existing data
+  useEffect(() => {
+    console.log('🔍 useEffect triggered with initialData:', {
+      initialData: initialData?.packaging?.supplierInformation,
+      selectedPackagingSupplier,
+      hasSupplierInfo: !!initialData?.packaging?.supplierInformation?.selectedSupplierId
+    });
+    
+    if (initialData?.packaging?.supplierInformation?.selectedProductId && !selectedPackagingSupplier) {
+      // Create a supplier object from the saved data
+      const savedSupplier = {
+        id: initialData.packaging.supplierInformation.selectedProductId,
+        supplierId: initialData.packaging.supplierInformation.selectedSupplierId,
+        productName: initialData.packaging.supplierInformation.selectedProductName || 'Selected Product',
+        supplierName: initialData.packaging.supplierInformation.supplierName || 'Unknown Supplier',
+        supplierCategory: initialData.packaging.supplierInformation.supplierCategory || 'bottle_producer',
+      };
+      console.log('🔄 Loading saved packaging supplier and product:', savedSupplier);
+      setSelectedPackagingSupplier(savedSupplier);
+    }
+  }, [initialData?.packaging?.supplierInformation?.selectedProductId, selectedPackagingSupplier]);
 
   const handleSubmit = (data: EnhancedProductFormData) => {
     const submissionData = {
