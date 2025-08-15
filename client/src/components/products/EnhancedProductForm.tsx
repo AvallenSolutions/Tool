@@ -955,7 +955,13 @@ export default function EnhancedProductForm({
   return (
     <TourProvider>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full" onKeyDown={(e) => {
+        <form onSubmit={(e) => {
+          console.log('📝 Form onSubmit event triggered');
+          form.handleSubmit((data) => {
+            console.log('✅ Form validation passed, calling handleSubmit');
+            handleSubmit(data);
+          })(e);
+        }} className="w-full" onKeyDown={(e) => {
           // Prevent form submission on Enter key unless we're on the last tab
           if (e.key === 'Enter' && activeTab !== 'lcadata') {
             e.preventDefault();
@@ -5577,6 +5583,16 @@ export default function EnhancedProductForm({
                   type="submit" 
                   disabled={isSubmitting}
                   className="bg-[#209d50] hover:bg-[#1a8442] text-white"
+                  onClick={(e) => {
+                    console.log('🔘 Submit button clicked!');
+                    console.log('🔍 Form errors:', form.formState.errors);
+                    console.log('🔍 Form valid:', form.formState.isValid);
+                    console.log('🔍 Form values sample:', {
+                      name: form.getValues('name'),
+                      sku: form.getValues('sku'),
+                      type: form.getValues('type')
+                    });
+                  }}
                 >
                   {isSubmitting ? (
                     <>
