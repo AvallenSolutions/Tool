@@ -1,99 +1,158 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { X, ArrowRight, Loader2, CheckCircle, Building2 } from "lucide-react";
-import ProgressBar from "./progress-bar";
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import {
+  User,
+  Building2,
+  CheckCircle,
+  ArrowRight,
+  X,
+  Loader2
+} from 'lucide-react';
 
-interface OnboardingWizardProps {
-  onComplete: (companyId: number) => void;
-  onCancel: () => void;
-}
-
-interface WizardFormData {
-  firstName: string;
+interface OnboardingData {
+  userName: string;
   companyName: string;
   industry: string;
   companySize: string;
-  primaryMotivations: string[];
   country: string;
+  primaryMotivations: string[];
 }
 
-export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+interface CleanOnboardingWizardProps {
+  onComplete: () => void;
+  onCancel: () => void;
+}
+
+const ProgressBar = ({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) => {
+  return (
+    <div className="flex items-center space-x-2 mt-4">
+      {Array.from({ length: totalSteps }, (_, i) => (
+        <div
+          key={i}
+          className={`h-2 flex-1 rounded-full ${
+            i + 1 <= currentStep ? 'bg-avallen-green' : 'bg-gray-200'
+          }`}
+        />
+      ))}
+      <span className="text-sm text-gray-500 ml-2">
+        {currentStep} of {totalSteps}
+      </span>
+    </div>
+  );
+};
+
+// Comprehensive country list (excluding Israel, including Palestine)
+const COUNTRIES = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
+  "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
+  "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan",
+  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria",
+  "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada",
+  "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros",
+  "Congo (Congo-Brazzaville)", "Costa Rica", "Croatia", "Cuba", "Cyprus",
+  "Czech Republic", "Democratic Republic of the Congo", "Denmark", "Djibouti",
+  "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador",
+  "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji",
+  "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana",
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana",
+  "Haiti", "Holy See", "Honduras", "Hungary", "Iceland", "India", "Indonesia",
+  "Iran", "Iraq", "Ireland", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan",
+  "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon",
+  "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands",
+  "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco",
+  "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia",
+  "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
+  "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan",
+  "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru",
+  "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda",
+  "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
+  "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
+  "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia",
+  "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan",
+  "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
+  "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
+  "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States",
+  "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia",
+  "Zimbabwe"
+];
+
+function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<WizardFormData>({
-    firstName: '',
+  const [formData, setFormData] = useState<OnboardingData>({
+    userName: '',
     companyName: '',
     industry: '',
     companySize: '',
-    primaryMotivations: [],
     country: '',
-  });
-
-  // Company creation mutation
-  const createCompanyMutation = useMutation({
-    mutationFn: async (data: WizardFormData) => {
-      const response = await apiRequest("PATCH", "/api/companies/update-onboarding", {
-        primaryMotivation: data.primaryMotivations.join(', '),
-        industry: data.industry,
-        country: data.country,
-        numberOfEmployees: data.companySize,
-        onboardingComplete: true
-      });
-      return response;
-    },
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/company"] });
-      toast({
-        title: "Welcome aboard!",
-        description: `Setup complete. Welcome to your sustainability dashboard, ${formData.firstName}!`,
-      });
-      onComplete(response.company?.id || 1);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Setup Failed",
-        description: error.message || "Could not complete company setup. Please try again.",
-        variant: "destructive",
-      });
-    },
+    primaryMotivations: []
   });
 
   const totalSteps = 4;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const createCompanyMutation = useMutation({
+    mutationFn: async (data: OnboardingData) => {
+      return apiRequest('/api/companies/onboard', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: data.companyName,
+          industry: data.industry,
+          size: data.companySize,
+          country: data.country,
+          primaryMotivations: data.primaryMotivations
+        })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
+      toast({
+        title: "Welcome!",
+        description: "Your company profile has been created successfully.",
+      });
+      onComplete();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create company profile. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Onboarding error:', error);
+    }
+  });
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep(currentStep + 1);
     } else {
-      handleComplete();
+      createCompanyMutation.mutate(formData);
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep(currentStep - 1);
     }
-  };
-
-  const handleComplete = () => {
-    createCompanyMutation.mutate(formData);
   };
 
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.firstName.trim().length > 0;
+        return formData.userName.trim().length > 0;
       case 2:
-        return formData.companyName.trim().length > 0 && formData.industry.trim().length > 0;
+        return formData.companyName.trim().length > 0 && formData.industry.length > 0;
       case 3:
-        return formData.companySize.trim().length > 0 && formData.country.trim().length > 0;
+        return formData.companySize.length > 0 && formData.country.length > 0;
       case 4:
         return formData.primaryMotivations.length > 0;
       default:
@@ -106,42 +165,41 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       case 1:
         // Step 1: Personal Welcome
         return (
-          <div className="space-y-6 text-center">
-            <div className="mb-8">
-              <CheckCircle className="w-16 h-16 text-avallen-green mx-auto mb-4" />
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <User className="w-16 h-16 text-avallen-green mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-gray mb-2">
-                Welcome to the Sustainability Tool!
+                Welcome to your sustainability journey!
               </h3>
-              <p className="text-gray-600 max-w-md mx-auto">
-                We're going to help you measure and manage your brand's impact. 
-                First, what should we call you?
+              <p className="text-gray-600 max-w-lg mx-auto">
+                Let's start by getting to know you. This will help us personalize your experience.
               </p>
             </div>
             
-            <div className="max-w-sm mx-auto">
-              <Label htmlFor="firstName">Your First Name</Label>
+            <div className="max-w-md mx-auto">
+              <Label htmlFor="userName">What should we call you?</Label>
               <Input
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                placeholder="Enter your first name"
-                className="text-center text-lg"
+                id="userName"
+                value={formData.userName}
+                onChange={(e) => setFormData(prev => ({ ...prev, userName: e.target.value }))}
+                placeholder="Enter your name"
+                className="text-lg mt-2"
               />
             </div>
           </div>
         );
-      
+
       case 2:
-        // Step 2: Company Name & Industry
+        // Step 2: Company Information
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
               <Building2 className="w-16 h-16 text-avallen-green mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-gray mb-2">
-                Great to meet you, {formData.firstName}!
+                Tell us about your company
               </h3>
-              <p className="text-gray-600 max-w-md mx-auto">
-                Tell us about your company so we can personalize your experience.
+              <p className="text-gray-600 max-w-lg mx-auto">
+                We need some basic information to set up your sustainability dashboard.
               </p>
             </div>
             
@@ -179,7 +237,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         );
       
       case 3:
-        // Step 3: Company Details  
+        // Step 3: Company Details
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -208,7 +266,25 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   <option value="201-500">201-500 employees</option>
                   <option value="500+">500+ employees</option>
                 </select>
-
+              </div>
+              
+              <div>
+                <Label htmlFor="country">Country</Label>
+                <select
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Select your country</option>
+                  {COUNTRIES.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         );
 
@@ -331,3 +407,5 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     </div>
   );
 }
+
+export default CleanOnboardingWizard;
