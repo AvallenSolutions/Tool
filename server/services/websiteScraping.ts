@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 
-interface ScrapedCompanyInfo {
+export interface ScrapedCompanyInfo {
   name?: string;
   address?: string;
   contactDetails?: string;
@@ -47,28 +47,20 @@ export class WebsiteScrapingService {
       result.name = this.extractCompanyName($);
 
       // Extract address
-      result.address = this.extractAddress($);
+      result.address = await this.extractAddress($, normalizedUrl);
 
       // Extract contact details
       result.contactDetails = this.extractContactDetails($);
 
-      // Phase 1: Extract products from main page
-      result.products = await this.extractProducts($, normalizedUrl);
-
-      // Phase 2: Discover and crawl relevant sub-pages for more products
-      if (result.products.length < this.MAX_PRODUCTS) {
-        const subPages = this.discoverRelevantPages($, normalizedUrl);
-        const additionalProducts = await this.crawlSubPages(subPages, normalizedUrl);
-        
-        // Merge products, avoiding duplicates
-        const existingNames = new Set(result.products.map(p => p.name.toLowerCase()));
-        additionalProducts.forEach(product => {
-          if (!existingNames.has(product.name.toLowerCase()) && result.products.length < this.MAX_PRODUCTS) {
-            result.products.push(product);
-            existingNames.add(product.name.toLowerCase());
-          }
-        });
-      }
+      // Phase 2: Category-First Product Discovery
+      // Step 1: Determine primary category
+      const primaryCategory = this.determinePrimaryCategory($, normalizedUrl);
+      
+      // Step 2: Find product/shop pages
+      const productPages = await this.findProductPages($, normalizedUrl, primaryCategory);
+      
+      // Step 3: Extract validated products from category-specific pages
+      result.products = await this.extractValidatedProducts(productPages, primaryCategory, normalizedUrl);
 
       return result;
 
@@ -100,84 +92,155 @@ export class WebsiteScrapingService {
     return undefined;
   }
 
-  private static extractAddress($: cheerio.CheerioAPI): string | undefined {
-    // Enhanced address extraction with drinks industry patterns
-    const selectors = [
-      // Standard address selectors
-      'address', '.address', '.location', '.contact-address',
-      '[data-testid*="address"]', '[data-address]',
-      
-      // Content-based selectors
-      '*:contains("Address")', '*:contains("Location")', '*:contains("Visit us")',
-      '*:contains("Find us")', '*:contains("Distillery")', '*:contains("Brewery")', 
-      '*:contains("Winery")', '*:contains("Headquarters")', '*:contains("Estate")',
-      
-      // Contact sections
-      '.contact-info', '.contact-details', '.footer-address', '.company-info',
-      '#contact', '.contact-section', '.about-location'
-    ];
-
-    for (const selector of selectors) {
-      const elements = $(selector);
-      
-      for (let i = 0; i < elements.length; i++) {
-        const $elem = $(elements[i]);
-        let text = $elem.text().trim();
-        
-        // Skip if it's just a label
-        if (text.toLowerCase() === 'address' || text.toLowerCase() === 'location') {
-          continue;
-        }
-        
-        // Look for address patterns
-        if (this.looksLikeAddress(text)) {
-          return text.replace(/\s+/g, ' ');
-        }
+  private static async extractAddress($: cheerio.CheerioAPI, baseUrl: string): Promise<string | undefined> {
+    // Step 1: Prioritize Contact/About pages
+    let targetPage$ = await this.findContactOrAboutPage($, baseUrl);
+    if (!targetPage$) {
+      // Fallback: Use footer of homepage
+      const footerContent = $('footer').html();
+      if (footerContent) {
+        targetPage$ = cheerio.load(footerContent);
+      } else {
+        targetPage$ = $; // Use main page as last resort
       }
     }
 
-    // Fallback: search for address-like patterns in the entire page
-    const bodyText = $('body').text();
-    const addressPatterns = [
-      // UK/EU address patterns
-      /\b\d+\s+[A-Za-z\s,]+,\s*[A-Za-z\s]+,\s*[A-Z]{2,3}\s*\d+[A-Z]{0,2}\b/g,
-      // US address patterns  
-      /\b\d+\s+[A-Za-z\s,]+,\s*[A-Za-z\s]+,\s*[A-Z]{2}\s+\d{5}(-\d{4})?\b/g,
-      // General patterns with postal codes
-      /\b[A-Za-z\s,]+,\s*[A-Za-z\s]+,\s*[A-Z0-9\s]{3,10}\b/g
-    ];
+    // Step 2: Identify country context
+    const country = this.identifyCountry(targetPage$);
 
-    for (const pattern of addressPatterns) {
-      const matches = bodyText.match(pattern);
-      if (matches && matches.length > 0) {
-        const address = matches[0].trim();
-        if (address.length > 15 && address.length < 200) {
-          return address.replace(/\s+/g, ' ');
+    // Step 3: Use country-specific regex patterns
+    const address = this.extractAddressWithRegex(targetPage$, country);
+    
+    if (address) {
+      // Step 4: Clean and validate the address
+      return this.cleanPhysicalAddress(address);
+    }
+
+    return undefined;
+  }
+
+  private static async findContactOrAboutPage($: cheerio.CheerioAPI, baseUrl: string): Promise<cheerio.CheerioAPI | null> {
+    const contactPatterns = /contact|about\s*us|about/i;
+    const links: string[] = [];
+
+    // Look for contact/about links
+    $('a[href]').each((_, elem) => {
+      const $link = $(elem);
+      const href = $link.attr('href');
+      const linkText = $link.text().toLowerCase().trim();
+      
+      if (href && (contactPatterns.test(linkText) || contactPatterns.test(href))) {
+        try {
+          const fullUrl = new URL(href, baseUrl).href;
+          if (fullUrl.startsWith(new URL(baseUrl).origin)) {
+            links.push(fullUrl);
+          }
+        } catch {
+          // Skip malformed URLs
         }
+      }
+    });
+
+    // Try to fetch the first contact/about page found
+    if (links.length > 0) {
+      try {
+        const response = await fetch(links[0], {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SustainabilityBot/1.0)' },
+          signal: AbortSignal.timeout(this.TIMEOUT)
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          return cheerio.load(html);
+        }
+      } catch {
+        // Failed to fetch, continue with fallback
+      }
+    }
+
+    return null;
+  }
+
+  private static identifyCountry($: cheerio.CheerioAPI): string {
+    const text = $('body').text().toLowerCase();
+    
+    const countryPatterns = {
+      'united kingdom': /\b(united kingdom|uk|britain|england|scotland|wales|northern ireland)\b/i,
+      'france': /\b(france|français|french)\b/i,
+      'germany': /\b(germany|deutschland|german)\b/i,
+      'usa': /\b(united states|usa|america|american)\b/i,
+      'seychelles': /\b(seychelles|seychellois)\b/i,
+      'australia': /\b(australia|australian|aussie)\b/i,
+      'canada': /\b(canada|canadian)\b/i
+    };
+
+    for (const [country, pattern] of Object.entries(countryPatterns)) {
+      if (pattern.test(text)) {
+        return country;
+      }
+    }
+
+    return 'unknown';
+  }
+
+  private static extractAddressWithRegex($: cheerio.CheerioAPI, country: string): string | undefined {
+    const text = $('body').text();
+
+    const postcodePatterns: Record<string, RegExp> = {
+      'united kingdom': /([A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2})/i,
+      'france': /(\d{5})/,
+      'germany': /(\d{5})/,
+      'usa': /(\d{5}(-\d{4})?)/,
+      'seychelles': /([A-Z0-9]{3,8})/i, // General pattern for Seychelles
+      'australia': /(\d{4})/,
+      'canada': /([A-Z]\d[A-Z]\s?\d[A-Z]\d)/i
+    };
+
+    const pattern = postcodePatterns[country] || postcodePatterns['usa']; // Default to US pattern
+    const match = text.match(pattern);
+
+    if (match) {
+      const postcodePosition = text.indexOf(match[0]);
+      
+      // Extract surrounding lines (2-4 lines before the postcode)
+      const beforeText = text.substring(Math.max(0, postcodePosition - 500), postcodePosition);
+      const afterText = text.substring(postcodePosition, postcodePosition + 200);
+      
+      const lines = (beforeText + match[0] + afterText)
+        .split(/[\n\r]/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      // Find the line with the postcode and include 2-3 lines before it
+      const postcodeLineIndex = lines.findIndex(line => line.includes(match[0]));
+      if (postcodeLineIndex >= 0) {
+        const startIndex = Math.max(0, postcodeLineIndex - 3);
+        const addressLines = lines.slice(startIndex, postcodeLineIndex + 1);
+        return addressLines.join('\n');
       }
     }
 
     return undefined;
   }
 
-  private static looksLikeAddress(text: string): boolean {
-    if (!text || text.length < 10 || text.length > 300) return false;
-    
-    const cleanText = text.toLowerCase();
-    
-    // Address indicators
-    const addressIndicators = [
-      'street', 'road', 'avenue', 'lane', 'drive', 'court', 'way', 'place',
-      'distillery', 'brewery', 'winery', 'estate', 'farm', 'vineyard'
-    ];
-    
-    // Postal code patterns
-    const hasPostalCode = /\b[A-Z0-9]{3,10}\b/.test(text);
-    const hasNumber = /\b\d+\b/.test(text);
-    const hasCommas = text.includes(',');
-    const hasAddressWords = addressIndicators.some(word => cleanText.includes(word));
-    
-    return (hasPostalCode && hasNumber) || (hasAddressWords && hasCommas);
+  private static cleanPhysicalAddress(address: string): string {
+    const lines = address.split(/[\n\r]/)
+      .map(line => line.trim())
+      .filter(line => {
+        // Remove lines with emails
+        if (line.includes('@')) return false;
+        
+        // Remove lines with phone patterns
+        if (/(\+?\d{1,4}[\s\-\(\)])?[\d\s\-\(\)]{6,}/.test(line)) return false;
+        
+        // Remove lines that are just labels
+        if (/^(address|location|contact|tel|phone|email)[\s:]*$/i.test(line)) return false;
+        
+        // Keep lines that look like address components
+        return line.length > 2 && line.length < 100;
+      });
+
+    return lines.join(', ').replace(/\s+/g, ' ').trim();
   }
 
   private static extractContactDetails($: cheerio.CheerioAPI): string | undefined {
@@ -205,13 +268,120 @@ export class WebsiteScrapingService {
     return contacts.length > 0 ? contacts.join(', ') : undefined;
   }
 
-  private static async extractProducts($: cheerio.CheerioAPI, baseUrl: string): Promise<Array<{
+  private static determinePrimaryCategory($: cheerio.CheerioAPI, baseUrl: string): string {
+    // Step 1: Create keyword dictionaries
+    const categoryKeywords = {
+      'spirits': ['rum', 'gin', 'whisky', 'whiskey', 'vodka', 'tequila', 'brandy', 'calvados', 'cognac', 'armagnac', 'bourbon', 'rye', 'scotch', 'mezcal', 'absinthe', 'grappa', 'schnapps'],
+      'wine': ['wine', 'red', 'white', 'rosé', 'rose', 'merlot', 'chardonnay', 'prosecco', 'champagne', 'pinot', 'cabernet', 'sauvignon', 'riesling', 'shiraz', 'vintage', 'vineyard', 'winery'],
+      'beer': ['beer', 'lager', 'ale', 'stout', 'ipa', 'pilsner', 'porter', 'wheat', 'bitter', 'mild', 'brewery', 'brewing', 'hops', 'malt'],
+      'cider': ['cider', 'apple wine', 'perry', 'scrumpy', 'cidery', 'orchard']
+    };
+
+    // Step 2: Scan for keywords and count occurrences
+    const text = $('body').text().toLowerCase();
+    const navText = $('nav, .navbar, .menu, .navigation').text().toLowerCase();
+    const combinedText = text + ' ' + navText;
+
+    const categoryCounts: Record<string, number> = {};
+
+    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+      categoryCounts[category] = 0;
+      for (const keyword of keywords) {
+        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+        const matches = combinedText.match(regex);
+        if (matches) {
+          categoryCounts[category] += matches.length;
+        }
+      }
+    }
+
+    // Step 3: Determine primary category with highest count
+    let primaryCategory = 'other';
+    let maxCount = 0;
+
+    for (const [category, count] of Object.entries(categoryCounts)) {
+      if (count > maxCount) {
+        maxCount = count;
+        primaryCategory = category;
+      }
+    }
+
+    return primaryCategory;
+  }
+
+  private static async findProductPages($: cheerio.CheerioAPI, baseUrl: string, primaryCategory: string): Promise<Array<{ url: string, $: cheerio.CheerioAPI }>> {
+    const productPages: Array<{ url: string, $: cheerio.CheerioAPI }> = [];
+    
+    // Step 1: Look for product/shop navigation links
+    const productPatterns = [
+      /products?/i, /shop/i, /our\s*range/i, /collection/i, /catalog/i, /store/i,
+      new RegExp(`our\\s*${primaryCategory}`, 'i'), // e.g., "Our Rum"
+      new RegExp(primaryCategory, 'i') // Category name itself
+    ];
+
+    const links: string[] = [];
+    
+    $('nav a, .menu a, .navbar a, a').each((_, elem) => {
+      const $link = $(elem);
+      const href = $link.attr('href');
+      const linkText = $link.text().toLowerCase().trim();
+      
+      if (href && links.length < 3) { // Limit to 3 product pages
+        const isProductLink = productPatterns.some(pattern => 
+          pattern.test(linkText) || pattern.test(href)
+        );
+        
+        if (isProductLink) {
+          try {
+            const fullUrl = new URL(href, baseUrl).href;
+            if (fullUrl.startsWith(new URL(baseUrl).origin) && !links.includes(fullUrl)) {
+              links.push(fullUrl);
+            }
+          } catch {
+            // Skip malformed URLs
+          }
+        }
+      }
+    });
+
+    // Add main page as fallback if no product pages found
+    if (links.length === 0) {
+      links.push(baseUrl);
+    }
+
+    // Fetch each product page
+    for (const url of links) {
+      try {
+        await new Promise(resolve => setTimeout(resolve, this.REQUEST_DELAY));
+        
+        const response = await fetch(url, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SustainabilityBot/1.0)' },
+          signal: AbortSignal.timeout(this.TIMEOUT)
+        });
+
+        if (response.ok) {
+          const html = await response.text();
+          productPages.push({ url, $: cheerio.load(html) });
+        }
+      } catch (error) {
+        console.warn(`Failed to fetch product page ${url}:`, error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    return productPages;
+  }
+
+  private static async extractValidatedProducts(
+    productPages: Array<{ url: string, $: cheerio.CheerioAPI }>,
+    primaryCategory: string,
+    baseUrl: string
+  ): Promise<Array<{
     name: string;
     category?: string;
     imageUrl?: string;
     isPrimary: boolean;
   }>> {
-    const products: Array<{
+    const validProducts: Array<{
       name: string;
       category?: string;
       imageUrl?: string;
@@ -219,171 +389,37 @@ export class WebsiteScrapingService {
     }> = [];
     const foundNames = new Set<string>();
 
-    // Enhanced selectors specifically for drinks industry websites
-    const productSelectors = [
-      // Standard product selectors
-      '.product', '.product-card', '.product-item', '.product-container',
-      '[data-testid*="product"]', '.shop-item', '.item', '.collection-item',
-      
-      // Drinks-specific selectors
-      '.drink', '.bottle', '.spirits', '.wine', '.beer', '.rum', '.gin', '.whisky', '.vodka',
-      '.calvados', '.cognac', '.brandy', '.liqueur', '.cocktail', '.mixer', '.cider',
-      
-      // Content-based selectors
-      'article', '.card', '.tile', '.grid-item',
-      '[class*="product"]', '[id*="product"]', '[class*="bottle"]', '[class*="drink"]',
-      
-      // E-commerce platform selectors
-      '.woocommerce-loop-product__title', '.product-title', '.item-title',
-      '.shopify-product', '.magento-product', '.bigcommerce-product',
-      
-      // Generic content selectors that might contain products
-      'section h2, section h3, section h4', // Product sections
-      '.gallery .item', '.slider .item', // Image galleries/sliders
-      'ul li', 'ol li' // Lists that might contain products
-    ];
+    // Get category keywords for validation
+    const categoryKeywords = this.getCategoryKeywords(primaryCategory);
 
-    for (const selector of productSelectors) {
-      const elements = $(selector);
-      elements.each((i, elem) => {
-        if (products.length >= this.MAX_PRODUCTS) return false;
+    for (const { url, $ } of productPages) {
+      // Step 2: Scrape potential product titles
+      const titleSelectors = [
+        'h1', 'h2', 'h3', 'h4', 
+        '.product-title', '.product-name', '.bottle-name', '.drink-name',
+        '.name', '.title', '.heading',
+        '[data-product-name]', '[data-title]'
+      ];
 
-        const $elem = $(elem);
-        
-        // Enhanced product name extraction for drinks industry
-        const nameSelectors = [
-          // Primary selectors
-          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-          '.product-name', '.product-title', '.bottle-name', '.drink-name',
-          '.name', '.title', '.label', '.brand-name',
-          
-          // Drinks-specific selectors  
-          '.wine-name', '.spirit-name', '.rum-name', '.gin-name', '.whisky-name',
-          '.beer-name', '.cocktail-name', '.mixer-name', '.cider-name',
-          
-          // Data attributes and links
-          '[data-product-name]', '[data-title]', '[data-name]',
-          'a[title]', 'a[alt]', 'img[alt]', 'img[title]',
-          
-          // E-commerce specific
-          '.woocommerce-loop-product__title', '.entry-title', '.post-title'
-        ];
-        let name = '';
-        
-        for (const nameSelector of nameSelectors) {
-          const element = $elem.find(nameSelector).first();
-          const nameText = element.text().trim() || 
-                          element.attr('alt') || 
-                          element.attr('title') || 
-                          element.attr('data-name') || '';
-          
-          if (nameText && nameText.length > 2 && nameText.length < 150) {
-            // Clean up the name
-            name = nameText.replace(/\s+/g, ' ').trim();
-            // Remove common prefixes/suffixes that aren't part of product name
-            name = name.replace(/^(product|bottle|drink):\s*/i, '');
-            name = name.replace(/\s*-\s*(buy now|shop|purchase|order).*$/i, '');
-            break;
-          }
-        }
+      for (const selector of titleSelectors) {
+        if (validProducts.length >= this.MAX_PRODUCTS) break;
 
-        // Fallback: try to extract from element text or nearby siblings
-        if (!name) {
-          // Check if this element contains mostly product-like text
-          const elementText = $elem.text().trim();
-          const lines = elementText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-          
-          for (const line of lines) {
-            if (line.length > 2 && line.length < 150 && this.looksLikeProductName(line)) {
-              name = line;
-              break;
-            }
-          }
-        }
+        $(selector).each((i, elem) => {
+          if (validProducts.length >= this.MAX_PRODUCTS) return false;
 
-        if (name && !foundNames.has(name.toLowerCase())) {
-          foundNames.add(name.toLowerCase());
+          const $elem = $(elem);
+          const title = $elem.text().trim();
 
-          // Extract image URL
-          const img = $elem.find('img').first();
-          let imageUrl = img.attr('src') || img.attr('data-src');
-          if (imageUrl && !imageUrl.startsWith('http')) {
-            try {
-              imageUrl = new URL(imageUrl, baseUrl).href;
-            } catch {
-              imageUrl = undefined;
-            }
-          }
+          // Step 3: Filter and validate products
+          if (title && title.length > 2 && title.length < 150) {
+            const isValidProduct = this.isValidProductForCategory(title, categoryKeywords, primaryCategory);
+            
+            if (isValidProduct && !foundNames.has(title.toLowerCase())) {
+              foundNames.add(title.toLowerCase());
 
-          // Determine category (basic heuristics)
-          const category: string | undefined = this.guessProductCategory(name, $elem.text());
-
-          products.push({
-            name: name.replace(/\s+/g, ' '),
-            category,
-            imageUrl,
-            isPrimary: i === 0 // First product is primary
-          });
-        }
-      });
-
-      if (products.length >= this.MAX_PRODUCTS) break;
-    }
-
-    // Phase 3: Advanced extraction for missed products using text analysis
-    if (products.length < 5) {
-      const textBasedProducts = this.extractProductsFromText($, baseUrl);
-      textBasedProducts.forEach(product => {
-        if (!foundNames.has(product.name.toLowerCase()) && products.length < this.MAX_PRODUCTS) {
-          foundNames.add(product.name.toLowerCase());
-          products.push(product);
-        }
-      });
-    }
-
-    return products;
-  }
-
-  private static extractProductsFromText($: cheerio.CheerioAPI, baseUrl: string): Array<{
-    name: string;
-    category?: string;
-    imageUrl?: string;
-    isPrimary: boolean;
-  }> {
-    const products: Array<{
-      name: string;
-      category?: string;
-      imageUrl?: string;
-      isPrimary: boolean;
-    }> = [];
-    const foundNames = new Set<string>();
-
-    // Extract product names from structured text content
-    const textSelectors = [
-      'main p', 'article p', '.content p', '.description p',
-      'main ul li', 'main ol li', '.product-list li', '.range li',
-      'h1, h2, h3, h4', '.title, .heading', '.product-name, .bottle-name'
-    ];
-
-    textSelectors.forEach(selector => {
-      $(selector).each((_, elem) => {
-        if (products.length >= 10) return false;
-
-        const $elem = $(elem);
-        const text = $elem.text().trim();
-        
-        // Look for patterns that suggest product names
-        const lines = text.split(/[,;.\n]/).map(line => line.trim());
-        
-        lines.forEach(line => {
-          if (line.length > 3 && line.length < 100 && this.looksLikeProductName(line)) {
-            const cleanName = line.replace(/^[-*•]\s*/, '').trim();
-            if (!foundNames.has(cleanName.toLowerCase()) && products.length < 10) {
-              foundNames.add(cleanName.toLowerCase());
-              
-              // Try to find related image
-              const nearbyImg = $elem.closest('section, article, div').find('img').first();
-              let imageUrl = nearbyImg.attr('src') || nearbyImg.attr('data-src');
+              // Step 4: Extract product images
+              const img = $elem.closest('div, section, article').find('img').first();
+              let imageUrl = img.attr('src') || img.attr('data-src');
               if (imageUrl && !imageUrl.startsWith('http')) {
                 try {
                   imageUrl = new URL(imageUrl, baseUrl).href;
@@ -392,215 +428,52 @@ export class WebsiteScrapingService {
                 }
               }
 
-              products.push({
-                name: cleanName,
-                category: this.guessProductCategory(cleanName, text),
+              validProducts.push({
+                name: title,
+                category: primaryCategory,
                 imageUrl,
-                isPrimary: false
+                isPrimary: i === 0
               });
             }
           }
         });
-      });
-    });
+      }
+    }
 
-    return products;
+    return validProducts;
   }
 
-  private static guessProductCategory(name: string, context: string): string | undefined {
-    const text = (name + ' ' + context).toLowerCase();
-    
-    // Enhanced category detection with more comprehensive keywords
-    const categories = {
-      'spirits': [
-        // Spirits types
-        'whiskey', 'whisky', 'bourbon', 'scotch', 'rye', 'irish whiskey',
-        'vodka', 'gin', 'rum', 'tequila', 'brandy', 'cognac', 'armagnac', 
-        'calvados', 'grappa', 'schnapps', 'absinthe', 'ouzo', 'sake',
-        'mezcal', 'pisco', 'cachaça', 'soju', 'baijiu', 'arak',
-        // Common spirit terms
-        'proof', 'aged', 'distilled', 'single malt', 'blended', 'cask',
-        'barrel aged', 'overproof', 'spiced', 'dark', 'white', 'gold',
-        'reserve', 'premium', 'craft spirit', 'distillery'
-      ],
-      'wine': [
-        'wine', 'vintage', 'pinot', 'chardonnay', 'cabernet', 'merlot', 
-        'sauvignon', 'riesling', 'shiraz', 'syrah', 'sangiovese', 'tempranillo',
-        'grenache', 'pinot grigio', 'moscato', 'prosecco', 'champagne',
-        'red wine', 'white wine', 'rosé', 'sparkling', 'dessert wine',
-        'winery', 'vineyard', 'estate', 'reserve wine', 'organic wine'
-      ],
-      'beer': [
-        'beer', 'ale', 'lager', 'ipa', 'stout', 'pilsner', 'porter', 
-        'wheat beer', 'hefeweizen', 'saison', 'lambic', 'sour beer',
-        'pale ale', 'brown ale', 'amber', 'bitter', 'mild', 'session',
-        'craft beer', 'brewery', 'brewed', 'hops', 'malt', 'draught'
-      ],
-      'cider': [
-        'cider', 'apple wine', 'perry', 'fruit cider', 'scrumpy',
-        'dry cider', 'sweet cider', 'sparkling cider', 'farmhouse cider',
-        'traditional cider', 'craft cider', 'cidery', 'orchard'
-      ],
-      'liqueur': [
-        'liqueur', 'cream liqueur', 'coffee liqueur', 'herbal liqueur',
-        'fruit liqueur', 'nut liqueur', 'amaro', 'aperitif', 'digestif',
-        'schnapps', 'sambuca', 'cointreau', 'grand marnier', 'kahlua',
-        'bailey', 'amaretto', 'frangelico', 'limoncello', 'chartreuse'
-      ],
-      'mixer': [
-        'mixer', 'tonic', 'soda', 'ginger beer', 'bitter', 'vermouth',
-        'triple sec', 'simple syrup', 'grenadine', 'cocktail mixer',
-        'bar syrup', 'bitters', 'garnish'
-      ],
-      'non-alcoholic': [
-        'non-alcoholic', 'alcohol-free', 'zero percent', '0%', 'na beer',
-        'mocktail', 'virgin', 'dealcoholized', 'low alcohol', 'alcohol removed'
-      ]
+  private static getCategoryKeywords(category: string): string[] {
+    const keywordMap: Record<string, string[]> = {
+      'spirits': ['rum', 'gin', 'whisky', 'whiskey', 'vodka', 'tequila', 'brandy', 'calvados', 'bourbon', 'scotch', 'rye', 'irish', 'single malt', 'blended', 'aged', 'proof', 'distilled', 'cask', 'barrel', 'reserve', 'premium', 'craft', 'dark', 'white', 'gold', 'spiced', 'overproof'],
+      'wine': ['wine', 'red', 'white', 'rosé', 'rose', 'sparkling', 'vintage', 'reserve', 'estate', 'organic', 'merlot', 'chardonnay', 'cabernet', 'pinot', 'sauvignon', 'riesling', 'shiraz'],
+      'beer': ['beer', 'ale', 'lager', 'ipa', 'stout', 'porter', 'pilsner', 'wheat', 'pale', 'brown', 'amber', 'bitter', 'mild', 'session', 'craft', 'brewing', 'brewed'],
+      'cider': ['cider', 'apple', 'perry', 'dry', 'sweet', 'sparkling', 'traditional', 'craft', 'scrumpy']
     };
 
-    // Check for category matches with weighted scoring
-    let bestMatch = 'other';
-    let highestScore = 0;
+    return keywordMap[category] || [];
+  }
 
-    for (const [category, keywords] of Object.entries(categories)) {
-      const matches = keywords.filter(keyword => text.includes(keyword)).length;
-      if (matches > highestScore) {
-        highestScore = matches;
-        bestMatch = category;
-      }
+  private static isValidProductForCategory(title: string, categoryKeywords: string[], primaryCategory: string): boolean {
+    const titleLower = title.toLowerCase();
+    
+    // Exclude obvious non-products
+    const excludePatterns = [
+      /^(about|contact|home|news|blog|faq)/i,
+      /^(tripadvisor|facebook|instagram|twitter|youtube)/i,
+      /^(privacy|terms|policy|cookies)/i,
+      /^(search|filter|sort|view)/i
+    ];
+
+    if (excludePatterns.some(pattern => pattern.test(title))) {
+      return false;
     }
 
-    return highestScore > 0 ? bestMatch : 'other';
-  }
-
-  private static looksLikeProductName(text: string): boolean {
-    const cleanText = text.toLowerCase().trim();
+    // Must contain at least one category keyword or common spirit terms
+    const commonSpiriterms = ['series', 'collection', 'edition', 'expression', 'range', 'blend', 'bottle'];
+    const allKeywords = [...categoryKeywords, ...commonSpiriterms];
     
-    // Too short or too long
-    if (cleanText.length < 3 || cleanText.length > 100) return false;
-    
-    // Contains common product indicators
-    const productIndicators = [
-      'rum', 'gin', 'whisky', 'whiskey', 'vodka', 'brandy', 'cognac', 'calvados',
-      'wine', 'beer', 'ale', 'lager', 'ipa', 'stout', 'cider', 'liqueur',
-      'vintage', 'aged', 'proof', 'abv', 'ml', 'cl', 'bottle', 'flask'
-    ];
-    
-    // Avoid common non-product text
-    const blacklist = [
-      'click', 'buy', 'shop', 'cart', 'price', 'contact', 'about', 'home',
-      'menu', 'login', 'register', 'search', 'filter', 'sort', 'page',
-      'copyright', 'terms', 'privacy', 'policy', 'cookie'
-    ];
-    
-    // Check for blacklisted terms
-    if (blacklist.some(term => cleanText.includes(term))) return false;
-    
-    // Check for product indicators or typical product name patterns
-    const hasProductIndicator = productIndicators.some(indicator => cleanText.includes(indicator));
-    const hasNumberPattern = /\d+\s*(ml|cl|l|%|proof|year|aged)/i.test(text);
-    const hasCapitalizedWords = /^[A-Z][a-z]+(\s+[A-Z][a-z]+)*$/.test(text.trim());
-    
-    return hasProductIndicator || hasNumberPattern || hasCapitalizedWords;
-  }
-
-  private static discoverRelevantPages($: cheerio.CheerioAPI, baseUrl: string): string[] {
-    const relevantLinks: string[] = [];
-    const baseUrlObj = new URL(baseUrl);
-    
-    // Look for links that likely contain product information
-    const relevantPatterns = [
-      // Product/shop pages
-      /product/i, /shop/i, /store/i, /catalog/i, /collection/i,
-      // Drinks-specific pages
-      /rum/i, /gin/i, /whisky/i, /whiskey/i, /vodka/i, /wine/i, /beer/i, /spirits/i, /drinks/i,
-      /bottle/i, /distillery/i, /brewery/i, /winery/i, /range/i, /selection/i,
-      // Portfolio/brand pages
-      /portfolio/i, /brands/i, /our.*products/i, /what.*we.*make/i, /offerings/i,
-      /menu/i, /list/i, /gallery/i
-    ];
-
-    $('a[href]').each((_, elem) => {
-      const $link = $(elem);
-      const href = $link.attr('href');
-      const linkText = $link.text().toLowerCase().trim();
-      
-      if (!href || relevantLinks.length >= this.MAX_PAGES) return;
-      
-      try {
-        const fullUrl = new URL(href, baseUrl).href;
-        
-        // Skip external links, fragments, and already added URLs
-        if (!fullUrl.startsWith(baseUrlObj.origin) || 
-            fullUrl.includes('#') || 
-            relevantLinks.includes(fullUrl) ||
-            fullUrl === baseUrl) return;
-        
-        // Check if the URL or link text suggests product content
-        const urlPath = new URL(fullUrl).pathname.toLowerCase();
-        const isRelevant = relevantPatterns.some(pattern => 
-          pattern.test(urlPath) || pattern.test(linkText)
-        );
-        
-        if (isRelevant) {
-          relevantLinks.push(fullUrl);
-        }
-      } catch (error) {
-        // Skip malformed URLs
-      }
-    });
-
-    return relevantLinks;
-  }
-
-  private static async crawlSubPages(subPageUrls: string[], baseUrl: string): Promise<Array<{
-    name: string;
-    category?: string;
-    imageUrl?: string;
-    isPrimary: boolean;
-  }>> {
-    const allProducts: Array<{
-      name: string;
-      category?: string;
-      imageUrl?: string;
-      isPrimary: boolean;
-    }> = [];
-    
-    for (const subUrl of subPageUrls) {
-      try {
-        // Rate limiting to be respectful
-        await new Promise(resolve => setTimeout(resolve, this.REQUEST_DELAY));
-        
-        const response = await fetch(subUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; SustainabilityBot/1.0)',
-          },
-          signal: AbortSignal.timeout(this.TIMEOUT)
-        });
-
-        if (!response.ok) continue;
-        
-        const html = await response.text();
-        const $ = cheerio.load(html);
-        
-        // Extract products from this sub-page
-        const pageProducts = await this.extractProducts($, baseUrl);
-        
-        // Mark sub-page products as non-primary
-        pageProducts.forEach(product => {
-          product.isPrimary = false;
-          allProducts.push(product);
-        });
-        
-        // Stop if we have enough products
-        if (allProducts.length >= this.MAX_PRODUCTS) break;
-        
-      } catch (error) {
-        console.warn(`Failed to scrape sub-page ${subUrl}:`, error.message);
-        continue;
-      }
-    }
-
-    return allProducts;
+    return allKeywords.some(keyword => titleLower.includes(keyword)) || 
+           /^\w+\s*(series|collection|edition|expression|range|blend)$/i.test(title);
   }
 }
