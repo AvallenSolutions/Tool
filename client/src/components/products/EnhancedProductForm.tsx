@@ -558,6 +558,7 @@ export default function EnhancedProductForm({
     if (initialData) {
       console.log('🔄 Resetting form with initialData:', initialData);
       console.log('🔍 Water dilution in initialData:', initialData.waterDilution);
+      console.log('📦 Packaging data in initialData:', initialData.packaging);
       form.reset(initialData);
       
       // Force update waterDilution specifically after reset
@@ -570,6 +571,46 @@ export default function EnhancedProductForm({
             amount: form.getValues('waterDilution.amount'),
             unit: form.getValues('waterDilution.unit')
           });
+        }, 100);
+      }
+      
+      // Force update packaging data specifically after reset
+      if (initialData.packaging) {
+        console.log('🔧 Setting packaging data manually:', initialData.packaging);
+        setTimeout(() => {
+          // Set closure data
+          if (initialData.packaging.closure) {
+            form.setValue('packaging.closure.closureType', initialData.packaging.closure.closureType);
+            form.setValue('packaging.closure.material', initialData.packaging.closure.material);
+            form.setValue('packaging.closure.weight', initialData.packaging.closure.weight);
+            console.log('✅ Closure values set:', {
+              closureType: form.getValues('packaging.closure.closureType'),
+              material: form.getValues('packaging.closure.material'),
+              weight: form.getValues('packaging.closure.weight')
+            });
+          }
+          
+          // Set labeling data
+          if (initialData.packaging.labeling) {
+            form.setValue('packaging.labeling.labelMaterial', initialData.packaging.labeling.labelMaterial);
+            form.setValue('packaging.labeling.labelWeight', initialData.packaging.labeling.labelWeight);
+            console.log('✅ Label values set:', {
+              labelMaterial: form.getValues('packaging.labeling.labelMaterial'),
+              labelWeight: form.getValues('packaging.labeling.labelWeight')
+            });
+          }
+          
+          // Set secondary packaging data
+          if (initialData.packaging.secondaryPackaging) {
+            form.setValue('packaging.secondaryPackaging.hasSecondaryPackaging', initialData.packaging.secondaryPackaging.hasSecondaryPackaging);
+            form.setValue('packaging.secondaryPackaging.boxMaterial', initialData.packaging.secondaryPackaging.boxMaterial);
+            form.setValue('packaging.secondaryPackaging.boxWeight', initialData.packaging.secondaryPackaging.boxWeight);
+            console.log('✅ Secondary packaging values set:', {
+              hasSecondaryPackaging: form.getValues('packaging.secondaryPackaging.hasSecondaryPackaging'),
+              boxMaterial: form.getValues('packaging.secondaryPackaging.boxMaterial'),
+              boxWeight: form.getValues('packaging.secondaryPackaging.boxWeight')
+            });
+          }
         }, 100);
       }
       
