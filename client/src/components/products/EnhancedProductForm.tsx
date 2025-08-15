@@ -175,25 +175,25 @@ const enhancedProductSchema = z.object({
       angelsSharePercentage: z.coerce.number().min(0).max(100).default(0),
       waterM3PerTonCrop: z.coerce.number().min(0).default(0),
       renewableEnergyPercent: z.coerce.number().min(0).max(100).default(0),
-    }),
+    }).optional(),
     fermentation: z.object({
       fermentationTime: z.coerce.number().min(0).default(0),
       yeastType: z.string().default(""),
       temperatureControl: z.boolean().default(false),
       sugarAddedKg: z.coerce.number().min(0).default(0),
-    }),
+    }).optional(),
     distillation: z.object({
       distillationRounds: z.coerce.number().min(0).default(0),
       energySourceType: z.enum(['electric', 'gas', 'biomass', 'steam']).optional(),
       heatRecoverySystem: z.boolean().default(false),
       copperUsageKg: z.coerce.number().min(0).default(0),
-    }),
+    }).optional(),
     maturation: z.object({
       maturationTimeMonths: z.coerce.number().min(0).default(0),
       barrelType: z.enum(['new_oak', 'used_oak', 'stainless_steel', 'concrete', 'ceramic']).optional(),
       barrelOrigin: z.string().default(""),
       barrelReuseCycles: z.coerce.number().min(0).default(0),
-    }),
+    }).optional(),
   }),
   
   // Environmental Impact Tab
@@ -203,7 +203,7 @@ const enhancedProductSchema = z.object({
     waterFootprint: z.coerce.number().optional(),
     landUse: z.coerce.number().optional(),
     biodiversityImpact: z.string().optional(),
-  }),
+  }).optional(),
   
   // Certifications & Awards Tab
   certifications: z.array(z.string()).optional(),
