@@ -35,55 +35,55 @@ const enhancedProductSchema = z.object({
   
   // Ingredients Tab  
   waterDilution: z.object({
-    amount: z.number().min(0, "Water amount must be positive"),
+    amount: z.coerce.number().min(0, "Water amount must be positive"),
     unit: z.string().min(1, "Unit is required"),
   }).optional(),
   
   ingredients: z.array(z.object({
     name: z.string().min(1, "Ingredient name is required"),
-    amount: z.number().min(0, "Amount must be positive"),
+    amount: z.coerce.number().min(0, "Amount must be positive"),
     unit: z.string().min(1, "Unit is required"),
     type: z.string().optional(),
     origin: z.string().optional(),
     organic: z.boolean().default(false),
     supplier: z.string().optional(),
     // Additional agriculture fields for comprehensive LCA data collection
-    yieldPerHectare: z.number().optional(),
+    yieldPerHectare: z.coerce.number().optional(),
     farmingPractice: z.enum(['conventional', 'organic', 'biodynamic', 'regenerative']).optional(),
-    nitrogenFertilizer: z.number().optional(),
-    phosphorusFertilizer: z.number().optional(),
-    dieselUsage: z.number().optional(),
-    transportDistance: z.number().optional(),
-    processingEnergy: z.number().optional(),
-    waterUsage: z.number().optional(),
-    biodiversityImpact: z.number().optional(),
-    soilQualityIndex: z.number().optional(),
-    carbonSequestration: z.number().optional(),
+    nitrogenFertilizer: z.coerce.number().optional(),
+    phosphorusFertilizer: z.coerce.number().optional(),
+    dieselUsage: z.coerce.number().optional(),
+    transportDistance: z.coerce.number().optional(),
+    processingEnergy: z.coerce.number().optional(),
+    waterUsage: z.coerce.number().optional(),
+    biodiversityImpact: z.coerce.number().optional(),
+    soilQualityIndex: z.coerce.number().optional(),
+    carbonSequestration: z.coerce.number().optional(),
   })).min(1, "At least one ingredient is required"),
   
   // Packaging Tab - User-friendly input that auto-syncs to LCA Data
   packaging: z.object({
     primaryContainer: z.object({
       material: z.string().min(1, "Container material is required"),
-      weight: z.number().min(0, "Weight must be positive"),
-      recycledContent: z.number().min(0).max(100).optional(),
+      weight: z.coerce.number().min(0, "Weight must be positive"),
+      recycledContent: z.coerce.number().min(0).max(100).optional(),
       recyclability: z.string().optional(),
       color: z.string().optional(),
-      thickness: z.number().optional(),
+      thickness: z.coerce.number().optional(),
       origin: z.string().optional(),
     }),
     labeling: z.object({
       labelMaterial: z.string().optional(),
-      labelWeight: z.number().optional(),
+      labelWeight: z.coerce.number().optional(),
       printingMethod: z.string().optional(),
       inkType: z.string().optional(),
-      labelSize: z.number().optional(),
+      labelSize: z.coerce.number().optional(),
       origin: z.string().optional(),
     }),
     closure: z.object({
       closureType: z.string().optional(),
       material: z.string().optional(),
-      weight: z.number().optional(),
+      weight: z.coerce.number().optional(),
       hasLiner: z.boolean().default(false),
       linerMaterial: z.string().optional(),
       origin: z.string().optional(),
@@ -91,9 +91,9 @@ const enhancedProductSchema = z.object({
     secondaryPackaging: z.object({
       hasSecondaryPackaging: z.boolean().default(false),
       boxMaterial: z.string().optional(),
-      boxWeight: z.number().optional(),
+      boxWeight: z.coerce.number().optional(),
       fillerMaterial: z.string().optional(),
-      fillerWeight: z.number().optional(),
+      fillerWeight: z.coerce.number().optional(),
       origin: z.string().optional(),
     }),
     // Additional fields
@@ -111,7 +111,7 @@ const enhancedProductSchema = z.object({
   // Production Tab - Comprehensive manufacturing data collection
   production: z.object({
     productionModel: z.string().min(1, "Production model is required"),
-    annualProductionVolume: z.number().min(0, "Production volume must be positive"),
+    annualProductionVolume: z.coerce.number().min(0, "Production volume must be positive"),
     productionUnit: z.string().default('units'),
     facilityLocation: z.string().optional(),
     facilityAddress: z.string().optional(),
@@ -123,85 +123,85 @@ const enhancedProductSchema = z.object({
     // Process-specific data for LCA calculations
     processSteps: z.array(z.object({
       stepName: z.string().optional(),
-      duration: z.number().optional(),
-      temperature: z.number().optional(),
-      energyIntensity: z.number().optional(),
-      waterConsumption: z.number().optional(),
-      wasteGenerated: z.number().optional(),
+      duration: z.coerce.number().optional(),
+      temperature: z.coerce.number().optional(),
+      energyIntensity: z.coerce.number().optional(),
+      waterConsumption: z.coerce.number().optional(),
+      wasteGenerated: z.coerce.number().optional(),
     })).optional(),
     equipmentSpecifications: z.object({
-      fermentationVessels: z.number().optional(),
-      distillationColumns: z.number().optional(),
-      agingBarrels: z.number().optional(),
-      bottlingLineCapacity: z.number().optional(),
+      fermentationVessels: z.coerce.number().optional(),
+      distillationColumns: z.coerce.number().optional(),
+      agingBarrels: z.coerce.number().optional(),
+      bottlingLineCapacity: z.coerce.number().optional(),
       cleaningSystemType: z.string().optional(),
     }).optional(),
     energyConsumption: z.object({
-      electricityKwh: z.number().optional(),
-      gasM3: z.number().optional(),
-      steamKg: z.number().optional(),
-      fuelLiters: z.number().optional(),
-      renewableEnergyPercent: z.number().min(0).max(100).optional(),
+      electricityKwh: z.coerce.number().optional(),
+      gasM3: z.coerce.number().optional(),
+      steamKg: z.coerce.number().optional(),
+      fuelLiters: z.coerce.number().optional(),
+      renewableEnergyPercent: z.coerce.number().min(0).max(100).optional(),
       energySource: z.string().optional(),
       heatRecovery: z.boolean().default(false),
     }),
     waterUsage: z.object({
-      processWaterLiters: z.number().optional(),
-      cleaningWaterLiters: z.number().optional(),
-      coolingWaterLiters: z.number().optional(),
+      processWaterLiters: z.coerce.number().optional(),
+      cleaningWaterLiters: z.coerce.number().optional(),
+      coolingWaterLiters: z.coerce.number().optional(),
       wasteWaterTreatment: z.string().optional(),
-      waterRecyclingPercent: z.number().min(0).max(100).optional(),
+      waterRecyclingPercent: z.coerce.number().min(0).max(100).optional(),
       waterSourceType: z.string().optional(),
     }),
     wasteGeneration: z.object({
-      organicWasteKg: z.number().optional(),
-      packagingWasteKg: z.number().optional(),
-      hazardousWasteKg: z.number().optional(),
-      wasteRecycledPercent: z.number().min(0).max(100).optional(),
+      organicWasteKg: z.coerce.number().optional(),
+      packagingWasteKg: z.coerce.number().optional(),
+      hazardousWasteKg: z.coerce.number().optional(),
+      wasteRecycledPercent: z.coerce.number().min(0).max(100).optional(),
       yeastRecovery: z.boolean().default(false),
       grainWasteDestination: z.string().optional(),
     }),
     qualityControl: z.object({
       testingFrequency: z.string().optional(),
-      rejectionRate: z.number().min(0).max(100).optional(),
-      reworkRate: z.number().min(0).max(100).optional(),
+      rejectionRate: z.coerce.number().min(0).max(100).optional(),
+      reworkRate: z.coerce.number().min(0).max(100).optional(),
       qualityCertifications: z.array(z.string()).optional(),
     }).optional(),
     productionMethods: z.array(z.string()).optional(),
     // Detailed processing sections for auto-sync with LCA Data
     processing: z.object({
-      electricityKwhPerTonCrop: z.number().min(0).default(0),
-      lpgKgPerLAlcohol: z.number().min(0).default(0),
-      angelsSharePercentage: z.number().min(0).max(100).default(0),
-      waterM3PerTonCrop: z.number().min(0).default(0),
-      renewableEnergyPercent: z.number().min(0).max(100).default(0),
+      electricityKwhPerTonCrop: z.coerce.number().min(0).default(0),
+      lpgKgPerLAlcohol: z.coerce.number().min(0).default(0),
+      angelsSharePercentage: z.coerce.number().min(0).max(100).default(0),
+      waterM3PerTonCrop: z.coerce.number().min(0).default(0),
+      renewableEnergyPercent: z.coerce.number().min(0).max(100).default(0),
     }),
     fermentation: z.object({
-      fermentationTime: z.number().min(0).default(0),
+      fermentationTime: z.coerce.number().min(0).default(0),
       yeastType: z.string().default(""),
       temperatureControl: z.boolean().default(false),
-      sugarAddedKg: z.number().min(0).default(0),
+      sugarAddedKg: z.coerce.number().min(0).default(0),
     }),
     distillation: z.object({
-      distillationRounds: z.number().min(0).default(0),
+      distillationRounds: z.coerce.number().min(0).default(0),
       energySourceType: z.enum(['electric', 'gas', 'biomass', 'steam']).optional(),
       heatRecoverySystem: z.boolean().default(false),
-      copperUsageKg: z.number().min(0).default(0),
+      copperUsageKg: z.coerce.number().min(0).default(0),
     }),
     maturation: z.object({
-      maturationTimeMonths: z.number().min(0).default(0),
-      barrelType: z.enum(['new-oak', 'used-oak', 'stainless-steel', 'concrete', 'ceramic']).optional(),
+      maturationTimeMonths: z.coerce.number().min(0).default(0),
+      barrelType: z.enum(['new_oak', 'used_oak', 'stainless_steel', 'concrete', 'ceramic']).optional(),
       barrelOrigin: z.string().default(""),
-      barrelReuseCycles: z.number().min(0).default(0),
+      barrelReuseCycles: z.coerce.number().min(0).default(0),
     }),
   }),
   
   // Environmental Impact Tab
   environmentalImpact: z.object({
     calculationMethod: z.string().optional(),
-    co2Emissions: z.number().optional(),
-    waterFootprint: z.number().optional(),
-    landUse: z.number().optional(),
+    co2Emissions: z.coerce.number().optional(),
+    waterFootprint: z.coerce.number().optional(),
+    landUse: z.coerce.number().optional(),
     biodiversityImpact: z.string().optional(),
   }),
   
@@ -211,19 +211,19 @@ const enhancedProductSchema = z.object({
   
   // Distribution Tab
   distribution: z.object({
-    averageTransportDistance: z.number().optional(),
+    averageTransportDistance: z.coerce.number().optional(),
     primaryTransportMode: z.string().optional(),
-    distributionCenters: z.number().optional(),
+    distributionCenters: z.coerce.number().optional(),
     coldChainRequired: z.boolean().default(false),
-    packagingEfficiency: z.number().optional(),
-    palletizationEfficiency: z.number().optional(),
+    packagingEfficiency: z.coerce.number().optional(),
+    palletizationEfficiency: z.coerce.number().optional(),
     temperatureRange: z.string().optional(),
   }),
   
   // End of Life Tab
   endOfLife: z.object({
     returnableContainer: z.boolean().default(false),
-    recyclingRate: z.number().min(0).max(100).optional(),
+    recyclingRate: z.coerce.number().min(0).max(100).optional(),
     disposalMethod: z.string().optional(),
     consumerEducation: z.string().optional(),
     biodegradability: z.object({
@@ -232,11 +232,11 @@ const enhancedProductSchema = z.object({
       marineBiodegradable: z.boolean().default(false),
     }).optional(),
     lcaEndOfLife: z.object({
-      recyclingRate: z.number().optional(),
-      energyRecoveryRate: z.number().optional(),
-      landfillRate: z.number().optional(),
-      transportDistanceKm: z.number().optional(),
-      sortingEfficiency: z.number().optional(),
+      recyclingRate: z.coerce.number().optional(),
+      energyRecoveryRate: z.coerce.number().optional(),
+      landfillRate: z.coerce.number().optional(),
+      transportDistanceKm: z.coerce.number().optional(),
+      sortingEfficiency: z.coerce.number().optional(),
     }).optional(),
     takeback: z.object({
       takebackProgram: z.boolean().default(false),
@@ -381,6 +381,117 @@ const enhancedProductSchema = z.object({
 });
 
 type EnhancedProductFormData = z.infer<typeof enhancedProductSchema>;
+
+// Data transformation utility to convert database strings to proper types
+const transformDatabaseData = (data: any): any => {
+  if (!data) return data;
+  
+  const toNum = (val: any) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    return typeof val === 'string' ? parseFloat(val) : val;
+  };
+  
+  const toBool = (val: any) => {
+    if (val === null || val === undefined) return false;
+    if (typeof val === 'string') return val === 'true' || val === '1';
+    return Boolean(val);
+  };
+
+  // Create a deep copy to avoid mutating the original data
+  const transformed = JSON.parse(JSON.stringify(data));
+
+  // Transform packaging data and map from database fields
+  if (transformed.packaging) {
+    const pkg = transformed.packaging;
+    if (pkg.primaryContainer) {
+      pkg.primaryContainer.weight = toNum(pkg.primaryContainer.weight);
+      pkg.primaryContainer.recycledContent = toNum(pkg.primaryContainer.recycledContent);
+      pkg.primaryContainer.thickness = toNum(pkg.primaryContainer.thickness);
+    }
+    if (pkg.labeling) {
+      pkg.labeling.labelWeight = toNum(pkg.labeling.labelWeight);
+      pkg.labeling.labelSize = toNum(pkg.labeling.labelSize);
+    }
+    if (pkg.closure) {
+      pkg.closure.weight = toNum(pkg.closure.weight);
+      pkg.closure.hasLiner = toBool(pkg.closure.hasLiner);
+    }
+    if (pkg.secondaryPackaging) {
+      pkg.secondaryPackaging.boxWeight = toNum(pkg.secondaryPackaging.boxWeight);
+      pkg.secondaryPackaging.fillerWeight = toNum(pkg.secondaryPackaging.fillerWeight);
+      pkg.secondaryPackaging.hasSecondaryPackaging = toBool(pkg.secondaryPackaging.hasSecondaryPackaging);
+    }
+  }
+  
+  // Map database fields to form fields for missing auto-fill data
+  if (transformed.closureMaterial && !transformed.packaging?.closure?.material) {
+    if (!transformed.packaging) transformed.packaging = {};
+    if (!transformed.packaging.closure) transformed.packaging.closure = {};
+    transformed.packaging.closure.material = transformed.closureMaterial;
+  }
+  
+  if (transformed.labelInkType && !transformed.packaging?.labeling?.inkType) {
+    if (!transformed.packaging) transformed.packaging = {};
+    if (!transformed.packaging.labeling) transformed.packaging.labeling = {};
+    transformed.packaging.labeling.inkType = transformed.labelInkType;
+  }
+  
+  if (transformed.averageTransportDistance && !transformed.distribution?.averageTransportDistance) {
+    if (!transformed.distribution) transformed.distribution = {};
+    transformed.distribution.averageTransportDistance = toNum(transformed.averageTransportDistance);
+  }
+  
+  if (transformed.recyclingRate && !transformed.endOfLife?.recyclingRate) {
+    if (!transformed.endOfLife) transformed.endOfLife = {};
+    transformed.endOfLife.recyclingRate = toNum(transformed.recyclingRate);
+  }
+
+  // Transform water dilution
+  if (transformed.waterDilution) {
+    transformed.waterDilution.amount = toNum(transformed.waterDilution.amount);
+  }
+
+  // Transform ingredients
+  if (transformed.ingredients && Array.isArray(transformed.ingredients)) {
+    transformed.ingredients = transformed.ingredients.map((ing: any) => ({
+      ...ing,
+      amount: toNum(ing.amount),
+      yieldPerHectare: toNum(ing.yieldPerHectare),
+      nitrogenFertilizer: toNum(ing.nitrogenFertilizer),
+      phosphorusFertilizer: toNum(ing.phosphorusFertilizer),
+      dieselUsage: toNum(ing.dieselUsage),
+      transportDistance: toNum(ing.transportDistance),
+      processingEnergy: toNum(ing.processingEnergy),
+      waterUsage: toNum(ing.waterUsage),
+      biodiversityImpact: toNum(ing.biodiversityImpact),
+      soilQualityIndex: toNum(ing.soilQualityIndex),
+      carbonSequestration: toNum(ing.carbonSequestration),
+    }));
+  }
+
+  // Transform distribution data
+  if (transformed.distribution) {
+    transformed.distribution.averageTransportDistance = toNum(transformed.distribution.averageTransportDistance);
+    transformed.distribution.distributionCenters = toNum(transformed.distribution.distributionCenters);
+    transformed.distribution.packagingEfficiency = toNum(transformed.distribution.packagingEfficiency);
+    transformed.distribution.palletizationEfficiency = toNum(transformed.distribution.palletizationEfficiency);
+    transformed.distribution.coldChainRequired = toBool(transformed.distribution.coldChainRequired);
+  }
+
+  // Transform end of life data
+  if (transformed.endOfLife) {
+    transformed.endOfLife.recyclingRate = toNum(transformed.endOfLife.recyclingRate);
+    transformed.endOfLife.returnableContainer = toBool(transformed.endOfLife.returnableContainer);
+  }
+
+  // Transform production data
+  if (transformed.production) {
+    transformed.production.annualProductionVolume = toNum(transformed.production.annualProductionVolume);
+    transformed.production.heatRecoverySystem = toBool(transformed.production.heatRecoverySystem);
+  }
+
+  return transformed;
+};
 
 interface EnhancedProductFormProps {
   initialData?: Partial<EnhancedProductFormData>;
@@ -557,66 +668,83 @@ export default function EnhancedProductForm({
   useEffect(() => {
     if (initialData) {
       console.log('🔄 Resetting form with initialData:', initialData);
-      console.log('🔍 Water dilution in initialData:', initialData.waterDilution);
-      console.log('📦 Packaging data in initialData:', initialData.packaging);
-      form.reset(initialData);
       
-      // Force update waterDilution specifically after reset
-      if (initialData.waterDilution) {
-        console.log('🔧 Setting waterDilution manually:', initialData.waterDilution);
+      // Transform database data to proper types before resetting form
+      const transformedData = transformDatabaseData(initialData);
+      console.log('🔄 Transformed data:', transformedData);
+      
+      form.reset(transformedData);
+      
+      // Force update specific nested fields with null checks
+      if (transformedData.waterDilution?.amount !== undefined) {
         setTimeout(() => {
-          form.setValue('waterDilution.amount', initialData.waterDilution.amount);
-          form.setValue('waterDilution.unit', initialData.waterDilution.unit);
-          console.log('✅ Form values after manual set:', {
-            amount: form.getValues('waterDilution.amount'),
-            unit: form.getValues('waterDilution.unit')
-          });
+          form.setValue('waterDilution.amount', transformedData.waterDilution.amount);
+          form.setValue('waterDilution.unit', transformedData.waterDilution.unit);
         }, 100);
       }
       
-      // Force update packaging data specifically after reset
-      if (initialData.packaging) {
-        console.log('🔧 Setting packaging data manually:', initialData.packaging);
+      // Force update packaging data with null checks and missing fields
+      if (transformedData.packaging) {
         setTimeout(() => {
-          // Set closure data
-          if (initialData.packaging.closure) {
-            form.setValue('packaging.closure.closureType', initialData.packaging.closure.closureType);
-            form.setValue('packaging.closure.material', initialData.packaging.closure.material);
-            form.setValue('packaging.closure.weight', initialData.packaging.closure.weight);
-            console.log('✅ Closure values set:', {
-              closureType: form.getValues('packaging.closure.closureType'),
-              material: form.getValues('packaging.closure.material'),
-              weight: form.getValues('packaging.closure.weight')
-            });
+          // Set closure data with null checks
+          if (transformedData.packaging.closure?.closureType) {
+            form.setValue('packaging.closure.closureType', transformedData.packaging.closure.closureType);
+          }
+          if (transformedData.packaging.closure?.material) {
+            form.setValue('packaging.closure.material', transformedData.packaging.closure.material);
+          }
+          if (transformedData.packaging.closure?.weight !== undefined) {
+            form.setValue('packaging.closure.weight', transformedData.packaging.closure.weight);
           }
           
-          // Set labeling data
-          if (initialData.packaging.labeling) {
-            form.setValue('packaging.labeling.labelMaterial', initialData.packaging.labeling.labelMaterial);
-            form.setValue('packaging.labeling.labelWeight', initialData.packaging.labeling.labelWeight);
-            console.log('✅ Label values set:', {
-              labelMaterial: form.getValues('packaging.labeling.labelMaterial'),
-              labelWeight: form.getValues('packaging.labeling.labelWeight')
-            });
+          // Set labeling data with null checks including missing inkType
+          if (transformedData.packaging.labeling?.labelMaterial) {
+            form.setValue('packaging.labeling.labelMaterial', transformedData.packaging.labeling.labelMaterial);
+          }
+          if (transformedData.packaging.labeling?.labelWeight !== undefined) {
+            form.setValue('packaging.labeling.labelWeight', transformedData.packaging.labeling.labelWeight);
+          }
+          if (transformedData.packaging.labeling?.inkType) {
+            form.setValue('packaging.labeling.inkType', transformedData.packaging.labeling.inkType);
+          }
+          if (transformedData.packaging.labeling?.printingMethod) {
+            form.setValue('packaging.labeling.printingMethod', transformedData.packaging.labeling.printingMethod);
           }
           
-          // Set secondary packaging data
-          if (initialData.packaging.secondaryPackaging) {
-            form.setValue('packaging.secondaryPackaging.hasSecondaryPackaging', initialData.packaging.secondaryPackaging.hasSecondaryPackaging);
-            form.setValue('packaging.secondaryPackaging.boxMaterial', initialData.packaging.secondaryPackaging.boxMaterial);
-            form.setValue('packaging.secondaryPackaging.boxWeight', initialData.packaging.secondaryPackaging.boxWeight);
-            console.log('✅ Secondary packaging values set:', {
-              hasSecondaryPackaging: form.getValues('packaging.secondaryPackaging.hasSecondaryPackaging'),
-              boxMaterial: form.getValues('packaging.secondaryPackaging.boxMaterial'),
-              boxWeight: form.getValues('packaging.secondaryPackaging.boxWeight')
-            });
+          // Set secondary packaging data with null checks
+          if (transformedData.packaging.secondaryPackaging?.hasSecondaryPackaging !== undefined) {
+            form.setValue('packaging.secondaryPackaging.hasSecondaryPackaging', transformedData.packaging.secondaryPackaging.hasSecondaryPackaging);
           }
-        }, 100);
+          if (transformedData.packaging.secondaryPackaging?.boxMaterial) {
+            form.setValue('packaging.secondaryPackaging.boxMaterial', transformedData.packaging.secondaryPackaging.boxMaterial);
+          }
+          if (transformedData.packaging.secondaryPackaging?.boxWeight !== undefined) {
+            form.setValue('packaging.secondaryPackaging.boxWeight', transformedData.packaging.secondaryPackaging.boxWeight);
+          }
+        }, 200);
+      }
+      
+      // Set distribution data
+      if (transformedData.distribution) {
+        setTimeout(() => {
+          if (transformedData.distribution.averageTransportDistance !== undefined) {
+            form.setValue('distribution.averageTransportDistance', transformedData.distribution.averageTransportDistance);
+          }
+        }, 300);
+      }
+      
+      // Set end of life data
+      if (transformedData.endOfLife) {
+        setTimeout(() => {
+          if (transformedData.endOfLife.recyclingRate !== undefined) {
+            form.setValue('endOfLife.recyclingRate', transformedData.endOfLife.recyclingRate);
+          }
+        }, 400);
       }
       
       // Also set product images if they exist
-      if (initialData.productImages && Array.isArray(initialData.productImages)) {
-        setProductImages(initialData.productImages);
+      if (transformedData.productImages && Array.isArray(transformedData.productImages)) {
+        setProductImages(transformedData.productImages);
       }
     }
   }, [initialData, form]);
