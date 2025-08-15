@@ -7,75 +7,110 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { X, Building, Calendar, Zap, Package, Users, FileText } from "lucide-react";
+import { X, ArrowRight, Loader2, CheckCircle, Globe, Building2 } from "lucide-react";
 import ProgressBar from "./progress-bar";
-import DocumentUpload from "@/components/documents/document-upload";
 
 interface OnboardingWizardProps {
   onComplete: (companyId: number) => void;
   onCancel: () => void;
 }
 
+interface ScrapedData {
+  name?: string;
+  address?: string;
+  contactDetails?: string;
+  products: Array<{
+    name: string;
+    category?: string;
+    imageUrl?: string;
+    isPrimary: boolean;
+  }>;
+}
+
+interface WizardFormData {
+  firstName: string;
+  companyName: string;
+  websiteUrl: string;
+  scrapedData: ScrapedData | null;
+  selectedProducts: Set<number>;
+  primaryMotivation: string;
+}
+
 export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    // Company data
-    name: '',
-    industry: '',
-    size: '',
-    address: '',
-    country: '',
-    website: '',
-    reportingPeriodStart: '',
-    reportingPeriodEnd: '',
-    // Operational data (optional)
-    electricityConsumption: '',
-    gasConsumption: '',
-    waterConsumption: '',
-    wasteGenerated: '',
-    // Document upload tracking
-    documentsUploaded: false,
+  const [formData, setFormData] = useState<WizardFormData>({
+    firstName: '',
+    companyName: '',
+    websiteUrl: '',
+    scrapedData: null,
+    selectedProducts: new Set(),
+    primaryMotivation: '',
   });
 
+  // Website scraping mutation
+  const scrapeMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const response = await apiRequest("POST", "/api/onboarding/scrape", { url });
+      return response.json();
+    },
+    onSuccess: (data: ScrapedData) => {
+      setFormData(prev => ({
+        ...prev,
+        scrapedData: data,
+        // Auto-fill company name if scraped successfully and not already set
+        companyName: prev.companyName || data.name || prev.companyName
+      }));
+      toast({
+        title: "Website Scraped Successfully",
+        description: "Found company and product information from your website.",
+      });
+      setCurrentStep(4); // Move to review step
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Scraping Failed",
+        description: error.message || "Could not extract data from website. You can continue manually.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Company creation mutation
   const createCompanyMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/company", data);
+      const response = await apiRequest("PATCH", "/api/companies/update-onboarding", data);
       return response.json();
     },
     onSuccess: async (company) => {
       queryClient.invalidateQueries({ queryKey: ["/api/company"] });
-      
-      // No longer creating products during onboarding - they can be added later from the dashboard
-      
       toast({
-        title: "Setup Complete!",
-        description: "Welcome to your sustainability dashboard.",
+        title: "Welcome aboard!",
+        description: `Setup complete. Welcome to your sustainability dashboard, ${formData.firstName}!`,
       });
       onComplete(company.id);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to create company profile",
+        description: "Failed to complete setup. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const totalSteps = 4;
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const totalSteps = 5;
 
   const handleNext = () => {
+    if (currentStep === 3 && formData.websiteUrl) {
+      // Trigger scraping on step 3
+      scrapeMutation.mutate(formData.websiteUrl);
+      return;
+    }
+    
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
     } else {
@@ -90,279 +125,301 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
   };
 
   const handleComplete = () => {
+    // Collect selected products
+    const selectedProductList = formData.scrapedData?.products.filter((_, index) => 
+      formData.selectedProducts.has(index)
+    ) || [];
+
     const companyData = {
-      name: formData.name,
-      industry: formData.industry,
-      size: formData.size,
-      address: formData.address,
-      country: formData.country,
-      website: formData.website,
-      currentReportingPeriodStart: formData.reportingPeriodStart,
-      currentReportingPeriodEnd: formData.reportingPeriodEnd,
+      name: formData.companyName,
+      website: formData.websiteUrl,
+      address: formData.scrapedData?.address,
+      primaryMotivation: formData.primaryMotivation,
       onboardingComplete: true,
-      // Pass operational data for metrics
-      electricityConsumption: formData.electricityConsumption ? parseFloat(formData.electricityConsumption) : 0,
-      gasConsumption: formData.gasConsumption ? parseFloat(formData.gasConsumption) : 0,
-      waterConsumption: formData.waterConsumption ? parseFloat(formData.waterConsumption) : 0,
-      wasteGenerated: formData.wasteGenerated ? parseFloat(formData.wasteGenerated) : 0,
     };
 
+    // Update user's first name separately if needed
+    // For now we'll use the existing fallback user pattern
+    
     createCompanyMutation.mutate(companyData);
+  };
+
+  const handleProductToggle = (productIndex: number) => {
+    setFormData(prev => {
+      const newSelected = new Set(prev.selectedProducts);
+      if (newSelected.has(productIndex)) {
+        newSelected.delete(productIndex);
+      } else {
+        newSelected.add(productIndex);
+      }
+      return { ...prev, selectedProducts: newSelected };
+    });
   };
 
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.name && formData.industry && formData.size;
+        return formData.firstName.trim().length > 0;
       case 2:
-        return formData.reportingPeriodStart && formData.reportingPeriodEnd;
+        return formData.companyName.trim().length > 0;
       case 3:
-        return true; // Document upload is optional
+        return formData.websiteUrl.trim().length > 0;
       case 4:
-        return true; // Utilities are optional, can be skipped
+        return true; // Review step is always valid
+      case 5:
+        return formData.primaryMotivation.length > 0;
       default:
-        return true;
+        return false;
     }
   };
+
+
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
+        // Step 1: Personal Welcome
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Building className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Company Profile</h3>
-              <p className="text-gray-600">Tell us about your company</p>
+          <div className="space-y-6 text-center">
+            <div className="mb-8">
+              <CheckCircle className="w-16 h-16 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-slate-gray mb-2">
+                Welcome to the Sustainability Tool!
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto">
+                We're going to help you measure and manage your brand's impact. 
+                First, what should we call you?
+              </p>
             </div>
             
-            <div>
-              <Label htmlFor="name">Company Name *</Label>
+            <div className="max-w-sm mx-auto">
+              <Label htmlFor="firstName">Your First Name</Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="e.g., Craft Spirits Co."
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                placeholder="Enter your first name"
+                className="text-center text-lg"
               />
-            </div>
-            
-            <div>
-              <Label htmlFor="industry">Industry *</Label>
-              <Select value={formData.industry} onValueChange={(value) => handleInputChange('industry', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="spirits">Spirits</SelectItem>
-                  <SelectItem value="wine">Wine</SelectItem>
-                  <SelectItem value="beer">Beer</SelectItem>
-                  <SelectItem value="non-alcoholic">Non-alcoholic Beverages</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="size">Company Size *</Label>
-              <Select value={formData.size} onValueChange={(value) => handleInputChange('size', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Small (1-50 employees)</SelectItem>
-                  <SelectItem value="medium">Medium (51-250 employees)</SelectItem>
-                  <SelectItem value="large">Large (250+ employees)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                placeholder="Company address"
-                rows={2}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="country">Country</Label>
-                <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                    <SelectItem value="United States">United States</SelectItem>
-                    <SelectItem value="Canada">Canada</SelectItem>
-                    <SelectItem value="Australia">Australia</SelectItem>
-                    <SelectItem value="Germany">Germany</SelectItem>
-                    <SelectItem value="France">France</SelectItem>
-                    <SelectItem value="Italy">Italy</SelectItem>
-                    <SelectItem value="Spain">Spain</SelectItem>
-                    <SelectItem value="Netherlands">Netherlands</SelectItem>
-                    <SelectItem value="Belgium">Belgium</SelectItem>
-                    <SelectItem value="Switzerland">Switzerland</SelectItem>
-                    <SelectItem value="Austria">Austria</SelectItem>
-                    <SelectItem value="Denmark">Denmark</SelectItem>
-                    <SelectItem value="Sweden">Sweden</SelectItem>
-                    <SelectItem value="Norway">Norway</SelectItem>
-                    <SelectItem value="Finland">Finland</SelectItem>
-                    <SelectItem value="Ireland">Ireland</SelectItem>
-                    <SelectItem value="New Zealand">New Zealand</SelectItem>
-                    <SelectItem value="Japan">Japan</SelectItem>
-                    <SelectItem value="South Korea">South Korea</SelectItem>
-                    <SelectItem value="Singapore">Singapore</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="website">Website</Label>
-                <Input
-                  id="website"
-                  value={formData.website}
-                  onChange={(e) => handleInputChange('website', e.target.value)}
-                  placeholder="https://example.com"
-                />
-              </div>
             </div>
           </div>
         );
-
+      
       case 2:
+        // Step 2: Company Name
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <Calendar className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Reporting Period</h3>
-              <p className="text-gray-600">Define your sustainability reporting period</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="reportingPeriodStart">Start Date *</Label>
-                <Input
-                  id="reportingPeriodStart"
-                  type="date"
-                  value={formData.reportingPeriodStart}
-                  onChange={(e) => handleInputChange('reportingPeriodStart', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="reportingPeriodEnd">End Date *</Label>
-                <Input
-                  id="reportingPeriodEnd"
-                  type="date"
-                  value={formData.reportingPeriodEnd}
-                  onChange={(e) => handleInputChange('reportingPeriodEnd', e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-blue-800 text-sm">
-                💡 Most companies use a 12-month period that aligns with their fiscal year.
+          <div className="space-y-6 text-center">
+            <div className="mb-8">
+              <Building2 className="w-16 h-16 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-slate-gray mb-2">
+                Great to meet you, {formData.firstName}!
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto">
+                What is the name of your company? This will be used as your account name.
               </p>
+            </div>
+            
+            <div className="max-w-sm mx-auto">
+              <Label htmlFor="companyName">Company Name</Label>
+              <Input
+                id="companyName"
+                value={formData.companyName}
+                onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
+                placeholder="Enter company name"
+                className="text-center text-lg"
+              />
             </div>
           </div>
         );
-
+      
       case 3:
+        // Step 3: Website Scraping
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <FileText className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Upload Documents</h3>
-              <p className="text-gray-600">Upload utility bills and environmental documents for automatic data extraction</p>
-            </div>
-            
-            <div className="bg-blue-50 p-4 rounded-lg mb-4">
-              <p className="text-blue-800 text-sm">
-                💡 Upload your utility bills, energy certificates, and waste reports. Our AI will automatically extract key data to save you time in the next step.
+          <div className="space-y-6 text-center">
+            <div className="mb-8">
+              <Globe className="w-16 h-16 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-slate-gray mb-2">
+                Let's Import Your Data
+              </h3>
+              <p className="text-gray-600 max-w-lg mx-auto">
+                To save you time, let's try to automatically import your company and 
+                product details. Please enter your company's primary website address below.
               </p>
             </div>
             
-            <DocumentUpload 
-              onUploadSuccess={() => handleInputChange('documentsUploaded', 'true')}
-              showApplyButton={false}
-            />
-            
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Don't have documents ready? You can skip this step and enter data manually in the next step.
-              </p>
+            <div className="max-w-md mx-auto">
+              <Label htmlFor="websiteUrl">Website URL</Label>
+              <Input
+                id="websiteUrl"
+                value={formData.websiteUrl}
+                onChange={(e) => setFormData(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                placeholder="https://yourcompany.com"
+                className="text-center"
+              />
+              {scrapeMutation.isError && (
+                <p className="text-sm text-red-600 mt-2">
+                  Could not scrape website. You can continue manually.
+                </p>
+              )}
             </div>
           </div>
         );
-
+      
       case 4:
+        // Step 4: Review & Confirm Scraped Data
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="text-center mb-6">
-              <Zap className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-gray mb-2">Operational Footprint</h3>
-              <p className="text-gray-600">Your direct operations (Scope 1 & 2). You can skip this step and add utilities later if needed.</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="electricityConsumption">Electricity Consumption (kWh/year) *</Label>
-                <Input
-                  id="electricityConsumption"
-                  type="number"
-                  value={formData.electricityConsumption}
-                  onChange={(e) => handleInputChange('electricityConsumption', e.target.value)}
-                  placeholder="e.g., 50000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="gasConsumption">Gas Consumption (kWh/year)</Label>
-                <Input
-                  id="gasConsumption"
-                  type="number"
-                  value={formData.gasConsumption}
-                  onChange={(e) => handleInputChange('gasConsumption', e.target.value)}
-                  placeholder="e.g., 25000"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="waterConsumption">Water Consumption (L/year) *</Label>
-                <Input
-                  id="waterConsumption"
-                  type="number"
-                  value={formData.waterConsumption}
-                  onChange={(e) => handleInputChange('waterConsumption', e.target.value)}
-                  placeholder="e.g., 100000"
-                />
-              </div>
-              <div>
-                <Label htmlFor="wasteGenerated">Waste Generated (kg/year)</Label>
-                <Input
-                  id="wasteGenerated"
-                  type="number"
-                  value={formData.wasteGenerated}
-                  onChange={(e) => handleInputChange('wasteGenerated', e.target.value)}
-                  placeholder="e.g., 5000"
-                />
-              </div>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-green-800 text-sm">
-                💡 Check your utility bills for accurate consumption data.
+              <CheckCircle className="w-12 h-12 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-gray mb-2">
+                Review Your Information
+              </h3>
+              <p className="text-gray-600">
+                {formData.scrapedData ? 
+                  "Here's what we found. Please check the details and make any corrections." :
+                  "Please enter your company information manually."
+                }
               </p>
             </div>
+            
+            {formData.scrapedData ? (
+              <div className="space-y-4">
+                <div>
+                  <Label>Company Name</Label>
+                  <Input
+                    value={formData.companyName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
+                    placeholder="Company name"
+                  />
+                </div>
+                
+                {formData.scrapedData.address && (
+                  <div>
+                    <Label>Address</Label>
+                    <Textarea
+                      value={formData.scrapedData.address}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        scrapedData: prev.scrapedData ? 
+                          { ...prev.scrapedData, address: e.target.value } : null
+                      }))}
+                      rows={2}
+                    />
+                  </div>
+                )}
+                
+                {formData.scrapedData.contactDetails && (
+                  <div>
+                    <Label>Contact Details</Label>
+                    <Input
+                      value={formData.scrapedData.contactDetails}
+                      readOnly
+                      className="bg-gray-50"
+                    />
+                  </div>
+                )}
+                
+                {formData.scrapedData.products.length > 0 && (
+                  <div>
+                    <Label className="text-base font-semibold">Products Found</Label>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Select the products you want to import:
+                    </p>
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {formData.scrapedData.products.map((product, index) => (
+                        <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
+                          <Checkbox
+                            id={`product-${index}`}
+                            checked={formData.selectedProducts.has(index)}
+                            onCheckedChange={() => handleProductToggle(index)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-3">
+                              {product.imageUrl && (
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              )}
+                              <div>
+                                <p className="font-medium text-sm">{product.name}</p>
+                                {product.category && (
+                                  <p className="text-xs text-gray-500 capitalize">{product.category}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">
+                <p>No data was scraped. You can add your company details later from the dashboard.</p>
+              </div>
+            )}
           </div>
         );
-
-
-
+      
+      case 5:
+        // Step 5: User Motivation
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <CheckCircle className="w-12 h-12 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-gray mb-2">
+                Perfect!
+              </h3>
+              <p className="text-gray-600">
+                To help us personalize your journey, what is the main goal you want to achieve with this tool?
+              </p>
+            </div>
+            
+            <RadioGroup
+              value={formData.primaryMotivation}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, primaryMotivation: value }))}
+              className="space-y-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="measure_footprint" id="measure" />
+                <Label htmlFor="measure" className="cursor-pointer">
+                  Measure my company & product carbon footprint (LCA)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="sustainability_report" id="report" />
+                <Label htmlFor="report" className="cursor-pointer">
+                  Produce a professional annual sustainability report
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="compliance" id="compliance" />
+                <Label htmlFor="compliance" className="cursor-pointer">
+                  Ensure compliance with new regulations (like DMCC)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="strategy" id="strategy" />
+                <Label htmlFor="strategy" className="cursor-pointer">
+                  Get help with my overall sustainability strategy
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="net_zero" id="net_zero" />
+                <Label htmlFor="net_zero" className="cursor-pointer">
+                  Set and track progress towards Net Zero targets
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+        );
+      
       default:
         return null;
     }
@@ -402,22 +459,40 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             </Button>
             
             <div className="flex space-x-2">
-              {(currentStep === 3 || currentStep === 4) && (
+              {currentStep === 4 && !formData.scrapedData && (
                 <Button
                   variant="outline"
                   onClick={handleNext}
                   className="border-gray-300 text-gray-600 hover:bg-gray-50"
                 >
-                  Skip for now
+                  Continue Anyway
                 </Button>
               )}
               <Button
                 onClick={handleNext}
-                disabled={!isStepValid() || createCompanyMutation.isPending}
+                disabled={!isStepValid() || scrapeMutation.isPending || createCompanyMutation.isPending}
                 className="bg-avallen-green hover:bg-avallen-green-light text-white"
               >
-                {createCompanyMutation.isPending ? "Setting up..." : 
-                 currentStep === totalSteps ? "Complete Setup" : "Continue"}
+                {scrapeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Importing Data...
+                  </>
+                ) : createCompanyMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Setting up...
+                  </>
+                ) : currentStep === 3 ? (
+                  "Import My Data"
+                ) : currentStep === totalSteps ? (
+                  "Go to Dashboard"
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             </div>
           </div>
