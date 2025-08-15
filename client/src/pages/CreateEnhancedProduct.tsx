@@ -72,17 +72,29 @@ export default function CreateEnhancedProduct() {
         ? JSON.parse(product.ingredients) 
         : product.ingredients || [],
       
-      // Water dilution
+      // Water dilution - ensure we always get the correct data structure
       waterDilution: (() => {
-        console.log('🔍 Raw waterDilution from database:', product.waterDilution, 'Type:', typeof product.waterDilution);
-        if (typeof product.waterDilution === 'string') {
-          const parsed = JSON.parse(product.waterDilution);
-          console.log('🔧 Parsed waterDilution:', parsed);
-          return parsed;
+        console.log('🔍 TRANSFORM: Raw waterDilution from database:', product.waterDilution, 'Type:', typeof product.waterDilution);
+        
+        if (typeof product.waterDilution === 'string' && product.waterDilution.trim()) {
+          try {
+            const parsed = JSON.parse(product.waterDilution);
+            console.log('🔧 TRANSFORM: Parsed waterDilution:', parsed);
+            return parsed;
+          } catch (e) {
+            console.warn('🚨 TRANSFORM: Failed to parse waterDilution string:', product.waterDilution, e);
+            return { amount: 0, unit: 'ml' };
+          }
         }
-        const result = product.waterDilution || { amount: 0, unit: 'ml' };
-        console.log('🔧 Using direct waterDilution:', result);
-        return result;
+        
+        if (product.waterDilution && typeof product.waterDilution === 'object') {
+          console.log('🔧 TRANSFORM: Using object waterDilution:', product.waterDilution);
+          return product.waterDilution;
+        }
+        
+        const fallback = { amount: 0, unit: 'ml' };
+        console.log('🔧 TRANSFORM: Using fallback waterDilution:', fallback);
+        return fallback;
       })(),
         
       packaging: {
