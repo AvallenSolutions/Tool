@@ -545,7 +545,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         productsCreated: 0,
         pdfsProcessed: 0,
         linksScraped: 0,
-        errors: [error.message],
+        errors: [(error as Error).message],
         results: []
       });
     }
@@ -1504,7 +1504,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   ];
 
   // Create a new supplier invitation
-  app.post('/api/admin/supplier-invitations', isAuthenticated, validateSupplierInvitation, async (req, res) => {
+  app.post('/api/admin/supplier-invitations', isAuthenticated, validateSupplierInvitation, async (req: any, res: any) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });

@@ -354,7 +354,7 @@ export default function Company() {
                       <Label className="text-sm font-semibold text-gray-700">Company Name</Label>
                       <div className="relative">
                         <Input
-                          value={company?.name || ''}
+                          value={(company as any)?.name || ''}
                           readOnly
                           className="bg-gray-50 border-gray-200 pl-10"
                         />
@@ -365,7 +365,7 @@ export default function Company() {
                       <Label className="text-sm font-semibold text-gray-700">Industry</Label>
                       <div className="relative">
                         <Input
-                          value={company?.industry || ''}
+                          value={(company as any)?.industry || ''}
                           readOnly
                           className="bg-gray-50 border-gray-200 pl-10"
                         />
@@ -377,7 +377,7 @@ export default function Company() {
                     <div className="space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Company Size</Label>
                       <Input
-                        value={company?.size || ''}
+                        value={(company as any)?.size || ''}
                         readOnly
                         className="bg-gray-50 border-gray-200"
                       />
@@ -385,7 +385,7 @@ export default function Company() {
                     <div className="space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Country</Label>
                       <Input
-                        value={company?.country || ''}
+                        value={(company as any)?.country || ''}
                         readOnly
                         className="bg-gray-50 border-gray-200"
                       />
