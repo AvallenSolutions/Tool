@@ -56,12 +56,16 @@ export default function CreateEnhancedProduct() {
     console.log('🔍 Database product data:', {
       packagingSupplier: product.packagingSupplier,
       packagingSupplierId: product.packagingSupplierId,
-      packagingSupplierCategory: product.packagingSupplierCategory
+      packagingSupplierCategory: product.packagingSupplierCategory,
+      waterDilution: product.waterDilution,
+      certifications: product.certifications,
+      recyclingRate: product.recyclingRate,
+      disposalMethod: product.disposalMethod
     });
     
     console.log('📋 All product keys:', Object.keys(product));
     
-    return {
+    const result = {
       ...product,
       // Reconstruct nested structures from flattened database fields
       ingredients: typeof product.ingredients === 'string' 
@@ -173,6 +177,16 @@ export default function CreateEnhancedProduct() {
         disposalMethod: product.disposalMethod || '',
       }
     };
+    
+    console.log('🔄 Final transformed data structure:', {
+      waterDilution: result.waterDilution,
+      certifications: result.certifications,
+      production: result.production,
+      distribution: result.distribution,
+      endOfLife: result.endOfLife
+    });
+    
+    return result;
   };
 
   // Draft saving mutation
