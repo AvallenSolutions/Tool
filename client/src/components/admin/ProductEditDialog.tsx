@@ -134,14 +134,14 @@ export default function ProductEditDialog({ product, isOpen, onClose }: ProductE
         }
       };
 
-      return apiRequest('PUT', `/api/supplier-products/${product.id}`, updateData);
+      return apiRequest('PATCH', `/api/products/${product.id}`, updateData);
     },
     onSuccess: () => {
       toast({
         title: "Success",
         description: "Product updated successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/supplier-products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
       setIsSubmitting(false);
       onClose();

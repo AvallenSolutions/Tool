@@ -1103,6 +1103,11 @@ export default function EnhancedProductForm({
                                   <SelectItem value="botanical">Botanical</SelectItem>
                                   <SelectItem value="additive">Additive</SelectItem>
                                   <SelectItem value="yeast">Yeast</SelectItem>
+                                  <SelectItem value="sugar">Sugar</SelectItem>
+                                  <SelectItem value="sugar_product">Sugar Product</SelectItem>
+                                  <SelectItem value="agave">Agave</SelectItem>
+                                  <SelectItem value="water">Water</SelectItem>
+                                  <SelectItem value="acid">Acid</SelectItem>
                                   <SelectItem value="other">Other</SelectItem>
                                 </SelectContent>
                               </Select>

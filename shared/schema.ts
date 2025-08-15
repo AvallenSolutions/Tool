@@ -858,7 +858,7 @@ export const secondaryPackagingAttributesSchema = z.object({
 });
 
 export const ingredientSupplierAttributesSchema = z.object({
-  ingredient_type: z.enum(['Grain', 'Fruit', 'Botanical', 'Additive', 'Water', 'Yeast', 'Sugar', 'Acid']),
+  ingredient_type: z.enum(['Grain', 'Fruit', 'Botanical', 'Additive', 'Water', 'Yeast', 'Sugar', 'Sugar Product', 'Agave', 'Acid']),
   origin_country: z.string(),
   organic_certified: z.boolean().default(false),
   processing_method: z.string().optional(),

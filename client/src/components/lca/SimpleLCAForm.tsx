@@ -57,6 +57,7 @@ const cropDefaults: Record<string, Partial<SimpleLCAForm['agriculture']>> = {
   'grapes': { yieldTonPerHectare: 12.0, dieselLPerHectare: 200 },
   'apples': { yieldTonPerHectare: 25.0, dieselLPerHectare: 180 },
   'sugarcane': { yieldTonPerHectare: 60.0, dieselLPerHectare: 300 },
+  'agave': { yieldTonPerHectare: 8.5, dieselLPerHectare: 150 },
 };
 
 export default function SimpleLCAForm({ productId, existingData, onComplete, className }: SimpleLCAFormProps) {
@@ -189,6 +190,7 @@ export default function SimpleLCAForm({ productId, existingData, onComplete, cla
                       <SelectItem value="grapes">Grapes</SelectItem>
                       <SelectItem value="apples">Apples</SelectItem>
                       <SelectItem value="sugarcane">Sugarcane</SelectItem>
+                      <SelectItem value="agave">Agave</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
