@@ -92,12 +92,7 @@ function SimpleTestComponent() {
             >
               Test Collaboration Dashboard
             </button>
-            <button 
-              onClick={() => window.open('/test-scraping-frontend.html', '_blank')}
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              Test Website Scraping
-            </button>
+
           </div>
         </div>
       </div>

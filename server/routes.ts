@@ -17,7 +17,7 @@ import { simpleLcaService } from "./simpleLca";
 import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
-import { WebsiteScrapingService } from "./services/websiteScraping";
+
 import { body, validationResult } from "express-validator";
 import { adminRouter } from "./routes/admin";
 import { SupplierProductService } from "./services/SupplierProductService";
@@ -79,27 +79,7 @@ export function registerRoutes(app: Express): Server {
   // Phase 2: Onboarding routes
   setupOnboardingRoutes(app);
 
-  // Website scraping endpoint for new onboarding flow
-  app.post('/api/onboarding/scrape', [
-    body('url').isURL().withMessage('Valid URL is required')
-  ], async (req: any, res: any) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
 
-    try {
-      const { url } = req.body;
-      const scrapedData = await WebsiteScrapingService.scrapeCompanyInfo(url);
-      return res.json(scrapedData);
-    } catch (error) {
-      console.error('Website scraping error:', error);
-      return res.status(500).json({ 
-        error: 'Failed to scrape website',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
 
   // Auth user endpoint - must come BEFORE greenwash guardian routes
   app.get('/api/auth/user', async (req, res) => {

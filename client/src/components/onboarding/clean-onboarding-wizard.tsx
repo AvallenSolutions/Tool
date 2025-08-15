@@ -6,10 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { X, ArrowRight, Loader2, CheckCircle, Globe, Building2 } from "lucide-react";
+import { X, ArrowRight, Loader2, CheckCircle, Building2 } from "lucide-react";
 import ProgressBar from "./progress-bar";
 
 interface OnboardingWizardProps {
@@ -38,8 +36,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     primaryMotivations: [],
     country: '',
   });
-
-
 
   // Company creation mutation
   const createCompanyMutation = useMutation({
@@ -90,8 +86,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     createCompanyMutation.mutate(formData);
   };
 
-
-
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
@@ -106,8 +100,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         return false;
     }
   };
-
-
 
   const renderStep = () => {
     switch (currentStep) {
@@ -140,47 +132,31 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
         );
       
       case 2:
-        // Step 2: Company Name
-        return (
-          <div className="space-y-6 text-center">
-            <div className="mb-8">
-              <Building2 className="w-16 h-16 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-slate-gray mb-2">
-                Great to meet you, {formData.firstName}!
-              </h3>
-              <p className="text-gray-600 max-w-md mx-auto">
-                What is the name of your company? This will be used as your account name.
-              </p>
-            </div>
-            
-            <div className="max-w-sm mx-auto">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input
-                id="companyName"
-                value={formData.companyName}
-                onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
-                placeholder="Enter company name"
-                className="text-center text-lg"
-              />
-            </div>
-          </div>
-        );
-      
-      case 3:
-        // Step 3: Company Details  
+        // Step 2: Company Name & Industry
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
               <Building2 className="w-16 h-16 text-avallen-green mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-gray mb-2">
-                Tell us about {formData.companyName}
+                Great to meet you, {formData.firstName}!
               </h3>
-              <p className="text-gray-600 max-w-lg mx-auto">
-                A few details about your company to help us personalize your experience.
+              <p className="text-gray-600 max-w-md mx-auto">
+                Tell us about your company so we can personalize your experience.
               </p>
             </div>
             
             <div className="max-w-md mx-auto space-y-4">
+              <div>
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input
+                  id="companyName"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
+                  placeholder="Enter company name"
+                  className="text-lg"
+                />
+              </div>
+              
               <div>
                 <Label htmlFor="industry">Industry</Label>
                 <select
@@ -198,7 +174,25 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   <option value="other">Other</option>
                 </select>
               </div>
-              
+            </div>
+          </div>
+        );
+      
+      case 3:
+        // Step 3: Company Details  
+        return (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <Building2 className="w-16 h-16 text-avallen-green mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-slate-gray mb-2">
+                More about {formData.companyName}
+              </h3>
+              <p className="text-gray-600 max-w-lg mx-auto">
+                A few more details to help us set up your sustainability dashboard.
+              </p>
+            </div>
+            
+            <div className="max-w-md mx-auto space-y-4">
               <div>
                 <Label htmlFor="companySize">Company Size</Label>
                 <select
@@ -251,109 +245,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             </div>
           </div>
         );
-      
-      case 4:
-        // Step 4: Review & Confirm Scraped Data
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <CheckCircle className="w-12 h-12 text-avallen-green mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-slate-gray mb-2">
-                Review Your Information
-              </h3>
-              <p className="text-gray-600">
-                {formData.scrapedData ? 
-                  "Here's what we found. Please check the details and make any corrections." :
-                  "Please enter your company information manually."
-                }
-              </p>
-            </div>
-            
-            {formData.scrapedData ? (
-              <div className="space-y-4">
-                <div>
-                  <Label>Company Name</Label>
-                  <Input
-                    value={formData.companyName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
-                    placeholder="Company name"
-                  />
-                </div>
-                
-                {formData.scrapedData.address && (
-                  <div>
-                    <Label>Address</Label>
-                    <Textarea
-                      value={formData.scrapedData.address}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        scrapedData: prev.scrapedData ? 
-                          { ...prev.scrapedData, address: e.target.value } : null
-                      }))}
-                      rows={2}
-                    />
-                  </div>
-                )}
-                
-                {formData.scrapedData.contactDetails && (
-                  <div>
-                    <Label>Contact Details</Label>
-                    <Input
-                      value={formData.scrapedData.contactDetails}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                )}
-                
-                {formData.scrapedData.products.length > 0 && (
-                  <div>
-                    <Label className="text-base font-semibold">Products Found</Label>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Select the products you want to import:
-                    </p>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {formData.scrapedData.products.map((product, index) => (
-                        <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
-                          <Checkbox
-                            id={`product-${index}`}
-                            checked={formData.selectedProducts.has(index)}
-                            onCheckedChange={() => handleProductToggle(index)}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-3">
-                              {product.imageUrl && (
-                                <img
-                                  src={product.imageUrl}
-                                  alt={product.name}
-                                  className="w-12 h-12 object-cover rounded"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              )}
-                              <div>
-                                <p className="font-medium text-sm">{product.name}</p>
-                                {product.category && (
-                                  <p className="text-xs text-gray-500 capitalize">{product.category}</p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center text-gray-500">
-                <p>No data was scraped. You can add your company details later from the dashboard.</p>
-              </div>
-            )}
-          </div>
-        );
-      
+
       case 4:
         // Step 4: Motivation & Goals
         return (
@@ -447,7 +339,6 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
             </Button>
             
             <div className="flex space-x-2">
-
               <Button
                 onClick={handleNext}
                 disabled={!isStepValid() || createCompanyMutation.isPending}
