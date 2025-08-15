@@ -28,7 +28,7 @@ export function setupOnboardingRoutes(app: Express) {
           sessionID: req.sessionID,
           session: req.session ? Object.keys(req.session) : 'no session',
           isAuthenticated: req.isAuthenticated(),
-          passport: req.session?.passport
+          hasPassport: req.session && 'passport' in req.session
         });
         
         // Use the exact same pattern as working products route with fallback
@@ -44,15 +44,27 @@ export function setupOnboardingRoutes(app: Express) {
 
         console.log('Using userId:', userId);
 
+        // First ensure user exists - create if needed
+        let user = await storage.getUser(userId);
+        if (!user) {
+          console.log('User not found, creating user:', userId);
+          user = await storage.upsertUser({
+            id: userId,
+            email: `${userId}@example.com`, // Fallback email
+            firstName: 'Development',
+            lastName: 'User',
+          });
+          console.log('Created user:', user);
+        }
+
         // Get company by owner ID
         let company = await storage.getCompanyByOwner(userId);
         if (!company) {
           console.log('No company found for userId:', userId, 'Creating new company...');
-          // Create a company for the user
+          // Create a company for the user (removed businessType since it's not in schema)
           const newCompany = await storage.createCompany({
             name: 'Default Company',
             ownerId: userId,
-            businessType: 'drinks',
             onboardingComplete: false
           });
           company = newCompany;
@@ -83,8 +95,8 @@ export function setupOnboardingRoutes(app: Express) {
         console.error('Error details:', {
           message: error instanceof Error ? error.message : 'Unknown error',
           stack: error instanceof Error ? error.stack : 'No stack trace',
-          userId,
-          updateData
+          userId: userId || 'unknown',
+          requestBody: req.body
         });
         res.status(500).json({ 
           error: 'Failed to update company information',

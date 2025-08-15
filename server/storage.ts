@@ -571,7 +571,14 @@ export class DatabaseStorage implements IStorage {
           ...data, 
           updatedAt: new Date(),
           lastUpdated: new Date(),
-          certifications: data.certifications ? data.certifications as string[] : undefined
+          certifications: data.certifications || undefined,
+          facilitiesData: data.facilitiesData ? {
+            energySource: data.facilitiesData.energySource || '',
+            renewableEnergyPercentage: typeof data.facilitiesData.renewableEnergyPercentage === 'number' ? data.facilitiesData.renewableEnergyPercentage : undefined,
+            wasteRecyclingPercentage: typeof data.facilitiesData.wasteRecyclingPercentage === 'number' ? data.facilitiesData.wasteRecyclingPercentage : undefined,
+            waterTreatment: data.facilitiesData.waterTreatment || '',
+            transportationMethods: Array.isArray(data.facilitiesData.transportationMethods) ? data.facilitiesData.transportationMethods : []
+          } : undefined
         })
         .where(eq(companySustainabilityData.companyId, companyId))
         .returning();
