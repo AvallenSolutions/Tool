@@ -1085,21 +1085,31 @@ function ProductDetail() {
             {/* LCA Tab */}
             <TabsContent value="lca">
               {(() => {
-                // Parse LCA data if available
+                // Parse all JSON data sources
                 let lcaData: any = {};
+                let productionData: any = {};
+                let ingredients: any[] = [];
+                
                 try {
                   if (product.lcaData) {
-                    lcaData = typeof product.lcaData === 'string' 
-                      ? JSON.parse(product.lcaData) 
-                      : product.lcaData;
+                    lcaData = typeof product.lcaData === 'string' ? JSON.parse(product.lcaData) : product.lcaData;
+                  }
+                  if (product.productionMethods) {
+                    productionData = typeof product.productionMethods === 'string' ? JSON.parse(product.productionMethods) : product.productionMethods;
+                  }
+                  if (product.ingredients) {
+                    ingredients = Array.isArray(product.ingredients) ? product.ingredients : JSON.parse(product.ingredients || '[]');
                   }
                 } catch (e) {
                   console.warn('Failed to parse LCA data:', e);
                 }
 
+                // Convert string numbers to actual numbers for display
+                const toNum = (val: any) => val ? (typeof val === 'string' ? parseFloat(val) : val) : 0;
+
                 return (
                   <div className="space-y-6">
-                    {/* LCA Overview */}
+                    {/* LCA Overview & Key Metrics */}
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -1110,22 +1120,22 @@ function ProductDetail() {
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {product.carbonFootprint && (
-                            <div className="text-center p-4 bg-green-50 rounded-lg">
-                              <Leaf className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                              <h4 className="font-medium text-gray-900">Carbon Footprint</h4>
-                              <p className="text-2xl font-bold text-green-600">{product.carbonFootprint}</p>
-                              <p className="text-sm text-gray-600">kg CO₂e</p>
-                            </div>
-                          )}
-                          {product.waterFootprint && (
-                            <div className="text-center p-4 bg-blue-50 rounded-lg">
-                              <Droplets className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                              <h4 className="font-medium text-gray-900">Water Footprint</h4>
-                              <p className="text-2xl font-bold text-blue-600">{product.waterFootprint}</p>
-                              <p className="text-sm text-gray-600">Liters</p>
-                            </div>
-                          )}
+                          <div className="text-center p-4 bg-green-50 rounded-lg">
+                            <Leaf className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                            <h4 className="font-medium text-gray-900">Carbon Footprint</h4>
+                            <p className="text-2xl font-bold text-green-600">
+                              {product.carbonFootprint ? `${toNum(product.carbonFootprint)}` : 'Calculating...'}
+                            </p>
+                            <p className="text-sm text-gray-600">kg CO₂e</p>
+                          </div>
+                          <div className="text-center p-4 bg-blue-50 rounded-lg">
+                            <Droplets className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                            <h4 className="font-medium text-gray-900">Water Footprint</h4>
+                            <p className="text-2xl font-bold text-blue-600">
+                              {product.waterFootprint ? `${toNum(product.waterFootprint)}` : 'Calculating...'}
+                            </p>
+                            <p className="text-sm text-gray-600">Liters</p>
+                          </div>
                           <div className="text-center p-4 bg-gray-50 rounded-lg">
                             <FileText className="w-8 h-8 text-gray-600 mx-auto mb-2" />
                             <h4 className="font-medium text-gray-900">LCA Status</h4>
@@ -1137,36 +1147,325 @@ function ProductDetail() {
                       </CardContent>
                     </Card>
 
-                    {/* LCA Distribution Data */}
-                    {lcaData.distribution && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <Truck className="w-5 h-5" />
-                            Distribution LCA Data
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {lcaData.distribution.avgDistanceToDcKm && (
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Average Distance to DC</label>
-                                <p className="text-gray-800">{lcaData.distribution.avgDistanceToDcKm} km</p>
+                    {/* Raw Materials & Ingredients Impact */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Wheat className="w-5 h-5" />
+                          Raw Materials Environmental Impact
+                        </CardTitle>
+                        <CardDescription>Environmental footprint of ingredients and raw materials</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {ingredients.length > 0 ? (
+                          <div className="space-y-4">
+                            {ingredients.map((ingredient: any, index: number) => (
+                              <div key={index} className="border rounded-lg p-4">
+                                <div className="flex justify-between items-center mb-3">
+                                  <h4 className="font-medium text-lg">{ingredient.name}</h4>
+                                  <div className="text-sm text-gray-500">{toNum(ingredient.amount)} {ingredient.unit}</div>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                  <div>
+                                    <label className="text-gray-600">Origin Country</label>
+                                    <p className="font-medium">{ingredient.origin || 'Not specified'}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Transport Distance</label>
+                                    <p className="font-medium">{toNum(ingredient.transportDistance)} km</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Water Usage</label>
+                                    <p className="font-medium">{toNum(ingredient.waterUsage)} L</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Processing Energy</label>
+                                    <p className="font-medium">{toNum(ingredient.processingEnergy)} kWh</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Farming Practice</label>
+                                    <Badge variant={ingredient.organic ? "default" : "outline"}>
+                                      {ingredient.farmingPractice || 'conventional'}
+                                    </Badge>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Yield per Hectare</label>
+                                    <p className="font-medium">{toNum(ingredient.yieldPerHectare)} tons/ha</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">N Fertilizer Usage</label>
+                                    <p className="font-medium">{toNum(ingredient.nitrogenFertilizer)} kg/ha</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">P Fertilizer Usage</label>
+                                    <p className="font-medium">{toNum(ingredient.phosphorusFertilizer)} kg/ha</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Diesel Usage</label>
+                                    <p className="font-medium">{toNum(ingredient.dieselUsage)} L/ha</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Biodiversity Impact</label>
+                                    <p className="font-medium">{toNum(ingredient.biodiversityImpact)}/10</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Soil Quality Index</label>
+                                    <p className="font-medium">{toNum(ingredient.soilQualityIndex)}/10</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-gray-600">Carbon Sequestration</label>
+                                    <p className="font-medium">{toNum(ingredient.carbonSequestration)} kg CO₂</p>
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                            {lcaData.distribution.palletizationEfficiency && (
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No ingredient data available</p>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Manufacturing & Production Impact */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Factory className="w-5 h-5" />
+                          Manufacturing & Production Impact
+                        </CardTitle>
+                        <CardDescription>Production process environmental footprint</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Production Overview */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium text-gray-900">Production Overview</h4>
+                            <div className="space-y-3">
                               <div>
-                                <label className="text-sm font-medium text-gray-600">Palletization Efficiency</label>
-                                <p className="text-gray-800">{lcaData.distribution.palletizationEfficiency}%</p>
+                                <label className="text-sm font-medium text-gray-600">Production Model</label>
+                                <p className="text-gray-800 capitalize">{product.productionModel || productionData.productionModel || 'Not specified'}</p>
                               </div>
-                            )}
-                            {lcaData.distribution.primaryTransportMode && (
                               <div>
-                                <label className="text-sm font-medium text-gray-600">Primary Transport Mode</label>
-                                <p className="text-gray-800 capitalize">{lcaData.distribution.primaryTransportMode}</p>
+                                <label className="text-sm font-medium text-gray-600">Annual Volume</label>
+                                <p className="text-gray-800">
+                                  {toNum(product.annualProductionVolume || productionData.annualProductionVolume).toLocaleString()} {product.productionUnit || productionData.productionUnit || 'units'}
+                                </p>
                               </div>
-                            )}
-                            {lcaData.distribution.temperatureRangeCelsius && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Facility Location</label>
+                                <p className="text-gray-800">{productionData.facilityLocation || 'Not specified'}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Energy Source</label>
+                                <p className="text-gray-800">{productionData.energySource || 'Not specified'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Energy Consumption */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium text-gray-900">Energy Consumption</h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Electricity</label>
+                                <p className="text-gray-800">{toNum(product.electricityKwh || productionData.energyConsumption?.electricityKwh)} kWh</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Natural Gas</label>
+                                <p className="text-gray-800">{toNum(product.gasM3 || productionData.energyConsumption?.gasM3)} m³</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Steam</label>
+                                <p className="text-gray-800">{toNum(product.steamKg || productionData.energyConsumption?.steamKg)} kg</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Fuel</label>
+                                <p className="text-gray-800">{toNum(product.fuelLiters || productionData.energyConsumption?.fuelLiters)} L</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Renewable Energy</label>
+                                <p className="text-gray-800">{toNum(product.renewableEnergyPercent || productionData.energyConsumption?.renewableEnergyPercent)}%</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Water Usage */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium text-gray-900">Water Usage</h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Process Water</label>
+                                <p className="text-gray-800">{toNum(product.processWaterLiters || productionData.waterUsage?.processWaterLiters)} L</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Cleaning Water</label>
+                                <p className="text-gray-800">{toNum(product.cleaningWaterLiters || productionData.waterUsage?.cleaningWaterLiters)} L</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Cooling Water</label>
+                                <p className="text-gray-800">{toNum(product.coolingWaterLiters || productionData.waterUsage?.coolingWaterLiters)} L</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Wastewater Treatment</label>
+                                <Badge variant={(product.wasteWaterTreatment || productionData.waterUsage?.wasteWaterTreatment) ? "default" : "outline"}>
+                                  {(product.wasteWaterTreatment || productionData.waterUsage?.wasteWaterTreatment) ? "Yes" : "No"}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Waste Management */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium text-gray-900">Waste Management</h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Organic Waste</label>
+                                <p className="text-gray-800">{toNum(product.organicWasteKg || productionData.wasteGeneration?.organicWasteKg)} kg</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Packaging Waste</label>
+                                <p className="text-gray-800">{toNum(product.packagingWasteKg || productionData.wasteGeneration?.packagingWasteKg)} kg</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Hazardous Waste</label>
+                                <p className="text-gray-800">{toNum(product.hazardousWasteKg || productionData.wasteGeneration?.hazardousWasteKg)} kg</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Waste Recycled</label>
+                                <p className="text-gray-800">{toNum(product.wasteRecycledPercent || productionData.wasteGeneration?.wasteRecycledPercent)}%</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Packaging Impact */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          Packaging Environmental Impact
+                        </CardTitle>
+                        <CardDescription>Packaging materials and their environmental footprint</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* Primary Container */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium text-gray-900">Primary Container</h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Material</label>
+                                <p className="text-gray-800 capitalize">{product.bottleMaterial || 'Not specified'}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Weight</label>
+                                <p className="text-gray-800">{toNum(product.bottleWeight)} g</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Recycled Content</label>
+                                <p className="text-gray-800">{toNum(product.bottleRecycledContent)}%</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Color</label>
+                                <p className="text-gray-800">{product.bottleColor || 'Not specified'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Labels & Closure */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium text-gray-900">Labels & Closure</h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Label Material</label>
+                                <p className="text-gray-800 capitalize">{product.labelMaterial || 'Not specified'}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Label Weight</label>
+                                <p className="text-gray-800">{toNum(product.labelWeight)} g</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Closure Type</label>
+                                <p className="text-gray-800 capitalize">{product.closureType || 'Not specified'}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Closure Material</label>
+                                <p className="text-gray-800 capitalize">{product.closureMaterial || 'Not specified'}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Closure Weight</label>
+                                <p className="text-gray-800">{toNum(product.closureWeight)} g</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Secondary Packaging */}
+                          <div className="space-y-4">
+                            <h4 className="font-medium text-gray-900">Secondary Packaging</h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Has Secondary Packaging</label>
+                                <Badge variant={product.hasSecondaryPackaging ? "default" : "outline"}>
+                                  {product.hasSecondaryPackaging ? "Yes" : "No"}
+                                </Badge>
+                              </div>
+                              {product.hasSecondaryPackaging && (
+                                <>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Box Material</label>
+                                    <p className="text-gray-800 capitalize">{product.boxMaterial || 'Not specified'}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Box Weight</label>
+                                    <p className="text-gray-800">{toNum(product.boxWeight)} g</p>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Distribution & Transportation Impact */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Truck className="w-5 h-5" />
+                          Distribution & Transportation Impact
+                        </CardTitle>
+                        <CardDescription>Transportation and distribution environmental footprint</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Average Transport Distance</label>
+                              <p className="text-gray-800">{toNum(product.averageTransportDistance || lcaData.distribution?.avgDistanceToDcKm)} km</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Primary Transport Mode</label>
+                              <p className="text-gray-800 capitalize">{product.primaryTransportMode || lcaData.distribution?.primaryTransportMode || 'Not specified'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Cold Chain Required</label>
+                              <Badge variant={product.coldChainRequired ? "default" : "outline"}>
+                                {product.coldChainRequired ? "Yes" : "No"}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Palletization Efficiency</label>
+                              <p className="text-gray-800">{toNum(lcaData.distribution?.palletizationEfficiency)}%</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Packaging Efficiency</label>
+                              <p className="text-gray-800">{toNum(product.packagingEfficiency)}%</p>
+                            </div>
+                            {lcaData.distribution?.temperatureRangeCelsius && (
                               <div>
                                 <label className="text-sm font-medium text-gray-600">Temperature Range</label>
                                 <p className="text-gray-800">
@@ -1175,83 +1474,44 @@ function ProductDetail() {
                               </div>
                             )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    )}
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                    {/* Ingredient LCA Impact */}
-                    {product.ingredients && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <Wheat className="w-5 h-5" />
-                            Ingredient Environmental Impact
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            {(() => {
-                              const ingredients = Array.isArray(product.ingredients) 
-                                ? product.ingredients 
-                                : JSON.parse(product.ingredients || '[]');
-                              
-                              return ingredients.map((ingredient: any, index: number) => (
-                                <div key={index} className="border rounded-lg p-4">
-                                  <h4 className="font-medium text-lg mb-3">{ingredient.name}</h4>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                    <div>
-                                      <label className="text-gray-600">Origin</label>
-                                      <p className="font-medium">{ingredient.origin || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-gray-600">Transport Distance</label>
-                                      <p className="font-medium">{ingredient.transportDistance || 0} km</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-gray-600">Water Usage</label>
-                                      <p className="font-medium">{ingredient.waterUsage || 0} L</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-gray-600">Carbon Sequestration</label>
-                                      <p className="font-medium">{ingredient.carbonSequestration || 0} kg CO₂</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-gray-600">Farming Practice</label>
-                                      <Badge variant={ingredient.organic ? "default" : "outline"}>
-                                        {ingredient.farmingPractice || 'conventional'}
-                                      </Badge>
-                                    </div>
-                                    <div>
-                                      <label className="text-gray-600">Biodiversity Impact</label>
-                                      <p className="font-medium">{ingredient.biodiversityImpact || 0}/10</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-gray-600">Soil Quality Index</label>
-                                      <p className="font-medium">{ingredient.soilQualityIndex || 0}/10</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-gray-600">Processing Energy</label>
-                                      <p className="font-medium">{ingredient.processingEnergy || 0} kWh</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ));
-                            })()}
+                    {/* End-of-Life Impact */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Recycle className="w-5 h-5" />
+                          End-of-Life Environmental Impact
+                        </CardTitle>
+                        <CardDescription>Recycling, disposal and end-of-life management</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Recycling Rate</label>
+                            <p className="text-gray-800">{toNum(product.recyclingRate)}%</p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* If no LCA data available */}
-                    {!product.carbonFootprint && !product.waterFootprint && !lcaData.distribution && (!product.ingredients || product.ingredients.length === 0) && (
-                      <Card>
-                        <CardContent className="text-center py-8">
-                          <Leaf className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-500">No LCA data available</p>
-                          <p className="text-sm text-gray-400 mt-2">Life Cycle Assessment data will appear here once calculated</p>
-                        </CardContent>
-                      </Card>
-                    )}
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Disposal Method</label>
+                            <p className="text-gray-800 capitalize">{product.disposalMethod || 'Not specified'}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Returnable Container</label>
+                            <Badge variant={product.returnableContainer ? "default" : "outline"}>
+                              {product.returnableContainer ? "Yes" : "No"}
+                            </Badge>
+                          </div>
+                        </div>
+                        {product.consumerEducation && (
+                          <div className="mt-4">
+                            <label className="text-sm font-medium text-gray-600">Consumer Education</label>
+                            <p className="text-gray-800 mt-1">{product.consumerEducation}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 );
               })()}
