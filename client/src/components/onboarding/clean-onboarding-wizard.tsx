@@ -208,41 +208,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                   <option value="201-500">201-500 employees</option>
                   <option value="500+">500+ employees</option>
                 </select>
-              </div>
-              
-              <div>
-                <Label htmlFor="country">Country</Label>
-                <select
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select your country</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                  <option value="AU">Australia</option>
-                  <option value="DE">Germany</option>
-                  <option value="FR">France</option>
-                  <option value="ES">Spain</option>
-                  <option value="IT">Italy</option>
-                  <option value="NL">Netherlands</option>
-                  <option value="SE">Sweden</option>
-                  <option value="NO">Norway</option>
-                  <option value="DK">Denmark</option>
-                  <option value="FI">Finland</option>
-                  <option value="IE">Ireland</option>
-                  <option value="CH">Switzerland</option>
-                  <option value="AT">Austria</option>
-                  <option value="BE">Belgium</option>
-                  <option value="LU">Luxembourg</option>
-                  <option value="PT">Portugal</option>
-                  <option value="GR">Greece</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
+
           </div>
         );
 
