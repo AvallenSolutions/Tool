@@ -50,7 +50,7 @@
             contentDiv.innerHTML = '<div class="loading">Scraping website, please wait...</div>';
             
             try {
-                const response = await fetch('/api/onboarding/scrape-website', {
+                const response = await fetch('/api/onboarding/scrape', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
