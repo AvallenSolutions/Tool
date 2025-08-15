@@ -67,15 +67,15 @@ export default function Onboarding() {
             <div className="grid gap-3">
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
-                <span className="text-slate-gray">Company profile and reporting period</span>
+                <span className="text-slate-gray">Basic company profile setup</span>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
-                <span className="text-slate-gray">Document upload (optional)</span>
+                <span className="text-slate-gray">Sustainability goals and priorities</span>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-lightest-gray rounded-lg">
                 <div className="w-2 h-2 bg-avallen-green rounded-full" />
-                <span className="text-slate-gray">Operational data (optional)</span>
+                <span className="text-slate-gray">Reporting period configuration</span>
               </div>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function Onboarding() {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold text-blue-900 mb-2">💡 Pro Tip</h4>
             <p className="text-blue-800 text-sm">
-              Have your company details and utility bills ready. You can add products and suppliers later from the dashboard.
+              Have your company details ready. You can add products, suppliers, and detailed operational data later from the dashboard.
             </p>
           </div>
 
@@ -99,7 +99,7 @@ export default function Onboarding() {
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              This should take about 5-10 minutes to complete.
+              This should take about 3-5 minutes to complete.
             </p>
           </div>
         </CardContent>
