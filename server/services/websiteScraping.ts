@@ -393,33 +393,93 @@ export class WebsiteScrapingService {
     const categoryKeywords = this.getCategoryKeywords(primaryCategory);
 
     for (const { url, $ } of productPages) {
-      // Step 2: Scrape potential product titles
-      const titleSelectors = [
-        'h1', 'h2', 'h3', 'h4', 
-        '.product-title', '.product-name', '.bottle-name', '.drink-name',
-        '.name', '.title', '.heading',
-        '[data-product-name]', '[data-title]'
+      console.log(`🔍 Extracting products from: ${url}`);
+      
+      // Strategy 1: Look for product grids/containers first
+      const productContainerSelectors = [
+        '.product-grid', '.products-grid', '.product-list', '.products-list',
+        '.product-container', '.products-container', '.product-item', '.products-item',
+        '.shop-grid', '.shop-items', '.collection-grid', '.collection-items',
+        '[class*="product"]', '[id*="product"]', '[class*="item"]', '[class*="grid"]'
       ];
 
-      for (const selector of titleSelectors) {
-        if (validProducts.length >= this.MAX_PRODUCTS) break;
-
-        $(selector).each((i, elem) => {
-          if (validProducts.length >= this.MAX_PRODUCTS) return false;
-
-          const $elem = $(elem);
-          const title = $elem.text().trim();
-
-          // Step 3: Filter and validate products
-          if (title && title.length > 2 && title.length < 150) {
-            const isValidProduct = this.isValidProductForCategory(title, categoryKeywords, primaryCategory);
+      let foundInContainers = false;
+      
+      for (const containerSelector of productContainerSelectors) {
+        const containers = $(containerSelector);
+        if (containers.length > 0) {
+          console.log(`📦 Found ${containers.length} product containers with selector: ${containerSelector}`);
+          
+          containers.each((containerIndex, container) => {
+            if (validProducts.length >= this.MAX_PRODUCTS) return false;
             
-            if (isValidProduct && !foundNames.has(title.toLowerCase())) {
+            const $container = $(container);
+            
+            // Look for titles within each product container
+            const titleSelectors = [
+              'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+              '.product-title', '.product-name', '.bottle-name', '.drink-name',
+              '.name', '.title', '.heading', '.label',
+              '[data-product-name]', '[data-title]',
+              'figcaption', '.caption', '.description'
+            ];
+
+            for (const titleSelector of titleSelectors) {
+              const titleElem = $container.find(titleSelector).first();
+              if (titleElem.length > 0) {
+                const title = titleElem.text().trim();
+                
+                if (this.isValidProductTitle(title, categoryKeywords, primaryCategory, foundNames)) {
+                  foundNames.add(title.toLowerCase());
+                  foundInContainers = true;
+
+                  // Extract associated image
+                  let imageUrl = this.extractImageFromContainer($container, baseUrl);
+
+                  validProducts.push({
+                    name: title,
+                    category: primaryCategory,
+                    imageUrl,
+                    isPrimary: containerIndex === 0
+                  });
+                  
+                  console.log(`✅ Found product: "${title}" ${imageUrl ? 'with image' : 'without image'}`);
+                  break; // Move to next container
+                }
+              }
+            }
+          });
+          
+          if (foundInContainers) break; // Stop after finding products in one container type
+        }
+      }
+
+      // Strategy 2: If no products found in containers, fall back to general selectors
+      if (!foundInContainers) {
+        console.log('📄 No product containers found, trying general title selectors...');
+        
+        const generalTitleSelectors = [
+          'h1', 'h2', 'h3', 'h4', 
+          '.product-title', '.product-name', '.bottle-name', '.drink-name',
+          '.name', '.title', '.heading',
+          '[data-product-name]', '[data-title]'
+        ];
+
+        for (const selector of generalTitleSelectors) {
+          if (validProducts.length >= this.MAX_PRODUCTS) break;
+
+          $(selector).each((i, elem) => {
+            if (validProducts.length >= this.MAX_PRODUCTS) return false;
+
+            const $elem = $(elem);
+            const title = $elem.text().trim();
+
+            if (this.isValidProductTitle(title, categoryKeywords, primaryCategory, foundNames)) {
               foundNames.add(title.toLowerCase());
 
-              // Step 4: Extract product images
+              // Extract associated image
               const img = $elem.closest('div, section, article').find('img').first();
-              let imageUrl = img.attr('src') || img.attr('data-src');
+              let imageUrl = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src');
               if (imageUrl && !imageUrl.startsWith('http')) {
                 try {
                   imageUrl = new URL(imageUrl, baseUrl).href;
@@ -434,13 +494,59 @@ export class WebsiteScrapingService {
                 imageUrl,
                 isPrimary: i === 0
               });
+              
+              console.log(`✅ Found product: "${title}" ${imageUrl ? 'with image' : 'without image'}`);
             }
-          }
-        });
+          });
+        }
       }
     }
 
+    console.log(`🎯 Total products found: ${validProducts.length}`);
     return validProducts;
+  }
+
+  private static isValidProductTitle(
+    title: string,
+    categoryKeywords: string[],
+    primaryCategory: string,
+    foundNames: Set<string>
+  ): boolean {
+    if (!title || title.length < 2 || title.length > 150) return false;
+    if (foundNames.has(title.toLowerCase())) return false;
+
+    const isValidProduct = this.isValidProductForCategory(title, categoryKeywords, primaryCategory);
+    return isValidProduct;
+  }
+
+  private static extractImageFromContainer($container: cheerio.Cheerio<cheerio.Element>, baseUrl: string): string | undefined {
+    const img = $container.find('img').first();
+    let imageUrl = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src') || img.attr('data-original');
+    
+    if (imageUrl) {
+      // Handle relative URLs
+      if (!imageUrl.startsWith('http')) {
+        try {
+          imageUrl = new URL(imageUrl, baseUrl).href;
+        } catch {
+          return undefined;
+        }
+      }
+      
+      // Filter out common non-product images
+      const excludePatterns = [
+        /logo/i, /icon/i, /arrow/i, /button/i, /nav/i, /header/i, /footer/i,
+        /social/i, /facebook/i, /twitter/i, /instagram/i, /youtube/i
+      ];
+      
+      if (excludePatterns.some(pattern => pattern.test(imageUrl!))) {
+        return undefined;
+      }
+      
+      return imageUrl;
+    }
+    
+    return undefined;
   }
 
   private static getCategoryKeywords(category: string): string[] {
@@ -462,14 +568,44 @@ export class WebsiteScrapingService {
       /^(about|contact|home|news|blog|faq)/i,
       /^(tripadvisor|facebook|instagram|twitter|youtube)/i,
       /^(privacy|terms|policy|cookies)/i,
-      /^(search|filter|sort|view)/i
+      /^(search|filter|sort|view)/i,
+      /^(subscribe|newsletter|email)/i,
+      /^(copyright|all rights)/i,
+      /^(loading|please wait)/i
     ];
 
     if (excludePatterns.some(pattern => pattern.test(title))) {
       return false;
     }
 
-    // Must contain at least one category keyword or common spirit terms
+    // For spirits category, be more inclusive for specific product names
+    if (primaryCategory === 'spirits') {
+      // Common rum/spirit product descriptors
+      const spiritDescriptors = [
+        'blanc', 'white', 'dark', 'spiced', 'overproof', 'gold', 'aged', 'premium',
+        'reserve', 'vintage', 'cask', 'barrel', 'proof', 'strength', 'expression',
+        'edition', 'series', 'collection', 'range', 'blend', 'single', 'double',
+        'triple', 'zenn', 'zen', 'koko', 'coco', 'coconut'
+      ];
+      
+      // Check if title contains rum/spirit descriptors or keywords
+      if (spiritDescriptors.some(desc => titleLower.includes(desc)) ||
+          categoryKeywords.some(keyword => titleLower.includes(keyword))) {
+        return true;
+      }
+      
+      // Allow short product names that look like spirit names (2-15 words, not too generic)
+      const words = title.split(/\s+/);
+      if (words.length >= 1 && words.length <= 4) {
+        // Exclude very generic terms
+        const genericTerms = ['products', 'services', 'home', 'page', 'welcome', 'main'];
+        if (!genericTerms.some(term => titleLower.includes(term))) {
+          return true;
+        }
+      }
+    }
+
+    // For other categories, use the original logic
     const commonSpiriterms = ['series', 'collection', 'edition', 'expression', 'range', 'blend', 'bottle'];
     const allKeywords = [...categoryKeywords, ...commonSpiriterms];
     
