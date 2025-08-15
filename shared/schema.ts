@@ -170,6 +170,12 @@ export const products = pgTable("products", {
   coolingWaterLiters: decimal("cooling_water_liters", { precision: 10, scale: 2 }),
   wasteWaterTreatment: boolean("waste_water_treatment").default(false),
   
+  // Water Dilution (for spirits production)
+  waterDilution: jsonb("water_dilution").$type<{
+    amount: number;
+    unit: 'ml' | 'l' | 'gallons';
+  }>(),
+  
   // Production Process - Waste
   organicWasteKg: decimal("organic_waste_kg", { precision: 10, scale: 3 }),
   packagingWasteKg: decimal("packaging_waste_kg", { precision: 10, scale: 3 }),
