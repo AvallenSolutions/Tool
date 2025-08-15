@@ -267,15 +267,13 @@ export default function CreateEnhancedProduct() {
           variant: "default",
         });
         
-        // Handle navigation - stay on enhanced form page instead of redirecting
+        // Handle navigation after successful save
         if (isEditMode) {
-          // Stay on the same page for edit mode
-          return;
+          // Navigate back to products list after successful update
+          setTimeout(() => navigate('/app/products'), 1000);
         } else {
-          // Stay on enhanced form page after creation instead of navigating away
-          
-          
-          // No navigation - user stays on the enhanced form page
+          // Navigate to products list after creation
+          setTimeout(() => navigate('/app/products'), 1000);
         }
       } catch (error) {
         console.error('❌ Error in success handler:', error);
@@ -302,11 +300,12 @@ export default function CreateEnhancedProduct() {
   });
 
   const handleSubmit = (data: any) => {
-    
+    console.log('🚀 handleSubmit called with data:', data);
+    console.log('🏷️ isEditMode:', isEditMode, 'productId:', productId);
     
     // Prevent double submission
     if (createProductMutation.isPending) {
-      
+      console.log('⏳ Mutation already pending, skipping...');
       return;
     }
     
@@ -323,7 +322,7 @@ export default function CreateEnhancedProduct() {
       productionModel: data.productionModel,
       annualProductionVolume: data.annualProductionVolume,
       productionUnit: data.productionUnit,
-      status: data.status,
+      status: isEditMode ? 'confirmed' : (data.status || 'draft'),
       isMainProduct: data.isMainProduct,
       packShotUrl: data.productImage,
       productImages: data.productImages || [],
@@ -423,7 +422,12 @@ export default function CreateEnhancedProduct() {
     
     const transformTime = Date.now() - startTime;
     
-    
+    console.log('📦 Transformed data for API:', {
+      status: transformedData.status,
+      name: transformedData.name,
+      id: productId
+    });
+    console.log('📡 Calling mutation with method:', isEditMode ? 'PATCH' : 'POST');
     
     createProductMutation.mutate(transformedData);
   };

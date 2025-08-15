@@ -772,10 +772,15 @@ export default function EnhancedProductForm({
   }, [initialData?.packaging?.supplierInformation?.selectedProductId, selectedPackagingSupplier]);
 
   const handleSubmit = (data: EnhancedProductFormData) => {
+    console.log('🎯 EnhancedProductForm handleSubmit called');
+    console.log('📋 Form data:', data);
+    console.log('🖼️ Product images:', productImages);
+    
     const submissionData = {
       ...data,
       productImages
     };
+    console.log('📤 Calling onSubmit with:', submissionData);
     onSubmit(submissionData);
   };
 
