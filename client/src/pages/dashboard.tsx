@@ -64,6 +64,18 @@ export default function Dashboard() {
     window.location.reload();
   };
 
+  // Development helper - test onboarding flow
+  const testOnboardingFlow = () => {
+    // Clear all onboarding states
+    localStorage.removeItem('dashboard-tour-completed');
+    localStorage.removeItem('product-guide-completed');
+    
+    // Force show onboarding by setting the state directly
+    setShowOnboarding(true);
+    setShowTour(false);
+    setShowProductGuide(false);
+  };
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -135,9 +147,12 @@ export default function Dashboard() {
         
         {/* Development helper - remove in production */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="p-2 bg-yellow-100 text-yellow-800 text-sm">
+          <div className="p-2 bg-yellow-100 text-yellow-800 text-sm flex gap-4">
             <button onClick={resetTour} className="underline">
               Reset Tour (Dev Only)
+            </button>
+            <button onClick={testOnboardingFlow} className="underline">
+              Test Onboarding Flow
             </button>
           </div>
         )}
