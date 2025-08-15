@@ -885,76 +885,201 @@ function ProductDetail() {
 
             {/* Distribution Tab */}
             <TabsContent value="distribution">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="w-5 h-5" />
-                    Distribution & Logistics
-                  </CardTitle>
-                  <CardDescription>Transportation and distribution information</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {product.averageTransportDistance && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Average Transport Distance</label>
-                        <p className="text-gray-800">{product.averageTransportDistance} km</p>
-                      </div>
+              {(() => {
+                // Parse LCA data for distribution information
+                let distributionData: any = {};
+                try {
+                  if (product.lcaData && product.lcaData.distribution) {
+                    distributionData = product.lcaData.distribution;
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse distribution data:', e);
+                }
+
+                return (
+                  <div className="space-y-6">
+                    {/* Basic Distribution Information */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Truck className="w-5 h-5" />
+                          Distribution & Logistics
+                        </CardTitle>
+                        <CardDescription>Transportation and distribution information</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {(product.averageTransportDistance || distributionData.avgDistanceToDcKm) && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Average Transport Distance</label>
+                              <p className="text-gray-800">{product.averageTransportDistance || distributionData.avgDistanceToDcKm} km</p>
+                            </div>
+                          )}
+                          {(product.primaryTransportMode || distributionData.primaryTransportMode) && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Primary Transport Mode</label>
+                              <p className="text-gray-800 capitalize">{product.primaryTransportMode || distributionData.primaryTransportMode}</p>
+                            </div>
+                          )}
+                          {product.coldChainRequired !== null && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Cold Chain Required</label>
+                              <Badge variant={product.coldChainRequired ? "default" : "outline"}>
+                                {product.coldChainRequired ? "Yes" : "No"}
+                              </Badge>
+                            </div>
+                          )}
+                          {distributionData.palletizationEfficiency && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Palletization Efficiency</label>
+                              <p className="text-gray-800">{distributionData.palletizationEfficiency}%</p>
+                            </div>
+                          )}
+                          {product.distributionCenters && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Distribution Centers</label>
+                              <p className="text-gray-800">{product.distributionCenters}</p>
+                            </div>
+                          )}
+                          {product.packagingEfficiency && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Packaging Efficiency</label>
+                              <p className="text-gray-800">{product.packagingEfficiency}%</p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Temperature Control */}
+                    {distributionData.temperatureRangeCelsius && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Truck className="w-5 h-5" />
+                            Temperature Control
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Minimum Temperature</label>
+                              <p className="text-gray-800">{distributionData.temperatureRangeCelsius.min}°C</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Maximum Temperature</label>
+                              <p className="text-gray-800">{distributionData.temperatureRangeCelsius.max}°C</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     )}
-                    {product.primaryTransportMode && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Primary Transport Mode</label>
-                        <p className="text-gray-800 capitalize">{product.primaryTransportMode}</p>
-                      </div>
-                    )}
-                    {product.coldChainRequired !== null && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Cold Chain Required</label>
-                        <Badge variant={product.coldChainRequired ? "default" : "outline"}>
-                          {product.coldChainRequired ? "Yes" : "No"}
-                        </Badge>
-                      </div>
+
+                    {/* If no distribution data available */}
+                    {!product.averageTransportDistance && !product.primaryTransportMode && !distributionData.avgDistanceToDcKm && (
+                      <Card>
+                        <CardContent className="text-center py-8">
+                          <Truck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">No distribution information available</p>
+                        </CardContent>
+                      </Card>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                );
+              })()}
             </TabsContent>
 
             {/* End of Life Tab */}
             <TabsContent value="endoflife">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Recycle className="w-5 h-5" />
-                    End of Life Management
-                  </CardTitle>
-                  <CardDescription>Recycling and disposal information</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {product.returnableContainer !== null && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Returnable Container</label>
-                        <Badge variant={product.returnableContainer ? "default" : "outline"}>
-                          {product.returnableContainer ? "Yes" : "No"}
-                        </Badge>
+              <div className="space-y-6">
+                {/* Recycling & Disposal */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Recycle className="w-5 h-5" />
+                      End of Life Management
+                    </CardTitle>
+                    <CardDescription>Recycling and disposal information</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {product.returnableContainer !== null && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Returnable Container</label>
+                          <Badge variant={product.returnableContainer ? "default" : "outline"}>
+                            {product.returnableContainer ? "Yes" : "No"}
+                          </Badge>
+                        </div>
+                      )}
+                      {product.recyclingRate && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Recycling Rate</label>
+                          <p className="text-gray-800">{product.recyclingRate}%</p>
+                        </div>
+                      )}
+                      {product.disposalMethod && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Disposal Method</label>
+                          <p className="text-gray-800 capitalize">{product.disposalMethod}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Consumer Education */}
+                {product.consumerEducation && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Info className="w-5 h-5" />
+                        Consumer Education
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-800">{product.consumerEducation}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Environmental Impact Summary */}
+                {(product.carbonFootprint || product.waterFootprint) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Leaf className="w-5 h-5" />
+                        Environmental Impact Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {product.carbonFootprint && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Carbon Footprint</label>
+                            <p className="text-gray-800">{product.carbonFootprint} kg CO₂e</p>
+                          </div>
+                        )}
+                        {product.waterFootprint && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-600">Water Footprint</label>
+                            <p className="text-gray-800">{product.waterFootprint} L</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {product.recyclingRate && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Recycling Rate</label>
-                        <p className="text-gray-800">{product.recyclingRate}%</p>
-                      </div>
-                    )}
-                    {product.disposalMethod && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600">Disposal Method</label>
-                        <p className="text-gray-800 capitalize">{product.disposalMethod}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* If no end-of-life data available */}
+                {!product.returnableContainer && !product.recyclingRate && !product.disposalMethod && !product.consumerEducation && (
+                  <Card>
+                    <CardContent className="text-center py-8">
+                      <Recycle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No end-of-life information available</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </TabsContent>
 
             {/* Suppliers Tab */}
