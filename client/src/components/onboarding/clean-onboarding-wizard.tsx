@@ -102,14 +102,14 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
 
   const createCompanyMutation = useMutation({
     mutationFn: async (data: OnboardingData) => {
-      return apiRequest('/api/companies/onboard', {
-        method: 'POST',
+      return apiRequest('/api/companies/update-onboarding', {
+        method: 'PATCH',
         body: JSON.stringify({
-          name: data.companyName,
           industry: data.industry,
-          size: data.companySize,
+          numberOfEmployees: data.companySize,
           country: data.country,
-          primaryMotivations: data.primaryMotivations
+          primaryMotivation: data.primaryMotivations.join(', '),
+          onboardingComplete: true
         })
       });
     },
