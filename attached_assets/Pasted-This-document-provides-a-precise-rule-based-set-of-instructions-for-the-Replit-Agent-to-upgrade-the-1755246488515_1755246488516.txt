@@ -1,0 +1,86 @@
+This document provides a precise, rule-based set of instructions for the Replit Agent to upgrade the WebsiteScrapingService. The goal is to replace the current generic scraping logic with a more intelligent, multi-step process to accurately extract only physical addresses and contextually relevant products.
+
+2. Part 1: Instructions for Scraping the Physical Address
+The scraper must follow this sequential logic to find and validate a physical address. It should stop and return the first valid address it finds.
+
+Step 1: Prioritize Search Locations
+
+First, search for and crawl a page with "Contact" or "About Us" in the URL or page title.
+
+If no such page is found, scrape the <footer> element of the homepage.
+
+Step 2: Identify the Country for Context
+
+On the target page (from Step 1), scan the text for common country names (e.g., "United Kingdom", "France", "Germany", "USA").
+
+If a country is found, store it as the context for address formatting.
+
+Step 3: Use Regular Expressions for Pattern Matching
+
+Based on the country context, use a specific regular expression to find a valid address format. The primary goal is to find a postcode, which is the most reliable anchor for a physical address.
+
+If Country is "United Kingdom": Search for a UK postcode pattern: ([A-Z]{1,2}[0-9][A-Z0-9]? [0-9][A-Z]{2}).
+
+If Country is "France": Search for a French postcode pattern: (\d{5}).
+
+(Add other country-specific patterns as needed).
+
+Once a postcode is found, extract the surrounding lines of text (typically 2-4 lines preceding it) as the full address.
+
+Step 4: Exclude Non-Physical Information
+
+The final extracted address string must be filtered to remove any lines containing "@" (to exclude emails) or common phone number patterns. The final output must only be the physical street address, city, postcode, and country.
+
+3. Part 2: Instructions for Scraping Products
+The scraper must follow this two-phase process to identify a website's category and then find relevant products.
+
+Phase 1: Identify the Website's Primary Category
+Step 1: Create Keyword Dictionaries
+
+The service must use a predefined dictionary to map keywords to categories.
+
+{
+  "Spirits": ["rum", "gin", "whisky", "vodka", "tequila", "brandy", "calvados"],
+  "Wine": ["wine", "red", "white", "rosé", "merlot", "chardonnay", "prosecco"],
+  "Beer": ["beer", "lager", "ale", "stout", "ipa", "pilsner"],
+  "Cider": ["cider"]
+}
+
+Step 2: Scan for Keywords
+
+The scraper must scan the text content of the homepage and any primary navigation links (e.g., in the <nav> element).
+
+It will count the occurrences of each keyword from the dictionary.
+
+Step 3: Determine Primary Category
+
+The category with the highest keyword count is determined to be the website's Primary Category. For example, if the word "rum" appears 15 times and "gin" appears 5 times, the Primary Category is "Spirits".
+
+Phase 2: Targeted Product Extraction
+Step 1: Find the Product/Shop Page
+
+The scraper must now look for navigation links containing keywords like "Products", "Shop", "Our Range", "Collection", or the determined Primary Category itself (e.g., "Our Rum"). It should then crawl that specific page.
+
+Step 2: Scrape Potential Product Titles
+
+On the product page, the scraper will extract the text from common product title tags (e.g., <h2>, <h3>, or elements with a class like product-title).
+
+Step 3: Filter and Validate Products
+
+The scraper must now iterate through the list of potential titles and validate them against the Primary Category.
+
+A title is considered a valid product only if it contains one of the keywords from the identified category.
+
+Example (using https://www.takamakarum.com/):
+
+The scraper identifies the Primary Category as "Spirits" (due to the high frequency of "rum").
+
+It navigates to the "Our Rum" page.
+
+It extracts titles like "Rum Blanc", "Dark Spiced", "St André Series", "About Us".
+
+It validates them: "Rum Blanc" is kept (contains "rum"). "Dark Spiced" is kept (common spirit term). "St André Series" is kept. "About Us" is discarded because it does not match any keywords in the "Spirits" category.
+
+Step 4: Extract Product Images
+
+For each validated product, the scraper will find the associated <img> tag and extract its src attribute to get the image URL.
