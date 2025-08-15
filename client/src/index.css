@@ -32,9 +32,9 @@
   --chart-5: 27 87% 67%;
   
   /* Custom Avallen Colors */
-  --avallen-green: 148 57% 23%;
-  --avallen-green-light: 148 57% 35%;
-  --avallen-green-dark: 148 57% 15%;
+  --avallen-green: 140 68% 39%; /* #209d50 */
+  --avallen-green-light: 140 68% 50%;
+  --avallen-green-dark: 140 68% 30%;
   --slate-gray: 215 16% 47%;
   --light-gray: 214 31% 91%;
   --lightest-gray: 210 40% 96%;

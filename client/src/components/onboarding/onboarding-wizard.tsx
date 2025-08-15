@@ -35,7 +35,7 @@ interface WizardFormData {
   websiteUrl: string;
   scrapedData: ScrapedData | null;
   selectedProducts: Set<number>;
-  primaryMotivation: string;
+  primaryMotivations: string[];
 }
 
 export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWizardProps) {
@@ -48,7 +48,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
     websiteUrl: '',
     scrapedData: null,
     selectedProducts: new Set(),
-    primaryMotivation: '',
+    primaryMotivations: [],
   });
 
   // Website scraping mutation
@@ -134,7 +134,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       name: formData.companyName,
       website: formData.websiteUrl,
       address: formData.scrapedData?.address,
-      primaryMotivation: formData.primaryMotivation,
+      primaryMotivations: formData.primaryMotivations,
       onboardingComplete: true,
     };
 
@@ -167,7 +167,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
       case 4:
         return true; // Review step is always valid
       case 5:
-        return formData.primaryMotivation.length > 0;
+        return formData.primaryMotivations.length > 0;
       default:
         return false;
     }
@@ -377,46 +377,37 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
                 Perfect!
               </h3>
               <p className="text-gray-600">
-                To help us personalize your journey, what is the main goal you want to achieve with this tool?
+                To help us personalize your journey, what are your main goals with this tool? Select all that apply.
               </p>
             </div>
             
-            <RadioGroup
-              value={formData.primaryMotivation}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, primaryMotivation: value }))}
-              className="space-y-3"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="measure_footprint" id="measure" />
-                <Label htmlFor="measure" className="cursor-pointer">
-                  Measure my company & product carbon footprint (LCA)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="sustainability_report" id="report" />
-                <Label htmlFor="report" className="cursor-pointer">
-                  Produce a professional annual sustainability report
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="compliance" id="compliance" />
-                <Label htmlFor="compliance" className="cursor-pointer">
-                  Ensure compliance with new regulations (like DMCC)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="strategy" id="strategy" />
-                <Label htmlFor="strategy" className="cursor-pointer">
-                  Get help with my overall sustainability strategy
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="net_zero" id="net_zero" />
-                <Label htmlFor="net_zero" className="cursor-pointer">
-                  Set and track progress towards Net Zero targets
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className="space-y-3">
+              {[
+                { value: "measure_footprint", label: "Measure my company & product carbon footprint (LCA)" },
+                { value: "sustainability_report", label: "Produce a professional annual sustainability report" },
+                { value: "compliance", label: "Ensure compliance with new regulations (like DMCC)" },
+                { value: "strategy", label: "Get help with my overall sustainability strategy" },
+                { value: "net_zero", label: "Set and track progress towards Net Zero targets" }
+              ].map(goal => (
+                <div key={goal.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={goal.value}
+                    checked={formData.primaryMotivations.includes(goal.value)}
+                    onCheckedChange={(checked) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        primaryMotivations: checked
+                          ? [...prev.primaryMotivations, goal.value]
+                          : prev.primaryMotivations.filter(m => m !== goal.value)
+                      }));
+                    }}
+                  />
+                  <Label htmlFor={goal.value} className="cursor-pointer">
+                    {goal.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
         );
       
@@ -427,7 +418,7 @@ export default function OnboardingWizard({ onComplete, onCancel }: OnboardingWiz
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border-light-gray">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-gray-200 shadow-xl">
         <CardHeader className="border-b border-light-gray">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-bold text-slate-gray">

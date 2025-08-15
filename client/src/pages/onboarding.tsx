@@ -49,8 +49,8 @@ export default function Onboarding() {
           </p>
           
           {/* Debug/bypass button */}
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-sm text-yellow-800 mb-2">
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 mb-2">
               Already completed onboarding? 
             </p>
             <Button

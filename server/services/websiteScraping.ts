@@ -146,15 +146,28 @@ export class WebsiteScrapingService {
     }> = [];
     const foundNames = new Set<string>();
 
-    // Try multiple selectors for products
+    // Try multiple selectors for products (expanded for spirits/drinks)
     const productSelectors = [
       '.product',
-      '.product-card',
+      '.product-card', 
       '.product-item',
       '[data-testid*="product"]',
       '.shop-item',
       '.drink',
-      '.bottle'
+      '.bottle',
+      '.spirits',
+      '.wine',
+      '.beer',
+      '.calvados',
+      '.whisky',
+      '.gin',
+      '.rum',
+      '.liqueur',
+      '[class*="product"]',
+      '[id*="product"]',
+      'article',
+      '.item',
+      '.collection-item'
     ];
 
     for (const selector of productSelectors) {
@@ -164,17 +177,32 @@ export class WebsiteScrapingService {
 
         const $elem = $(elem);
         
-        // Extract product name
-        const nameSelectors = ['h1', 'h2', 'h3', '.product-name', '.name', '.title', 'img[alt]'];
+        // Extract product name (expanded for spirits/drinks)
+        const nameSelectors = [
+          'h1', 'h2', 'h3', 'h4', 
+          '.product-name', '.product-title',
+          '.name', '.title', 
+          'img[alt]', 
+          '.wine-name', '.spirit-name', '.bottle-name',
+          '[data-product-name]',
+          'a[title]'
+        ];
         let name = '';
         
         for (const nameSelector of nameSelectors) {
           const nameText = $elem.find(nameSelector).first().text().trim() || 
-                          $elem.find(nameSelector).first().attr('alt') || '';
-          if (nameText && nameText.length < 100) {
+                          $elem.find(nameSelector).first().attr('alt') || 
+                          $elem.find(nameSelector).first().attr('title') || '';
+          if (nameText && nameText.length > 2 && nameText.length < 100) {
             name = nameText;
             break;
           }
+        }
+
+        // Try parent element if no name found
+        if (!name) {
+          name = $elem.text().trim().split('\n')[0] || '';
+          if (name.length > 100) name = name.substring(0, 100);
         }
 
         if (name && !foundNames.has(name.toLowerCase())) {
@@ -215,10 +243,10 @@ export class WebsiteScrapingService {
     const categories = {
       'wine': ['wine', 'pinot', 'chardonnay', 'cabernet', 'merlot', 'sauvignon'],
       'beer': ['beer', 'ale', 'lager', 'ipa', 'stout', 'pilsner'],
-      'spirit': ['whiskey', 'whisky', 'vodka', 'gin', 'rum', 'tequila', 'brandy'],
+      'spirit': ['whiskey', 'whisky', 'vodka', 'gin', 'rum', 'tequila', 'brandy', 'calvados', 'cognac', 'armagnac', 'bourbon', 'scotch', 'rye', 'spirits'],
       'non-alcoholic': ['non-alcoholic', 'alcohol-free', 'zero percent', '0%'],
       'cider': ['cider', 'apple wine'],
-      'liqueur': ['liqueur', 'cream', 'coffee liqueur']
+      'liqueur': ['liqueur', 'cream', 'coffee liqueur', 'amaro', 'aperitif']
     };
 
     for (const [category, keywords] of Object.entries(categories)) {
