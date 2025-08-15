@@ -92,10 +92,11 @@ export function setupOnboardingRoutes(app: Express) {
         });
       } catch (error) {
         console.error('Error updating company onboarding:', error);
+        const errorUserId = (req.session as any)?.user?.id || 'user-1';
         console.error('Error details:', {
           message: error instanceof Error ? error.message : 'Unknown error',
           stack: error instanceof Error ? error.stack : 'No stack trace',
-          userId: userId || 'unknown',
+          userId: errorUserId || 'unknown',
           requestBody: req.body
         });
         res.status(500).json({ 
