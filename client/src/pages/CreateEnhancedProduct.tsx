@@ -73,9 +73,17 @@ export default function CreateEnhancedProduct() {
         : product.ingredients || [],
       
       // Water dilution
-      waterDilution: typeof product.waterDilution === 'string' 
-        ? JSON.parse(product.waterDilution) 
-        : product.waterDilution || { amount: 0, unit: 'ml' },
+      waterDilution: (() => {
+        console.log('🔍 Raw waterDilution from database:', product.waterDilution, 'Type:', typeof product.waterDilution);
+        if (typeof product.waterDilution === 'string') {
+          const parsed = JSON.parse(product.waterDilution);
+          console.log('🔧 Parsed waterDilution:', parsed);
+          return parsed;
+        }
+        const result = product.waterDilution || { amount: 0, unit: 'ml' };
+        console.log('🔧 Using direct waterDilution:', result);
+        return result;
+      })(),
         
       packaging: {
         primaryContainer: {
