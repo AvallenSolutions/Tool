@@ -149,7 +149,7 @@ const enhancedProductSchema = z.object({
       processWaterLiters: z.coerce.number().optional(),
       cleaningWaterLiters: z.coerce.number().optional(),
       coolingWaterLiters: z.coerce.number().optional(),
-      wasteWaterTreatment: z.string().optional(),
+      wasteWaterTreatment: z.union([z.string(), z.boolean()]).transform((val) => typeof val === 'boolean' ? (val ? 'yes' : 'no') : val).optional(),
       waterRecyclingPercent: z.coerce.number().min(0).max(100).optional(),
       waterSourceType: z.string().optional(),
     }),
@@ -300,11 +300,11 @@ const enhancedProductSchema = z.object({
       }).optional(),
       maturation: z.object({
         maturationTimeMonths: z.number().nonnegative().optional(),
-        barrelType: z.enum(['new_oak', 'used_oak', 'stainless_steel', 'other']).optional(),
+        barrelType: z.enum(['new_oak', 'used_oak', 'stainless_steel', 'concrete', 'ceramic', 'other']).optional(),
         warehouseType: z.enum(['traditional', 'racked', 'climate_controlled']).optional(),
         evaporationLossPercentage: z.number().min(0).max(100).optional(),
       }).optional(),
-    }),
+    }).optional(),
     
     // Section 4: Packaging (Enhanced) - Master Source for All Packaging Data
     packagingDetailed: z.object({
@@ -330,7 +330,7 @@ const enhancedProductSchema = z.object({
         labelSize: z.number().optional(),
       }).optional(),
       closure: z.object({
-        materialType: z.enum(['cork', 'synthetic_cork', 'screw_cap', 'crown_cap']).optional(),
+        materialType: z.enum(['cork', 'synthetic_cork', 'screw_cap', 'crown_cap', 'aluminum']).optional(),
         weightGrams: z.number().positive().optional(),
         hasLiner: z.boolean().default(false),
         linerMaterial: z.string().optional(),
@@ -563,27 +563,27 @@ export default function EnhancedProductForm({
           angelsSharePercentage: 0,
           waterM3PerTonCrop: 0,
           renewableEnergyPercent: 0,
-        },
-        fermentation: {
-          fermentationTime: 0,
-          yeastType: '',
-          temperatureControl: false,
-          sugarAddedKg: 0,
-        },
-        distillation: {
-          distillationRounds: 0,
-          energySourceType: undefined,
-          heatRecoverySystem: false,
-          copperUsageKg: 0,
-        },
-        maturation: {
-          maturationTimeMonths: 0,
-          barrelType: undefined,
-          barrelOrigin: '',
-          barrelReuseCycles: 0,
+          fermentation: {
+            fermentationTime: 7,
+            yeastType: 'commercial',
+            temperatureControl: false,
+            sugarAddedKg: 0,
+          },
+          distillation: {
+            distillationRounds: 2,
+            energySourceType: 'gas',
+            heatRecoverySystem: false,
+            copperUsageKg: 0,
+          },
+          maturation: {
+            maturationTimeMonths: 12,
+            barrelType: 'used_oak',
+            warehouseType: 'traditional',
+            evaporationLossPercentage: 2,
+          },
         },
       },
-      environmentalImpact: { calculationMethod: '', co2Emissions: 0, waterFootprint: 0, landUse: 0, biodiversityImpact: '' },
+      environmentalImpact: { calculationMethod: 'estimated', co2Emissions: 0, waterFootprint: 0, landUse: 0, biodiversityImpact: 'low' },
       certifications: [],
       awards: [],
       distribution: { averageTransportDistance: 0, primaryTransportMode: '', distributionCenters: 0, coldChainRequired: false, packagingEfficiency: 0 },
