@@ -130,7 +130,7 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
   
-  console.log('isAuthenticated middleware check:', {
+  console.log('isAuthenticated middleware check for:', req.url, {
     isAuthenticated: req.isAuthenticated(),
     hasUser: !!user,
     hasExpiresAt: !!user?.expires_at,

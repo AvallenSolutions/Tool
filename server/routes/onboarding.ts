@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
-import { isAuthenticated } from "../replitAuth";
+// import { isAuthenticated } from "../replitAuth"; // Not using middleware anymore
 import { storage } from "../storage";
 
 export function setupOnboardingRoutes(app: Express) {
@@ -16,8 +16,16 @@ export function setupOnboardingRoutes(app: Express) {
     ],
     async (req: Request, res: Response) => {
       try {
+        console.log('Onboarding PATCH route hit:', req.url);
+        console.log('Auth status:', { 
+          isAuthenticated: req.isAuthenticated(), 
+          hasUser: !!req.user,
+          userObject: req.user ? Object.keys(req.user) : 'no user'
+        });
+        
         // Check authentication the same way as /api/auth/user
         if (!req.isAuthenticated() || !req.user) {
+          console.log('Onboarding auth failed in route handler');
           return res.status(401).json({ error: 'User not authenticated' });
         }
 
