@@ -1629,6 +1629,29 @@ Be precise and quote actual text from the content, not generic terms.`;
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // Clear all company footprint data
+  app.delete('/api/company/footprint', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      await dbStorage.clearFootprintData(company.id);
+      res.json({ success: true, message: 'All footprint data cleared successfully' });
+    } catch (error) {
+      console.error('Error clearing footprint data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   
   // Helper function for emission factors (simplified - in production this would be a proper database/service)
   function getEmissionsFactor(dataType: string, unit: string): number {

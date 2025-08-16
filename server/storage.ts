@@ -645,6 +645,10 @@ export class DatabaseStorage implements IStorage {
     await db.delete(companyFootprintData).where(eq(companyFootprintData.id, id));
   }
 
+  async clearFootprintData(companyId: number): Promise<void> {
+    await db.delete(companyFootprintData).where(eq(companyFootprintData.companyId, companyId));
+  }
+
   // Document upload operations
   async getDocumentsByCompany(companyId: number): Promise<UploadedDocument[]> {
     return await db

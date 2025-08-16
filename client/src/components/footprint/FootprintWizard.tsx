@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, ArrowLeft, ArrowRight, Save, Calculator } from 'lucide-react';
+import { CheckCircle, Circle, ArrowLeft, ArrowRight, Save, Calculator, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Scope1EmissionsStep } from './steps/Scope1EmissionsStep';
 import { Scope2EmissionsStep } from './steps/Scope2EmissionsStep';
@@ -43,6 +43,8 @@ export function FootprintWizard() {
   // Fetch existing footprint data
   const { data: existingData, isLoading } = useQuery({
     queryKey: ['/api/company/footprint'],
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   // Save footprint data mutation
@@ -61,6 +63,27 @@ export function FootprintWizard() {
       toast({
         title: "Data Saved",
         description: "Your carbon footprint data has been saved successfully.",
+      });
+    },
+  });
+
+  // Clear all footprint data mutation
+  const clearMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/company/footprint', {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to clear data');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/company/footprint'] });
+      queryClient.refetchQueries({ queryKey: ['/api/company/footprint'] }); // Force immediate refetch
+      setCurrentStep(0); // Reset to first step
+      setWizardData({}); // Clear wizard state
+      toast({
+        title: "Data Cleared",
+        description: "All carbon footprint data has been cleared successfully.",
       });
     },
   });
@@ -184,11 +207,26 @@ export function FootprintWizard() {
                 {completedSteps} of {steps.length} sections completed
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-green-600">
-                {steps.reduce((total, step) => total + step.emissionsTotal, 0).toLocaleString()} kg CO₂e
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <div className="text-2xl font-bold text-green-600">
+                  {steps.reduce((total, step) => total + step.emissionsTotal, 0).toLocaleString()} kg CO₂e
+                </div>
+                <p className="text-sm text-slate-600">Total Calculated Emissions</p>
               </div>
-              <p className="text-sm text-slate-600">Total Calculated Emissions</p>
+              
+              {existingData?.data && existingData.data.length > 0 && (
+                <Button
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => clearMutation.mutate()}
+                  disabled={clearMutation.isPending}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {clearMutation.isPending ? 'Clearing...' : 'Clear All Data'}
+                </Button>
+              )}
             </div>
           </div>
           <Progress value={progressPercentage} className="h-2" />
