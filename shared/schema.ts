@@ -1291,6 +1291,34 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ESG Data table for Social and Governance metrics
+export const esgData = pgTable("esg_data", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  dataCategory: varchar("data_category", { length: 100 }).notNull(), // 'people', 'community', 'governance'
+  dataPoint: varchar("data_point", { length: 100 }).notNull(), // 'employee_turnover_rate', 'gender_diversity_leadership', etc.
+  value: jsonb("value").notNull(), // Stores number, text, or boolean values
+  reportingPeriodStart: date("reporting_period_start").notNull(),
+  reportingPeriodEnd: date("reporting_period_end").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations for ESG data table
+export const esgDataRelations = relations(esgData, ({ one }) => ({
+  company: one(companies, {
+    fields: [esgData.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Insert schema for ESG data
+export const insertEsgDataSchema = createInsertSchema(esgData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Export types and insert schemas for collaboration tables
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
@@ -1331,3 +1359,7 @@ export const insertNotificationPreferenceSchema = createInsertSchema(notificatio
   createdAt: true,
   updatedAt: true,
 });
+
+// Export types for ESG data table
+export type EsgData = typeof esgData.$inferSelect;
+export type InsertEsgData = z.infer<typeof insertEsgDataSchema>;

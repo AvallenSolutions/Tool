@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Leaf, Target, BarChart3, Save, Loader2, CheckCircle, AlertCircle, Info, Calculator } from "lucide-react";
+import { Building2, Leaf, Target, BarChart3, Save, Loader2, CheckCircle, AlertCircle, Info, Calculator, Users, Shield } from "lucide-react";
 import { FootprintWizard } from "@/components/footprint/FootprintWizard";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -300,7 +300,7 @@ export default function Company() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-gray-100">
+            <TabsList className="grid w-full grid-cols-7 h-auto p-1 bg-gray-100">
               <TabsTrigger 
                 value="overview" 
                 className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
@@ -332,6 +332,22 @@ export default function Company() {
                 <Target className="w-5 h-5" />
                 <span className="text-sm font-medium">Goals</span>
                 <span className="text-xs text-gray-500">Targets</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="social" 
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+              >
+                <Users className="w-5 h-5" />
+                <span className="text-sm font-medium">Social</span>
+                <span className="text-xs text-gray-500">People & Community</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="governance" 
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+              >
+                <Shield className="w-5 h-5" />
+                <span className="text-sm font-medium">Governance</span>
+                <span className="text-xs text-gray-500">Ethics & Leadership</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="impact" 
@@ -1088,6 +1104,270 @@ export default function Company() {
                       placeholder="Describe your circular economy practices, reuse programs, and waste reduction initiatives..."
                       rows={4}
                     />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="social" className="space-y-6">
+              {/* Social Data Collection */}
+              <Card className="border-l-4 border-l-purple-500">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-gray-50">
+                  <CardTitle className="flex items-center text-slate-gray">
+                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                      <Users className="w-5 h-5 text-purple-600" />
+                    </div>
+                    Social Impact Data
+                  </CardTitle>
+                  <CardDescription>
+                    Track your company's impact on people and communities through key social metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                  {/* Employee Metrics Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-lg text-gray-800 flex items-center">
+                      <Users className="w-5 h-5 mr-2 text-purple-600" />
+                      Employee Metrics
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Employee Turnover Rate (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 8.5"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Annual employee turnover as percentage</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Gender Diversity in Leadership (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 45"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Percentage of women in leadership positions</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Training Hours per Employee</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 40"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Average annual training hours per employee</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Employee Satisfaction Score</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 4.2"
+                          max="5"
+                          step="0.1"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Average satisfaction score (1-5 scale)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Community Impact Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-lg text-gray-800">Community Impact</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Local Suppliers (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 65"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Percentage of suppliers within 100km</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Community Investment (£)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 25000"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Annual community investment amount</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Local Jobs Created</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 12"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Number of local jobs created this year</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Volunteer Hours</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 320"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Total employee volunteer hours annually</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end">
+                    <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Social Data
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="governance" className="space-y-6">
+              {/* Governance Data Collection */}
+              <Card className="border-l-4 border-l-indigo-500">
+                <CardHeader className="bg-gradient-to-r from-indigo-50 to-gray-50">
+                  <CardTitle className="flex items-center text-slate-gray">
+                    <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                      <Shield className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    Governance & Ethics Data
+                  </CardTitle>
+                  <CardDescription>
+                    Track governance practices, ethics, and leadership accountability
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                  {/* Board Composition Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-lg text-gray-800 flex items-center">
+                      <Shield className="w-5 h-5 mr-2 text-indigo-600" />
+                      Board Composition
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Independent Directors (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 60"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Percentage of independent board members</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Board Gender Diversity (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 40"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Gender diversity on board of directors</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Average Board Tenure (years)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 4.2"
+                          step="0.1"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Average length of board service</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Board Meetings per Year</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 8"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Number of formal board meetings annually</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ethics & Compliance Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-lg text-gray-800">Ethics & Compliance</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Ethics Training Completion (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 95"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Percentage of employees completing ethics training</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Code of Conduct Violations</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 2"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Number of reported violations this year</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Whistleblower Reports</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 1"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Number of whistleblower reports received</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Executive Compensation Ratio</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 25"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">CEO to median employee pay ratio</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Risk Management Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-lg text-gray-800">Risk Management</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Risk Assessment Frequency</Label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select frequency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="semi-annually">Semi-annually</SelectItem>
+                            <SelectItem value="annually">Annually</SelectItem>
+                            <SelectItem value="ad-hoc">Ad-hoc</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-gray-500">How often risk assessments are conducted</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-gray-700">Data Security Incidents</Label>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 0"
+                          className="border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500">Number of data security incidents this year</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Governance Data
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

@@ -1343,6 +1343,110 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ END PRODUCT SEARCH ENDPOINTS ============
 
+  // ============ ESG DATA ENDPOINTS ============
+
+  // Get ESG data for a company
+  app.get('/api/company/esg-data', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { esgData } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const esgDataRecords = await db
+        .select()
+        .from(esgData)
+        .where(eq(esgData.companyId, company.id));
+
+      res.json({ success: true, data: esgDataRecords });
+    } catch (error) {
+      console.error('Error fetching ESG data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Save ESG data for a company
+  app.post('/api/company/esg-data', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { dataCategory, dataPoint, value, reportingPeriodStart, reportingPeriodEnd } = req.body;
+      
+      if (!dataCategory || !dataPoint || value === undefined) {
+        return res.status(400).json({ error: 'dataCategory, dataPoint, and value are required' });
+      }
+
+      const { esgData } = await import('@shared/schema');
+      
+      const newEsgData = await db
+        .insert(esgData)
+        .values({
+          companyId: company.id,
+          dataCategory,
+          dataPoint,
+          value,
+          reportingPeriodStart: reportingPeriodStart || company.currentReportingPeriodStart,
+          reportingPeriodEnd: reportingPeriodEnd || company.currentReportingPeriodEnd,
+        })
+        .returning();
+
+      res.json({ success: true, data: newEsgData[0] });
+    } catch (error) {
+      console.error('Error saving ESG data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Update ESG data
+  app.put('/api/company/esg-data/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { value } = req.body;
+      
+      if (value === undefined) {
+        return res.status(400).json({ error: 'value is required' });
+      }
+
+      const { esgData } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const updatedData = await db
+        .update(esgData)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(esgData.id, id))
+        .returning();
+
+      if (updatedData.length === 0) {
+        return res.status(404).json({ error: 'ESG data not found' });
+      }
+
+      res.json({ success: true, data: updatedData[0] });
+    } catch (error) {
+      console.error('Error updating ESG data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // ============ COMPANY SUSTAINABILITY DATA ENDPOINTS ============
 
   // Get company sustainability data
