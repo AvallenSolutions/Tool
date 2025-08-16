@@ -111,6 +111,14 @@ const SCOPE3_CATEGORIES = {
         units: [
           { value: 'passenger_km', label: 'Passenger km', factor: 0.104 }
         ]
+      },
+      {
+        id: 'cycling',
+        label: 'Cycling',
+        description: 'Employee commuting by bicycle (DEFRA 2024)',
+        units: [
+          { value: 'passenger_km', label: 'Passenger km', factor: 0.0 }
+        ]
       }
     ]
   },
