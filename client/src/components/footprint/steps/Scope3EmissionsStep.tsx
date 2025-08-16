@@ -126,8 +126,74 @@ const SCOPE3_CATEGORIES = {
         source: 'DEFRA 2024 Spend-Based'
       }
     ]
+  },
+  // NEW AUTOMATED CATEGORIES - Phase 3 Addition
+  purchased_goods: {
+    title: 'Purchased Goods & Services',
+    icon: TrendingUp,
+    color: 'bg-blue-50 border-blue-200',
+    textColor: 'text-blue-800',
+    automated: true,
+    types: [
+      { 
+        id: 'purchased_goods_services', 
+        label: 'Automated from Product Data', 
+        units: [{ value: 'kg', label: 'Calculated automatically', factor: 0.0 }],
+        description: 'Automatically calculated from your product ingredients and packaging data',
+        source: 'Platform Intelligence'
+      }
+    ]
+  },
+  capital_goods: {
+    title: 'Capital Goods',
+    icon: TrendingUp,
+    color: 'bg-purple-50 border-purple-200',
+    textColor: 'text-purple-800',
+    types: [
+      { 
+        id: 'capital_goods', 
+        label: 'Equipment & Machinery (Spending-Based)', 
+        units: [{ value: '£', label: 'Pounds spent', factor: 0.3 }], // DEFRA 2024 verified
+        description: 'Purchases of equipment, machinery, and infrastructure (one-time capital investments)',
+        source: 'DEFRA 2024 Spend-Based'
+      }
+    ]
+  },
+  fuel_energy: {
+    title: 'Fuel & Energy-Related Activities',
+    icon: TrendingUp,
+    color: 'bg-indigo-50 border-indigo-200',
+    textColor: 'text-indigo-800',
+    automated: true,
+    types: [
+      { 
+        id: 'fuel_energy_related', 
+        label: 'Automated from Energy Data', 
+        units: [{ value: 'kWh', label: 'Calculated automatically', factor: 0.0 }],
+        description: 'Upstream emissions automatically calculated from your Scope 1 & 2 energy data',
+        source: 'DEFRA 2024 Upstream Factors'
+      }
+    ]
   }
 };
+
+interface AutomatedCalculation {
+  totalEmissions: number;
+  categories: {
+    purchasedGoodsServices: {
+      emissions: number;
+      productCount: number;
+      details: Array<{productId: number; name: string; emissions: number}>;
+      source: string;
+    };
+    fuelEnergyRelated: {
+      emissions: number;
+      breakdown: Record<string, number>;
+      source: string;
+    };
+  };
+  lastCalculated: string;
+}
 
 export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, isLoading }: Scope3EmissionsStepProps) {
   const [entries, setEntries] = useState<EmissionEntry[]>([]);
@@ -138,6 +204,8 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
     description: ''
   });
   const [activeCategory, setActiveCategory] = useState('waste');
+  const [automatedData, setAutomatedData] = useState<AutomatedCalculation | null>(null);
+  const [automatedLoading, setAutomatedLoading] = useState(false);
 
   // Load existing Scope 3 data
   useEffect(() => {
@@ -152,6 +220,30 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
       setEntries(loadedEntries);
     }
   }, [existingData]);
+
+  // Fetch automated calculations
+  useEffect(() => {
+    const fetchAutomatedCalculations = async () => {
+      setAutomatedLoading(true);
+      try {
+        const response = await fetch('/api/company/footprint/scope3/automated', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const result = await response.json();
+          setAutomatedData(result.data);
+        } else {
+          console.error('Failed to fetch automated calculations');
+        }
+      } catch (error) {
+        console.error('Error fetching automated calculations:', error);
+      } finally {
+        setAutomatedLoading(false);
+      }
+    };
+
+    fetchAutomatedCalculations();
+  }, []);
 
   // Calculate total emissions for current entries
   const calculateTotalEmissions = (): number => {
@@ -296,11 +388,13 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
         </CardHeader>
         <CardContent>
           <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1">
               {Object.entries(SCOPE3_CATEGORIES).map(([key, category]) => (
-                <TabsTrigger key={key} value={key} className="flex items-center space-x-2">
-                  <category.icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{category.title.split(' ')[0]}</span>
+                <TabsTrigger key={key} value={key} className="flex items-center space-x-1 text-xs">
+                  <category.icon className="h-3 w-3" />
+                  <span className="hidden lg:inline">{category.title.split(' ')[0]}</span>
+                  <span className="lg:hidden">{category.title.split(' ')[0].slice(0, 4)}</span>
+                  {category.automated && <Badge variant="secondary" className="text-xs px-1 py-0">Auto</Badge>}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -311,152 +405,241 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                   <div className="flex items-center space-x-3 mb-3">
                     <category.icon className={`h-6 w-6 ${category.textColor}`} />
                     <h3 className={`text-lg font-semibold ${category.textColor}`}>{category.title}</h3>
+                    {category.automated && (
+                      <Badge variant="secondary" className="text-xs">
+                        Automated Calculation
+                      </Badge>
+                    )}
                   </div>
                   
-                  {/* Show existing entries for this category */}
-                  {entries.filter(entry => category.types.some(t => t.id === entry.dataType)).length > 0 && (
-                    <div className="space-y-2 mb-4">
-                      {entries
-                        .filter(entry => category.types.some(t => t.id === entry.dataType))
-                        .map((entry, index) => {
-                          const type = category.types.find(t => t.id === entry.dataType);
-                          const unitInfo = type?.units.find(u => u.value === entry.unit);
-                          const emissions = unitInfo ? parseFloat(entry.value) * unitInfo.factor : 0;
-                          
-                          return (
-                            <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 border">
-                              <div>
-                                <p className="font-medium text-slate-900">{type?.label}</p>
-                                <p className="text-sm text-slate-600">
-                                  {entry.value} {entry.unit} = {emissions.toLocaleString()} kg CO₂e
-                                </p>
-                                {entry.description && (
-                                  <p className="text-xs text-slate-500 mt-1">{entry.description}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Badge variant="secondary">{emissions.toLocaleString()} kg CO₂e</Badge>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => removeEntry(entries.findIndex(e => e === entry))}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Add new entry form */}
-                <div className="space-y-4">
-                  {/* Data Type Selection */}
-                  <div className="space-y-2">
-                    <Label htmlFor="dataType">Emission Source</Label>
-                    <Select 
-                      value={newEntry.dataType} 
-                      onValueChange={(value) => setNewEntry({ ...newEntry, dataType: value, unit: '' })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an emission source..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {category.types.map((type) => (
-                          <SelectItem key={type.id} value={type.id}>
+                  {/* Automated Category Display */}
+                  {category.automated ? (
+                    <div className="space-y-4">
+                      {automatedLoading ? (
+                        <div className="p-6 text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                          <p className="mt-2 text-sm text-slate-600">Calculating automated emissions...</p>
+                        </div>
+                      ) : automatedData ? (
+                        <div className="bg-white rounded-lg border p-4">
+                          {key === 'purchased_goods' && (
                             <div>
-                              <div className="font-medium">{type.label}</div>
-                              <div className="text-xs text-slate-500">{type.description}</div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Value Input */}
-                    <div className="space-y-2">
-                      <Label htmlFor="value">Amount</Label>
-                      <Input
-                        id="value"
-                        type="number"
-                        placeholder="Enter amount..."
-                        value={newEntry.value}
-                        onChange={(e) => setNewEntry({ ...newEntry, value: e.target.value })}
-                        disabled={!selectedType}
-                      />
-                    </div>
-
-                    {/* Unit (auto-selected based on type) */}
-                    <div className="space-y-2">
-                      <Label htmlFor="unit">Unit</Label>
-                      <Select 
-                        value={newEntry.unit} 
-                        onValueChange={(value) => setNewEntry({ ...newEntry, unit: value })}
-                        disabled={!selectedType}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select unit..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {selectedType?.units.map((unit) => (
-                            <SelectItem key={unit.value} value={unit.value}>
-                              <div className="flex justify-between items-center w-full">
-                                <span>{unit.label}</span>
-                                <Badge variant="outline" className="ml-2">
-                                  {unit.factor} kg CO₂e per {unit.value}
-                                </Badge>
+                              <h4 className="font-semibold text-slate-900 mb-2">Purchased Goods & Services</h4>
+                              <div className="text-2xl font-bold text-blue-600 mb-2">
+                                {automatedData.categories.purchasedGoodsServices.emissions.toFixed(3)} tonnes CO₂e
                               </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Add details about this emission source..."
-                      value={newEntry.description}
-                      onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
-                      rows={2}
-                    />
-                  </div>
-
-                  {/* Emission Preview */}
-                  {newEntry.value && newEntry.unit && selectedType && (
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700">Calculated Emissions:</span>
-                        <span className="text-lg font-semibold text-green-600">
-                          {(() => {
-                            const unitInfo = selectedType.units.find(u => u.value === newEntry.unit);
-                            if (unitInfo && newEntry.value) {
-                              const emissions = parseFloat(newEntry.value) * unitInfo.factor;
-                              return `${emissions.toLocaleString()} kg CO₂e`;
+                              <p className="text-sm text-slate-600 mb-3">
+                                Calculated from {automatedData.categories.purchasedGoodsServices.productCount} products
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {automatedData.categories.purchasedGoodsServices.source}
+                              </p>
+                              {automatedData.categories.purchasedGoodsServices.details.length > 0 && (
+                                <details className="mt-3">
+                                  <summary className="cursor-pointer text-sm font-medium text-slate-700">
+                                    View product breakdown
+                                  </summary>
+                                  <div className="mt-2 space-y-1">
+                                    {automatedData.categories.purchasedGoodsServices.details.map((detail, idx) => (
+                                      <div key={idx} className="text-xs text-slate-600 flex justify-between">
+                                        <span>{detail.name}</span>
+                                        <span>{detail.emissions.toFixed(3)} tonnes CO₂e</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
+                              )}
+                            </div>
+                          )}
+                          {key === 'fuel_energy' && (
+                            <div>
+                              <h4 className="font-semibold text-slate-900 mb-2">Fuel & Energy-Related Activities</h4>
+                              <div className="text-2xl font-bold text-indigo-600 mb-2">
+                                {automatedData.categories.fuelEnergyRelated.emissions.toFixed(3)} tonnes CO₂e
+                              </div>
+                              <p className="text-xs text-slate-500 mb-3">
+                                {automatedData.categories.fuelEnergyRelated.source}
+                              </p>
+                              {Object.keys(automatedData.categories.fuelEnergyRelated.breakdown).length > 0 && (
+                                <details className="mt-3">
+                                  <summary className="cursor-pointer text-sm font-medium text-slate-700">
+                                    View energy breakdown
+                                  </summary>
+                                  <div className="mt-2 space-y-1">
+                                    {Object.entries(automatedData.categories.fuelEnergyRelated.breakdown).map(([fuel, emissions]) => (
+                                      <div key={fuel} className="text-xs text-slate-600 flex justify-between">
+                                        <span className="capitalize">{fuel.replace('_', ' ')}</span>
+                                        <span>{emissions.toFixed(3)} tonnes CO₂e</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-6 text-center border-2 border-dashed border-slate-300 rounded-lg">
+                          <category.icon className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                          <p className="text-slate-600">No automated data available</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {key === 'purchased_goods' 
+                              ? 'Add products to your company to see automated calculations'
+                              : 'Add Scope 1 & 2 energy data to see automated calculations'
                             }
-                            return '0 kg CO₂e';
-                          })()}
-                        </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Manual Entry Form for Non-Automated Categories */}
+                      
+                      {/* Show existing entries for this category */}
+                      {entries.filter(entry => category.types.some(t => t.id === entry.dataType)).length > 0 && (
+                        <div className="space-y-2 mb-4">
+                          {entries
+                            .filter(entry => category.types.some(t => t.id === entry.dataType))
+                            .map((entry, index) => {
+                              const type = category.types.find(t => t.id === entry.dataType);
+                              const unitInfo = type?.units.find(u => u.value === entry.unit);
+                              const emissions = unitInfo ? parseFloat(entry.value) * unitInfo.factor : 0;
+                              
+                              return (
+                                <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 border">
+                                  <div>
+                                    <p className="font-medium text-slate-900">{type?.label}</p>
+                                    <p className="text-sm text-slate-600">
+                                      {entry.value} {entry.unit} = {emissions.toLocaleString()} kg CO₂e
+                                    </p>
+                                    {entry.description && (
+                                      <p className="text-xs text-slate-500 mt-1">{entry.description}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Badge variant="secondary">{emissions.toLocaleString()} kg CO₂e</Badge>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => removeEntry(entries.findIndex(e => e === entry))}
+                                      className="text-red-600 hover:text-red-800"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      )}
+
+                      {/* Add new entry form */}
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="dataType">Emission Source</Label>
+                          <Select 
+                            value={newEntry.dataType} 
+                            onValueChange={(value) => setNewEntry({ ...newEntry, dataType: value, unit: '' })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an emission source..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {category.types.map((type) => (
+                                <SelectItem key={type.id} value={type.id}>
+                                  <div>
+                                    <div className="font-medium">{type.label}</div>
+                                    <div className="text-xs text-slate-500">{type.description}</div>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Value Input */}
+                          <div className="space-y-2">
+                            <Label htmlFor="value">Amount</Label>
+                            <Input
+                              id="value"
+                              type="number"
+                              placeholder="Enter amount..."
+                              value={newEntry.value}
+                              onChange={(e) => setNewEntry({ ...newEntry, value: e.target.value })}
+                              disabled={!selectedType}
+                            />
+                          </div>
+
+                          {/* Unit (auto-selected based on type) */}
+                          <div className="space-y-2">
+                            <Label htmlFor="unit">Unit</Label>
+                            <Select 
+                              value={newEntry.unit} 
+                              onValueChange={(value) => setNewEntry({ ...newEntry, unit: value })}
+                              disabled={!selectedType}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select unit..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {selectedType?.units.map((unit) => (
+                                  <SelectItem key={unit.value} value={unit.value}>
+                                    <div className="flex justify-between items-center w-full">
+                                      <span>{unit.label}</span>
+                                      <Badge variant="outline" className="ml-2">
+                                        {unit.factor} kg CO₂e per {unit.value}
+                                      </Badge>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Description (Optional)</Label>
+                          <Textarea
+                            id="description"
+                            placeholder="Add details about this emission source..."
+                            value={newEntry.description}
+                            onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
+                            rows={2}
+                          />
+                        </div>
+
+                        {/* Emission Preview */}
+                        {newEntry.value && newEntry.unit && selectedType && (
+                          <div className="bg-slate-50 rounded-lg p-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-700">Calculated Emissions:</span>
+                              <span className="text-lg font-semibold text-green-600">
+                                {(() => {
+                                  const unitInfo = selectedType.units.find(u => u.value === newEntry.unit);
+                                  if (unitInfo && newEntry.value) {
+                                    const emissions = parseFloat(newEntry.value) * unitInfo.factor;
+                                    return `${emissions.toLocaleString()} kg CO₂e`;
+                                  }
+                                  return '0 kg CO₂e';
+                                })()}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Add Button */}
+                        <Button 
+                          onClick={addEntry}
+                          disabled={!newEntry.dataType || !newEntry.value || !newEntry.unit || isLoading}
+                          className="w-full"
+                        >
+                          {isLoading ? 'Saving...' : `Add ${category.title} Data`}
+                        </Button>
                       </div>
                     </div>
                   )}
-
-                  {/* Add Button */}
-                  <Button 
-                    onClick={addEntry}
-                    disabled={!newEntry.dataType || !newEntry.value || !newEntry.unit || isLoading}
-                    className="w-full"
-                  >
-                    {isLoading ? 'Saving...' : `Add ${category.title} Data`}
-                  </Button>
                 </div>
               </TabsContent>
             ))}
