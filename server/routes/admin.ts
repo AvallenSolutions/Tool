@@ -1,20 +1,19 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { users, companies, reports, verifiedSuppliers, supplierProducts } from '@shared/schema';
 import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
-import { eq, count, gte, desc, and } from 'drizzle-orm';
+import { eq, count, gte, desc, and, lt } from 'drizzle-orm';
 
 const router = Router();
 
-// TEMPORARY: Disable admin middleware for development
-// TODO: Re-enable for production
-// router.use(requireAdminRole);
+// Apply admin authentication to all routes
+router.use(requireAdminRole);
 
 /**
  * GET /api/admin/analytics
  * Returns platform analytics and key metrics
  */
-router.get('/analytics', async (req: AdminRequest, res) => {
+router.get('/analytics', async (req: AdminRequest, res: Response) => {
   try {
     console.log('Admin analytics endpoint called');
     // Calculate date ranges for growth calculations
@@ -39,7 +38,7 @@ router.get('/analytics', async (req: AdminRequest, res) => {
       .from(users)
       .where(and(
         gte(users.createdAt, sixtyDaysAgo),
-        gte(thirtyDaysAgo, users.createdAt)
+        lt(users.createdAt, thirtyDaysAgo)
       ));
 
     // Calculate user growth percentage
@@ -62,7 +61,7 @@ router.get('/analytics', async (req: AdminRequest, res) => {
       .from(verifiedSuppliers)
       .where(and(
         gte(verifiedSuppliers.createdAt, sixtyDaysAgo),
-        gte(thirtyDaysAgo, verifiedSuppliers.createdAt)
+        lt(verifiedSuppliers.createdAt, thirtyDaysAgo)
       ));
 
     // Calculate supplier growth percentage
@@ -111,7 +110,7 @@ router.get('/analytics', async (req: AdminRequest, res) => {
  * GET /api/admin/suppliers
  * Returns all suppliers with their verification status
  */
-router.get('/suppliers', async (req: AdminRequest, res) => {
+router.get('/suppliers', async (req: AdminRequest, res: Response) => {
   try {
     console.log('Admin suppliers endpoint called');
     const suppliersWithSubmitter = await db
@@ -160,7 +159,7 @@ router.get('/suppliers', async (req: AdminRequest, res) => {
  * GET /api/admin/suppliers/:supplierId
  * Returns detailed information for a specific supplier
  */
-router.get('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+router.get('/suppliers/:supplierId', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
     console.log('Admin supplier detail endpoint called for ID:', supplierId);
@@ -317,7 +316,7 @@ router.delete('/suppliers/:supplierId', async (req: AdminRequest, res) => {
  * PUT /api/admin/suppliers/:supplierId/verify
  * Updates a supplier's verification status to 'verified'
  */
-router.put('/suppliers/:supplierId/verify', async (req: AdminRequest, res) => {
+router.put('/suppliers/:supplierId/verify', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
     const adminUserId = req.adminUser?.id || 'dev-user';
@@ -366,7 +365,7 @@ router.get('/reports/pending', async (req: AdminRequest, res) => {
       .select({
         id: reports.id,
         companyId: reports.companyId,
-        productName: reports.productName,
+        reportType: reports.reportType,
         status: reports.status,
         totalCarbonFootprint: reports.totalCarbonFootprint,
         createdAt: reports.createdAt,
@@ -484,7 +483,7 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
     const [updatedSupplier] = await db
       .update(verifiedSuppliers)
       .set(updateData)
-      .where(eq(verifiedSuppliers.id, parseInt(supplierId)))
+      .where(eq(verifiedSuppliers.id, supplierId))
       .returning();
 
     if (!updatedSupplier) {
@@ -516,17 +515,15 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
 router.delete('/suppliers/:supplierId', async (req: AdminRequest, res) => {
   try {
     const { supplierId } = req.params;
-    const supplierIdNum = parseInt(supplierId);
-
     // First delete all associated supplier products
     await db
       .delete(supplierProducts)
-      .where(eq(supplierProducts.supplierId, supplierIdNum));
+      .where(eq(supplierProducts.supplierId, supplierId));
 
     // Then delete the supplier
     const [deletedSupplier] = await db
       .delete(verifiedSuppliers)
-      .where(eq(verifiedSuppliers.id, supplierIdNum))
+      .where(eq(verifiedSuppliers.id, supplierId))
       .returning();
 
     if (!deletedSupplier) {

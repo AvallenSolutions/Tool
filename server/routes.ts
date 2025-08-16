@@ -19,6 +19,14 @@ import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
 
 import { body, validationResult } from "express-validator";
+import { 
+  validateCompanyOnboarding, 
+  validateSupplierData, 
+  validateProductData,
+  validateFileUpload,
+  validateGreenwashAnalysis,
+  handleValidationErrors 
+} from "./middleware/validation";
 import { adminRouter } from "./routes/admin";
 import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
@@ -125,14 +133,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Input validation middleware
-  const validateAnalysisInput = [
-    body('type').isIn(['website', 'text']).withMessage('Type must be either "website" or "text"'),
-    body('content').isLength({ min: 1, max: 50000 }).trim().escape().withMessage('Content must be between 1 and 50000 characters'),
-  ];
-
   // GreenwashGuardian API Routes - AI-powered analysis
-  app.post('/api/greenwash-guardian/analyze', validateAnalysisInput, async (req: any, res: any) => {
+  app.post('/api/greenwash-guardian/analyze', validateGreenwashAnalysis, async (req: any, res: any) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -837,7 +839,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Update supplier
-  app.put('/api/suppliers/:id', async (req, res) => {
+  app.put('/api/suppliers/:id', validateSupplierData, async (req, res) => {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1397,7 +1399,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Update company sustainability data
-  app.put('/api/company/sustainability-data', isAuthenticated, async (req, res) => {
+  app.put('/api/company/sustainability-data', isAuthenticated, validateCompanyOnboarding, async (req, res) => {
     try {
       console.log('PUT /api/company/sustainability-data - Start');
       console.log('Request body:', JSON.stringify(req.body, null, 2));
