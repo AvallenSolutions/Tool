@@ -332,7 +332,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                     <category.icon className={`h-5 w-5 ${
                       activeCategory === key ? 'text-blue-600' : 'text-slate-600'
                     }`} />
-                    {category.automated && (
+                    {(category as any).automated && (
                       <Badge variant="secondary" className="text-xs px-2 py-1">
                         Auto
                       </Badge>
@@ -346,7 +346,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                   <p className={`text-xs ${
                     activeCategory === key ? 'text-blue-700' : 'text-slate-600'
                   }`}>
-                    {category.automated ? 'Calculated automatically' : 'Manual data entry'}
+                    {(category as any).automated ? 'Calculated automatically' : 'Manual data entry'}
                   </p>
                   {activeCategory === key && (
                     <div className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full"></div>
@@ -364,7 +364,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                       <div className="flex items-center space-x-3 mb-3">
                         <category.icon className={`h-6 w-6 ${category.textColor}`} />
                         <h3 className={`text-lg font-semibold ${category.textColor}`}>{category.title}</h3>
-                        {category.automated && (
+                        {(category as any).automated && (
                           <Badge variant="secondary" className="text-xs">
                             Automated Calculation
                           </Badge>
@@ -372,37 +372,37 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                       </div>
                       
                       {/* Automated Category Display */}
-                      {category.automated ? (
+                      {(category as any).automated ? (
                         <div className="space-y-4">
                           {automatedLoading ? (
                             <div className="p-6 text-center">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                               <p className="mt-2 text-sm text-slate-600">Calculating automated emissions...</p>
                             </div>
-                          ) : automatedData ? (
+                          ) : automatedData && (automatedData as any).categories ? (
                             <div className="bg-white rounded-lg border p-4">
-                              {key === 'purchased_goods' && (
+                              {key === 'purchased_goods' && (automatedData as any).categories.purchasedGoodsServices && (
                                 <div>
                                   <h4 className="font-semibold text-slate-900 mb-2">Purchased Goods & Services</h4>
                                   <div className="text-2xl font-bold text-blue-600 mb-2">
-                                    {automatedData.categories.purchasedGoodsServices.emissions.toFixed(3)} tonnes CO₂e
+                                    {(automatedData as any).categories.purchasedGoodsServices.emissions.toFixed(3)} tonnes CO₂e
                                   </div>
                                   <p className="text-sm text-slate-600 mb-3">
-                                    Calculated from {automatedData.categories.purchasedGoodsServices.productCount} products
+                                    Calculated from {(automatedData as any).categories.purchasedGoodsServices.productCount} products
                                   </p>
                                   <p className="text-xs text-slate-500">
-                                    {automatedData.categories.purchasedGoodsServices.source}
+                                    {(automatedData as any).categories.purchasedGoodsServices.source}
                                   </p>
                                 </div>
                               )}
-                              {key === 'fuel_energy' && (
+                              {key === 'fuel_energy' && (automatedData as any).categories.fuelEnergyRelated && (
                                 <div>
                                   <h4 className="font-semibold text-slate-900 mb-2">Fuel & Energy-Related Activities</h4>
                                   <div className="text-2xl font-bold text-indigo-600 mb-2">
-                                    {automatedData.categories.fuelEnergyRelated.emissions.toFixed(3)} tonnes CO₂e
+                                    {(automatedData as any).categories.fuelEnergyRelated.emissions.toFixed(3)} tonnes CO₂e
                                   </div>
                                   <p className="text-xs text-slate-500 mb-3">
-                                    {automatedData.categories.fuelEnergyRelated.source}
+                                    {(automatedData as any).categories.fuelEnergyRelated.source}
                                   </p>
                                 </div>
                               )}
