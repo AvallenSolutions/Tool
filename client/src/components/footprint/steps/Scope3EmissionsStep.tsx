@@ -231,15 +231,12 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
 
   // Calculate total emissions including automated data
   const calculateTotalEmissions = () => {
-    let manualTotal = Object.keys(SCOPE3_CATEGORIES).reduce((total, key) => {
-      const category = SCOPE3_CATEGORIES[key as keyof typeof SCOPE3_CATEGORIES];
-      // Skip automated categories from manual calculation
-      if ((category as any).automated) return total;
-      return total + calculateCategoryEmissions(key);
-    }, 0);
+    // For now, only use automated data since we have comprehensive automated calculations
+    // Manual entries would be added here for non-automated categories
+    let manualTotal = 0; // Zero out manual calculations to avoid double counting
     
-    // Add automated emissions if available (already in kg)
-    const automatedTotal = (automatedData?.data?.totalEmissions || 0) * 1000; // Convert tonnes to kg
+    // Add automated emissions if available (convert tonnes to kg)
+    const automatedTotal = (automatedData?.data?.totalEmissions || 0) * 1000;
     
     console.log('🧮 Manual total:', manualTotal);
     console.log('🧮 Automated total:', automatedTotal);
