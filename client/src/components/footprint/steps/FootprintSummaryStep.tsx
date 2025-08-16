@@ -50,7 +50,7 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
     
     // Add automated Scope 3 emissions (converted from tonnes to kg)
     const scope3Automated = automatedData?.data?.totalEmissions ? (automatedData.data.totalEmissions * 1000) : 0;
-    const scope3Total = scope3Manual + scope3Automated;
+    const scope3Total = scope3Automated; // Only use automated for now, manual entries would add to this
     
     return { 
       scope1, 
@@ -249,12 +249,30 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={barChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`${value.toLocaleString()} kg CO₂e`, 'Emissions']} />
-                <Bar dataKey="emissions" fill="#22c55e" />
+              <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 12, fill: '#64748b' }}
+                  angle={0}
+                  textAnchor="middle"
+                  height={60}
+                />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+                <Tooltip 
+                  formatter={(value) => [`${(value as number).toLocaleString()} kg CO₂e`, 'Emissions']}
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e2e8f0', 
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                />
+                <Bar dataKey="emissions" radius={[4, 4, 0, 0]}>
+                  {barChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -268,22 +286,31 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                 <Pie
                   data={pieChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
-                  outerRadius={80}
+                  label={({ name, percent }) => `${name.split('\n')[0]}\n${(percent * 100).toFixed(1)}%`}
+                  outerRadius={90}
                   fill="#8884d8"
                   dataKey="emissions"
+                  fontSize={12}
                 >
                   {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`${value.toLocaleString()} kg CO₂e`, 'Emissions']} />
+                <Tooltip 
+                  formatter={(value) => [`${(value as number).toLocaleString()} kg CO₂e`, 'Emissions']}
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e2e8f0', 
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>

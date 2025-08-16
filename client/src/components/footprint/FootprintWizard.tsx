@@ -99,7 +99,7 @@ export function FootprintWizard() {
       );
   };
 
-  // Define wizard steps
+  // Define wizard steps (only 3 scopes, no separate summary)
   const steps: WizardStep[] = [
     {
       id: 'scope1',
@@ -127,15 +127,6 @@ export function FootprintWizard() {
       scope: 3,
       isComplete: (existingData?.data || []).some((d: FootprintData) => d.scope === 3),
       emissionsTotal: calculateScopeEmissions(3),
-    },
-    {
-      id: 'summary',
-      title: 'Summary & Report',
-      description: 'Review total footprint and generate reports',
-      component: FootprintSummaryStep,
-      scope: 0,
-      isComplete: false,
-      emissionsTotal: calculateScopeEmissions(1) + calculateScopeEmissions(2) + calculateScopeEmissions(3),
     },
   ];
 
@@ -204,7 +195,7 @@ export function FootprintWizard() {
             <div>
               <h3 className="font-semibold text-slate-900">Overall Progress</h3>
               <p className="text-sm text-slate-600">
-                {completedSteps} of {steps.length} sections completed
+                {completedSteps} of {steps.length} scopes completed
               </p>
             </div>
             <div className="flex items-center space-x-4">
