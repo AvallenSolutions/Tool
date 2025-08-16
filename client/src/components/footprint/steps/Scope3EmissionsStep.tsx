@@ -303,8 +303,8 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
         </CardContent>
       </Card>
 
-      {/* Current Entries Summary */}
-      {entries && entries.length > 0 && (
+      {/* Current Entries Summary - Show if there are entries OR automated data */}
+      {((entries && entries.length > 0) || (automatedData?.data?.totalEmissions > 0)) && (
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-green-800">Current Scope 3 Emissions</CardTitle>
@@ -312,21 +312,43 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {Object.entries(SCOPE3_CATEGORIES).map(([key, category]) => {
+                // Calculate manual category emissions
                 const categoryEmissions = calculateCategoryEmissions(key);
                 const categoryEntries = entries.filter(e => 
                   category.types.some(t => t.id === e.dataType)
                 );
+                
+                // Get automated data for this category
+                let automatedEmissions = 0;
+                let automatedLabel = 'entries';
+                
+                if ((category as any).automated && automatedData?.data?.categories) {
+                  if (key === 'purchased_goods' && automatedData.data.categories.purchasedGoodsServices) {
+                    automatedEmissions = automatedData.data.categories.purchasedGoodsServices.emissions * 1000; // Convert tonnes to kg
+                    automatedLabel = `${automatedData.data.categories.purchasedGoodsServices.productCount} products`;
+                  } else if (key === 'fuel_energy' && automatedData.data.categories.fuelEnergyRelated) {
+                    automatedEmissions = automatedData.data.categories.fuelEnergyRelated.emissions * 1000; // Convert tonnes to kg
+                    automatedLabel = 'automated';
+                  }
+                }
+                
+                const totalCategoryEmissions = categoryEmissions + automatedEmissions;
                 
                 return (
                   <div key={key} className={`p-4 rounded-lg ${category.color}`}>
                     <div className="flex items-center space-x-2 mb-2">
                       <category.icon className={`h-5 w-5 ${category.textColor}`} />
                       <h3 className={`font-medium ${category.textColor}`}>{category.title}</h3>
+                      {(category as any).automated && (
+                        <Badge variant="secondary" className="text-xs">Auto</Badge>
+                      )}
                     </div>
                     <div className={`text-lg font-semibold ${category.textColor}`}>
-                      {categoryEmissions.toLocaleString()} kg CO₂e
+                      {totalCategoryEmissions.toLocaleString()} kg CO₂e
                     </div>
-                    <p className="text-sm text-slate-600">{categoryEntries.length} entries</p>
+                    <p className="text-sm text-slate-600">
+                      {(category as any).automated ? automatedLabel : `${categoryEntries.length} entries`}
+                    </p>
                   </div>
                 );
               })}

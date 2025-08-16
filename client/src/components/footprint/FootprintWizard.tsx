@@ -47,6 +47,11 @@ export function FootprintWizard() {
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
+  // Fetch automated Scope 3 data for Overall Progress calculation
+  const { data: automatedData } = useQuery({
+    queryKey: ['/api/company/footprint/scope3/automated'],
+  });
+
   // Save footprint data mutation
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<FootprintData>) => {
@@ -88,15 +93,24 @@ export function FootprintWizard() {
     },
   });
 
-  // Calculate total emissions for each scope
+  // Calculate total emissions for each scope including automated data
   const calculateScopeEmissions = (scope: number): number => {
     const footprintDataArray = existingData?.data || [];
     if (!Array.isArray(footprintDataArray)) return 0;
-    return footprintDataArray
+    
+    let manualTotal = footprintDataArray
       .filter((item: FootprintData) => item.scope === scope)
       .reduce((total: number, item: FootprintData) => 
         total + parseFloat(item.calculatedEmissions || '0'), 0
       );
+
+    // Add automated Scope 3 emissions
+    if (scope === 3 && automatedData?.data?.totalEmissions) {
+      const automatedTotal = automatedData.data.totalEmissions * 1000; // Convert tonnes to kg
+      return automatedTotal; // For now, use only automated data to avoid double counting
+    }
+    
+    return manualTotal;
   };
 
   // Define wizard steps including Summary & Report
