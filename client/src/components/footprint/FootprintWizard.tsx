@@ -139,7 +139,7 @@ export function FootprintWizard() {
       description: 'Indirect emissions in the value chain',
       component: Scope3EmissionsStep,
       scope: 3,
-      isComplete: (existingData?.data || []).some((d: FootprintData) => d.scope === 3),
+      isComplete: (existingData?.data || []).some((d: FootprintData) => d.scope === 3) || (automatedData?.data?.totalEmissions > 0),
       emissionsTotal: calculateScopeEmissions(3),
     },
     {
@@ -149,7 +149,7 @@ export function FootprintWizard() {
       component: FootprintSummaryStep,
       scope: 0,
       isComplete: false,
-      emissionsTotal: calculateScopeEmissions(1) + calculateScopeEmissions(2) + calculateScopeEmissions(3),
+      emissionsTotal: 0, // Summary step doesn't add to total, just displays
     },
   ];
 
