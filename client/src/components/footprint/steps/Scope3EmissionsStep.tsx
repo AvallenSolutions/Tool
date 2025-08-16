@@ -213,6 +213,10 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
     enabled: true
   });
 
+  // Debug automated data
+  console.log('🔍 Automated data:', automatedData);
+  console.log('🔍 Automated loading:', automatedLoading);
+
   // Calculate category emissions
   const calculateCategoryEmissions = (categoryKey: string) => {
     const category = SCOPE3_CATEGORIES[categoryKey as keyof typeof SCOPE3_CATEGORIES];
@@ -225,11 +229,20 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
       }, 0);
   };
 
-  // Calculate total emissions
+  // Calculate total emissions including automated data
   const calculateTotalEmissions = () => {
-    return Object.keys(SCOPE3_CATEGORIES).reduce((total, key) => {
+    let manualTotal = Object.keys(SCOPE3_CATEGORIES).reduce((total, key) => {
       return total + calculateCategoryEmissions(key);
     }, 0);
+    
+    // Add automated emissions if available
+    const automatedTotal = automatedData?.data?.totalEmissions || 0;
+    
+    console.log('🧮 Manual total:', manualTotal);
+    console.log('🧮 Automated total:', automatedTotal);
+    console.log('🧮 Combined total:', manualTotal + automatedTotal);
+    
+    return manualTotal + automatedTotal;
   };
 
   // Add new entry
@@ -269,6 +282,26 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
           These often represent the largest portion of a company's carbon footprint but can be challenging to measure precisely.
         </AlertDescription>
       </Alert>
+
+      {/* Total Emissions Summary */}
+      <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">Total Scope 3 Emissions</h3>
+              <p className="text-sm text-slate-600">Combined manual entries and automated calculations</p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-green-700">
+                {calculateTotalEmissions().toLocaleString()} kg CO₂e
+              </div>
+              <div className="text-lg text-slate-600">
+                {(calculateTotalEmissions() / 1000).toFixed(3)} tonnes CO₂e
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Current Entries Summary */}
       {entries && entries.length > 0 && (
@@ -387,30 +420,30 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                               <p className="mt-2 text-sm text-slate-600">Calculating automated emissions...</p>
                             </div>
-                          ) : automatedData && (automatedData as any).categories ? (
+                          ) : automatedData && (automatedData as any).data && (automatedData as any).data.categories ? (
                             <div className="bg-white rounded-lg border p-4">
-                              {key === 'purchased_goods' && (automatedData as any).categories.purchasedGoodsServices && (
+                              {key === 'purchased_goods' && (automatedData as any).data.categories.purchasedGoodsServices && (
                                 <div>
                                   <h4 className="font-semibold text-slate-900 mb-2">Purchased Goods & Services</h4>
                                   <div className="text-2xl font-bold text-blue-600 mb-2">
-                                    {(automatedData as any).categories.purchasedGoodsServices.emissions.toFixed(3)} tonnes CO₂e
+                                    {(automatedData as any).data.categories.purchasedGoodsServices.emissions.toFixed(3)} tonnes CO₂e
                                   </div>
                                   <p className="text-sm text-slate-600 mb-3">
-                                    Calculated from {(automatedData as any).categories.purchasedGoodsServices.productCount} products
+                                    Calculated from {(automatedData as any).data.categories.purchasedGoodsServices.productCount} products
                                   </p>
                                   <p className="text-xs text-slate-500">
-                                    {(automatedData as any).categories.purchasedGoodsServices.source}
+                                    {(automatedData as any).data.categories.purchasedGoodsServices.source}
                                   </p>
                                 </div>
                               )}
-                              {key === 'fuel_energy' && (automatedData as any).categories.fuelEnergyRelated && (
+                              {key === 'fuel_energy' && (automatedData as any).data.categories.fuelEnergyRelated && (
                                 <div>
                                   <h4 className="font-semibold text-slate-900 mb-2">Fuel & Energy-Related Activities</h4>
                                   <div className="text-2xl font-bold text-indigo-600 mb-2">
-                                    {(automatedData as any).categories.fuelEnergyRelated.emissions.toFixed(3)} tonnes CO₂e
+                                    {(automatedData as any).data.categories.fuelEnergyRelated.emissions.toFixed(3)} tonnes CO₂e
                                   </div>
                                   <p className="text-xs text-slate-500 mb-3">
-                                    {(automatedData as any).categories.fuelEnergyRelated.source}
+                                    {(automatedData as any).data.categories.fuelEnergyRelated.source}
                                   </p>
                                 </div>
                               )}
