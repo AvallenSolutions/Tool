@@ -142,39 +142,33 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     console.log('Development mode: Creating mock user for testing');
     
     try {
-      // Ensure dev user exists
-      await storage.upsertUser({
-        id: 'dev-user',
-        email: 'dev@example.com',
-        firstName: 'Dev',
-        lastName: 'User',
-        role: 'admin'
-      });
-      
-      // Ensure dev company exists
-      let company = await storage.getCompanyByOwner('dev-user');
-      if (!company) {
-        console.log('Creating mock company for dev user');
-        company = await storage.createCompany({
-          name: 'Demo Company',
-          industry: 'Beverages',
-          size: 'Medium',
-          country: 'United Kingdom',
-          ownerId: 'dev-user',
-          onboardingComplete: true,
-          address: '123 Demo Street, London, UK',
-          website: 'https://demo.company.com'
+      // Use existing user that has products
+      try {
+        await storage.upsertUser({
+          id: '44886248',
+          email: 'dev44886248@example.com', // Unique email for this user
+          firstName: 'Dev',
+          lastName: 'User',
+          role: 'admin'
         });
-        console.log('Mock company created:', company);
+      } catch (error) {
+        // User already exists, that's fine
+        console.log('User already exists, continuing...');
+      }
+      
+      // Get existing company with products
+      let company = await storage.getCompanyByOwner('44886248');
+      if (!company) {
+        console.log('WARNING: No company found for user 44886248 - this should not happen');
       } else {
-        console.log('Existing company found for dev user:', company.name);
+        console.log('Using existing company with products:', company.name, 'ID:', company.id);
       }
     } catch (error: unknown) {
       console.error('Error creating mock user/company:', error);
     }
     
     (req as any).user = {
-      claims: { sub: 'dev-user' },
+      claims: { sub: '44886248' },
       expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
       access_token: 'dev-token',
       refresh_token: 'dev-refresh'

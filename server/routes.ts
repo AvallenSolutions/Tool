@@ -1696,19 +1696,25 @@ Be precise and quote actual text from the content, not generic terms.`;
     details: Array<{productId: number; name: string; emissions: number}>
   }> {
     try {
+      console.log(`🔍 Calculating purchased goods for company ${companyId}`);
       const products = await dbStorage.getProductsByCompany(companyId);
+      console.log(`📦 Found ${products.length} products for emissions calculation`);
+      
       let totalEmissions = 0;
       const details: Array<{productId: number; name: string; emissions: number}> = [];
       
       for (const product of products) {
         let productEmissions = 0;
+        console.log(`🧮 Processing product: ${product.name} (ID: ${product.id})`);
         
         // Calculate ingredient emissions
         if (product.ingredients && Array.isArray(product.ingredients)) {
+          console.log(`📋 Found ${product.ingredients.length} ingredients`);
           for (const ingredient of product.ingredients) {
             // Simple emission factor: 0.5 kg CO2e per kg of ingredient (conservative estimate)
             const ingredientEmissions = (ingredient.amount || 0) * 0.5;
             productEmissions += ingredientEmissions;
+            console.log(`🌾 ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${ingredientEmissions} kg CO2e`);
           }
         }
         
@@ -1718,11 +1724,14 @@ Be precise and quote actual text from the content, not generic terms.`;
           const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
           const glassEmissions = parseFloat(product.bottleWeight) * 0.85 * (1 - recycledReduction);
           productEmissions += glassEmissions;
+          console.log(`🍾 Glass bottle: ${product.bottleWeight}g, ${product.bottleRecycledContent}% recycled = ${glassEmissions.toFixed(3)} kg CO2e`);
         }
         
         // Apply production volume
         const productionVolume = parseFloat(product.annualProductionVolume || '1');
         const totalProductEmissions = productEmissions * productionVolume;
+        
+        console.log(`📊 ${product.name} total: ${productEmissions.toFixed(3)} kg CO2e per unit × ${productionVolume} units = ${totalProductEmissions.toFixed(0)} kg CO2e`);
         
         totalEmissions += totalProductEmissions;
         details.push({
@@ -1799,6 +1808,8 @@ Be precise and quote actual text from the content, not generic terms.`;
       if (!company) {
         return res.status(404).json({ error: 'Company not found' });
       }
+      
+      console.log(`🏢 Using company ID ${company.id} for automated calculations`);
       
       // Calculate all automated categories
       const [purchasedGoods, fuelEnergyUpstream] = await Promise.all([

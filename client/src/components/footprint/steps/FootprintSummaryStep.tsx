@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,17 +34,33 @@ const INDUSTRY_BENCHMARKS = {
 
 export function FootprintSummaryStep({ data, onDataChange, existingData, onSave, isLoading }: FootprintSummaryStepProps) {
   
-  // Calculate emissions by scope
+  // Fetch automated Scope 3 data
+  const { data: automatedData } = useQuery({
+    queryKey: ['/api/company/footprint/scope3/automated'],
+  });
+
+  // Calculate emissions by scope including automated Scope 3
   const scopeEmissions = useMemo(() => {
     const scope1 = existingData.filter(item => item.scope === 1)
       .reduce((sum, item) => sum + parseFloat(item.calculatedEmissions || '0'), 0);
     const scope2 = existingData.filter(item => item.scope === 2)
       .reduce((sum, item) => sum + parseFloat(item.calculatedEmissions || '0'), 0);
-    const scope3 = existingData.filter(item => item.scope === 3)
+    const scope3Manual = existingData.filter(item => item.scope === 3)
       .reduce((sum, item) => sum + parseFloat(item.calculatedEmissions || '0'), 0);
     
-    return { scope1, scope2, scope3, total: scope1 + scope2 + scope3 };
-  }, [existingData]);
+    // Add automated Scope 3 emissions (converted from tonnes to kg)
+    const scope3Automated = automatedData?.data?.totalEmissions ? (automatedData.data.totalEmissions * 1000) : 0;
+    const scope3Total = scope3Manual + scope3Automated;
+    
+    return { 
+      scope1, 
+      scope2, 
+      scope3: scope3Total, 
+      scope3Manual, 
+      scope3Automated,
+      total: scope1 + scope2 + scope3Total 
+    };
+  }, [existingData, automatedData]);
 
   // Prepare chart data
   const barChartData = [
