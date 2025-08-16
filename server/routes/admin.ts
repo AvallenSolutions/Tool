@@ -224,7 +224,7 @@ router.get('/suppliers/:supplierId', async (req: AdminRequest, res: Response) =>
  * PUT /api/admin/suppliers/:supplierId
  * Updates supplier information
  */
-router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+router.put('/suppliers/:supplierId', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
     const updateData = {
@@ -279,7 +279,7 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
  * DELETE /api/admin/suppliers/:supplierId
  * Deletes a supplier
  */
-router.delete('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
 
@@ -359,7 +359,7 @@ router.put('/suppliers/:supplierId/verify', async (req: AdminRequest, res: Respo
  * GET /api/admin/reports/pending
  * Returns all reports with status 'pending_review'
  */
-router.get('/reports/pending', async (req: AdminRequest, res) => {
+router.get('/reports/pending', async (req: AdminRequest, res: Response) => {
   try {
     const pendingReports = await db
       .select({
@@ -395,7 +395,7 @@ router.get('/reports/pending', async (req: AdminRequest, res) => {
  * PUT /api/admin/reports/:reportId/approve
  * Updates a report's status to 'approved'
  */
-router.put('/reports/:reportId/approve', async (req: AdminRequest, res) => {
+router.put('/reports/:reportId/approve', async (req: AdminRequest, res: Response) => {
   try {
     const { reportId } = req.params;
     const adminUserId = req.adminUser?.id || 'dev-user';
@@ -438,7 +438,7 @@ router.put('/reports/:reportId/approve', async (req: AdminRequest, res) => {
  * PUT /api/admin/suppliers/:supplierId
  * Updates a supplier's information
  */
-router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+router.put('/suppliers/:supplierId', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
     
@@ -512,7 +512,7 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res) => {
  * DELETE /api/admin/suppliers/:supplierId
  * Deletes a supplier and all associated products
  */
-router.delete('/suppliers/:supplierId', async (req: AdminRequest, res) => {
+router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
     // First delete all associated supplier products
