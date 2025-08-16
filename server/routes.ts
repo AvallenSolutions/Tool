@@ -3775,71 +3775,25 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Enhanced report not available' });
       }
 
-      // For demo purposes, generate a sample PDF content
-      const samplePDFContent = `%PDF-1.4
-1 0 obj
-<<
-/Type /Catalog
-/Pages 2 0 R
->>
-endobj
-2 0 obj
-<<
-/Type /Pages
-/Kids [3 0 R]
-/Count 1
->>
-endobj
-3 0 obj
-<<
-/Type /Page
-/Parent 2 0 R
-/MediaBox [0 0 612 792]
-/Contents 4 0 R
->>
-endobj
-4 0 obj
-<<
-/Length 250
->>
-stream
-BT
-/F1 16 Tf
-50 750 Td
-(Enhanced LCA Report) Tj
-0 -30 Td
-/F1 12 Tf
-(Company: ${company.name || 'Demo Company'}) Tj
-0 -20 Td
-(Report ID: ${reportId}) Tj
-0 -20 Td
-(Generated: ${new Date().toLocaleDateString()}) Tj
-0 -30 Td
-(Total Emissions: ${report.totalCarbonFootprint || (report.totalScope1 + report.totalScope2 + report.totalScope3)} tonnes CO2e) Tj
-0 -20 Td
-(Status: Enhanced Professional Report) Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f 
-0000000010 00000 n 
-0000000053 00000 n 
-0000000125 00000 n 
-0000000185 00000 n 
-trailer
-<<
-/Size 5
-/Root 1 0 R
->>
-startxref
-350
-%%EOF`;
+      // Serve the actual generated sustainability report
+      const filename = path.basename(report.enhancedPdfFilePath);
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        console.error('Enhanced report file not found:', filePath);
+        return res.status(404).json({ error: 'Report file not found' });
+      }
 
+      // Read and serve the comprehensive sustainability report
+      const reportContent = fs.readFileSync(filePath);
+      
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="Enhanced_LCA_Report_${reportId}.pdf"`);
-      res.send(Buffer.from(samplePDFContent));
+      res.setHeader('Content-Disposition', `attachment; filename="sustainability_report_${company.name.replace(/\s+/g, '_')}_${reportId}.pdf"`);
+      res.send(reportContent);
+      
+      console.log(`Served comprehensive sustainability report: ${filePath}`);
+      
     } catch (error) {
       console.error('Error downloading enhanced report:', error);
       res.status(500).json({ error: 'Internal server error' });
