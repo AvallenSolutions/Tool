@@ -67,7 +67,7 @@ export function FootprintWizard() {
 
   // Calculate total emissions for each scope
   const calculateScopeEmissions = (scope: number): number => {
-    const footprintDataArray = existingData?.data || existingData || [];
+    const footprintDataArray = existingData?.data || [];
     if (!Array.isArray(footprintDataArray)) return 0;
     return footprintDataArray
       .filter((item: FootprintData) => item.scope === scope)
@@ -84,7 +84,7 @@ export function FootprintWizard() {
       description: 'Direct emissions from owned or controlled sources',
       component: Scope1EmissionsStep,
       scope: 1,
-      isComplete: (existingData?.data || existingData || []).some((d: FootprintData) => d.scope === 1),
+      isComplete: (existingData?.data || []).some((d: FootprintData) => d.scope === 1),
       emissionsTotal: calculateScopeEmissions(1),
     },
     {
@@ -93,7 +93,7 @@ export function FootprintWizard() {
       description: 'Indirect emissions from purchased energy',
       component: Scope2EmissionsStep,
       scope: 2,
-      isComplete: (existingData?.data || existingData || []).some((d: FootprintData) => d.scope === 2),
+      isComplete: (existingData?.data || []).some((d: FootprintData) => d.scope === 2),
       emissionsTotal: calculateScopeEmissions(2),
     },
     {
@@ -102,7 +102,7 @@ export function FootprintWizard() {
       description: 'Indirect emissions in the value chain',
       component: Scope3EmissionsStep,
       scope: 3,
-      isComplete: (existingData?.data || existingData || []).some((d: FootprintData) => d.scope === 3),
+      isComplete: (existingData?.data || []).some((d: FootprintData) => d.scope === 3),
       emissionsTotal: calculateScopeEmissions(3),
     },
     {
@@ -267,7 +267,7 @@ export function FootprintWizard() {
               <CurrentStepComponent
                 data={wizardData}
                 onDataChange={setWizardData}
-                existingData={existingData?.data || existingData || []}
+                existingData={existingData?.data || []}
                 onSave={saveMutation.mutate}
                 isLoading={saveMutation.isPending}
               />

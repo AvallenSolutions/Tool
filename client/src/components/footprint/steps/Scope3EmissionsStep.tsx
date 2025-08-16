@@ -22,6 +22,7 @@ import {
   Package
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { FootprintData } from '../FootprintWizard';
 
 // Scope 3 Categories with new automated ones
 const SCOPE3_CATEGORIES = {
@@ -180,13 +181,16 @@ const SCOPE3_CATEGORIES = {
 };
 
 interface Scope3EmissionsStepProps {
-  entries: any[];
-  setEntries: (entries: any[]) => void;
-  onSave: (entry: any) => void;
+  data: Record<string, any>;
+  onDataChange: (data: Record<string, any>) => void;
+  existingData: FootprintData[];
+  onSave: (data: Partial<FootprintData>) => void;
   isLoading: boolean;
 }
 
-export function Scope3EmissionsStep({ entries, setEntries, onSave, isLoading }: Scope3EmissionsStepProps) {
+export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, isLoading }: Scope3EmissionsStepProps) {
+  // Extract Scope 3 entries from existing data
+  const entries = existingData.filter(item => item.scope === 3) || [];
   const [activeCategory, setActiveCategory] = useState('waste');
   const [newEntry, setNewEntry] = useState({
     dataType: '',
@@ -209,7 +213,7 @@ export function Scope3EmissionsStep({ entries, setEntries, onSave, isLoading }: 
       .reduce((sum, entry) => {
         const type = category.types.find(t => t.id === entry.dataType);
         const unit = type?.units.find(u => u.value === entry.unit);
-        return sum + (unit ? parseFloat(entry.value) * unit.factor : 0);
+        return sum + (unit ? parseFloat(entry.value || '0') * (unit?.factor || 0) : 0);
       }, 0);
   };
 
@@ -223,9 +227,6 @@ export function Scope3EmissionsStep({ entries, setEntries, onSave, isLoading }: 
   // Add new entry
   const addEntry = () => {
     if (newEntry.dataType && newEntry.value && newEntry.unit) {
-      const updatedEntries = [...entries, { ...newEntry }];
-      setEntries(updatedEntries);
-
       // Save to backend
       onSave({
         dataType: newEntry.dataType,
@@ -240,10 +241,10 @@ export function Scope3EmissionsStep({ entries, setEntries, onSave, isLoading }: 
     }
   };
 
-  // Remove entry
+  // Remove entry (Note: would need delete API endpoint)
   const removeEntry = (index: number) => {
-    const updatedEntries = entries.filter((_, i) => i !== index);
-    setEntries(updatedEntries);
+    // TODO: Implement delete API when available
+    console.log('Delete entry at index:', index);
   };
 
   // Get current category data
@@ -262,7 +263,7 @@ export function Scope3EmissionsStep({ entries, setEntries, onSave, isLoading }: 
       </Alert>
 
       {/* Current Entries Summary */}
-      {entries.length > 0 && (
+      {entries && entries.length > 0 && (
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-green-800">Current Scope 3 Emissions</CardTitle>
