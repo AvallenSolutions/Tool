@@ -238,7 +238,7 @@ export default function ProductsPage() {
                             </div>
                           </div>
                           <div className="flex items-center space-x-4">
-                            {product.carbonFootprint && (
+                            {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
                               <div className="text-center">
                                 <p className="text-sm font-medium text-green-700">CO₂ Footprint</p>
                                 <p className="text-lg font-semibold text-green-800">
@@ -310,7 +310,7 @@ export default function ProductsPage() {
                               </div>
                             </div>
                             <div className="flex items-center space-x-4">
-                              {product.carbonFootprint && (
+                              {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
                                 <div className="text-right">
                                   <p className="text-xs text-gray-500">CO₂ Footprint</p>
                                   <p className="text-sm font-medium text-green-700">
@@ -374,10 +374,10 @@ export default function ProductsPage() {
                               <span className="font-medium">Total Annual Volume:</span>{' '}
                               {products.reduce((sum, p) => sum + (p.annualProductionVolume || 0), 0).toLocaleString()} units
                             </div>
-                            {products.some(p => p.carbonFootprint) && (
+                            {products.some(p => p.carbonFootprint && typeof p.carbonFootprint === 'number') && (
                               <div className="text-blue-700">
                                 <span className="font-medium">Portfolio CO₂:</span>{' '}
-                                {products.reduce((sum, p) => sum + (p.carbonFootprint || 0), 0).toFixed(2)} kg
+                                {products.reduce((sum, p) => sum + (typeof p.carbonFootprint === 'number' ? p.carbonFootprint : 0), 0).toFixed(2)} kg
                               </div>
                             )}
                           </div>
