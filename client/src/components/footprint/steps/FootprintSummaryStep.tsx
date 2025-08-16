@@ -48,9 +48,16 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
     const scope3Manual = existingData.filter(item => item.scope === 3)
       .reduce((sum, item) => sum + parseFloat(item.calculatedEmissions || '0'), 0);
     
-    // Add automated Scope 3 emissions (converted from tonnes to kg)
-    const scope3Automated = automatedData?.data?.totalEmissions ? (automatedData.data.totalEmissions * 1000) : 0;
+    // Add automated Scope 3 emissions (already in kg from API)
+    const scope3Automated = automatedData?.data?.totalEmissions || 0;
     const scope3Total = scope3Manual + scope3Automated;
+    
+    console.log('🧮 Summary calculations:');
+    console.log('  Scope 1:', scope1);
+    console.log('  Scope 2:', scope2);  
+    console.log('  Scope 3 Manual:', scope3Manual);
+    console.log('  Scope 3 Automated:', scope3Automated);
+    console.log('  Scope 3 Total:', scope3Total);
     
     return { 
       scope1, 
