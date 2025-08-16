@@ -1707,24 +1707,34 @@ Be precise and quote actual text from the content, not generic terms.`;
         let productEmissions = 0;
         console.log(`🧮 Processing product: ${product.name} (ID: ${product.id})`);
         
-        // Calculate ingredient emissions
-        if (product.ingredients && Array.isArray(product.ingredients)) {
-          console.log(`📋 Found ${product.ingredients.length} ingredients`);
-          for (const ingredient of product.ingredients) {
-            // Simple emission factor: 0.5 kg CO2e per kg of ingredient (conservative estimate)
-            const ingredientEmissions = (ingredient.amount || 0) * 0.5;
-            productEmissions += ingredientEmissions;
-            console.log(`🌾 ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${ingredientEmissions} kg CO2e`);
+        // Use the pre-calculated LCA carbon footprint if available
+        const lcaFootprint = parseFloat(product.carbonFootprint || '0');
+        if (lcaFootprint > 0) {
+          productEmissions = lcaFootprint;
+          console.log(`📊 Using pre-calculated LCA: ${productEmissions} kg CO2e per unit`);
+        } else {
+          // Fallback calculation only if no LCA data exists
+          console.log(`⚠️ No LCA data found, using fallback calculation`);
+          
+          // Calculate ingredient emissions
+          if (product.ingredients && Array.isArray(product.ingredients)) {
+            console.log(`📋 Found ${product.ingredients.length} ingredients`);
+            for (const ingredient of product.ingredients) {
+              // Simple emission factor: 0.5 kg CO2e per kg of ingredient (conservative estimate)
+              const ingredientEmissions = (ingredient.amount || 0) * 0.5;
+              productEmissions += ingredientEmissions;
+              console.log(`🌾 ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${ingredientEmissions} kg CO2e`);
+            }
           }
-        }
-        
-        // Calculate packaging emissions (simplified)
-        if (product.bottleWeight) {
-          // Glass: 0.85 kg CO2e/kg, with recycled content reduction
-          const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
-          const glassEmissions = parseFloat(product.bottleWeight) * 0.85 * (1 - recycledReduction);
-          productEmissions += glassEmissions;
-          console.log(`🍾 Glass bottle: ${product.bottleWeight}g, ${product.bottleRecycledContent}% recycled = ${glassEmissions.toFixed(3)} kg CO2e`);
+          
+          // Calculate packaging emissions (simplified)
+          if (product.bottleWeight) {
+            // Glass: 0.85 kg CO2e/kg, with recycled content reduction
+            const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
+            const glassEmissions = parseFloat(product.bottleWeight) * 0.85 * (1 - recycledReduction);
+            productEmissions += glassEmissions;
+            console.log(`🍾 Glass bottle: ${product.bottleWeight}g, ${product.bottleRecycledContent}% recycled = ${glassEmissions.toFixed(3)} kg CO2e`);
+          }
         }
         
         // Apply production volume
