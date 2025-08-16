@@ -1,19 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus } from "lucide-react";
 import { EnhancedReportButton } from "@/components/EnhancedReportButton";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Reports() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: reports, isLoading: reportsLoading } = useQuery({
     queryKey: ["/api/reports"],
@@ -25,6 +27,36 @@ export default function Reports() {
     queryKey: ["/api/lca/reports"],
     retry: false,
   });
+
+  // Generate new report mutation
+  const generateReportMutation = useMutation({
+    mutationFn: async (reportType: 'sustainability' | 'lca') => {
+      const response = await apiRequest("POST", "/api/reports/generate", { reportType });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+      toast({
+        title: "Report Generation Started",
+        description: "Your sustainability report is being generated. This may take a few minutes.",
+      });
+      setIsGenerating(false);
+    },
+    onError: (error: any) => {
+      console.error('Error generating report:', error);
+      toast({
+        title: "Generation Failed",
+        description: "There was an error generating your report. Please try again.",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+    },
+  });
+
+  const handleGenerateReport = async (reportType: 'sustainability' | 'lca' = 'sustainability') => {
+    setIsGenerating(true);
+    generateReportMutation.mutate(reportType);
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -86,10 +118,32 @@ export default function Reports() {
       <div className="flex-1 flex flex-col">
         <Header title="Reports" subtitle="Manage your sustainability reports" />
         <main className="flex-1 p-6 overflow-y-auto">
-          <div className="mb-6">
-            <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
-              <FileText className="w-4 h-4 mr-2" />
-              Generate New Report
+          <div className="mb-6 flex gap-4">
+            <Button 
+              onClick={() => handleGenerateReport('sustainability')}
+              disabled={isGenerating || generateReportMutation.isPending}
+              className="bg-avallen-green hover:bg-avallen-green-light text-white"
+            >
+              {isGenerating ? (
+                <>
+                  <Clock className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Generate Sustainability Report
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={() => handleGenerateReport('lca')}
+              disabled={isGenerating || generateReportMutation.isPending}
+              variant="outline"
+              className="border-avallen-green text-avallen-green hover:bg-avallen-green hover:text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Generate LCA Report
             </Button>
           </div>
 
@@ -99,7 +153,7 @@ export default function Reports() {
             </div>
           ) : (
             <div className="grid gap-6">
-              {reports && reports.length > 0 ? (
+              {reports && Array.isArray(reports) && reports.length > 0 ? (
                 reports.map((report: any) => (
                   <Card key={report.id} className="border-light-gray">
                     <CardHeader>
@@ -177,15 +231,29 @@ export default function Reports() {
                     <p className="text-gray-600 mb-4">
                       Generate your first sustainability report to get started.
                     </p>
-                    <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
-                      Generate Report
+                    <Button 
+                      onClick={() => handleGenerateReport('sustainability')}
+                      disabled={isGenerating || generateReportMutation.isPending}
+                      className="bg-avallen-green hover:bg-avallen-green-light text-white"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Clock className="w-4 h-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-4 h-4 mr-2" />
+                          Generate Report
+                        </>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
               )}
 
               {/* LCA Calculation Reports Section */}
-              {lcaReports && lcaReports.length > 0 && (
+              {lcaReports && Array.isArray(lcaReports) && lcaReports.length > 0 && (
                 <div className="mt-8">
                   <div className="mb-4">
                     <h2 className="text-xl font-semibold text-slate-gray mb-2">LCA Calculation Reports</h2>

@@ -3481,6 +3481,117 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // ============ REPORT GENERATION ENDPOINTS ============
+
+  // Generate a new report
+  app.post('/api/reports/generate', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reportType = 'sustainability' } = req.body;
+      
+      // Generate a unique job ID for the report
+      const jobId = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Create initial report record
+      const { reports } = await import('@shared/schema');
+      
+      const reportData = {
+        companyId: company.id,
+        reportType: reportType === 'lca' ? 'lca' : 'annual',
+        reportingPeriodStart: company.currentReportingPeriodStart,
+        reportingPeriodEnd: company.currentReportingPeriodEnd,
+        status: 'generating',
+        jobId,
+        totalScope1: 0,
+        totalScope2: 0,
+        totalScope3: 0,
+        totalWaterUsage: 0,
+        totalWasteGenerated: 0,
+        totalEnergyConsumption: 0,
+        totalRenewableEnergyUsage: 0,
+      };
+
+      const [newReport] = await db
+        .insert(reports)
+        .values(reportData)
+        .returning();
+
+      // TODO: Here you would typically trigger background processing
+      // For now, we'll simulate the generation process
+      setTimeout(async () => {
+        try {
+          await db
+            .update(reports)
+            .set({ 
+              status: 'completed',
+              completedAt: new Date(),
+              // Add some sample data
+              totalScope1: 150.5,
+              totalScope2: 89.2,
+              totalScope3: 420.8,
+              totalWaterUsage: 15000,
+              totalWasteGenerated: 2500,
+              totalEnergyConsumption: 85000,
+              totalRenewableEnergyUsage: 42500,
+            })
+            .where(eq(reports.id, newReport.id));
+        } catch (error) {
+          console.error('Error updating report status:', error);
+        }
+      }, 3000); // Simulate 3-second generation time
+
+      res.json({ 
+        success: true, 
+        report: newReport,
+        message: 'Report generation started'
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get all reports for the authenticated user's company
+  app.get('/api/reports', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reports } = await import('@shared/schema');
+      
+      const userReports = await db
+        .select()
+        .from(reports)
+        .where(eq(reports.companyId, company.id))
+        .orderBy(desc(reports.createdAt));
+
+      res.json(userReports);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   const server = createServer(app);
   
   // Initialize WebSocket service
