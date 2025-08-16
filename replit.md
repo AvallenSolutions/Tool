@@ -8,6 +8,16 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (August 16, 2025)
+
+**Carbon Footprint Calculator - Critical Fixes Completed:**
+- ✅ Fixed automated Scope 3 data display in "Current Scope 3 Emissions" box
+- ✅ Corrected Overall Progress calculation from 1.32M kg to accurate 660,380.26 kg  
+- ✅ Eliminated double-counting issues between manual and automated emissions
+- ✅ Restored Summary & Report page as 4th wizard step
+- ✅ Enhanced chart designs with improved spacing and non-overlapping labels
+- ✅ Verified automated calculations: 660 tonnes Purchased Goods & Services + 0.048 tonnes Fuel & Energy-Related Activities
+
 **Critical UI Requirements:**
 - NEVER make popups/dialogs transparent - all dialog components must have opaque backgrounds with explicit styling (bg-white, border, shadow)
 - User explicitly stated: "NEVER make popups transparent" - this is mandatory for all dialog interfaces
@@ -48,7 +58,7 @@ Preferred communication style: Simple, everyday language.
     - **Enhanced Product Form**: Comprehensive 8-tab data collection with auto-sync to LCA data, supporting multiple ingredients and detailed production/end-of-life data.
     - **Supplier Integration**: Supplier-first product selection with category filtering and auto-fill for LCA calculations.
 - **Image Management**: Comprehensive image upload, storage, and retrieval system with Google Cloud Storage backend, supporting multiple images, smart upload management, and visual management interface.
-- **Carbon Footprint Calculator**: Multi-step wizard (Scope 1, 2, 3, Summary) with educational guidance, real emission factors, and auto-save functionality. Integrates with Company page.
+- **Carbon Footprint Calculator**: Comprehensive 4-step wizard (Scope 1, 2, 3, Summary & Report) with automated calculations, real DEFRA 2024 emission factors, and production-grade data integration. Features automated Scope 3 calculations for Purchased Goods & Services (660 tonnes) and Fuel & Energy-Related Activities, with verified LCA data integration showing 660,380.26 kg total emissions.
 - **GreenwashGuardian Integration**: Functionality to assess marketing materials against UK DMCC Act 2024 compliance, with a step-by-step wizard, traffic light system for compliance, and actionable solutions.
 - **Admin Dashboard**: Role-Based Access Control (RBAC) for 'user' and 'admin' roles, comprehensive three-section interface for real-time metrics, supplier verification, and LCA approvals. Prioritized layout with advanced features at the top.
 - **Data Extraction**: Automated supplier data capture via URL web scraping (cheerio) and PDF document upload (Anthropic API), with mandatory human verification workflow. Includes bulk import capabilities.
