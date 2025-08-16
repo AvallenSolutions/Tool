@@ -24,13 +24,15 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
   const queryClient = useQueryClient();
 
   // Query enhanced report status
-  const { data: enhancedStatus, refetch } = useQuery<EnhancedReportStatus>({
+  const { data: enhancedStatus, refetch, isLoading: statusLoading } = useQuery<EnhancedReportStatus>({
     queryKey: ['/api/reports', reportId, 'enhanced-status'],
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Refetch every 3 seconds if generating
-      return data?.status === 'generating' ? 3000 : false;
+      return query.state.data?.status === 'generating' ? 3000 : false;
     },
   });
+
+  console.log('Enhanced status data:', enhancedStatus, 'for report:', reportId);
 
   // Generate enhanced report mutation
   const generateMutation = useMutation({
@@ -42,10 +44,14 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
         description: "Professional LCA report generation in progress. The system is aggregating your LCA data, calculating carbon footprints, and generating charts. This typically takes 2-3 minutes.",
         variant: "default",
       });
-      // Start polling for status
-      refetch();
+      // Invalidate and refetch the status query
+      queryClient.invalidateQueries({ queryKey: ['/api/reports', reportId, 'enhanced-status'] });
+      setTimeout(() => {
+        refetch();
+      }, 500);
     },
     onError: (error: any) => {
+      setIsGenerating(false);
       toast({
         title: "Generation Failed",
         description: error.message || "Failed to start enhanced report generation",
@@ -88,6 +94,11 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
 
   const canGenerate = reportStatus === 'completed' || reportStatus === 'approved';
   const status = enhancedStatus?.status || 'not_generated';
+  
+  // Update local generating state when status changes
+  if (status !== 'generating' && isGenerating) {
+    setIsGenerating(false);
+  }
 
   const getStatusBadge = () => {
     switch (status) {
@@ -126,16 +137,16 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
           )}
         </p>
 
-        {status === 'generating' && (
+        {(status === 'generating' || isGenerating) && (
           <div className="space-y-3 p-4 bg-blue-50 rounded-lg border">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Clock className="w-4 h-4 mr-2 text-blue-600 animate-spin" />
                 <span className="font-medium text-blue-900">Report Generation in Progress</span>
               </div>
-              <span className="text-sm text-blue-700">~3 min remaining</span>
+              <span className="text-sm text-blue-700">~5 sec remaining</span>
             </div>
-            <Progress value={75} className="w-full" />
+            <Progress value={65} className="w-full" />
             <div className="text-sm text-blue-700 space-y-1">
               <p>• Aggregating LCA data from products and suppliers</p>
               <p>• Calculating carbon footprint contributions by lifecycle stage</p>
@@ -143,13 +154,13 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
               <p>• Formatting ISO 14040/14044 compliant report</p>
             </div>
             <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
-              <strong>Admin Note:</strong> Background job processing with Bull Queue. Check server logs for detailed progress.
+              <strong>Status:</strong> {status} | <strong>Local:</strong> {isGenerating ? 'Generating' : 'Not Generating'}
             </div>
           </div>
         )}
 
         <div className="flex flex-col sm:flex-row gap-2">
-          {status === 'not_generated' && (
+          {(status === 'not_generated' && !isGenerating) && (
             <Button
               onClick={() => generateMutation.mutate()}
               disabled={!canGenerate || generateMutation.isPending}
@@ -160,9 +171,9 @@ export function EnhancedReportButton({ reportId, reportStatus }: EnhancedReportB
             </Button>
           )}
 
-          {status === 'generating' && (
+          {(status === 'generating' || isGenerating) && (
             <Button disabled className="flex-1">
-              <Clock className="w-4 h-4 mr-2" />
+              <Clock className="w-4 h-4 mr-2 animate-spin" />
               Generating...
             </Button>
           )}
