@@ -371,75 +371,7 @@ This is a mock PDF report. In production, this would be a properly formatted PDF
     }
   }
 
-  // Calculate estimation duration based on product complexity
-  private estimateCalculationDuration(product: any): number {
-    // Simple heuristic for estimation
-    const baseTime = 30000; // 30 seconds base
-    const inputCount = product.ingredients?.length || 1;
-    const complexityFactor = Math.min(inputCount * 1000, 60000); // Max 1 minute extra
-    return baseTime + complexityFactor;
-  }
-}
-        olcaSystemName: 'Mock LCA System'
-      });
 
-      return {
-        jobId,
-        estimatedDuration: this.estimateCalculationDuration(product)
-      };
-    } catch (error) {
-      console.error('Error starting LCA calculation:', error);
-      throw new Error(`Failed to start LCA calculation: ${(error as Error).message}`);
-    }
-  }
-
-  // Get LCA calculation status with proper progress tracking
-  async getCalculationStatus(jobId: string): Promise<{
-    status: string;
-    progress: number;
-    results?: any;
-    errorMessage?: string;
-    estimatedTimeRemaining?: number;
-  }> {
-    try {
-      const job = await storage.getLcaCalculationJobByJobId(jobId);
-      if (!job) {
-        throw new Error(`Job not found: ${jobId}`);
-      }
-
-      return {
-        status: job.status || 'unknown',
-        progress: job.progress || 0,
-        results: job.results,
-        errorMessage: job.errorMessage || undefined,
-        estimatedTimeRemaining: job.status === 'processing' ? 30 : 0
-      };
-    } catch (error) {
-      console.error('Error getting calculation status:', error);
-      throw new Error(`Failed to get calculation status: ${(error as Error).message}`);
-    }
-  }
-
-  // Get product LCA history with proper typing
-  async getProductLCAHistory(productId: number): Promise<any[]> {
-    try {
-      const jobs = await storage.getLcaCalculationJobsByProduct(productId);
-      return jobs.map(job => ({
-        id: job.id,
-        jobId: job.jobId,
-        status: job.status,
-        progress: job.progress,
-        results: job.results,
-        createdAt: job.createdAt,
-        completedAt: job.completedAt,
-        olcaSystemId: job.olcaSystemId,
-        olcaSystemName: job.olcaSystemName,
-      }));
-    } catch (error) {
-      console.error('Error getting product LCA history:', error);
-      return [];
-    }
-  }
 }
 
 // Export singleton instance
