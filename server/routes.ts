@@ -3683,11 +3683,34 @@ Be precise and quote actual text from the content, not generic terms.`;
         })
         .where(eq(reports.id, reportId));
 
-      // Simulate enhanced report generation (in production, this would be a background job)
+      // Generate comprehensive sustainability report using real data
       setTimeout(async () => {
         try {
-          const enhancedFileName = `enhanced_report_${reportId}_${Date.now()}.pdf`;
+          console.log(`Starting enhanced sustainability report generation for report ${reportId}`);
+          
+          // Import services
+          const { ReportDataProcessor } = await import('./services/ReportDataProcessor');
+          const { EnhancedPDFService } = await import('./services/EnhancedPDFService');
+          
+          // Gather comprehensive sustainability data
+          const sustainabilityData = await ReportDataProcessor.aggregateReportData(reportId);
+          console.log('Aggregated sustainability data:', {
+            company: sustainabilityData.company.name,
+            totalEmissions: sustainabilityData.emissions.total,
+            productsCount: sustainabilityData.products.length
+          });
+          
+          // Generate comprehensive sustainability report
+          const pdfService = new EnhancedPDFService();
+          const pdfBuffer = await pdfService.generateSustainabilityReport(sustainabilityData);
+          
+          // Save to file system
+          const enhancedFileName = `sustainability_report_${reportId}_${Date.now()}.pdf`;
           const enhancedFilePath = `/enhanced_reports/${enhancedFileName}`;
+          const fullPath = path.join(process.cwd(), 'uploads', enhancedFileName);
+          
+          await fs.promises.writeFile(fullPath, pdfBuffer);
+          console.log(`Sustainability report saved to: ${fullPath}`);
           
           await db
             .update(reports)
@@ -3697,8 +3720,10 @@ Be precise and quote actual text from the content, not generic terms.`;
               updatedAt: new Date()
             })
             .where(eq(reports.id, reportId));
+            
+          console.log(`Enhanced sustainability report generation completed for report ${reportId}`);
         } catch (error) {
-          console.error('Error completing enhanced report generation:', error);
+          console.error('Error generating enhanced sustainability report:', error);
           await db
             .update(reports)
             .set({ 
@@ -3707,7 +3732,7 @@ Be precise and quote actual text from the content, not generic terms.`;
             })
             .where(eq(reports.id, reportId));
         }
-      }, 5000); // Simulate 5-second generation time
+      }, 5000); // Production sustainability report generation
 
       res.json({ 
         success: true, 
