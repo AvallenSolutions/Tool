@@ -3592,6 +3592,228 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // ============ ENHANCED REPORT ENDPOINTS ============
+
+  // Get enhanced report status for a specific report
+  app.get('/api/reports/:id/enhanced-status', isAuthenticated, async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reports } = await import('@shared/schema');
+      
+      const [report] = await db
+        .select()
+        .from(reports)
+        .where(eq(reports.id, reportId));
+
+      if (!report || report.companyId !== company.id) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      // Check enhanced report status
+      const status = report.enhanced_report_status || 'not_generated';
+      const filePath = report.enhanced_pdf_file_path;
+
+      res.json({
+        status,
+        filePath: filePath ? `/api/reports/${reportId}/download-enhanced` : undefined
+      });
+    } catch (error) {
+      console.error('Error getting enhanced report status:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Generate enhanced report for a specific report
+  app.post('/api/reports/:id/generate-enhanced', isAuthenticated, async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reports } = await import('@shared/schema');
+      
+      const [report] = await db
+        .select()
+        .from(reports)
+        .where(eq(reports.id, reportId));
+
+      if (!report || report.companyId !== company.id) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      // Check if report is ready for enhanced generation
+      if (report.status !== 'completed' && report.status !== 'approved') {
+        return res.status(400).json({ error: 'Report must be completed before generating enhanced version' });
+      }
+
+      // Update status to generating
+      await db
+        .update(reports)
+        .set({ 
+          enhanced_report_status: 'generating',
+          updatedAt: new Date()
+        })
+        .where(eq(reports.id, reportId));
+
+      // Simulate enhanced report generation (in production, this would be a background job)
+      setTimeout(async () => {
+        try {
+          const enhancedFileName = `enhanced_report_${reportId}_${Date.now()}.pdf`;
+          const enhancedFilePath = `/enhanced_reports/${enhancedFileName}`;
+          
+          await db
+            .update(reports)
+            .set({ 
+              enhanced_report_status: 'completed',
+              enhanced_pdf_file_path: enhancedFilePath,
+              updatedAt: new Date()
+            })
+            .where(eq(reports.id, reportId));
+        } catch (error) {
+          console.error('Error completing enhanced report generation:', error);
+          await db
+            .update(reports)
+            .set({ 
+              enhanced_report_status: 'failed',
+              updatedAt: new Date()
+            })
+            .where(eq(reports.id, reportId));
+        }
+      }, 5000); // Simulate 5-second generation time
+
+      res.json({ 
+        success: true, 
+        message: 'Enhanced report generation started'
+      });
+    } catch (error) {
+      console.error('Error starting enhanced report generation:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Download enhanced report
+  app.get('/api/reports/:id/download-enhanced', isAuthenticated, async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reports } = await import('@shared/schema');
+      
+      const [report] = await db
+        .select()
+        .from(reports)
+        .where(eq(reports.id, reportId));
+
+      if (!report || report.companyId !== company.id) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      if (!report.enhanced_pdf_file_path || report.enhanced_report_status !== 'completed') {
+        return res.status(404).json({ error: 'Enhanced report not available' });
+      }
+
+      // For demo purposes, generate a sample PDF content
+      const samplePDFContent = `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 250
+>>
+stream
+BT
+/F1 16 Tf
+50 750 Td
+(Enhanced LCA Report) Tj
+0 -30 Td
+/F1 12 Tf
+(Company: ${company.name || 'Demo Company'}) Tj
+0 -20 Td
+(Report ID: ${reportId}) Tj
+0 -20 Td
+(Generated: ${new Date().toLocaleDateString()}) Tj
+0 -30 Td
+(Total Emissions: ${report.totalCarbonFootprint || (report.totalScope1 + report.totalScope2 + report.totalScope3)} tonnes CO2e) Tj
+0 -20 Td
+(Status: Enhanced Professional Report) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000010 00000 n 
+0000000053 00000 n 
+0000000125 00000 n 
+0000000185 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+350
+%%EOF`;
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Enhanced_LCA_Report_${reportId}.pdf"`);
+      res.send(Buffer.from(samplePDFContent));
+    } catch (error) {
+      console.error('Error downloading enhanced report:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   const server = createServer(app);
   
   // Initialize WebSocket service
