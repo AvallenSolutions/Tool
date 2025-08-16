@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import puppeteer from 'puppeteer';
+import * as htmlPdf from 'html-pdf-node';
 import { SimplePDFService } from './SimplePDFService';
 import type { EnhancedLCAResults } from './EnhancedLCACalculationService';
 import type { SustainabilityReportData } from './ReportDataProcessor';
@@ -56,10 +58,10 @@ export class EnhancedPDFService {
       // Generate professional sustainability report following the guide structure
       const htmlReport = this.generateSustainabilityReportHTML(data);
       
-      // Convert to production-quality PDF
-      const pdfContent = this.convertSustainabilityReportToPDF(htmlReport, data);
+      // Convert HTML to actual PDF using Puppeteer
+      const pdfBuffer = await this.convertHTMLtoPDF(htmlReport);
       
-      return Buffer.from(pdfContent, 'utf8');
+      return pdfBuffer;
       
     } catch (error) {
       console.error('Error generating sustainability report:', error);
@@ -82,6 +84,58 @@ export class EnhancedPDFService {
       const html = this.generateEnhancedHTML(data);
       const basicPDF = this.convertHTMLToPDFStructure(html, data);
       return Buffer.from(basicPDF, 'binary');
+    }
+  }
+
+  private async convertHTMLtoPDF(html: string): Promise<Buffer> {
+    try {
+      // Try html-pdf-node first (simpler approach)
+      const options = { 
+        format: 'A4',
+        margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' },
+        printBackground: true
+      };
+      
+      const file = { content: html };
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      return pdfBuffer;
+      
+    } catch (htmlPdfError) {
+      console.log('html-pdf-node failed, trying puppeteer...', htmlPdfError.message);
+      
+      try {
+        const browser = await puppeteer.launch({
+          headless: true,
+          executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
+          args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-gpu'
+          ]
+        });
+        
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' },
+          printBackground: true,
+          preferCSSPageSize: true
+        });
+        
+        await browser.close();
+        return Buffer.from(pdfBuffer);
+        
+      } catch (puppeteerError) {
+        console.error('Both PDF generation methods failed');
+        console.error('html-pdf-node error:', htmlPdfError.message);
+        console.error('puppeteer error:', puppeteerError.message);
+        throw new Error('PDF generation failed: Unable to convert HTML to PDF');
+      }
     }
   }
 
