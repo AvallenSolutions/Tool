@@ -24,8 +24,17 @@ interface ElectricityEntry {
   isRenewable?: boolean;
 }
 
-// UK Grid electricity emission factor: 0.193 kg CO2e per kWh (2024)
-const ELECTRICITY_EMISSION_FACTOR = 0.193;
+// VERIFIED DEFRA 2024 UK GRID ELECTRICITY EMISSION FACTORS
+// Source: UK Government GHG Conversion Factors 2024 (Published July 8, 2024, Updated October 30, 2024)
+// Official: https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2024
+const UK_ELECTRICITY_FACTORS = {
+  // Combined total factor (generation + transmission & distribution)
+  TOTAL: 0.22535,          // kg CO₂e per kWh - DEFRA 2024 verified
+  GENERATION: 0.20705,     // kg CO₂e per kWh - generation only
+  TRANSMISSION: 0.01830,   // kg CO₂e per kWh - T&D losses
+  // Market-based approach for renewable energy certificates (REGOs)
+  RENEWABLE: 0             // Zero emissions for verified renewable electricity
+};
 
 export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, isLoading }: Scope2EmissionsStepProps) {
   const [entries, setEntries] = useState<ElectricityEntry[]>([]);
@@ -48,13 +57,13 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     }
   }, [existingData]);
 
-  // Calculate total emissions for current entries
+  // Calculate total emissions for current entries using DEFRA 2024 factors
   const calculateTotalEmissions = (): number => {
     return entries.reduce((total, entry) => {
       if (!entry.value) return total;
       const consumption = parseFloat(entry.value);
-      // Renewable electricity has zero market-based emissions
-      const emissionFactor = entry.isRenewable ? 0 : ELECTRICITY_EMISSION_FACTOR;
+      // Market-based approach: Renewable electricity (REGOs) has zero emissions, grid electricity uses full DEFRA factor
+      const emissionFactor = entry.isRenewable ? UK_ELECTRICITY_FACTORS.RENEWABLE : UK_ELECTRICITY_FACTORS.TOTAL;
       return total + (consumption * emissionFactor);
     }, 0);
   };
@@ -121,7 +130,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
         metadata: { 
           description: newEntry.description,
           isRenewable: newEntry.isRenewable,
-          emissionFactor: newEntry.isRenewable ? 0 : ELECTRICITY_EMISSION_FACTOR,
+          emissionFactor: newEntry.isRenewable ? UK_ELECTRICITY_FACTORS.RENEWABLE : UK_ELECTRICITY_FACTORS.TOTAL,
           validationWarnings: validation.warnings,
           industryBenchmark: 'Typical SME drinks companies: 10,000 - 200,000 kWh/year'
         }
@@ -166,7 +175,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             <div className="grid gap-3 mb-4">
               {entries.map((entry, index) => {
                 const consumption = parseFloat(entry.value || '0');
-                const emissionFactor = entry.isRenewable ? 0 : ELECTRICITY_EMISSION_FACTOR;
+                const emissionFactor = entry.isRenewable ? UK_ELECTRICITY_FACTORS.RENEWABLE : UK_ELECTRICITY_FACTORS.TOTAL;
                 const emissions = consumption * emissionFactor;
                 
                 return (
@@ -305,16 +314,16 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
                 <div>
                   <p className="text-sm text-slate-600">Location-based emissions</p>
                   <p className="text-lg font-semibold text-slate-900">
-                    {(parseFloat(newEntry.value || '0') * ELECTRICITY_EMISSION_FACTOR).toLocaleString()} kg CO₂e
+                    {(parseFloat(newEntry.value || '0') * UK_ELECTRICITY_FACTORS.TOTAL).toLocaleString()} kg CO₂e
                   </p>
-                  <p className="text-xs text-slate-500">UK grid average: {ELECTRICITY_EMISSION_FACTOR} kg CO₂e/kWh</p>
+                  <p className="text-xs text-slate-500">UK grid average: {UK_ELECTRICITY_FACTORS.TOTAL} kg CO₂e/kWh</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-600">Market-based emissions</p>
                   <p className="text-lg font-semibold text-green-600">
                     {newEntry.isRenewable 
                       ? '0 kg CO₂e' 
-                      : (parseFloat(newEntry.value || '0') * ELECTRICITY_EMISSION_FACTOR).toLocaleString() + ' kg CO₂e'
+                      : (parseFloat(newEntry.value || '0') * UK_ELECTRICITY_FACTORS.TOTAL).toLocaleString() + ' kg CO₂e'
                     }
                   </p>
                   <p className="text-xs text-slate-500">
@@ -384,7 +393,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
               <div>
                 <h4 className="font-medium text-blue-900">Location-based</h4>
                 <p className="text-sm text-blue-700">
-                  Uses average emission factors for your electricity grid (UK: {ELECTRICITY_EMISSION_FACTOR} kg CO₂e/kWh)
+                  Uses average emission factors for your electricity grid (UK: {UK_ELECTRICITY_FACTORS.TOTAL} kg CO₂e/kWh)
                 </p>
               </div>
               <div>
@@ -398,6 +407,44 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
           </CardContent>
         </Card>
       </div>
+
+      {/* Data Source Attribution */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="text-lg text-blue-800 flex items-center space-x-2">
+            <Info className="h-5 w-5" />
+            <span>Official Data Sources</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 text-sm">
+            <div className="flex items-start space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-blue-800">
+                <strong>UK Grid Emission Factor:</strong> UK DEFRA 2024 Greenhouse Gas Conversion Factors ({UK_ELECTRICITY_FACTORS.TOTAL} kg CO₂e/kWh total)
+              </p>
+            </div>
+            <div className="flex items-start space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-blue-800">
+                <strong>Factor Breakdown:</strong> Generation ({UK_ELECTRICITY_FACTORS.GENERATION} kg CO₂e/kWh) + Transmission & Distribution ({UK_ELECTRICITY_FACTORS.TRANSMISSION} kg CO₂e/kWh)
+              </p>
+            </div>
+            <div className="flex items-start space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-blue-800">
+                <strong>Renewable Energy Method:</strong> Market-based approach following GHG Protocol Scope 2 Guidance with REGOs/RECs
+              </p>
+            </div>
+            <div className="flex items-start space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-blue-800">
+                <strong>Last Updated:</strong> October 30, 2024 (DEFRA 2024 Conversion Factors v1.1)
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
