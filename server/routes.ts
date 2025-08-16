@@ -3621,9 +3621,16 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Report not found' });
       }
 
-      // Check enhanced report status
-      const status = report.enhanced_report_status || 'not_generated';
-      const filePath = report.enhanced_pdf_file_path;
+      // Check enhanced report status - use camelCase field names from schema
+      const status = report.enhancedReportStatus || 'not_generated';
+      const filePath = report.enhancedPdfFilePath;
+
+      console.log(`Enhanced status check for report ${reportId}:`, {
+        reportFound: !!report,
+        enhancedReportStatus: report.enhancedReportStatus,
+        enhancedPdfFilePath: report.enhancedPdfFilePath,
+        finalStatus: status
+      });
 
       res.json({
         status,
@@ -3671,7 +3678,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       await db
         .update(reports)
         .set({ 
-          enhanced_report_status: 'generating',
+          enhancedReportStatus: 'generating',
           updatedAt: new Date()
         })
         .where(eq(reports.id, reportId));
@@ -3685,8 +3692,8 @@ Be precise and quote actual text from the content, not generic terms.`;
           await db
             .update(reports)
             .set({ 
-              enhanced_report_status: 'completed',
-              enhanced_pdf_file_path: enhancedFilePath,
+              enhancedReportStatus: 'completed',
+              enhancedPdfFilePath: enhancedFilePath,
               updatedAt: new Date()
             })
             .where(eq(reports.id, reportId));
@@ -3695,7 +3702,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           await db
             .update(reports)
             .set({ 
-              enhanced_report_status: 'failed',
+              enhancedReportStatus: 'failed',
               updatedAt: new Date()
             })
             .where(eq(reports.id, reportId));
@@ -3739,7 +3746,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Report not found' });
       }
 
-      if (!report.enhanced_pdf_file_path || report.enhanced_report_status !== 'completed') {
+      if (!report.enhancedPdfFilePath || report.enhancedReportStatus !== 'completed') {
         return res.status(404).json({ error: 'Enhanced report not available' });
       }
 
