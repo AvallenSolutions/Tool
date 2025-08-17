@@ -8,7 +8,14 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (August 16, 2025)
+## Recent Changes (August 17, 2025)
+
+**OBJECT STORAGE & ADMIN SYSTEM FIXES COMPLETED:**
+- ✅ **ADMIN AUTHENTICATION:** Fixed critical authentication bypass in development mode - admin routes now accessible
+- ✅ **OBJECT STORAGE ROUTING:** Fixed missing router mount - /api/objects/ endpoints now serve images correctly
+- ✅ **SUPPLIER LOGO DISPLAY:** Resolved logo display issues in Supplier Management - all uploaded images now visible
+- ✅ **IMAGE SERVING:** Both /api/objects/ and /simple-image/ routes working with proper Content-Type headers
+- ✅ **SUPPLIER MANAGEMENT:** Complete admin functionality restored - edit, view, and logo upload working
 
 **COMPREHENSIVE SUSTAINABILITY REPORTING SYSTEM COMPLETED:**
 - ✅ **PDF GENERATION:** Fixed critical download issue - enhanced reports now generate actual PDFs (130KB+) instead of HTML files
