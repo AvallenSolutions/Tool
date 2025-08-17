@@ -1,142 +1,105 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import ProductEditDialog from "@/components/admin/ProductEditDialog";
 import { 
-  Eye, 
-  Edit,
-  Trash2,
+  Building2, 
+  AlertCircle, 
+  Check,
+  X,
+  Eye,
   Package,
-  DollarSign,
-  Calendar,
-  Building2,
-  CheckCircle,
-  AlertCircle,
-  Plus
+  Clock
 } from "lucide-react";
-import { useLocation } from "wouter";
 
-interface SupplierProduct {
+interface ProductForReview {
   id: string;
-  supplierId: string;
   productName: string;
-  productDescription?: string;
-  sku?: string;
-  hasPrecalculatedLca: boolean;
-  lcaDataJson?: any;
-  productAttributes?: any;
-  basePrice?: number;
-  currency: string;
-  minimumOrderQuantity?: number;
-  leadTimeDays?: number;
-  certifications: string[];
+  productDescription: string;
+  supplierId: string;
   supplierName: string;
-  supplierCategory: string;
+  sku: string;
   isVerified: boolean;
+  hasPrecalculatedLca: boolean;
+  submissionStatus: string;
   createdAt: string;
+  submittedBy: string;
 }
 
 export default function ProductManagement() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, navigate] = useLocation();
-  const [selectedProduct, setSelectedProduct] = useState<SupplierProduct | null>(null);
-  const [editingProduct, setEditingProduct] = useState<SupplierProduct | null>(null);
-  const [deletingProduct, setDeletingProduct] = useState<SupplierProduct | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [searchFilter, setSearchFilter] = useState<string>('');
 
-  const { data: products = [], isLoading } = useQuery<SupplierProduct[]>({
-    queryKey: ['/api/admin/supplier-products'],
+  const { data: pendingProducts, isLoading } = useQuery<ProductForReview[]>({
+    queryKey: ['/api/admin/products/pending'],
     refetchInterval: 30000,
   });
 
-  // Edit product mutation
-  const editProductMutation = useMutation({
-    mutationFn: (data: { id: string; productData: Partial<SupplierProduct> }) => 
-      apiRequest('/api/admin/supplier-products/' + data.id, 'PUT', data.productData),
-    onSuccess: () => {
-      toast({
-        title: "Product Updated",
-        description: "Product information has been successfully updated.",
+  const approveMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const response = await fetch(`/api/admin/products/${productId}/approve`, {
+        method: 'POST',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/supplier-products'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/supplier-products'] });
-      setEditingProduct(null);
+      if (!response.ok) throw new Error('Failed to approve product');
+      return response.json();
     },
-    onError: (error) => {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update product.",
-        variant: "destructive",
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics'] });
     },
   });
 
-  // Delete product mutation
-  const deleteProductMutation = useMutation({
-    mutationFn: (productId: string) => 
-      apiRequest('DELETE', '/api/supplier-products/' + productId),
-    onSuccess: () => {
-      toast({
-        title: "Product Deleted",
-        description: "Product has been successfully removed.",
+  const rejectMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const response = await fetch(`/api/admin/products/${productId}/reject`, {
+        method: 'POST',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/supplier-products'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/supplier-products'] });
-      setDeletingProduct(null);
+      if (!response.ok) throw new Error('Failed to reject product');
+      return response.json();
     },
-    onError: (error) => {
-      toast({
-        title: "Delete Failed",
-        description: error.message || "Failed to delete product.",
-        variant: "destructive",
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics'] });
     },
   });
 
-  const getVerificationBadge = (isVerified: boolean) => {
-    return isVerified 
-      ? <Badge className="bg-green-100 text-green-800 border-green-200">Verified</Badge>
-      : <Badge className="bg-orange-100 text-orange-800 border-orange-200">Pending</Badge>;
+  const handleApprove = (productId: string) => {
+    approveMutation.mutate(productId);
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = categoryFilter === 'all' || product.supplierCategory === categoryFilter;
-    const matchesSearch = !searchFilter || 
-      product.productName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      product.supplierName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchFilter.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const handleReject = (productId: string) => {
+    rejectMutation.mutate(productId);
+  };
+
+  const getStatusIcon = (product: ProductForReview) => {
+    if (product.isVerified) {
+      return <Check className="h-4 w-4 text-green-600" />;
+    }
+    return <Clock className="h-4 w-4 text-orange-600" />;
+  };
+
+  const getStatusBadge = (product: ProductForReview) => {
+    if (product.isVerified) {
+      return <Badge className="bg-green-100 text-green-800">Verified</Badge>;
+    }
+    return <Badge variant="outline" className="bg-orange-100 text-orange-800">Pending Review</Badge>;
+  };
+
+  const pendingCount = pendingProducts?.filter(p => !p.isVerified).length || 0;
 
   if (isLoading) {
     return (
       <div className="flex h-screen bg-lightest-gray">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header title="Product Management" subtitle="Loading products..." />
+          <Header title="Product Management" subtitle="Loading product data..." />
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-6 bg-gray-200 rounded"></div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold tracking-tight">Product Review Queue</h1>
+                <Badge variant="outline">Loading...</Badge>
+              </div>
             </div>
           </main>
         </div>
@@ -145,331 +108,128 @@ export default function ProductManagement() {
   }
 
   return (
-    <>
-      <div className="flex h-screen bg-lightest-gray">
-        <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <Header 
-            title="Product Management" 
-            subtitle="Manage supplier products and inventory"
-          />
-          <main className="flex-1 p-6 overflow-y-auto">
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">Product Management</h1>
-                  <p className="text-muted-foreground">
-                    Manage all supplier products and their verification status
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button 
-                    onClick={() => navigate('/app/product-registration')}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Product
-                  </Button>
-                  <Badge variant="secondary">
-                    {products.length} total products
-                  </Badge>
-                </div>
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header 
+          title="Product Management" 
+          subtitle="Review and approve submitted products"
+        />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Product Review Queue</h1>
+                <p className="text-muted-foreground">
+                  Review and approve pending product submissions
+                </p>
               </div>
-
-              {/* Filters */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex gap-4 items-center">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Search products by name, supplier, or SKU..."
-                        value={searchFilter}
-                        onChange={(e) => setSearchFilter(e.target.value)}
-                        className="max-w-sm"
-                      />
-                    </div>
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Filter by category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="bottle_producer">Bottle Producer</SelectItem>
-                        <SelectItem value="cap_closure_producer">Cap & Closure</SelectItem>
-                        <SelectItem value="label_producer">Label Producer</SelectItem>
-                        <SelectItem value="ingredient_supplier">Ingredient Supplier</SelectItem>
-                        <SelectItem value="packaging_supplier">Packaging Supplier</SelectItem>
-                        <SelectItem value="contract_distillery">Contract Distillery</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Products List */}
-              <div className="space-y-4">
-                {filteredProducts.map((product) => (
-                  <Card key={product.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Package className="h-5 w-5 text-muted-foreground" />
-                              <h3 className="text-lg font-semibold">{product.productName}</h3>
-                            </div>
-                            {getVerificationBadge(product.isVerified)}
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2">
-                              <Building2 className="h-4 w-4" />
-                              <span>{product.supplierName}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <Package className="h-4 w-4" />
-                              <span>{product.supplierCategory.replace('_', ' ')}</span>
-                            </div>
-                            
-                            {/* Display key product attributes */}
-                            {product.productAttributes && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs">
-                                  {product.productAttributes.material && `${product.productAttributes.material} | `}
-                                  {product.productAttributes.weight && `${product.productAttributes.weight}${product.productAttributes.weightUnit || 'g'} | `}
-                                  {product.productAttributes.recycledContent !== undefined && `${product.productAttributes.recycledContent}% recycled`}
-                                </span>
-                              </div>
-                            )}
-                            
-                            {product.sku && (
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono">SKU: {product.sku}</span>
-                              </div>
-                            )}
-                            
-                            {product.basePrice && (
-                              <div className="flex items-center gap-2">
-                                <DollarSign className="h-4 w-4" />
-                                <span>{product.basePrice} {product.currency}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {product.productDescription && (
-                            <div className="mt-2 text-sm text-muted-foreground">
-                              <p className="line-clamp-2">{product.productDescription}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedProduct(product)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditingProduct(product)}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDeletingProduct(product)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {filteredProducts.length === 0 && (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No products found</h3>
-                      <p className="text-muted-foreground">
-                        {categoryFilter === 'all' 
-                          ? "No products match your search criteria."
-                          : `No products in "${categoryFilter}" category found.`
-                        }
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+              <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
+                {pendingCount} pending review
+              </Badge>
             </div>
-          </main>
-        </div>
-      </div>
 
-      {/* View Product Dialog */}
-      {selectedProduct && (
-        <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
-          <DialogContent className="max-w-3xl bg-white border border-gray-200 shadow-lg">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                {selectedProduct.productName}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Verification Status</label>
-                  <div className="mt-1">
-                    {getVerificationBadge(selectedProduct.isVerified)}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Supplier</label>
-                  <p className="mt-1 text-sm">{selectedProduct.supplierName}</p>
-                </div>
-              </div>
-
-              {selectedProduct.productDescription && (
-                <div>
-                  <label className="text-sm font-medium">Description</label>
-                  <p className="mt-1 text-sm text-muted-foreground">{selectedProduct.productDescription}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                {selectedProduct.sku && (
-                  <div>
-                    <label className="text-sm font-medium">SKU</label>
-                    <p className="mt-1 text-sm font-mono">{selectedProduct.sku}</p>
-                  </div>
-                )}
-                
-                {selectedProduct.basePrice && (
-                  <div>
-                    <label className="text-sm font-medium">Base Price</label>
-                    <p className="mt-1 text-sm">{selectedProduct.basePrice} {selectedProduct.currency}</p>
-                  </div>
-                )}
-              </div>
-
-              {(selectedProduct.minimumOrderQuantity || selectedProduct.leadTimeDays) && (
-                <div className="grid grid-cols-2 gap-4">
-                  {selectedProduct.minimumOrderQuantity && (
-                    <div>
-                      <label className="text-sm font-medium">Minimum Order</label>
-                      <p className="mt-1 text-sm">{selectedProduct.minimumOrderQuantity} units</p>
-                    </div>
-                  )}
-                  
-                  {selectedProduct.leadTimeDays && (
-                    <div>
-                      <label className="text-sm font-medium">Lead Time</label>
-                      <p className="mt-1 text-sm">{selectedProduct.leadTimeDays} days</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Product Attributes */}
-              {selectedProduct.productAttributes && (
-                <div>
-                  <label className="text-sm font-medium">Product Specifications</label>
-                  <div className="mt-2 grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                    {selectedProduct.productAttributes.material && (
-                      <div>
-                        <span className="text-xs font-medium text-gray-500">Material</span>
-                        <p className="text-sm font-medium">{selectedProduct.productAttributes.material}</p>
-                      </div>
-                    )}
-                    {selectedProduct.productAttributes.weight && (
-                      <div>
-                        <span className="text-xs font-medium text-gray-500">Weight</span>
-                        <p className="text-sm font-medium">
-                          {selectedProduct.productAttributes.weight}{selectedProduct.productAttributes.weightUnit || 'g'}
-                        </p>
-                      </div>
-                    )}
-                    {selectedProduct.productAttributes.recycledContent !== undefined && (
-                      <div>
-                        <span className="text-xs font-medium text-gray-500">Recycled Content</span>
-                        <p className="text-sm font-medium">{selectedProduct.productAttributes.recycledContent}%</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedProduct.certifications && selectedProduct.certifications.length > 0 && (
-                <div>
-                  <label className="text-sm font-medium">Certifications</label>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {selectedProduct.certifications.map((cert, index) => (
-                      <Badge key={index} variant="outline">{cert}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="border-t pt-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>Added: {new Date(selectedProduct.createdAt).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Comprehensive Edit Product Dialog */}
-      <ProductEditDialog
-        product={editingProduct}
-        isOpen={!!editingProduct}
-        onClose={() => setEditingProduct(null)}
-      />
-
-      {/* Delete Product Dialog */}
-      {deletingProduct && (
-        <Dialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
-          <DialogContent className="bg-white border border-gray-200 shadow-lg">
-            <DialogHeader>
-              <DialogTitle>Delete Product</DialogTitle>
-            </DialogHeader>
+            {/* Products List */}
             <div className="space-y-4">
-              <p>
-                Are you sure you want to delete <strong>{deletingProduct.productName}</strong>? 
-                This action cannot be undone.
-              </p>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setDeletingProduct(null)}>
-                  Cancel
-                </Button>
-                <Button 
-                  variant="destructive"
-                  onClick={() => deleteProductMutation.mutate(deletingProduct.id)}
-                  disabled={deleteProductMutation.isPending}
-                >
-                  {deleteProductMutation.isPending ? 'Deleting...' : 'Delete Product'}
-                </Button>
-              </div>
+              {pendingProducts && pendingProducts.length > 0 ? (
+                pendingProducts.map((product) => (
+                  <Card key={product.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(product)}
+                            <CardTitle className="text-xl">{product.productName}</CardTitle>
+                            {getStatusBadge(product)}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Supplier: {product.supplierName} • SKU: {product.sku}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            disabled={product.isVerified}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                          {product.productDescription}
+                        </p>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium">Submitted by:</span>
+                            <p className="text-muted-foreground">{product.submittedBy}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Submitted:</span>
+                            <p className="text-muted-foreground">
+                              {new Date(product.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium">LCA Data:</span>
+                            <p className={`${product.hasPrecalculatedLca ? 'text-green-600' : 'text-gray-500'}`}>
+                              {product.hasPrecalculatedLca ? 'Available' : 'Not provided'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium">Status:</span>
+                            <p className="text-muted-foreground">{product.submissionStatus}</p>
+                          </div>
+                        </div>
+
+                        {!product.isVerified && (
+                          <div className="flex justify-end gap-3 pt-4 border-t">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleReject(product.id)}
+                              disabled={rejectMutation.isPending}
+                              className="text-red-600 border-red-200 hover:bg-red-50"
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => handleApprove(product.id)}
+                              disabled={approveMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Products Pending Review</h3>
+                    <p className="text-muted-foreground">
+                      All product submissions have been reviewed. New submissions will appear here.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </>
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }

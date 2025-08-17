@@ -25,6 +25,8 @@ interface AdminAnalytics {
   supplierGrowthPercentage: number;
   totalCompanies: number;
   pendingLcaReviews: number;
+  pendingSuppliersCount: number;
+  pendingProductsCount: number;
   lastUpdated: string;
 }
 
@@ -174,8 +176,8 @@ export default function AdminDashboard() {
             >
               <UserCheck className="h-6 w-6" />
               <span>Verify Suppliers</span>
-              <Badge variant="secondary" className="text-xs">
-                {analytics?.newSupplierCount || 0} pending
+              <Badge variant={analytics?.pendingSuppliersCount ? "destructive" : "secondary"} className="text-xs">
+                {analytics?.pendingSuppliersCount || 0} pending
               </Badge>
             </Button>
 
@@ -194,12 +196,12 @@ export default function AdminDashboard() {
             <Button 
               variant="outline" 
               className="h-20 flex-col gap-2"
-              onClick={() => navigate('/app/admin/supplier-data')}
+              onClick={() => navigate('/app/admin/products')}
             >
               <Building2 className="h-6 w-6" />
-              <span>Add Supplier Data</span>
-              <Badge variant="secondary" className="text-xs">
-                Admin Only
+              <span>Review Products</span>
+              <Badge variant={analytics?.pendingProductsCount ? "destructive" : "secondary"} className="text-xs">
+                {analytics?.pendingProductsCount || 0} pending
               </Badge>
             </Button>
 
@@ -258,12 +260,53 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {/* Pending Suppliers */}
+              {analytics?.pendingSuppliersCount && analytics.pendingSuppliersCount > 0 && (
+                <div className="flex items-center justify-between gap-2 p-3 border rounded-lg border-blue-200 bg-blue-50">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm">
+                      {analytics.pendingSuppliersCount} suppliers pending verification
+                    </span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate('/app/admin/suppliers')}
+                  >
+                    Review
+                  </Button>
+                </div>
+              )}
+
+              {/* Pending Products */}
+              {analytics?.pendingProductsCount && analytics.pendingProductsCount > 0 && (
+                <div className="flex items-center justify-between gap-2 p-3 border rounded-lg border-purple-200 bg-purple-50">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm">
+                      {analytics.pendingProductsCount} products requiring review
+                    </span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate('/app/admin/products')}
+                  >
+                    Review
+                  </Button>
+                </div>
+              )}
+              
+              {/* Pending LCA Reports */}
               {analytics?.pendingLcaReviews && analytics.pendingLcaReviews > 0 && (
-                <div className="flex items-center gap-2 p-3 border rounded-lg border-orange-200 bg-orange-50">
-                  <AlertCircle className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm">
-                    {analytics.pendingLcaReviews} LCA reports need review
-                  </span>
+                <div className="flex items-center justify-between gap-2 p-3 border rounded-lg border-orange-200 bg-orange-50">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm">
+                      {analytics.pendingLcaReviews} LCA reports need review
+                    </span>
+                  </div>
                   <Button 
                     size="sm" 
                     variant="outline"
@@ -273,25 +316,11 @@ export default function AdminDashboard() {
                   </Button>
                 </div>
               )}
-              
-              {analytics?.newSupplierCount && analytics.newSupplierCount > 0 && (
-                <div className="flex items-center gap-2 p-3 border rounded-lg border-blue-200 bg-blue-50">
-                  <UserCheck className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm">
-                    {analytics.newSupplierCount} new suppliers to verify
-                  </span>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => navigate('/app/admin/suppliers')}
-                  >
-                    Verify
-                  </Button>
-                </div>
-              )}
 
+              {/* All caught up message */}
               {(!analytics?.pendingLcaReviews || analytics.pendingLcaReviews === 0) && 
-               (!analytics?.newSupplierCount || analytics.newSupplierCount === 0) && (
+               (!analytics?.pendingSuppliersCount || analytics.pendingSuppliersCount === 0) &&
+               (!analytics?.pendingProductsCount || analytics.pendingProductsCount === 0) && (
                 <div className="flex items-center gap-2 p-3 border rounded-lg border-green-200 bg-green-50">
                   <FileCheck className="h-4 w-4 text-green-600" />
                   <span className="text-sm">All caught up! No pending actions.</span>

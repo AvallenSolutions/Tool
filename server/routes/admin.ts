@@ -69,6 +69,17 @@ router.get('/analytics', async (req: AdminRequest, res: Response) => {
       ? ((newSuppliersLast30Days.count - newSuppliersPrevious30Days.count) / newSuppliersPrevious30Days.count) * 100
       : newSuppliersLast30Days.count > 0 ? 100 : 0;
 
+    // Get ACTUAL pending items for action items
+    const [pendingSuppliersCount] = await db
+      .select({ count: count() })
+      .from(verifiedSuppliers)
+      .where(eq(verifiedSuppliers.verificationStatus, 'pending_review'));
+
+    const [pendingProductsCount] = await db
+      .select({ count: count() })
+      .from(supplierProducts)
+      .where(eq(supplierProducts.isVerified, false));
+
     // Get pending LCA reviews
     const [pendingReviews] = await db
       .select({ count: count() })
@@ -89,6 +100,9 @@ router.get('/analytics', async (req: AdminRequest, res: Response) => {
       supplierGrowthPercentage: Math.round(supplierGrowthPercentage * 100) / 100,
       totalCompanies: totalCompanies.count,
       pendingLcaReviews: pendingReviews.count,
+      // Action Items data
+      pendingSuppliersCount: pendingSuppliersCount.count,
+      pendingProductsCount: pendingProductsCount.count,
       lastUpdated: new Date().toISOString()
     };
     
@@ -110,6 +124,107 @@ router.get('/analytics', async (req: AdminRequest, res: Response) => {
  * GET /api/admin/suppliers
  * Returns all suppliers with their verification status
  */
+/**
+ * GET /api/admin/products/pending
+ * Returns products that need verification
+ */
+router.get('/products/pending', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin pending products endpoint called');
+    
+    // Get all products that are not verified
+    const pendingProducts = await db
+      .select({
+        id: supplierProducts.id,
+        productName: supplierProducts.productName,
+        productDescription: supplierProducts.productDescription,
+        supplierId: supplierProducts.supplierId,
+        sku: supplierProducts.sku,
+        isVerified: supplierProducts.isVerified,
+        hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+        submissionStatus: supplierProducts.submissionStatus,
+        createdAt: supplierProducts.createdAt,
+        submittedBy: supplierProducts.submittedBy,
+        supplierName: verifiedSuppliers.supplierName,
+      })
+      .from(supplierProducts)
+      .leftJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+      .where(eq(supplierProducts.isVerified, false))
+      .orderBy(desc(supplierProducts.createdAt));
+
+    res.json(pendingProducts);
+  } catch (error) {
+    console.error('Admin pending products error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch pending products',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/products/:id/approve
+ * Approve a product submission
+ */
+router.post('/products/:id/approve', async (req: AdminRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    console.log(`Admin approving product: ${id}`);
+    
+    const [updatedProduct] = await db
+      .update(supplierProducts)
+      .set({ 
+        isVerified: true,
+        verifiedBy: req.user?.id || 'admin',
+        verifiedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(supplierProducts.id, id))
+      .returning();
+
+    if (!updatedProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json({ message: 'Product approved successfully', product: updatedProduct });
+  } catch (error) {
+    console.error('Admin product approval error:', error);
+    res.status(500).json({ 
+      error: 'Failed to approve product',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/products/:id/reject
+ * Reject a product submission
+ */
+router.post('/products/:id/reject', async (req: AdminRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    console.log(`Admin rejecting product: ${id}`);
+    
+    // For now, we'll delete rejected products. In a real app, you might want to keep them with a 'rejected' status
+    const [deletedProduct] = await db
+      .delete(supplierProducts)
+      .where(eq(supplierProducts.id, id))
+      .returning();
+
+    if (!deletedProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json({ message: 'Product rejected and removed successfully' });
+  } catch (error) {
+    console.error('Admin product rejection error:', error);
+    res.status(500).json({ 
+      error: 'Failed to reject product',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 router.get('/suppliers', async (req: AdminRequest, res: Response) => {
   try {
     console.log('Admin suppliers endpoint called');
