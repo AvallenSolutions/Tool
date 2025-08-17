@@ -175,7 +175,7 @@ router.post('/products/:id/approve', async (req: AdminRequest, res: Response) =>
       .update(supplierProducts)
       .set({ 
         isVerified: true,
-        verifiedBy: req.user?.id || 'admin',
+        verifiedBy: req.adminUser?.id || '41152482',
         verifiedAt: new Date(),
         updatedAt: new Date()
       })
@@ -392,18 +392,21 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res: Response) =>
 
 /**
  * DELETE /api/admin/suppliers/:supplierId
- * Deletes a supplier
+ * Deletes a supplier and all associated products
  */
 router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
+    console.log(`Admin deleting supplier: ${supplierId}`);
 
-    const [deletedSupplier] = await db
-      .delete(verifiedSuppliers)
+    // First, check if supplier exists
+    const existingSupplier = await db
+      .select()
+      .from(verifiedSuppliers)
       .where(eq(verifiedSuppliers.id, supplierId))
-      .returning();
+      .limit(1);
 
-    if (!deletedSupplier) {
+    if (existingSupplier.length === 0) {
       return res.status(404).json({
         success: false,
         error: 'Supplier not found',
@@ -411,10 +414,27 @@ router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response)
       });
     }
 
+    // Delete all products associated with this supplier first
+    const deletedProducts = await db
+      .delete(supplierProducts)
+      .where(eq(supplierProducts.supplierId, supplierId))
+      .returning();
+
+    console.log(`Deleted ${deletedProducts.length} products for supplier ${supplierId}`);
+
+    // Now delete the supplier
+    const [deletedSupplier] = await db
+      .delete(verifiedSuppliers)
+      .where(eq(verifiedSuppliers.id, supplierId))
+      .returning();
+
     res.json({
       success: true,
-      message: 'Supplier deleted successfully',
-      data: deletedSupplier
+      message: `Supplier deleted successfully (${deletedProducts.length} associated products also removed)`,
+      data: {
+        supplier: deletedSupplier,
+        deletedProductsCount: deletedProducts.length
+      }
     });
 
   } catch (error) {
@@ -434,7 +454,7 @@ router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response)
 router.put('/suppliers/:supplierId/verify', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
-    const adminUserId = req.adminUser?.id || 'dev-user';
+    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
 
     // Update supplier verification status
     const [updatedSupplier] = await db
@@ -513,7 +533,7 @@ router.get('/reports/pending', async (req: AdminRequest, res: Response) => {
 router.put('/reports/:reportId/approve', async (req: AdminRequest, res: Response) => {
   try {
     const { reportId } = req.params;
-    const adminUserId = req.adminUser?.id || 'dev-user';
+    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
 
     // Update report status
     const [updatedReport] = await db

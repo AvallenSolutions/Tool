@@ -23,9 +23,9 @@ export async function requireAdminRole(req: AdminRequest, res: Response, next: N
     if (process.env.NODE_ENV === 'development') {
       console.log('Development mode: Bypassing admin authentication for admin routes');
       
-      // Create a mock admin user for development
+      // Create a mock admin user for development using existing user ID
       req.adminUser = {
-        id: 'dev-admin',
+        id: '41152482', // Use existing user ID in database
         email: 'admin@avallen.solutions',
         firstName: 'Development',
         lastName: 'Admin',
