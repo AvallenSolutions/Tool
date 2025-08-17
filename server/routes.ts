@@ -2237,6 +2237,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         addressCity: req.body.city || req.body.addressCity,
         addressPostalCode: req.body.postalCode || req.body.addressPostalCode,
         addressCountry: req.body.addressCountry,
+        logoUrl: req.body.logoUrl || null,
         verificationStatus: req.body.verificationStatus || 'pending_review',
         submittedBy: 'CLIENT',
         isVerified: req.body.verificationStatus === 'verified' ? true : false

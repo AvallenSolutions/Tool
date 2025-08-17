@@ -587,7 +587,7 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res: Response) =>
       updatedAt: new Date()
     };
 
-    // Only add fields that are present and valid
+    // Only add fields that are present and valid - don't convert empty strings to null for required fields
     if (cleanData.supplierName && typeof cleanData.supplierName === 'string') {
       updateData.supplierName = cleanData.supplierName;
     }
@@ -595,19 +595,31 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res: Response) =>
       updateData.supplierCategory = cleanData.supplierCategory;
     }
     if (cleanData.website !== undefined) {
-      updateData.website = cleanData.website || null;
+      updateData.website = cleanData.website === '' ? null : cleanData.website;
     }
     if (cleanData.contactEmail !== undefined) {
-      updateData.contactEmail = cleanData.contactEmail || null;
+      updateData.contactEmail = cleanData.contactEmail === '' ? null : cleanData.contactEmail;
     }
     if (cleanData.description !== undefined) {
-      updateData.description = cleanData.description || null;
+      updateData.description = cleanData.description === '' ? null : cleanData.description;
     }
     if (cleanData.location !== undefined) {
-      updateData.location = cleanData.location || null;
+      updateData.location = cleanData.location === '' ? null : cleanData.location;
+    }
+    if (cleanData.addressStreet !== undefined) {
+      updateData.addressStreet = cleanData.addressStreet === '' ? null : cleanData.addressStreet;
+    }
+    if (cleanData.addressCity !== undefined) {
+      updateData.addressCity = cleanData.addressCity === '' ? null : cleanData.addressCity;
+    }
+    if (cleanData.addressPostalCode !== undefined) {
+      updateData.addressPostalCode = cleanData.addressPostalCode === '' ? null : cleanData.addressPostalCode;
     }
     if (cleanData.addressCountry !== undefined) {
-      updateData.addressCountry = cleanData.addressCountry || null;
+      updateData.addressCountry = cleanData.addressCountry === '' ? null : cleanData.addressCountry;
+    }
+    if (cleanData.logoUrl !== undefined) {
+      updateData.logoUrl = cleanData.logoUrl || null;
     }
     if (cleanData.verificationStatus && typeof cleanData.verificationStatus === 'string') {
       updateData.verificationStatus = cleanData.verificationStatus;
