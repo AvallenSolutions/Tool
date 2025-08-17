@@ -28,6 +28,7 @@ import {
   handleValidationErrors 
 } from "./middleware/validation";
 import { adminRouter } from "./routes/admin";
+import objectStorageRouter from "./routes/objectStorage";
 import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -87,7 +88,11 @@ export function registerRoutes(app: Express): Server {
   // Phase 2: Onboarding routes
   setupOnboardingRoutes(app);
 
+  // Object storage routes
+  app.use('/api/objects', objectStorageRouter);
 
+  // Admin routes  
+  app.use('/api/admin', adminRouter);
 
   // Auth user endpoint - must come BEFORE greenwash guardian routes
   app.get('/api/auth/user', async (req, res) => {
