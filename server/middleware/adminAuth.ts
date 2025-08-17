@@ -19,6 +19,22 @@ export interface AdminRequest extends Request {
  */
 export async function requireAdminRole(req: AdminRequest, res: Response, next: NextFunction) {
   try {
+    // Development mode bypass for testing
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode: Bypassing admin authentication for admin routes');
+      
+      // Create a mock admin user for development
+      req.adminUser = {
+        id: 'dev-admin',
+        email: 'admin@avallen.solutions',
+        firstName: 'Development',
+        lastName: 'Admin',
+        role: 'admin'
+      };
+      
+      return next();
+    }
+
     /* Production authentication code */
     // Check if user is authenticated
     if (!req.isAuthenticated() || !req.user) {
