@@ -36,6 +36,8 @@ interface AdminAnalytics {
   supplierGrowthPercentage: number;
   totalCompanies: number;
   pendingLcaReviews: number;
+  pendingSuppliersCount: number;
+  pendingProductsCount: number;
   lastUpdated: string;
 }
 
@@ -72,36 +74,44 @@ export default function EnhancedAdminDashboard() {
 
   const suppliers = suppliersResponse?.data || [];
 
-  // Mock action items - would come from API in production
-  const actionItems: ActionItem[] = [
-    {
+  // Generate action items from real analytics data
+  const actionItems: ActionItem[] = [];
+  
+  if (analytics?.pendingSuppliersCount && analytics.pendingSuppliersCount > 0) {
+    actionItems.push({
       id: '1',
       type: 'supplier_verification',
       title: 'New Supplier Verification',
-      description: '3 suppliers pending verification review',
+      description: `${analytics.pendingSuppliersCount} suppliers pending verification review`,
       priority: 'high',
-      createdAt: '2025-01-28T10:00:00Z',
+      createdAt: new Date().toISOString(),
       actionUrl: '/app/admin/suppliers'
-    },
-    {
+    });
+  }
+  
+  if (analytics?.pendingProductsCount && analytics.pendingProductsCount > 0) {
+    actionItems.push({
       id: '2',
       type: 'product_review',
       title: 'Product Data Review',
-      description: '5 new products require review',
+      description: `${analytics.pendingProductsCount} new products require review`,
       priority: 'medium',
-      createdAt: '2025-01-28T09:30:00Z',
+      createdAt: new Date().toISOString(),
       actionUrl: '/app/admin/products'
-    },
-    {
+    });
+  }
+  
+  if (analytics?.pendingLcaReviews && analytics.pendingLcaReviews > 0) {
+    actionItems.push({
       id: '3',
       type: 'lca_approval',
       title: 'LCA Report Approval',
-      description: '2 LCA reports awaiting approval',
+      description: `${analytics.pendingLcaReviews} LCA reports awaiting approval`,
       priority: 'high',
-      createdAt: '2025-01-28T08:45:00Z',
+      createdAt: new Date().toISOString(),
       actionUrl: '/app/admin/lca-approvals'
-    }
-  ];
+    });
+  }
 
   const formatGrowth = (percentage: number) => {
     const sign = percentage >= 0 ? '+' : '';
