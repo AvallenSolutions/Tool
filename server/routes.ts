@@ -3641,7 +3641,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   // GET /api/conversations - Get user's conversations
   app.get('/api/conversations', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
+      const user = req.user as any;
       if (!user?.id) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
@@ -3681,7 +3681,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   // POST /api/conversations - Create new conversation
   app.post('/api/conversations', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
+      const user = req.user as any;
       if (!user?.id) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
@@ -3713,7 +3713,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   // GET /api/conversations/:id/messages - Get messages for a conversation
   app.get('/api/conversations/:id/messages', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
+      const user = req.user as any;
       if (!user?.id) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
@@ -3764,7 +3764,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   // POST /api/conversations/:id/tasks - Create collaboration task
   app.post('/api/conversations/:id/tasks', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
+      const user = req.user as any;
       if (!user?.id) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
