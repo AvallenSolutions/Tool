@@ -1319,6 +1319,35 @@ export const insertEsgDataSchema = createInsertSchema(esgData).omit({
   updatedAt: true,
 });
 
+// Document Comments table for admin feedback on reports
+export const documentComments = pgTable("document_comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reportId: integer("report_id").references(() => reports.id).notNull(),
+  adminUserId: varchar("admin_user_id").references(() => users.id).notNull(),
+  commentText: text("comment_text").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for document comments
+export const documentCommentsRelations = relations(documentComments, ({ one }) => ({
+  report: one(reports, {
+    fields: [documentComments.reportId],
+    references: [reports.id],
+  }),
+  adminUser: one(users, {
+    fields: [documentComments.adminUserId],
+    references: [users.id],
+  }),
+}));
+
+// Export types and insert schemas for document comments
+export type DocumentComment = typeof documentComments.$inferSelect;
+export type InsertDocumentComment = typeof documentComments.$inferInsert;
+export const insertDocumentCommentSchema = createInsertSchema(documentComments).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Export types and insert schemas for collaboration tables
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;

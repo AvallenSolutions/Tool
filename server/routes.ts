@@ -970,6 +970,161 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Admin User Management API Endpoints
+  app.get('/api/admin/users', isAuthenticated, async (req, res) => {
+    try {
+      const { userProfileService } = await import('./services/userProfileService');
+      const { limit = '50', offset = '0', search } = req.query;
+      
+      const users = await userProfileService.getAllUsersWithCompleteness(
+        parseInt(limit as string),
+        parseInt(offset as string),
+        search as string
+      );
+      
+      res.json({
+        success: true,
+        data: users,
+        pagination: {
+          limit: parseInt(limit as string),
+          offset: parseInt(offset as string),
+          total: users.length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch users' 
+      });
+    }
+  });
+
+  app.get('/api/admin/users/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { userProfileService } = await import('./services/userProfileService');
+      const { companyId } = req.params;
+      
+      if (!companyId || isNaN(parseInt(companyId))) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid company ID'
+        });
+      }
+      
+      const profileData = await userProfileService.getUserProfileCompleteness(parseInt(companyId));
+      
+      if (!profileData) {
+        return res.status(404).json({
+          success: false,
+          error: 'Company not found'
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: profileData
+      });
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch user profile' 
+      });
+    }
+  });
+
+  // Document Comments API Endpoints
+  app.post('/api/admin/reports/:reportId/comment', isAuthenticated, async (req, res) => {
+    try {
+      const { documentComments } = await import('@shared/schema');
+      const { reportId } = req.params;
+      const { commentText } = req.body;
+      const userId = (req.user as any)?.claims?.sub || 'dev-user';
+      
+      if (!reportId || isNaN(parseInt(reportId))) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid report ID'
+        });
+      }
+      
+      if (!commentText || typeof commentText !== 'string' || commentText.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Comment text is required'
+        });
+      }
+      
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not authenticated'
+        });
+      }
+      
+      const [newComment] = await db.insert(documentComments).values({
+        reportId: parseInt(reportId),
+        adminUserId: userId,
+        commentText: commentText.trim()
+      }).returning();
+      
+      res.status(201).json({
+        success: true,
+        data: newComment
+      });
+    } catch (error) {
+      console.error('Error creating document comment:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to create comment' 
+      });
+    }
+  });
+
+  app.get('/api/reports/:reportId/comments', isAuthenticated, async (req, res) => {
+    try {
+      const { documentComments, users } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { reportId } = req.params;
+      
+      if (!reportId || isNaN(parseInt(reportId))) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid report ID'
+        });
+      }
+      
+      const comments = await db
+        .select({
+          id: documentComments.id,
+          commentText: documentComments.commentText,
+          createdAt: documentComments.createdAt,
+          adminName: users.firstName,
+          adminLastName: users.lastName,
+          adminEmail: users.email,
+        })
+        .from(documentComments)
+        .leftJoin(users, eq(documentComments.adminUserId, users.id))
+        .where(eq(documentComments.reportId, parseInt(reportId)))
+        .orderBy(documentComments.createdAt);
+      
+      res.json({
+        success: true,
+        data: comments.map(comment => ({
+          ...comment,
+          adminName: `${comment.adminName || ''} ${comment.adminLastName || ''}`.trim() || 'Admin User'
+        }))
+      });
+    } catch (error) {
+      console.error('Error fetching document comments:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch comments' 
+      });
+    }
+  });
+
   // Object storage upload endpoint (for supplier images, etc.)
   app.post('/api/objects/upload', async (req, res) => {
     try {

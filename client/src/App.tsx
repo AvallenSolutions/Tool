@@ -21,6 +21,8 @@ import SupplierPortal from "@/pages/SupplierPortal";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminDashboardMain from "@/pages/admin/EnhancedAdminDashboard";
 import SupplierManagement from "@/pages/admin/SupplierManagement";
+import UserManagement from "@/pages/admin/UserManagement";
+import UserDetail from "@/pages/admin/UserDetail";
 import AdminSupplierDetail from "@/pages/admin/SupplierDetail";
 import SupplierEdit from "@/pages/admin/SupplierEdit";
 import AdminProductManagement from "@/pages/admin/ProductManagement";
@@ -143,6 +145,8 @@ function Router() {
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
       <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />
       <Route path="/app/admin/invitations" component={SupplierInvitations} />
+      <Route path="/app/admin/users/:companyId" component={UserDetail} />
+      <Route path="/app/admin/users" component={UserManagement} />
       <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
       <Route path="/supplier-onboarding" component={SupplierOnboarding} />
