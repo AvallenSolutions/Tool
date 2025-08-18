@@ -5,7 +5,7 @@ import { conversations, messages, users } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 export interface WebSocketMessage {
-  type: 'message' | 'typing' | 'read_receipt' | 'user_joined' | 'user_left' | 'task_update';
+  type: 'message' | 'typing' | 'read_receipt' | 'user_joined' | 'user_left' | 'task_update' | 'auth' | 'auth_success' | 'error';
   conversationId?: number;
   data?: any;
   userId?: string;
@@ -69,7 +69,7 @@ export class WebSocketService {
 
       ws.on('close', () => {
         // Remove client from connected clients
-        for (const [userId, client] of this.clients.entries()) {
+        for (const [userId, client] of Array.from(this.clients.entries())) {
           if (client.ws === ws) {
             this.clients.delete(userId);
             console.log(`User ${userId} disconnected`);
@@ -222,7 +222,7 @@ export class WebSocketService {
   }
 
   private broadcastToConversation(conversationId: number, message: WebSocketMessage, excludeUserId?: string) {
-    for (const [userId, client] of this.clients.entries()) {
+    for (const [userId, client] of Array.from(this.clients.entries())) {
       if (excludeUserId && userId === excludeUserId) continue;
       
       if (client.conversationIds.has(conversationId) && 
@@ -233,7 +233,7 @@ export class WebSocketService {
   }
 
   private getClientByWebSocket(ws: WebSocket): ConnectedClient | null {
-    for (const client of this.clients.values()) {
+    for (const client of Array.from(this.clients.values())) {
       if (client.ws === ws) return client;
     }
     return null;
