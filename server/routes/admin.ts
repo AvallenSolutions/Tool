@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { users, companies, reports, verifiedSuppliers, supplierProducts } from '@shared/schema';
+import { users, companies, reports, verifiedSuppliers, supplierProducts, conversations, messages } from '@shared/schema';
 import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
-import { eq, count, gte, desc, and, lt } from 'drizzle-orm';
+import { eq, count, gte, desc, and, lt, ilike, or, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -691,6 +691,404 @@ router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response)
     res.status(500).json({ 
       error: 'Failed to delete supplier',
       message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// =====================================================================
+// ADMIN MESSAGING ENDPOINTS
+// =====================================================================
+
+/**
+ * GET /api/admin/conversations
+ * Returns all conversations for admin with search and filtering
+ */
+router.get('/conversations', async (req: AdminRequest, res: Response) => {
+  try {
+    const { search, status, limit = 50, offset = 0 } = req.query;
+    
+    console.log('Admin conversations endpoint called with params:', { search, status, limit, offset });
+
+    // Build query conditions
+    const conditions = [];
+    if (status && status !== 'all') {
+      conditions.push(eq(conversations.status, status as string));
+    }
+    if (search) {
+      conditions.push(
+        or(
+          ilike(conversations.title, `%${search}%`),
+          // Add participant email search later
+        )
+      );
+    }
+
+    // Get conversations with participant details
+    const conversationsData = await db
+      .select({
+        id: conversations.id,
+        title: conversations.title,
+        type: conversations.type,
+        status: conversations.status,
+        participants: conversations.participants,
+        lastMessageAt: conversations.lastMessageAt,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+        // Get unread message count (placeholder for now)
+      })
+      .from(conversations)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(conversations.lastMessageAt))
+      .limit(parseInt(limit as string))
+      .offset(parseInt(offset as string));
+
+    // Enrich conversations with participant details and unread counts
+    const enrichedConversations = await Promise.all(
+      conversationsData.map(async (conv) => {
+        // Get participant details
+        const participantDetails = await db
+          .select({
+            userId: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            role: users.role,
+            profileImageUrl: users.profileImageUrl,
+            companyName: companies.name,
+          })
+          .from(users)
+          .leftJoin(companies, eq(users.id, companies.ownerId))
+          .where(sql`${users.id} = ANY(${conv.participants})`);
+
+        // Count unread messages (simplified - could be enhanced)
+        const [unreadCount] = await db
+          .select({ count: count() })
+          .from(messages)
+          .where(
+            and(
+              eq(messages.conversationId, conv.id),
+              // Add read status check later
+            )
+          );
+
+        return {
+          ...conv,
+          participantDetails,
+          unreadCount: unreadCount.count,
+        };
+      })
+    );
+
+    // Get total count for pagination
+    const [totalCount] = await db
+      .select({ count: count() })
+      .from(conversations)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    res.json({
+      success: true,
+      data: enrichedConversations,
+      pagination: {
+        total: totalCount.count,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+      },
+    });
+
+  } catch (error) {
+    console.error('Admin conversations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch conversations',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/conversations/:conversationId/messages
+ * Returns messages for a specific conversation
+ */
+router.get('/conversations/:conversationId/messages', async (req: AdminRequest, res: Response) => {
+  try {
+    const { conversationId } = req.params;
+    const { limit = 100, offset = 0 } = req.query;
+
+    console.log(`Admin messages endpoint called for conversation: ${conversationId}`);
+
+    // Get messages with sender details
+    const messagesData = await db
+      .select({
+        id: messages.id,
+        conversationId: messages.conversationId,
+        senderId: messages.senderId,
+        senderRole: messages.senderRole,
+        messageType: messages.messageType,
+        content: messages.content,
+        attachments: messages.attachments,
+        metadata: messages.metadata,
+        createdAt: messages.createdAt,
+        updatedAt: messages.updatedAt,
+        // Sender details
+        senderFirstName: users.firstName,
+        senderLastName: users.lastName,
+        senderEmail: users.email,
+        senderProfileImageUrl: users.profileImageUrl,
+      })
+      .from(messages)
+      .leftJoin(users, eq(messages.senderId, users.id))
+      .where(eq(messages.conversationId, parseInt(conversationId)))
+      .orderBy(messages.createdAt)
+      .limit(parseInt(limit as string))
+      .offset(parseInt(offset as string));
+
+    // Format messages with sender details
+    const formattedMessages = messagesData.map((msg) => ({
+      id: msg.id,
+      conversationId: msg.conversationId,
+      senderId: msg.senderId,
+      senderRole: msg.senderRole,
+      messageType: msg.messageType,
+      content: msg.content,
+      attachments: msg.attachments,
+      metadata: msg.metadata,
+      createdAt: msg.createdAt,
+      updatedAt: msg.updatedAt,
+      senderDetails: {
+        firstName: msg.senderFirstName,
+        lastName: msg.senderLastName,
+        email: msg.senderEmail,
+        profileImageUrl: msg.senderProfileImageUrl,
+      },
+    }));
+
+    // Get total count
+    const [totalCount] = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(eq(messages.conversationId, parseInt(conversationId)));
+
+    res.json({
+      success: true,
+      data: formattedMessages,
+      pagination: {
+        total: totalCount.count,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+      },
+    });
+
+  } catch (error) {
+    console.error('Admin messages error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch messages',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/conversations/:conversationId/messages
+ * Send a message as admin in a conversation
+ */
+router.post('/conversations/:conversationId/messages', async (req: AdminRequest, res: Response) => {
+  try {
+    const { conversationId } = req.params;
+    const { content, messageType = 'text', priority = 'normal' } = req.body;
+    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
+
+    console.log(`Admin sending message to conversation: ${conversationId}`);
+
+    if (!content?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message content is required',
+      });
+    }
+
+    // Create the message
+    const [newMessage] = await db
+      .insert(messages)
+      .values({
+        conversationId: parseInt(conversationId),
+        senderId: adminUserId,
+        senderRole: 'admin',
+        messageType,
+        content: content.trim(),
+        metadata: { priority },
+      })
+      .returning();
+
+    // Update conversation last message time
+    await db
+      .update(conversations)
+      .set({
+        lastMessageAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(conversations.id, parseInt(conversationId)));
+
+    // Get sender details for response
+    const [sender] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, adminUserId))
+      .limit(1);
+
+    const messageWithDetails = {
+      ...newMessage,
+      senderDetails: {
+        firstName: sender?.firstName,
+        lastName: sender?.lastName,
+        email: sender?.email,
+        profileImageUrl: sender?.profileImageUrl,
+      },
+    };
+
+    res.json({
+      success: true,
+      data: messageWithDetails,
+      message: 'Message sent successfully',
+    });
+
+  } catch (error) {
+    console.error('Admin send message error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send message',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/conversations
+ * Create a new conversation with selected users
+ */
+router.post('/conversations', async (req: AdminRequest, res: Response) => {
+  try {
+    const { title, participants, type = 'direct_message', initialMessage } = req.body;
+    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
+
+    console.log('Admin creating new conversation:', { title, participants, type });
+
+    if (!title?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Conversation title is required',
+      });
+    }
+
+    if (!participants || !Array.isArray(participants) || participants.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one participant is required',
+      });
+    }
+
+    // Add admin to participants if not already included
+    const allParticipants = [...new Set([adminUserId, ...participants])];
+
+    // Create the conversation
+    const [newConversation] = await db
+      .insert(conversations)
+      .values({
+        title: title.trim(),
+        type,
+        participants: allParticipants,
+        status: 'active',
+        companyId: 1, // Default company ID for admin conversations
+      })
+      .returning();
+
+    // Send initial message if provided
+    if (initialMessage?.trim()) {
+      await db.insert(messages).values({
+        conversationId: newConversation.id,
+        senderId: adminUserId,
+        senderRole: 'admin',
+        messageType: 'text',
+        content: initialMessage.trim(),
+        metadata: { priority: 'normal' },
+      });
+
+      // Update conversation last message time
+      await db
+        .update(conversations)
+        .set({ lastMessageAt: new Date() })
+        .where(eq(conversations.id, newConversation.id));
+    }
+
+    // Get participant details for response
+    const participantDetails = await db
+      .select({
+        userId: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(users)
+      .where(sql`${users.id} = ANY(${allParticipants})`);
+
+    const conversationWithDetails = {
+      ...newConversation,
+      participantDetails,
+      unreadCount: 0,
+    };
+
+    res.json({
+      success: true,
+      data: conversationWithDetails,
+      message: 'Conversation created successfully',
+    });
+
+  } catch (error) {
+    console.error('Admin create conversation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create conversation',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/users-for-messaging
+ * Returns users that admin can start conversations with
+ */
+router.get('/users-for-messaging', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin users-for-messaging endpoint called');
+
+    // Get all users with their company information
+    const usersData = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        companyName: companies.name,
+      })
+      .from(users)
+      .leftJoin(companies, eq(users.id, companies.ownerId))
+      .where(eq(users.role, 'user')) // Only regular users, not other admins
+      .orderBy(users.firstName, users.lastName);
+
+    res.json({
+      success: true,
+      data: usersData,
+    });
+
+  } catch (error) {
+    console.error('Admin users-for-messaging error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch users',
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

@@ -30,6 +30,7 @@ export default function Sidebar() {
     { path: "/app/admin", label: "Overview", icon: BarChart3 },
     { path: "/app/admin/users", label: "User Management", icon: UserPlus },
     { path: "/app/admin/analytics", label: "Performance Analytics", icon: Activity },
+    { path: "/app/admin/messaging", label: "Messaging", icon: MessageSquare },
   ];
 
   return (
