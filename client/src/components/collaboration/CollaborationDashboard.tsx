@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useWebSocket, WebSocketMessage } from '@/hooks/useWebSocket';
+import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -92,15 +92,20 @@ export default function CollaborationDashboard() {
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
 
-  // WebSocket connection
-  const { isConnected, sendChatMessage, sendTypingIndicator } = useWebSocket({
+  // Real-time messaging connection (polling-based fallback)
+  const { isConnected, sendChatMessage, sendTypingIndicator } = useRealtimeMessaging({
     userId: user?.id,
-    onMessage: handleWebSocketMessage
+    onMessage: handlePollingMessage
   });
 
-  function handleWebSocketMessage(message: WebSocketMessage) {
-    if (message.type === 'message' && message.conversationId === selectedConversationId) {
-      setMessages(prev => [...prev, message.data as Message]);
+  function handlePollingMessage(message: any) {
+    if (message.conversationId === selectedConversationId) {
+      setMessages(prev => {
+        // Avoid duplicates by checking if message already exists
+        const exists = prev.some(m => m.id === message.id);
+        if (exists) return prev;
+        return [...prev, message];
+      });
       
       // Scroll to bottom
       setTimeout(() => {
@@ -109,9 +114,6 @@ export default function CollaborationDashboard() {
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
       }, 100);
-    } else if (message.type === 'typing') {
-      // Handle typing indicators
-      console.log('User is typing:', message.data);
     }
   }
 

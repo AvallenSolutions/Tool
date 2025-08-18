@@ -43,12 +43,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     try {
       setConnectionStatus('connecting');
       
-      // Determine WebSocket URL - environment-aware connection
+      // Alternative WebSocket connection strategy - use polling fallback for Replit environment
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const isReplit = window.location.hostname.includes('replit.dev');
+      const hostname = window.location.hostname;
+      
+      // Try direct connection to backend port for WebSocket
+      const isReplit = hostname.includes('replit.dev');
       const wsUrl = isReplit 
-        ? `${protocol}//${window.location.hostname}/ws`  // Production: use hostname only
-        : `${protocol}://localhost:5000/ws`;             // Development: explicit port 5000
+        ? `${protocol}//${hostname.replace('-00-', '-5000-00-')}/ws`  // Target port 5000 directly
+        : `${protocol}://localhost:5000/ws`;
       
       console.log('Connecting to WebSocket:', wsUrl);
       const ws = new WebSocket(wsUrl);

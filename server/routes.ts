@@ -3715,6 +3715,53 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // POST /api/messages/poll - Poll for new messages  
+  app.post('/api/messages/poll', async (req, res) => {
+    // Development mode authentication bypass
+    let userId = null;
+    if (req.isAuthenticated() && req.user) {
+      userId = (req.user as any).claims?.sub;
+    } else if (process.env.NODE_ENV === 'development') {
+      userId = req.body.userId || 'dev-user';
+    } else {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    try {
+      const { since } = req.body;
+      const sinceDate = since ? new Date(since) : new Date(Date.now() - 30000); // Last 30 seconds if no since provided
+
+      // Get all conversations for user's company
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.json({ messages: [] });
+      }
+
+      const newMessages = await db
+        .select({
+          id: messages.id,
+          conversationId: messages.conversationId,
+          senderId: messages.senderId,
+          content: messages.content,
+          createdAt: messages.createdAt
+        })
+        .from(messages)
+        .innerJoin(conversations, eq(messages.conversationId, conversations.id))
+        .where(
+          and(
+            eq(conversations.companyId, company.id),
+            gt(messages.createdAt, sinceDate)
+          )
+        )
+        .orderBy(desc(messages.createdAt));
+
+      res.json({ messages: newMessages });
+    } catch (error) {
+      console.error('Error polling messages:', error);
+      res.status(500).json({ error: 'Failed to poll messages' });
+    }
+  });
+
   // GET /api/conversations/:id/messages - Get messages for a conversation
   app.get('/api/conversations/:id/messages', isAuthenticated, async (req, res) => {
     try {
