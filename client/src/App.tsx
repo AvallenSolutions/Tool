@@ -43,7 +43,7 @@ import Suppliers from "@/pages/suppliers";
 import GreenwashGuardian from "@/pages/GreenwashGuardian";
 import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
-import CollaborationDashboard from "@/components/collaboration/CollaborationDashboard";
+import CollaborationHub from "@/pages/CollaborationHub";
 
 function SimpleTestComponent() {
   return (
@@ -141,7 +141,7 @@ function Router() {
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
       <Route path="/app/admin/supplier-management" component={SupplierManagement} />
       <Route path="/app/admin/products" component={AdminProductManagement} />
-      <Route path="/app/collaboration" component={CollaborationDashboard} />
+      <Route path="/app/collaboration" component={CollaborationHub} />
       <Route path="/app/admin/product-management" component={AdminProductManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
