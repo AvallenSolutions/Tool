@@ -1125,6 +1125,85 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Performance Analytics API Endpoints
+  app.get('/api/admin/analytics/performance', isAuthenticated, async (req, res) => {
+    try {
+      const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
+      
+      const metrics = await performanceAnalyticsService.getPerformanceMetrics();
+      
+      res.json({
+        success: true,
+        data: metrics,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching performance analytics:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch performance analytics' 
+      });
+    }
+  });
+
+  app.get('/api/admin/analytics/alerts', isAuthenticated, async (req, res) => {
+    try {
+      const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
+      
+      const alerts = await performanceAnalyticsService.getSystemAlerts();
+      
+      res.json({
+        success: true,
+        data: alerts,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching system alerts:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch system alerts' 
+      });
+    }
+  });
+
+  app.get('/api/admin/analytics/realtime', isAuthenticated, async (req, res) => {
+    try {
+      const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
+      
+      const realtimeMetrics = await performanceAnalyticsService.getRealtimeMetrics();
+      
+      res.json({
+        success: true,
+        data: realtimeMetrics
+      });
+    } catch (error) {
+      console.error('Error fetching realtime metrics:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch realtime metrics' 
+      });
+    }
+  });
+
+  app.post('/api/admin/analytics/cache/clear', isAuthenticated, async (req, res) => {
+    try {
+      const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
+      
+      performanceAnalyticsService.clearCache();
+      
+      res.json({
+        success: true,
+        message: 'Analytics cache cleared successfully'
+      });
+    } catch (error) {
+      console.error('Error clearing analytics cache:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to clear analytics cache' 
+      });
+    }
+  });
+
   // Object storage upload endpoint (for supplier images, etc.)
   app.post('/api/objects/upload', async (req, res) => {
     try {
