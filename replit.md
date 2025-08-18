@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 18, 2025)
 
+**ENHANCED PRODUCT FORM - OPENLCA INTEGRATION COMPLETED:**
+- ✅ **INGREDIENT SELECTION SYSTEM:** Comprehensive ingredient entry form with OpenLCA ecoinvent database integration (Molasses, Apples, Barley)
+- ✅ **SUPPLIER INTEGRATION:** Added "Select from Suppliers" functionality to auto-fill ingredient data from supplier product database
+- ✅ **WATER DILUTION TRACKING:** Restored dedicated section for recording water dilution from distillation/barrel strength to bottling strength
+- ✅ **AUTOMATED CALCULATIONS:** Eliminated manual agriculture fields (yield, fertilizer, diesel usage) - all environmental data calculated via OpenLCA API
+- ✅ **DUAL DATA SOURCES:** Users can select ingredients from OpenLCA database OR supplier products with automatic environmental impact calculations
+- ✅ **CLEAN UI:** Removed legacy ingredient display section, fixed React key warnings, streamlined interface with up to 10 ingredients per product
+
 **REAL-TIME MESSAGING SYSTEM COMPLETED:**
 - ✅ **POLLING-BASED MESSAGING:** Successfully replaced WebSocket with reliable polling system that works in Replit environment
 - ✅ **AUTHENTICATION FIXES:** Implemented development mode authentication bypass for all messaging endpoints

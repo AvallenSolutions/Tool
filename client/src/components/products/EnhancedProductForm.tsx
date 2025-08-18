@@ -1354,8 +1354,8 @@ export default function EnhancedProductForm({
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      {availableIngredients.map((ingredient) => (
-                                        <SelectItem key={ingredient.materialName} value={ingredient.materialName}>
+                                      {availableIngredients.map((ingredient, idx) => (
+                                        <SelectItem key={`${ingredient.materialName}-${idx}`} value={ingredient.materialName}>
                                           {ingredient.materialName}
                                         </SelectItem>
                                       ))}
@@ -1593,32 +1593,7 @@ export default function EnhancedProductForm({
                   </div>
                 </div>
 
-                {/* Current ingredients from form */}
-                {form.watch('ingredients')?.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="font-medium mb-2">Current Ingredients (Legacy Form):</h4>
-                    <div className="space-y-2">
-                      {form.watch('ingredients').map((ingredient, index) => (
-                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                          <div>
-                            <span className="font-medium">{ingredient.name || 'Unnamed ingredient'}</span>
-                            <span className="text-muted-foreground ml-2">
-                              {ingredient.amount} {ingredient.unit}
-                            </span>
-                            {ingredient.origin && (
-                              <span className="text-sm text-muted-foreground ml-2">
-                                from {ingredient.origin}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                            Manual Entry
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+
               </CardContent>
             </Card>
           </TabsContent>
