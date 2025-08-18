@@ -17,6 +17,7 @@ import { WhatsNextModule } from "@/components/dashboard/WhatsNextModule";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { KPITracking } from "@/components/dashboard/KPITracking";
 import { SMARTGoals } from "@/components/dashboard/SMARTGoals";
+import WaterFootprintBreakdownChart from "@/components/dashboard/WaterFootprintBreakdownChart";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -181,6 +182,13 @@ export default function Dashboard() {
             </div>
             <div id="reports-section">
               <ReportStatus />
+            </div>
+          </div>
+
+          {/* Water Footprint Section */}
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div id="water-footprint-section">
+              <WaterFootprintBreakdownChart />
             </div>
           </div>
 

@@ -4266,6 +4266,95 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // ============ WATER FOOTPRINT ENDPOINTS ============
+  
+  // POST /api/company/water - Submit total metered water consumption
+  app.post('/api/company/water', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+
+      const { total_consumption_m3, reporting_period } = req.body;
+      
+      if (!total_consumption_m3 || total_consumption_m3 <= 0) {
+        return res.status(400).json({ error: 'Valid total_consumption_m3 is required' });
+      }
+
+      // Convert m³ to liters for storage (database stores in liters)
+      const consumptionLiters = total_consumption_m3 * 1000;
+
+      // Update or create company water data
+      const existingData = await db.select()
+        .from(companyData)
+        .where(eq(companyData.companyId, company.id))
+        .limit(1);
+
+      if (existingData.length > 0) {
+        await db.update(companyData)
+          .set({
+            waterConsumption: consumptionLiters.toString(),
+            updatedAt: new Date()
+          })
+          .where(eq(companyData.companyId, company.id));
+      } else {
+        await db.insert(companyData).values({
+          companyId: company.id,
+          waterConsumption: consumptionLiters.toString(),
+          reportingPeriodStart: reporting_period?.start ? new Date(reporting_period.start) : null,
+          reportingPeriodEnd: reporting_period?.end ? new Date(reporting_period.end) : null
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Water consumption data saved successfully',
+        data: {
+          consumption_m3: total_consumption_m3,
+          consumption_liters: consumptionLiters
+        }
+      });
+    } catch (error) {
+      console.error('Error saving water consumption:', error);
+      res.status(500).json({ error: 'Failed to save water consumption data' });
+    }
+  });
+
+  // GET /api/company/water-footprint - Get complete water footprint breakdown
+  app.get('/api/company/water-footprint', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+
+      const { WaterFootprintService } = await import('./services/WaterFootprintService');
+      const breakdown = await WaterFootprintService.calculateTotalCompanyFootprint(company.id);
+
+      res.json({
+        success: true,
+        data: {
+          ...breakdown,
+          // Convert liters to m³ for display
+          total_m3: breakdown.total / 1000,
+          agricultural_water_m3: breakdown.agricultural_water / 1000,
+          processing_and_dilution_water_m3: breakdown.processing_and_dilution_water / 1000,
+          net_operational_water_m3: breakdown.net_operational_water / 1000
+        }
+      });
+    } catch (error) {
+      console.error('Error calculating water footprint:', error);
+      res.status(500).json({ error: 'Failed to calculate water footprint' });
+    }
+  });
+
   const server = createServer(app);
   
   // Initialize WebSocket service
