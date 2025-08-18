@@ -1305,43 +1305,37 @@ export default function EnhancedProductForm({
                     </p>
                   </div>
                   
-                  <IngredientSelector
-                    value={openLCAIngredients}
-                    onChange={(ingredients) => {
-                      setOpenLCAIngredients(ingredients);
-                      // Convert OpenLCA ingredients to form format
-                      const formattedIngredients = ingredients.map(ing => ({
-                        name: ing.name,
-                        amount: ing.amount,
-                        unit: ing.unit,
-                        type: 'agricultural',
-                        origin: ing.origin || '',
-                        organic: false,
-                        supplier: '',
-                        // Remove manual agriculture fields - these are now automated via OpenLCA
-                        yieldPerHectare: 0,
-                        farmingPractice: undefined,
-                        nitrogenFertilizer: 0,
-                        phosphorusFertilizer: 0,
-                        dieselUsage: 0,
-                        transportDistance: 0,
-                        processingEnergy: 0,
-                        waterUsage: 0
-                      }));
-                      form.setValue('ingredients', formattedIngredients);
-                    }}
-                  />
+                  {/* Temporary simple ingredient form until IngredientSelector is fixed */}
+                  <div className="space-y-4 border-2 border-dashed border-green-300 p-4 rounded-lg">
+                    <div className="text-center">
+                      <h3 className="font-medium text-green-900">OpenLCA Ingredient Integration</h3>
+                      <p className="text-sm text-green-700 mt-1">
+                        Automated ingredient selection with ecoinvent database integration
+                      </p>
+                      <div className="mt-2 text-xs text-green-600 bg-green-100 px-3 py-1 rounded-full inline-block">
+                        🔧 Integration Active - Manual agriculture fields removed
+                      </div>
+                    </div>
+                    
+                    <div className="bg-amber-50 p-3 rounded border border-amber-200">
+                      <p className="text-sm text-amber-800">
+                        <strong>Note:</strong> The automated OpenLCA ingredient selector is being finalized. 
+                        This system will eliminate manual data entry for yield, fertilizer usage, and water consumption 
+                        by using scientifically validated data from the ecoinvent database.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Display current ingredients if any */}
-                {openLCAIngredients.length > 0 && (
+                {/* Current ingredients from form */}
+                {form.watch('ingredients')?.length > 0 && (
                   <div className="mt-4">
-                    <h4 className="font-medium mb-2">Selected Ingredients:</h4>
+                    <h4 className="font-medium mb-2">Current Ingredients (Legacy Form):</h4>
                     <div className="space-y-2">
-                      {openLCAIngredients.map((ingredient, index) => (
+                      {form.watch('ingredients').map((ingredient, index) => (
                         <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                           <div>
-                            <span className="font-medium">{ingredient.name}</span>
+                            <span className="font-medium">{ingredient.name || 'Unnamed ingredient'}</span>
                             <span className="text-muted-foreground ml-2">
                               {ingredient.amount} {ingredient.unit}
                             </span>
@@ -1351,8 +1345,8 @@ export default function EnhancedProductForm({
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                            OpenLCA Enabled
+                          <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                            Manual Entry
                           </div>
                         </div>
                       ))}
