@@ -68,7 +68,16 @@ export default function UserDetail() {
   const [activeTab, setActiveTab] = useState('overview');
 
   const { data: profileResponse, isLoading, error } = useQuery<ProfileResponse>({
-    queryKey: [`/api/admin/users/${companyId}`],
+    queryKey: ['/api/admin/users', companyId],
+    queryFn: async () => {
+      if (!companyId) throw new Error('Company ID is required');
+      
+      const response = await fetch(`/api/admin/users/${companyId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     enabled: !!companyId,
     refetchInterval: 30000,
   });

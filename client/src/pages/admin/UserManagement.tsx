@@ -53,11 +53,20 @@ export default function UserManagement() {
   const pageSize = 20;
 
   const { data: userResponse, isLoading, error } = useQuery<UserListResponse>({
-    queryKey: ['/api/admin/users', { 
-      search: searchTerm, 
-      limit: pageSize, 
-      offset: currentPage * pageSize 
-    }],
+    queryKey: ['/api/admin/users', searchTerm, currentPage],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        limit: pageSize.toString(),
+        offset: (currentPage * pageSize).toString(),
+        ...(searchTerm && { search: searchTerm })
+      });
+      
+      const response = await fetch(`/api/admin/users?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 

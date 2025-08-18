@@ -1,0 +1,103 @@
+
+> rest-express@1.0.0 dev
+isAuthenticated middleware check for: /api/smart-goals {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/suggestions/next-steps {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/kpi-data {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+Products fetched: 2 for company 1
+Using existing company with products: Demo Company ID: 1
+Using existing company with products: Demo Company ID: 1
+Using existing company with products: Demo Company ID: 1
+Using existing company with products: Demo Company ID: 1
+🏢 Using company ID 1 for automated calculations
+🔍 Calculating purchased goods for company 1
+isAuthenticated middleware check for: /api/reports {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+📦 Found 2 products for emissions calculation
+🧮 Processing product: Dark Spiced ecoSPIRITS (ID: 14)
+⚠️ No LCA data found, using fallback calculation
+📋 Found 1 ingredients
+🌾 : 0 ml = 0 kg CO2e
+📊 Dark Spiced ecoSPIRITS total: 0.000 kg CO2e per unit × 1 units = 0 kg CO2e
+🧮 Processing product: Rum Blanc (ID: 12)
+📊 Using pre-calculated LCA: 2.2 kg CO2e per unit
+📊 Rum Blanc total: 2.200 kg CO2e per unit × 300000 units = 660000 kg CO2e
+Using existing company with products: Demo Company ID: 1
+Using existing company with products: Demo Company ID: 1
+🔍 Getting suggestions for company 1
+📋 Generated 2 suggestions: [
+  'Set Your First Sustainability Goal',
+  'Enhance Your Sustainability Reporting'
+]
+Development mode: Bypassing admin authentication for admin routes
+Development mode: Bypassing admin authentication for admin routes
+Admin analytics endpoint called
+Development mode: Bypassing admin authentication for admin routes
+Admin suppliers endpoint called
+Analytics response data: {
+  "totalUsers": 4,
+  "newUserCount": 2,
+  "userGrowthPercentage": 0,
+  "totalSuppliers": 10,
+  "newSupplierCount": 10,
+  "supplierGrowthPercentage": 100,
+  "totalCompanies": 3,
+  "pendingLcaReviews": 0,
+  "pendingSuppliersCount": 3,
+  "pendingProductsCount": 1,
+  "lastUpdated": "2025-08-18T14:52:42.101Z"
+}
+Total suppliers count from query: 10
+Development mode: Bypassing admin authentication for admin routes
+isAuthenticated middleware check for: /api/admin/users/[object%20Object] {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+Using existing company with products: Demo Company ID: 1
+Development mode: Bypassing admin authentication for admin routes
+isAuthenticated middleware check for: /api/admin/users/[object%20Object] {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
