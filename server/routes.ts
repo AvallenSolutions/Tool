@@ -3679,14 +3679,19 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // POST /api/conversations - Create new conversation
-  app.post('/api/conversations', isAuthenticated, async (req, res) => {
+  app.post('/api/conversations', async (req, res) => {
+    // Development mode authentication bypass
+    let userId = null;
+    if (req.isAuthenticated() && req.user) {
+      userId = (req.user as any).claims?.sub;
+    } else if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode: Bypassing auth for conversation creation');
+      userId = 'dev-user';
+    } else {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
     try {
-      const user = req.user as any;
-      if (!user?.id) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
-
-      const company = await dbStorage.getCompanyByOwner(user.id);
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
@@ -3698,7 +3703,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         type: type || 'supplier_collaboration',
         companyId: company.id,
         supplierId: supplierId || null,
-        participants: participants || [user.id],
+        participants: participants || [userId],
         status: 'active',
         lastMessageAt: new Date()
       }).returning();

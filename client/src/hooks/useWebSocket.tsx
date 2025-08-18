@@ -47,8 +47,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const isReplit = window.location.hostname.includes('replit.dev');
       const wsUrl = isReplit 
-        ? `${protocol}//${window.location.host}/ws`  // Production: no explicit port
-        : `${protocol}//${window.location.hostname}:${window.location.port || '5173'}/ws`; // Development: explicit port
+        ? `${protocol}//${window.location.hostname}/ws`  // Production: use hostname only
+        : `${protocol}://localhost:5000/ws`;             // Development: explicit port 5000
       
       console.log('Connecting to WebSocket:', wsUrl);
       const ws = new WebSocket(wsUrl);
