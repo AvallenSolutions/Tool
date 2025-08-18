@@ -3213,16 +3213,20 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
+      // Get company by owner ID  
       const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
+      console.log(`🔍 Getting suggestions for company ${company.id}`);
       const suggestions = await suggestionService.getNextSteps(company.id);
+      console.log(`📋 Generated ${suggestions.length} suggestions:`, suggestions.map(s => s.title));
+      
       res.json({ suggestions });
     } catch (error) {
       console.error('Error getting next steps:', error);
-      res.status(500).json({ error: 'Failed to get suggestions' });
+      res.status(500).json({ error: 'Failed to get suggestions', details: error.message });
     }
   });
 

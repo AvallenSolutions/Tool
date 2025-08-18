@@ -31,7 +31,7 @@ export class SuggestionService {
         title: 'Complete Your Company Profile',
         description: 'Finish setting up your company details to unlock all features',
         priority: 'high',
-        actionUrl: '/onboarding',
+        actionUrl: '/app/onboarding',
         estimatedTime: '5 minutes'
       });
     }
@@ -43,7 +43,7 @@ export class SuggestionService {
         title: 'Add Your First Product',
         description: 'Start tracking environmental impact by adding a product',
         priority: 'high',
-        actionUrl: '/products/create',
+        actionUrl: '/app/products/create/enhanced',
         estimatedTime: '10 minutes'
       });
     }
@@ -55,7 +55,7 @@ export class SuggestionService {
         title: 'Set Your First Sustainability Goal',
         description: 'Define measurable targets to track your progress',
         priority: 'medium',
-        actionUrl: '/dashboard#goals',
+        actionUrl: '/app/company',
         estimatedTime: '8 minutes'
       });
     }
@@ -68,7 +68,7 @@ export class SuggestionService {
         title: `Complete Data for ${incompleteProducts.length} Product${incompleteProducts.length > 1 ? 's' : ''}`,
         description: 'Add ingredient and packaging details for accurate LCA calculations',
         priority: 'medium',
-        actionUrl: `/products/${incompleteProducts[0].id}/edit`,
+        actionUrl: `/app/products/${incompleteProducts[0].id}/edit`,
         estimatedTime: '15 minutes'
       });
     }
@@ -80,7 +80,7 @@ export class SuggestionService {
         title: 'Generate Your First Sustainability Report',
         description: 'Create a professional report to share your environmental impact',
         priority: 'low',
-        actionUrl: '/reports/create',
+        actionUrl: '/app/reports',
         estimatedTime: '20 minutes'
       });
     }
