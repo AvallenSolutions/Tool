@@ -23,6 +23,7 @@ export class SuggestionService {
     const products = await storage.getProductsByCompany(companyId);
     const goals = await storage.getGoalsByCompany(companyId);
     const customReports = await storage.getReportsByCompanyCustom(companyId);
+    const mainReports = await storage.getReportsByCompany(companyId);
     
     // Priority 1: Complete onboarding if not done
     if (!company?.onboardingComplete) {
@@ -74,7 +75,8 @@ export class SuggestionService {
     }
     
     // Priority 5: Generate first report if none exist but have products
-    if (customReports.length === 0 && products.length > 0) {
+    const totalReports = customReports.length + mainReports.length;
+    if (totalReports === 0 && products.length > 0) {
       suggestions.push({
         id: 'create-first-report',
         title: 'Generate Your First Sustainability Report',
@@ -82,6 +84,16 @@ export class SuggestionService {
         priority: 'low',
         actionUrl: '/app/reports',
         estimatedTime: '20 minutes'
+      });
+    } else if (totalReports > 0 && products.length > 0) {
+      // Advanced suggestions for companies with existing reports
+      suggestions.push({
+        id: 'improve-reporting',
+        title: 'Enhance Your Sustainability Reporting',
+        description: 'Add more detailed metrics or generate quarterly reports',
+        priority: 'low',
+        actionUrl: '/app/reports',
+        estimatedTime: '15 minutes'
       });
     }
     

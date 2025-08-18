@@ -3162,7 +3162,7 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // Phase 1: Advanced UX Features - Suggestion and KPI endpoints
   
-  // GET /api/suggestions/debug - Debug suggestions generation (temporary)
+  // GET /api/suggestions/debug - Debug suggestions generation (can be removed later)
   app.get('/api/suggestions/debug', async (req, res) => {
     try {
       const companyId = 1;
@@ -3172,13 +3172,16 @@ Be precise and quote actual text from the content, not generic terms.`;
       const company = await dbStorage.getCompanyById(companyId);
       const products = await dbStorage.getProductsByCompany(companyId);
       const goals = await dbStorage.getGoalsByCompany(companyId);
-      const reports = await dbStorage.getReportsByCompanyCustom(companyId);
+      const customReports = await dbStorage.getReportsByCompanyCustom(companyId);
+      const mainReports = await dbStorage.getReportsByCompany(companyId);
       
       console.log('📊 Suggestion service data:');
       console.log(`   Company: ${company ? `${company.name} (onboarding: ${company.onboardingComplete})` : 'NOT FOUND'}`);
       console.log(`   Products: ${products.length} products found`);
       console.log(`   Goals: ${goals.length} goals found`);
-      console.log(`   Reports: ${reports.length} reports found`);
+      console.log(`   Custom Reports: ${customReports.length} reports found`);
+      console.log(`   Main Reports: ${mainReports.length} reports found`);
+      console.log(`   Total Reports: ${customReports.length + mainReports.length}`);
       
       // Check product completeness
       const incompleteProducts = products.filter(p => !p.ingredients || p.ingredients.length === 0);
@@ -3192,7 +3195,9 @@ Be precise and quote actual text from the content, not generic terms.`;
           company: company ? { name: company.name, onboardingComplete: company.onboardingComplete } : null,
           productsCount: products.length,
           goalsCount: goals.length,
-          reportsCount: reports.length,
+          customReportsCount: customReports.length,
+          mainReportsCount: mainReports.length,
+          totalReportsCount: customReports.length + mainReports.length,
           incompleteProductsCount: incompleteProducts.length
         },
         suggestions 
