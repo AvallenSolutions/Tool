@@ -43,10 +43,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     try {
       setConnectionStatus('connecting');
       
-      // Determine WebSocket URL
+      // Determine WebSocket URL - connect to the actual server port (5173)
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const host = window.location.hostname;
+      const port = window.location.port || '5173';
+      const wsUrl = `${protocol}//${host}:${port}/ws`;
       
+      console.log('Connecting to WebSocket:', wsUrl);
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
@@ -57,13 +60,17 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         reconnectCountRef.current = 0;
         onConnect?.();
 
-        // Authenticate if userId is provided
+        // Authenticate if userId is provided - add delay to ensure connection is stable
         if (userId) {
-          ws.send(JSON.stringify({
-            type: 'auth',
-            userId,
-            timestamp: new Date().toISOString()
-          }));
+          setTimeout(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'auth',
+                userId,
+                timestamp: new Date().toISOString()
+              }));
+            }
+          }, 100);
         }
 
         // Send queued messages
@@ -91,14 +98,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         wsRef.current = null;
         onDisconnect?.();
 
-        // Attempt to reconnect
+        // Attempt to reconnect with exponential backoff
         if (reconnectCountRef.current < reconnectAttempts) {
           reconnectCountRef.current++;
-          console.log(`Attempting to reconnect (${reconnectCountRef.current}/${reconnectAttempts})...`);
+          const backoffDelay = Math.min(reconnectInterval * Math.pow(2, reconnectCountRef.current - 1), 30000);
+          console.log(`Attempting to reconnect (${reconnectCountRef.current}/${reconnectAttempts}) in ${backoffDelay}ms...`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
-          }, reconnectInterval);
+          }, backoffDelay);
         } else {
           console.error('Max reconnection attempts reached');
           setConnectionStatus('error');
@@ -107,6 +115,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+        console.error('WebSocket URL was:', wsUrl);
+        console.error('WebSocket readyState:', ws.readyState);
         setConnectionStatus('error');
       };
 
@@ -133,10 +143,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   const sendMessage = useCallback((message: WebSocketMessage) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        ...message,
-        timestamp: new Date().toISOString()
-      }));
+      try {
+        wsRef.current.send(JSON.stringify({
+          ...message,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        console.error('Error sending WebSocket message:', error);
+        messageQueueRef.current.push(message);
+      }
     } else {
       // Queue message for when connection is established
       messageQueueRef.current.push(message);

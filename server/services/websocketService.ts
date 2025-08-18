@@ -31,7 +31,13 @@ export class WebSocketService {
 
   private setupWebSocket() {
     this.wss.on('connection', (ws: WebSocket, request) => {
-      console.log('New WebSocket connection');
+      console.log('New WebSocket connection established');
+      
+      // Set up ping/pong for connection health
+      ws.isAlive = true;
+      ws.on('pong', () => {
+        ws.isAlive = true;
+      });
 
       ws.on('message', async (data: Buffer) => {
         try {
@@ -80,8 +86,29 @@ export class WebSocketService {
 
       ws.on('error', (error) => {
         console.error('WebSocket error:', error);
+        // Clean up client on error
+        for (const [userId, client] of Array.from(this.clients.entries())) {
+          if (client.ws === ws) {
+            this.clients.delete(userId);
+            console.log(`Removed client ${userId} due to WebSocket error`);
+            break;
+          }
+        }
       });
     });
+    
+    // Set up health check interval
+    setInterval(() => {
+      this.wss.clients.forEach((ws: any) => {
+        if (ws.isAlive === false) {
+          console.log('Terminating dead WebSocket connection');
+          return ws.terminate();
+        }
+        
+        ws.isAlive = false;
+        ws.ping();
+      });
+    }, 30000);
   }
 
   private async handleMessage(ws: WebSocket, message: WebSocketMessage) {
