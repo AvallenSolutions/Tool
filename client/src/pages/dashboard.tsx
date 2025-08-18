@@ -9,7 +9,7 @@ import Header from "@/components/layout/header";
 import MetricsCards from "@/components/dashboard/metrics-cards";
 import EmissionsChart from "@/components/dashboard/emissions-chart";
 import ReportStatus from "@/components/dashboard/report-status";
-import SupplierList from "@/components/dashboard/supplier-list";
+
 import ProductsSection from "@/components/dashboard/products-section";
 import DashboardTour from "@/components/dashboard/dashboard-tour";
 import GuidedProductCreation from "@/components/dashboard/guided-product-creation";
@@ -184,12 +184,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 gap-6 mb-8">
             <div id="products-section">
               <ProductsSection />
-            </div>
-            <div id="suppliers-section">
-              <SupplierList />
             </div>
           </div>
         </main>
