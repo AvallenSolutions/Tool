@@ -49,13 +49,13 @@ export class WaterFootprintService {
    */
   private static async calculateAgriculturalWater(companyId: number): Promise<number> {
     try {
-      // Get all products with LCA data for the company
+      // Get all products with ingredients data for the company
       const companyProducts = await db
         .select({
           id: products.id,
           annualProductionVolume: products.annualProductionVolume,
           productionUnit: products.productionUnit,
-          lcaData: products.lcaData,
+          ingredients: products.ingredients,
           waterFootprint: products.waterFootprint
         })
         .from(products)
@@ -66,33 +66,19 @@ export class WaterFootprintService {
       for (const product of companyProducts) {
         const productionVolume = Number(product.annualProductionVolume) || 0;
         
-        // Try to extract agricultural water from LCA data
-        if (product.lcaData) {
-          try {
-            const lcaData = typeof product.lcaData === 'string' 
-              ? JSON.parse(product.lcaData) 
-              : product.lcaData;
-              
-            // Look for agricultural water data in LCA structure
-            if (lcaData?.agriculture?.water_usage_liters) {
-              totalAgriculturalWater += lcaData.agriculture.water_usage_liters * productionVolume;
-              continue;
+        // Extract agricultural water from ingredients data
+        if (product.ingredients && Array.isArray(product.ingredients)) {
+          let ingredientWater = 0;
+          for (const ingredient of product.ingredients) {
+            // Cast to any to access waterUsage field which exists in actual data but not in type definition
+            const ingredientData = ingredient as any;
+            if (ingredientData.waterUsage) {
+              ingredientWater += Number(ingredientData.waterUsage) || 0;
             }
-            
-            // Look for ingredients water usage
-            if (lcaData?.ingredients && Array.isArray(lcaData.ingredients)) {
-              let ingredientWater = 0;
-              for (const ingredient of lcaData.ingredients) {
-                if (ingredient.waterUsage) {
-                  ingredientWater += Number(ingredient.waterUsage) || 0;
-                }
-              }
-              totalAgriculturalWater += ingredientWater * productionVolume;
-              continue;
-            }
-          } catch (error) {
-            console.error('Error parsing LCA data for product', product.id, error);
           }
+          // Convert liters to liters (no conversion needed, keeping in liters for internal calculation)
+          totalAgriculturalWater += ingredientWater * productionVolume;
+          continue;
         }
         
         // Fallback: use water footprint if available (estimate 70% is agricultural)

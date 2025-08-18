@@ -790,6 +790,24 @@ export default function Company() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Company Water Usage Section */}
+                    <div className="border rounded-lg p-4 bg-blue-50 mt-6">
+                      <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                        <Droplets className="w-4 h-4 text-blue-600" />
+                        Company Water Usage
+                      </h4>
+                      <p className="text-sm text-gray-700 mb-4">
+                        What is your facility's total water consumption?
+                      </p>
+                      <p className="text-xs text-gray-600 mb-4 bg-blue-100 p-3 rounded border">
+                        💡 Please enter the total water consumption for your production facility from your utility bill for the reporting period. 
+                        Our tool will automatically allocate this between the water that goes into your product (processing & dilution) and 
+                        the water used for general operations (like cleaning and cooling).
+                      </p>
+                      
+                      <WaterUsageForm />
+                    </div>
                   </div>
 
                   {/* Transportation Section */}
@@ -1444,23 +1462,7 @@ export default function Company() {
                     </div>
                   </div>
 
-                  {/* Company Water Usage Section */}
-                  <div className="border rounded-lg p-4 bg-blue-50">
-                    <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
-                      <Droplets className="w-4 h-4 text-blue-600" />
-                      Company Water Usage
-                    </h4>
-                    <p className="text-sm text-gray-700 mb-4">
-                      What is your facility's total water consumption?
-                    </p>
-                    <p className="text-xs text-gray-600 mb-4 bg-blue-100 p-3 rounded border">
-                      💡 Please enter the total water consumption for your production facility from your utility bill for the reporting period. 
-                      Our tool will automatically allocate this between the water that goes into your product (processing & dilution) and 
-                      the water used for general operations (like cleaning and cooling).
-                    </p>
-                    
-                    <WaterUsageForm />
-                  </div>
+
 
                   {/* Impact Metrics Placeholder */}
                   <div className="border rounded-lg p-4 bg-gray-50">
