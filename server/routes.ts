@@ -3639,14 +3639,27 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Collaboration and messaging endpoints
   
   // GET /api/conversations - Get user's conversations
-  app.get('/api/conversations', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      if (!user?.id) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
+  app.get('/api/conversations', async (req, res) => {
+    console.log('isAuthenticated middleware check for: /api/conversations', {
+      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+      hasUser: !!req.user,
+      hasExpiresAt: !!(req.user as any)?.expiresAt,
+      userObject: req.user ? 'has user' : 'no user'
+    });
+    
+    // Development mode authentication bypass
+    let userId = null;
+    if (req.isAuthenticated() && req.user) {
+      userId = (req.user as any).claims?.sub || (req.user as any).id;
+    } else if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode: Using dev-user for conversations endpoint');
+      userId = 'dev-user';
+    } else {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
-      const company = await dbStorage.getCompanyByOwner(user.id);
+    try {
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }

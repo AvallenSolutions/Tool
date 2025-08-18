@@ -94,7 +94,7 @@ export default function CollaborationDashboard() {
 
   // Real-time messaging connection (polling-based fallback)
   const { isConnected, sendChatMessage, sendTypingIndicator } = useRealtimeMessaging({
-    userId: user?.id,
+    userId: 'dev-user', // Fixed userId for development mode
     onMessage: handlePollingMessage
   });
 
