@@ -105,14 +105,21 @@ export function KPITracking() {
   });
   
   const createKpiMutation = useMutation({
-    mutationFn: (kpiData: NewKPIFormData) => 
-      apiRequest('/api/kpis', {
+    mutationFn: async (kpiData: NewKPIFormData) => {
+      const response = await fetch('/api/kpis', {
         method: 'POST',
-        body: JSON.stringify(kpiData),
         headers: {
           'Content-Type': 'application/json',
         },
-      }),
+        body: JSON.stringify(kpiData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create KPI');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/kpi-data"] });
       setShowAddDialog(false);
@@ -175,7 +182,10 @@ export function KPITracking() {
             <Target className="w-12 h-12 text-blue-400 mx-auto mb-3" />
             <p className="text-gray-700 font-medium">No KPIs set up yet</p>
             <p className="text-sm text-gray-500 mb-4">Create your first sustainability goal to start tracking progress</p>
-            <Button className="bg-avallen-green hover:bg-avallen-green/90">
+            <Button 
+              className="bg-avallen-green hover:bg-avallen-green/90"
+              onClick={() => setShowAddDialog(true)}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add KPI
             </Button>

@@ -3293,13 +3293,15 @@ Be precise and quote actual text from the content, not generic terms.`;
   // GET /api/kpi-data - Get current KPI dashboard data
   app.get('/api/kpi-data', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
-      if (!user?.id) {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       // Get company by owner ID
-      const company = await dbStorage.getCompanyByOwner(user.id);
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
