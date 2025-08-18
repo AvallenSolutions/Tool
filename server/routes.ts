@@ -3162,6 +3162,61 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // Phase 1: Advanced UX Features - Suggestion and KPI endpoints
   
+  // POST /api/kpis - Create a new KPI
+  app.post('/api/kpis', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { name, description, target, unit, category, deadline } = req.body;
+      
+      // Validate required fields
+      if (!name || !target || !unit || !category) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: name, target, unit, category' 
+        });
+      }
+      
+      // Create KPI with default values
+      const kpiData = {
+        companyId: company.id,
+        name: name.trim(),
+        description: description?.trim() || null,
+        target: parseFloat(target),
+        current: 0, // Start at 0
+        unit: unit.trim(),
+        category,
+        deadline: deadline || null,
+        status: 'on-track' as const,
+        trend: 'stable' as const,
+        trendValue: 0
+      };
+      
+      const newKpi = await dbStorage.createKPI(kpiData);
+      
+      res.status(201).json({ 
+        success: true, 
+        kpi: newKpi,
+        message: 'KPI created successfully' 
+      });
+    } catch (error) {
+      console.error('Error creating KPI:', error);
+      res.status(500).json({ 
+        error: 'Failed to create KPI', 
+        details: error.message 
+      });
+    }
+  });
+  
   // GET /api/suggestions/debug - Debug suggestions generation (can be removed later)
   app.get('/api/suggestions/debug', async (req, res) => {
     try {

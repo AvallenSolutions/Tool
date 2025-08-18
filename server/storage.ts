@@ -880,6 +880,49 @@ export class DatabaseStorage implements IStorage {
     return goal;
   }
 
+  // KPI methods (using companyGoals table as KPI storage)
+  async createKPI(kpiData: {
+    companyId: number;
+    name: string;
+    description?: string | null;
+    target: number;
+    current: number;
+    unit: string;
+    category: string;
+    deadline?: string | null;
+    status: string;
+    trend: string;
+    trendValue: number;
+  }) {
+    // Map KPI data to companyGoals schema
+    const goalData = {
+      companyId: kpiData.companyId,
+      kpiName: kpiData.name,
+      targetValue: kpiData.target.toString(),
+      targetDate: kpiData.deadline || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default: 1 year from now
+      startValue: kpiData.current.toString(),
+    };
+
+    const [newKpi] = await db
+      .insert(companyGoals)
+      .values(goalData)
+      .returning();
+
+    // Transform back to KPI format for response
+    return {
+      id: newKpi.id,
+      name: newKpi.kpiName,
+      target: parseFloat(newKpi.targetValue),
+      current: parseFloat(newKpi.startValue),
+      unit: kpiData.unit,
+      category: kpiData.category,
+      deadline: newKpi.targetDate,
+      status: kpiData.status,
+      trend: kpiData.trend,
+      trendValue: kpiData.trendValue
+    };
+  }
+
   // Custom Reports operations
   async getReportsByCompanyCustom(companyId: number): Promise<CustomReport[]> {
     return await db

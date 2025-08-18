@@ -1,8 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -35,6 +44,15 @@ interface KPIResponse {
     atRisk: number;
     achieved: number;
   };
+}
+
+interface NewKPIFormData {
+  name: string;
+  description?: string;
+  target: number;
+  unit: string;
+  category: 'emissions' | 'efficiency' | 'sustainability' | 'compliance';
+  deadline?: string;
 }
 
 const categoryConfig = {
@@ -76,10 +94,46 @@ const statusConfig = {
 };
 
 export function KPITracking() {
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<NewKPIFormData>();
   const { data, isLoading, error } = useQuery<KPIResponse>({
     queryKey: ['/api/kpi-data'],
     refetchInterval: 10 * 60 * 1000, // Refresh every 10 minutes
   });
+  
+  const createKpiMutation = useMutation({
+    mutationFn: (kpiData: NewKPIFormData) => 
+      apiRequest('/api/kpis', {
+        method: 'POST',
+        body: JSON.stringify(kpiData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kpi-data"] });
+      setShowAddDialog(false);
+      reset();
+      toast({
+        title: "KPI Created",
+        description: "Your new KPI has been added successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create KPI. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const onSubmit = (data: NewKPIFormData) => {
+    createKpiMutation.mutate(data);
+  };
 
   if (isLoading) {
     return (
@@ -208,7 +262,11 @@ export function KPITracking() {
             </CardTitle>
             <CardDescription>Monitor individual sustainability metrics</CardDescription>
           </div>
-          <Button size="sm" className="bg-avallen-green hover:bg-avallen-green/90">
+          <Button 
+            size="sm" 
+            className="bg-avallen-green hover:bg-avallen-green/90"
+            onClick={() => setShowAddDialog(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add KPI
           </Button>
@@ -280,6 +338,115 @@ export function KPITracking() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add KPI Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="bg-white border shadow-lg max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New KPI</DialogTitle>
+            <DialogDescription>
+              Create a new sustainability KPI to track your progress
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">KPI Name</Label>
+              <Input
+                id="name"
+                {...register("name", { required: "KPI name is required" })}
+                placeholder="e.g., Reduce Carbon Emissions"
+              />
+              {errors.name && (
+                <p className="text-sm text-red-600">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select onValueChange={(value) => setValue("category", value as any)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border shadow-lg">
+                  <SelectItem value="emissions">Emissions</SelectItem>
+                  <SelectItem value="efficiency">Efficiency</SelectItem>
+                  <SelectItem value="sustainability">Sustainability</SelectItem>
+                  <SelectItem value="compliance">Compliance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="target">Target Value</Label>
+                <Input
+                  id="target"
+                  type="number"
+                  {...register("target", { 
+                    required: "Target is required",
+                    valueAsNumber: true,
+                    min: { value: 0, message: "Target must be positive" }
+                  })}
+                  placeholder="100"
+                />
+                {errors.target && (
+                  <p className="text-sm text-red-600">{errors.target.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="unit">Unit</Label>
+                <Input
+                  id="unit"
+                  {...register("unit", { required: "Unit is required" })}
+                  placeholder="kg CO2e, %, kWh"
+                />
+                {errors.unit && (
+                  <p className="text-sm text-red-600">{errors.unit.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Deadline (Optional)</Label>
+              <Input
+                id="deadline"
+                type="date"
+                {...register("deadline")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                {...register("description")}
+                placeholder="Brief description of this KPI..."
+                className="resize-none"
+                rows={2}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-avallen-green hover:bg-avallen-green/90"
+                disabled={createKpiMutation.isPending}
+              >
+                {createKpiMutation.isPending ? "Creating..." : "Create KPI"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
