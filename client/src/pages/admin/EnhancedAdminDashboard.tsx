@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EmbeddedUserManagement from '@/components/admin/EmbeddedUserManagement';
+import EmbeddedPerformanceAnalytics from '@/components/admin/EmbeddedPerformanceAnalytics';
 import { 
   Users, 
   Building2, 
@@ -24,7 +26,8 @@ import {
   Settings,
   CheckCircle2,
   Clock,
-  ExternalLink
+  ExternalLink,
+  UserPlus
 } from "lucide-react";
 
 interface AdminAnalytics {
@@ -53,7 +56,7 @@ interface ActionItem {
 
 export default function EnhancedAdminDashboard() {
   const [, navigate] = useLocation();
-  const [activeTab, setActiveTab] = useState("analytics");
+  const [activeTab, setActiveTab] = useState("overview");
 
   const { data: analytics, isLoading: analyticsLoading } = useQuery<AdminAnalytics>({
     queryKey: ['/api/admin/analytics'],
@@ -170,10 +173,18 @@ export default function EnhancedAdminDashboard() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />
-                  Platform Analytics
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  User Management
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  Performance Analytics
                 </TabsTrigger>
                 <TabsTrigger value="supplier-management" className="flex items-center gap-2">
                   <Building2 className="w-4 h-4" />
@@ -185,8 +196,8 @@ export default function EnhancedAdminDashboard() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Platform Analytics Tab */}
-              <TabsContent value="analytics" className="space-y-6">
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -276,6 +287,16 @@ export default function EnhancedAdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* User Management Tab */}
+              <TabsContent value="users" className="space-y-6">
+                <EmbeddedUserManagement />
+              </TabsContent>
+
+              {/* Performance Analytics Tab */}
+              <TabsContent value="analytics" className="space-y-6">
+                <EmbeddedPerformanceAnalytics />
               </TabsContent>
 
               {/* Supplier Management Tab */}
