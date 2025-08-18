@@ -527,6 +527,12 @@ export default function EnhancedProductForm({
   const [lcaJobId, setLcaJobId] = useState<string | null>(null);
   const [lcaProgress, setLcaProgress] = useState<number>(0);
   const [lcaStatus, setLcaStatus] = useState<'idle' | 'calculating' | 'completed' | 'failed'>('idle');
+
+  // Fetch available ingredients from OpenLCA
+  const { data: availableIngredients = [], isLoading: isLoadingIngredients } = useQuery<{materialName: string; unit: string}[]>({
+    queryKey: ['/api/lca/ingredients'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1305,25 +1311,177 @@ export default function EnhancedProductForm({
                     </p>
                   </div>
                   
-                  {/* Temporary simple ingredient form until IngredientSelector is fixed */}
-                  <div className="space-y-4 border-2 border-dashed border-green-300 p-4 rounded-lg">
-                    <div className="text-center">
-                      <h3 className="font-medium text-green-900">OpenLCA Ingredient Integration</h3>
-                      <p className="text-sm text-green-700 mt-1">
-                        Automated ingredient selection with ecoinvent database integration
-                      </p>
-                      <div className="mt-2 text-xs text-green-600 bg-green-100 px-3 py-1 rounded-full inline-block">
-                        🔧 Integration Active - Manual agriculture fields removed
-                      </div>
-                    </div>
-                    
-                    <div className="bg-amber-50 p-3 rounded border border-amber-200">
-                      <p className="text-sm text-amber-800">
-                        <strong>Note:</strong> The automated OpenLCA ingredient selector is being finalized. 
-                        This system will eliminate manual data entry for yield, fertilizer usage, and water consumption 
-                        by using scientifically validated data from the ecoinvent database.
-                      </p>
-                    </div>
+                  {/* OpenLCA Ingredient Entry Form */}
+                  <div className="space-y-4">
+                    {form.watch('ingredients').map((ingredient, index) => (
+                      <Card key={index} className="border-green-200 bg-green-50">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              <Wheat className="w-4 h-4 text-green-600" />
+                              Ingredient {index + 1}
+                            </span>
+                            {form.watch('ingredients').length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const currentIngredients = form.getValues('ingredients');
+                                  form.setValue('ingredients', currentIngredients.filter((_, i) => i !== index));
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            )}
+                          </CardTitle>
+                          <p className="text-xs text-green-600">
+                            Environmental data automatically calculated via OpenLCA ecoinvent database
+                          </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.name`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Material Name *</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select OpenLCA material" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {availableIngredients.map((ingredient) => (
+                                        <SelectItem key={ingredient.materialName} value={ingredient.materialName}>
+                                          {ingredient.materialName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormDescription>
+                                    Select from scientifically validated OpenLCA materials
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.amount`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Amount *</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.001"
+                                      placeholder="e.g., 3.5"
+                                      {...field}
+                                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Quantity used per product unit
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.unit`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Unit *</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select unit" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                                      <SelectItem value="l">Liters (l)</SelectItem>
+                                      <SelectItem value="ml">Milliliters (ml)</SelectItem>
+                                      <SelectItem value="g">Grams (g)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.origin`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Origin Country</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="e.g., Mauritius, France"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Country or region of origin
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                            <p className="text-xs text-blue-700">
+                              <strong>Automated via OpenLCA:</strong> Water footprint, carbon emissions, land use, and biodiversity impact are calculated automatically using ecoinvent database. Manual entry of yield, fertilizer usage, and diesel consumption is no longer required.
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+
+                    {/* Add Ingredient Button */}
+                    {form.watch('ingredients').length < 10 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const currentIngredients = form.getValues('ingredients');
+                          form.setValue('ingredients', [
+                            ...currentIngredients,
+                            {
+                              name: '',
+                              amount: 0,
+                              unit: 'kg',
+                              type: 'agricultural',
+                              origin: '',
+                              organic: false,
+                              supplier: '',
+                              yieldPerHectare: 0,
+                              farmingPractice: undefined,
+                              nitrogenFertilizer: 0,
+                              phosphorusFertilizer: 0,
+                              dieselUsage: 0,
+                              transportDistance: 0,
+                              processingEnergy: 0,
+                              waterUsage: 0
+                            }
+                          ]);
+                        }}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Another Ingredient ({form.watch('ingredients').length}/10)
+                      </Button>
+                    )}
                   </div>
                 </div>
 
