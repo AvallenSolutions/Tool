@@ -21,6 +21,7 @@ import { HelpBubble } from '@/components/ui/help-bubble';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { IngredientSelector, type IngredientInput } from '@/components/lca/IngredientSelector';
 import '@/styles/shepherd.css';
 
 // Enhanced Product Schema with all 8 tabs including LCA Data Collection
@@ -520,6 +521,7 @@ export default function EnhancedProductForm({
   const [selectedPackagingSupplier, setSelectedPackagingSupplier] = useState<any>(null);
   const [selectedProductionSupplier, setSelectedProductionSupplier] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [openLCAIngredients, setOpenLCAIngredients] = useState<IngredientInput[]>([]);
   
   // LCA calculation state
   const [lcaJobId, setLcaJobId] = useState<string | null>(null);
@@ -1281,7 +1283,7 @@ export default function EnhancedProductForm({
             </Card>
           </TabsContent>
 
-          {/* Ingredients Tab */}
+          {/* Ingredients Tab - Updated with OpenLCA Integration */}
           <TabsContent value="ingredients" className="space-y-6">
             <Card>
               <CardHeader>
@@ -1289,632 +1291,79 @@ export default function EnhancedProductForm({
                   <Wheat className="w-5 h-5 text-avallen-green" />
                   Recipe & Ingredients
                 </CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Select ingredients from our OpenLCA database for automated environmental impact calculations
+                </div>
               </CardHeader>
               <CardContent>
-                {/* Supplier Selection for Ingredients */}
-                <div className="p-4 bg-blue-50 rounded-lg mb-4">
-                  <h4 className="font-medium mb-2 flex items-center gap-2">
-                    <Search className="w-4 h-4" />
-                    Select from Verified Ingredient Suppliers
-                  </h4>
-                  <SupplierSelectionModal
-                    inputType="ingredient"
-                    onSelect={(supplier) => {
-                      // Auto-fill ingredient data from supplier product in FIRST empty slot
-                      const currentIngredients = form.getValues('ingredients');
-                      
-                      // Find first empty ingredient slot (name is empty)
-                      const firstEmptyIndex = currentIngredients.findIndex(ing => !ing.name);
-                      
-                      // Extract data from supplier product structure
-                      const productAttrs = supplier.productAttributes || {};
-                      const lcaData = supplier.lcaDataJson || {};
-                      const supplierAddr = supplier.supplierAddress || {};
-                      
-                      const newIngredient = {
-                        name: supplier.productName || '',
-                        amount: productAttrs.typical_usage_per_unit || productAttrs.weight || 0,
-                        unit: productAttrs.usage_unit || productAttrs.unit || 'kg',
-                        type: productAttrs.ingredient_type || productAttrs.type || '',
-                        origin: `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || productAttrs.origin_country || '',
-                        organic: productAttrs.organic_certified || false,
-                        supplier: supplier.supplierName || '',
-                        supplierAddress: supplierAddr
-                      };
-                      
-                      if (firstEmptyIndex !== -1) {
-                        // Fill first empty slot
-                        form.setValue(`ingredients.${firstEmptyIndex}`, newIngredient);
-                      } else {
-                        // Add new ingredient if no empty slots
-                        form.setValue('ingredients', [...currentIngredients, newIngredient]);
-                      }
-                      setSelectedIngredientSuppliers([...selectedIngredientSuppliers, supplier]);
-                    }}
-                    onManualEntry={() => {
-                      // Add blank ingredient for manual entry
-                      const currentIngredients = form.getValues('ingredients');
-                      form.setValue('ingredients', [
-                        ...currentIngredients, 
-                        { 
-                          name: '', amount: 0, unit: 'kg', type: '', origin: '', organic: false, supplier: '',
-                          yieldPerHectare: 0, farmingPractice: undefined, nitrogenFertilizer: 0, phosphorusFertilizer: 0,
-                          dieselUsage: 0, transportDistance: 0, processingEnergy: 0, waterUsage: 0
-                        }
-                      ]);
-                    }}
-                    selectedProduct={null}
-                  >
-                    <Button type="button" variant="outline">
-                      <Building2 className="w-4 h-4 mr-2" />
-                      Add Ingredient from Supplier
-                    </Button>
-                  </SupplierSelectionModal>
-                </div>
-
+                {/* OpenLCA Ingredient Selector */}
                 <div className="space-y-4">
-                  {form.watch('ingredients').map((_, index) => (
-                    <div key={index} className="border rounded-lg p-4 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <FormField
-                          control={form.control}
-                          name={`ingredients.${index}.name`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Ingredient Name *</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Apples" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`ingredients.${index}.amount`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Amount *</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  placeholder="100" 
-                                  {...field} 
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`ingredients.${index}.unit`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Unit *</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select unit" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="kg">Kilograms</SelectItem>
-                                  <SelectItem value="g">Grams</SelectItem>
-                                  <SelectItem value="l">Liters</SelectItem>
-                                  <SelectItem value="ml">Milliliters</SelectItem>
-                                  <SelectItem value="tonnes">Tonnes</SelectItem>
-                                  <SelectItem value="units">Units</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <FormField
-                          control={form.control}
-                          name={`ingredients.${index}.type`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Ingredient Type</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="grain">Grain</SelectItem>
-                                  <SelectItem value="fruit">Fruit</SelectItem>
-                                  <SelectItem value="botanical">Botanical</SelectItem>
-                                  <SelectItem value="additive">Additive</SelectItem>
-                                  <SelectItem value="yeast">Yeast</SelectItem>
-                                  <SelectItem value="sugar">Sugar</SelectItem>
-                                  <SelectItem value="sugar_product">Sugar Product</SelectItem>
-                                  <SelectItem value="agave">Agave</SelectItem>
-                                  <SelectItem value="water">Water</SelectItem>
-                                  <SelectItem value="acid">Acid</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`ingredients.${index}.origin`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Origin</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Normandy, France" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name={`ingredients.${index}.supplier`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Supplier</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Supplier name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Agriculture & Sourcing Details */}
-                      <div className="bg-blue-50 p-4 rounded-lg space-y-4">
-                        <h5 className="font-medium text-blue-900">Agriculture & Sourcing Details</h5>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.yieldPerHectare`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Yield (tons/hectare)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.1"
-                                    placeholder="25.5" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                      field.onChange(parseFloat(e.target.value) || 0);
-                                      // Auto-sync to LCA Data
-                                      form.setValue('lcaData.agriculture.yieldTonPerHectare', parseFloat(e.target.value) || 0);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.farmingPractice`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Farming Practice</FormLabel>
-                                <Select onValueChange={(value) => {
-                                  field.onChange(value);
-                                  // Auto-sync to LCA Data
-                                  form.setValue('lcaData.agriculture.landUse.farmingPractice', value as any);
-                                }} value={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select practice" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="conventional">Conventional</SelectItem>
-                                    <SelectItem value="organic">Organic</SelectItem>
-                                    <SelectItem value="biodynamic">Biodynamic</SelectItem>
-                                    <SelectItem value="regenerative">Regenerative</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.nitrogenFertilizer`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nitrogen Fertilizer (kg/ha)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.1"
-                                    placeholder="120" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                      field.onChange(parseFloat(e.target.value) || 0);
-                                      // Auto-sync to LCA Data
-                                      form.setValue('lcaData.agriculture.fertilizer.nitrogenKgPerHectare', parseFloat(e.target.value) || 0);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.phosphorusFertilizer`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Phosphorus (kg/ha)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.1"
-                                    placeholder="60" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                      field.onChange(parseFloat(e.target.value) || 0);
-                                      // Auto-sync to LCA Data
-                                      form.setValue('lcaData.agriculture.fertilizer.phosphorusKgPerHectare', parseFloat(e.target.value) || 0);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.dieselUsage`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Diesel Usage (L/ha)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.1"
-                                    placeholder="150" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                      field.onChange(parseFloat(e.target.value) || 0);
-                                      // Auto-sync to LCA Data
-                                      form.setValue('lcaData.agriculture.dieselLPerHectare', parseFloat(e.target.value) || 0);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.transportDistance`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center gap-2">
-                                  Transport Distance (km)
-                                  <HelpBubble 
-                                    title="Ingredient Transport Distance"
-                                    content="Distance from ingredient source to your production facility. This significantly impacts the carbon footprint of raw materials.<br><br><strong>Transport impact per km:</strong><br>• <strong>Road transport:</strong> 0.1-0.2 kg CO₂ per ton-km<br>• <strong>Rail transport:</strong> 0.03-0.05 kg CO₂ per ton-km<br>• <strong>Sea freight:</strong> 0.01-0.02 kg CO₂ per ton-km<br><br><strong>Local sourcing benefits:</strong><br>• Reduced transport emissions<br>• Lower supply chain risk<br>• Often fresher ingredients<br>• Support for local economy"
-                                  />
-                                </FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.1"
-                                    placeholder="350" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                      field.onChange(parseFloat(e.target.value) || 0);
-                                      // Auto-sync to LCA Data
-                                      form.setValue('lcaData.inboundTransport.distanceKm', parseFloat(e.target.value) || 0);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.waterUsage`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center gap-2">
-                                  Water Usage (m³/ton)
-                                  <HelpBubble 
-                                    title="Agricultural Water Usage"
-                                    content="Water consumed during crop cultivation per ton of harvested product. This includes irrigation, processing, and cleaning water.<br><br><strong>Typical water requirements:</strong><br>• <strong>Barley (rainfed):</strong> 0.5-1.2 m³/ton<br>• <strong>Barley (irrigated):</strong> 1.5-3.0 m³/ton<br>• <strong>Grapes (rainfed):</strong> 0.3-0.8 m³/ton<br>• <strong>Grapes (irrigated):</strong> 1.0-2.5 m³/ton<br><br><strong>Water stress impact:</strong><br>High water usage in water-stressed regions significantly increases environmental impact scores."
-                                  />
-                                </FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.1"
-                                    placeholder="3.5" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                      field.onChange(parseFloat(e.target.value) || 0);
-                                      // Auto-sync to LCA Data
-                                      form.setValue('lcaData.processing.waterM3PerTonCrop', parseFloat(e.target.value) || 0);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        {/* Biodiversity and Soil Quality Fields */}
-                        <div className="bg-green-50 p-4 rounded-lg space-y-4">
-                          <h6 className="font-medium text-green-900">Environmental Impact Assessment</h6>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              control={form.control}
-                              name={`ingredients.${index}.biodiversityImpact`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="flex items-center gap-2">
-                                    Biodiversity Impact Score (1-10)
-                                    <HelpBubble 
-                                      title="Biodiversity Impact Assessment"
-                                      content="A comprehensive score assessing the farming practices' impact on local ecosystem biodiversity.<br><br><strong>Scoring guide:</strong><br>• <strong>1-3:</strong> High negative impact (intensive monoculture, pesticide use)<br>• <strong>4-6:</strong> Moderate impact (conventional farming with some conservation)<br>• <strong>7-8:</strong> Low impact (integrated pest management, crop rotation)<br>• <strong>9-10:</strong> Positive impact (organic, agroecology, habitat creation)<br><br><strong>Factors considered:</strong><br>• Pesticide and herbicide use<br>• Habitat preservation<br>• Pollinator support<br>• Soil health practices"
-                                    />
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      type="number" 
-                                      min="1"
-                                      max="10"
-                                      step="0.1"
-                                      placeholder="7.5" 
-                                      {...field} 
-                                      onChange={(e) => {
-                                        field.onChange(parseFloat(e.target.value) || 0);
-                                        // Auto-sync to LCA Data
-                                        form.setValue('lcaData.agriculture.biodiversityImpactScore', parseFloat(e.target.value) || 0);
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormDescription>
-                                    Higher scores indicate better biodiversity outcomes (1=poor, 10=excellent)
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name={`ingredients.${index}.soilQualityIndex`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Soil Quality Index (1-10)</FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      type="number" 
-                                      min="1"
-                                      max="10"
-                                      step="0.1"
-                                      placeholder="6.8" 
-                                      {...field} 
-                                      onChange={(e) => {
-                                        field.onChange(parseFloat(e.target.value) || 0);
-                                        // Auto-sync to LCA Data
-                                        form.setValue('lcaData.agriculture.soilQualityIndex', parseFloat(e.target.value) || 0);
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormDescription>
-                                    Measures soil health and fertility (1=degraded, 10=excellent)
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.carbonSequestration`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Carbon Sequestration (tonnes CO2/ha/year)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.01"
-                                    placeholder="2.3" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                      field.onChange(parseFloat(e.target.value) || 0);
-                                      // Auto-sync to LCA Data
-                                      form.setValue('lcaData.agriculture.carbonSequestrationRate', parseFloat(e.target.value) || 0);
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormDescription>
-                                  Amount of CO2 sequestered by farming practices (positive values = carbon capture)
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <FormField
-                            control={form.control}
-                            name={`ingredients.${index}.organic`}
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                                <FormLabel>Organic certified</FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <SupplierSelectionModal
-                            inputType="ingredient"
-                            onSelect={(supplier) => {
-                              // Auto-fill this specific ingredient with supplier data
-                              const productAttrs = supplier.productAttributes || {};
-                              form.setValue(`ingredients.${index}.name`, supplier.productName || '');
-                              form.setValue(`ingredients.${index}.origin`, productAttrs.origin_country || '');
-                              form.setValue(`ingredients.${index}.supplier`, supplier.supplierName || '');
-                              form.setValue(`ingredients.${index}.organic`, productAttrs.organic_certified || false);
-                              if (productAttrs.typical_usage_per_unit) {
-                                form.setValue(`ingredients.${index}.amount`, productAttrs.typical_usage_per_unit);
-                              }
-                            }}
-                            onManualEntry={() => {}}
-                            selectedProduct={null}
-                          >
-                            <Button type="button" variant="ghost" size="sm">
-                              <Search className="w-3 h-3 mr-1" />
-                              Select Supplier
-                            </Button>
-                          </SupplierSelectionModal>
-                        </div>
-                        
-                        {form.watch('ingredients').length > 1 && (
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              const currentIngredients = form.getValues('ingredients');
-                              form.setValue('ingredients', currentIngredients.filter((_, i) => i !== index));
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Remove
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-green-900 mb-2">🌱 Automated Environmental Data</h4>
+                    <p className="text-sm text-green-700">
+                      Ingredients selected below will automatically use OpenLCA ecoinvent database for scientifically validated environmental impact calculations including water footprint, carbon emissions, and land use.
+                    </p>
+                  </div>
                   
-                  {/* Water Dilution Section */}
-                  <Card className="border-blue-200 bg-blue-50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Package className="w-4 h-4 text-blue-600" />
-                        Water Dilution
-                      </CardTitle>
-                      <p className="text-xs text-blue-600">
-                        Water used to dilute from distillation/barrel strength to bottling strength
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="waterDilution.amount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Water Amount *</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  step="0.1"
-                                  placeholder="e.g., 250" 
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="waterDilution.unit"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Unit *</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select unit" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="ml">Milliliters per bottle</SelectItem>
-                                  <SelectItem value="l">Liters per bottle</SelectItem>
-                                  <SelectItem value="l_per_100l">Liters per 100L product</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {form.watch('ingredients').length < 50 && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => {
-                        const currentIngredients = form.getValues('ingredients');
-                        form.setValue('ingredients', [
-                          ...currentIngredients, 
-                          { name: '', amount: 0, unit: 'kg', type: '', origin: '', organic: false, supplier: '' }
-                        ]);
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Ingredient ({form.watch('ingredients').length}/50)
-                    </Button>
-                  )}
-                  
-                  {form.watch('ingredients').length >= 50 && (
-                    <div className="text-center py-4 bg-gray-50 rounded-lg">
-                      <p className="text-muted-foreground">Maximum of 50 ingredients reached</p>
-                      <p className="text-sm text-muted-foreground mt-1">Remove an ingredient to add new ones</p>
-                    </div>
-                  )}
+                  <IngredientSelector
+                    value={openLCAIngredients}
+                    onChange={(ingredients) => {
+                      setOpenLCAIngredients(ingredients);
+                      // Convert OpenLCA ingredients to form format
+                      const formattedIngredients = ingredients.map(ing => ({
+                        name: ing.name,
+                        amount: ing.amount,
+                        unit: ing.unit,
+                        type: 'agricultural',
+                        origin: ing.origin || '',
+                        organic: false,
+                        supplier: '',
+                        // Remove manual agriculture fields - these are now automated via OpenLCA
+                        yieldPerHectare: 0,
+                        farmingPractice: undefined,
+                        nitrogenFertilizer: 0,
+                        phosphorusFertilizer: 0,
+                        dieselUsage: 0,
+                        transportDistance: 0,
+                        processingEnergy: 0,
+                        waterUsage: 0
+                      }));
+                      form.setValue('ingredients', formattedIngredients);
+                    }}
+                  />
                 </div>
+
+                {/* Display current ingredients if any */}
+                {openLCAIngredients.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Selected Ingredients:</h4>
+                    <div className="space-y-2">
+                      {openLCAIngredients.map((ingredient, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                          <div>
+                            <span className="font-medium">{ingredient.name}</span>
+                            <span className="text-muted-foreground ml-2">
+                              {ingredient.amount} {ingredient.unit}
+                            </span>
+                            {ingredient.origin && (
+                              <span className="text-sm text-muted-foreground ml-2">
+                                from {ingredient.origin}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                            OpenLCA Enabled
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
+
+
 
           {/* Packaging Tab */}
           <TabsContent value="packaging" className="space-y-6">
