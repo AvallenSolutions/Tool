@@ -173,18 +173,10 @@ export default function EnhancedAdminDashboard() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger value="users" className="flex items-center gap-2">
-                  <UserPlus className="w-4 h-4" />
-                  User Management
-                </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  Performance Analytics
+                  Platform Analytics
                 </TabsTrigger>
                 <TabsTrigger value="supplier-management" className="flex items-center gap-2">
                   <Building2 className="w-4 h-4" />
@@ -196,7 +188,7 @@ export default function EnhancedAdminDashboard() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Overview Tab */}
+              {/* Platform Analytics Tab */}
               <TabsContent value="overview" className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card>
@@ -287,16 +279,6 @@ export default function EnhancedAdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
-
-              {/* User Management Tab */}
-              <TabsContent value="users" className="space-y-6">
-                <EmbeddedUserManagement />
-              </TabsContent>
-
-              {/* Performance Analytics Tab */}
-              <TabsContent value="analytics" className="space-y-6">
-                <EmbeddedPerformanceAnalytics />
               </TabsContent>
 
               {/* Supplier Management Tab */}

@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, ChevronDown, ChevronRight, Activity } from "lucide-react";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
+  const [adminExpanded, setAdminExpanded] = useState(false);
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -21,11 +23,13 @@ export default function Sidebar() {
     { path: "/app/supplier-network", label: "Supplier Network", icon: Users },
     { path: "/app/collaboration", label: "Collaboration Hub", icon: MessageSquare },
     { path: "/app/settings", label: "Settings", icon: Settings },
-    // Admin-only items
-    ...(user && user.role === 'admin' ? [
-      { path: "/app/admin", label: "Admin Dashboard", icon: Users },
-    ] : []),
     { path: "/app/test", label: "Test Runner", icon: TestTube },
+  ];
+
+  const adminSubItems = [
+    { path: "/app/admin", label: "Overview", icon: BarChart3 },
+    { path: "/app/admin/users", label: "User Management", icon: UserPlus },
+    { path: "/app/admin/analytics", label: "Performance Analytics", icon: Activity },
   ];
 
   return (
@@ -64,6 +68,57 @@ export default function Sidebar() {
               </li>
             );
           })}
+          
+          {/* Admin Section */}
+          {user && user.role === 'admin' && (
+            <li>
+              <Button
+                variant="ghost"
+                className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                  location.startsWith('/app/admin')
+                    ? "bg-white text-[#209d50] hover:bg-gray-100"
+                    : "text-white hover:bg-green-600"
+                }`}
+                onClick={() => setAdminExpanded(!adminExpanded)}
+              >
+                <Users className="w-5 h-5 mr-3" />
+                <span className="font-body font-medium flex-1 text-left">Admin Dashboard</span>
+                {adminExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </Button>
+              
+              {/* Admin Sub-items */}
+              {adminExpanded && (
+                <ul className="mt-2 ml-4 space-y-1">
+                  {adminSubItems.map((subItem) => {
+                    const SubIcon = subItem.icon;
+                    const isSubActive = location === subItem.path;
+                    
+                    return (
+                      <li key={subItem.path}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
+                            isSubActive
+                              ? "bg-white text-[#209d50] hover:bg-gray-100"
+                              : "text-white/80 hover:bg-green-600 hover:text-white"
+                          }`}
+                          onClick={() => navigate(subItem.path)}
+                        >
+                          <SubIcon className="w-4 h-4 mr-2" />
+                          <span className="font-body text-sm">{subItem.label}</span>
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+          )}
         </ul>
       </div>
 
