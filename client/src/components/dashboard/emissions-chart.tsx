@@ -75,22 +75,22 @@ export default function EmissionsChart() {
     {
       name: "Scope 1 (Direct)",
       value: scope1,
-      percentage: total > 0 ? Math.round((scope1 / total) * 100) : 0,
+      percentage: total > 0 ? ((scope1 / total) * 100) : 0,
       color: "hsl(143, 69%, 38%)", // avallen-green
       details: getScope1Details(),
     },
     {
       name: "Scope 2 (Energy)", 
       value: scope2,
-      percentage: total > 0 ? Math.round((scope2 / total) * 100) : 0,
+      percentage: total > 0 ? ((scope2 / total) * 100) : 0,
       color: "hsl(210, 11%, 33%)", // slate-gray
       details: [{ type: 'Electricity', emissions: scope2, unit: 'kWh' }],
     },
     {
       name: "Scope 3 (Supply Chain)",
       value: scope3,
-      percentage: total > 0 ? Math.round((scope3 / total) * 100) : 0,
-      color: "hsl(40, 85%, 39%)", // muted-gold
+      percentage: total > 0 ? ((scope3 / total) * 100) : 0,
+      color: "hsl(196, 100%, 47%)", // bright blue instead of brown
       details: getScope3Details(),
     },
   ];
@@ -102,7 +102,7 @@ export default function EmissionsChart() {
         <div className="bg-white p-3 border border-light-gray rounded-lg shadow-lg min-w-[200px]">
           <p className="text-slate-gray font-medium mb-2">{data.name}</p>
           <p className="text-slate-gray font-semibold">
-            {data.value.toFixed(1)} tonnes CO2e ({data.percentage}%)
+            {data.value.toFixed(1)} tonnes CO2e ({data.percentage.toFixed(1)}%)
           </p>
           {data.details && data.details.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-200">
@@ -142,7 +142,7 @@ export default function EmissionsChart() {
               <span className="text-sm text-slate-gray">{entry.value}</span>
             </div>
             <span className="text-sm font-medium text-slate-gray">
-              {entry.payload?.value?.toFixed(1) || 0} tonnes ({entry.payload?.percentage || 0}%)
+              {entry.payload?.percentage?.toFixed(1) || 0}%
             </span>
           </div>
         ))}
