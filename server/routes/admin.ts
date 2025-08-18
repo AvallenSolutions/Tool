@@ -745,8 +745,9 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
     // Enrich conversations with participant details and unread counts
     const enrichedConversations = await Promise.all(
       conversationsData.map(async (conv) => {
-        // Get participant details
-        const participantDetails = await db
+        // Get participant details - fix JSONB array handling
+        const participantIds = Array.isArray(conv.participants) ? conv.participants : [];
+        const participantDetails = participantIds.length > 0 ? await db
           .select({
             userId: users.id,
             firstName: users.firstName,
@@ -758,7 +759,8 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
           })
           .from(users)
           .leftJoin(companies, eq(users.id, companies.ownerId))
-          .where(sql`${users.id} = ANY(${conv.participants})`);
+          .where(or(...participantIds.map(id => eq(users.id, id))))
+        : [];
 
         // Count unread messages (simplified - could be enhanced)
         const [unreadCount] = await db

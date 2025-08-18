@@ -43,11 +43,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     try {
       setConnectionStatus('connecting');
       
-      // Determine WebSocket URL - connect to the actual server port (5173)
+      // Determine WebSocket URL - environment-aware connection
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const host = window.location.hostname;
-      const port = window.location.port || '5173';
-      const wsUrl = `${protocol}//${host}:${port}/ws`;
+      const isReplit = window.location.hostname.includes('replit.dev');
+      const wsUrl = isReplit 
+        ? `${protocol}//${window.location.host}/ws`  // Production: no explicit port
+        : `${protocol}//${window.location.hostname}:${window.location.port || '5173'}/ws`; // Development: explicit port
       
       console.log('Connecting to WebSocket:', wsUrl);
       const ws = new WebSocket(wsUrl);
