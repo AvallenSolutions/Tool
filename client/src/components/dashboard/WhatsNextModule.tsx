@@ -79,8 +79,12 @@ export function WhatsNextModule() {
         <CardContent>
           <div className="text-center py-6">
             <Target className="w-12 h-12 text-blue-400 mx-auto mb-3" />
-            <p className="text-gray-700 font-medium">No suggestions at the moment</p>
-            <p className="text-sm text-gray-500">Upload more data so we can personalise an action plan for you</p>
+            <p className="text-gray-700 font-medium">API Authentication Issue</p>
+            <p className="text-sm text-gray-500">The suggestions service is temporarily unavailable due to authentication configuration</p>
+            <details className="mt-2 text-xs text-gray-400">
+              <summary>Debug Info</summary>
+              <pre>{JSON.stringify(error, null, 2)}</pre>
+            </details>
           </div>
         </CardContent>
       </Card>

@@ -19,7 +19,7 @@ export class SuggestionService {
     const suggestions: NextStepSuggestion[] = [];
     
     // Get company data
-    const company = await storage.getCompanyByOwner(`company-${companyId}`); // Note: This needs company data
+    const company = await storage.getCompanyById(companyId);
     const products = await storage.getProductsByCompany(companyId);
     const goals = await storage.getGoalsByCompany(companyId);
     const customReports = await storage.getReportsByCompanyCustom(companyId);

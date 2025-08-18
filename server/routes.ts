@@ -3162,16 +3162,58 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // Phase 1: Advanced UX Features - Suggestion and KPI endpoints
   
-  // GET /api/suggestions/next-steps - Get prioritized "What's Next?" actions
+  // GET /api/suggestions/debug - Debug suggestions generation (temporary)
+  app.get('/api/suggestions/debug', async (req, res) => {
+    try {
+      const companyId = 1;
+      console.log('=== DEBUGGING SUGGESTIONS GENERATION ===');
+      
+      // Check each data source the suggestion service uses
+      const company = await dbStorage.getCompanyById(companyId);
+      const products = await dbStorage.getProductsByCompany(companyId);
+      const goals = await dbStorage.getGoalsByCompany(companyId);
+      const reports = await dbStorage.getReportsByCompanyCustom(companyId);
+      
+      console.log('📊 Suggestion service data:');
+      console.log(`   Company: ${company ? `${company.name} (onboarding: ${company.onboardingComplete})` : 'NOT FOUND'}`);
+      console.log(`   Products: ${products.length} products found`);
+      console.log(`   Goals: ${goals.length} goals found`);
+      console.log(`   Reports: ${reports.length} reports found`);
+      
+      // Check product completeness
+      const incompleteProducts = products.filter(p => !p.ingredients || p.ingredients.length === 0);
+      console.log(`   Incomplete products: ${incompleteProducts.length}`);
+      
+      const suggestions = await suggestionService.getNextSteps(companyId);
+      console.log(`📋 Generated ${suggestions.length} suggestions:`, suggestions.map(s => s.title));
+      
+      res.json({ 
+        debug: {
+          company: company ? { name: company.name, onboardingComplete: company.onboardingComplete } : null,
+          productsCount: products.length,
+          goalsCount: goals.length,
+          reportsCount: reports.length,
+          incompleteProductsCount: incompleteProducts.length
+        },
+        suggestions 
+      });
+    } catch (error) {
+      console.error('Error debugging suggestions:', error);
+      res.status(500).json({ error: 'Failed to debug suggestions', details: error.message });
+    }
+  });
+  
+  // GET /api/suggestions/next-steps - Get prioritized "What's Next?" actions  
   app.get('/api/suggestions/next-steps', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
-      if (!user?.id) {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
-      // Get company by owner ID
-      const company = await dbStorage.getCompanyByOwner(user.id);
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
