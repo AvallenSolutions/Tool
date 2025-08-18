@@ -46,7 +46,7 @@ export default function EmissionsChart() {
   const scope2 = calculateScopeEmissions(2) / 1000; // Convert kg to tonnes
   
   // Get Scope 3 from automated calculations (includes product LCA + fuel-related)
-  const scope3 = automatedData?.success ? (automatedData.data.totalEmissions / 1000) : 0; // Convert to tonnes
+  const scope3 = automatedData?.success ? automatedData.data.totalEmissions : 0; // Already in tonnes
   
   const total = scope1 + scope2 + scope3;
 
