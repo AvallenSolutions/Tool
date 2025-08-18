@@ -66,17 +66,40 @@ export class WaterFootprintService {
       for (const product of companyProducts) {
         const productionVolume = Number(product.annualProductionVolume) || 0;
         
-        // Extract agricultural water from ingredients data
+        // Extract agricultural water using OpenLCA integration
         if (product.ingredients && Array.isArray(product.ingredients)) {
           let ingredientWater = 0;
+          
           for (const ingredient of product.ingredients) {
-            // Cast to any to access waterUsage field which exists in actual data but not in type definition
             const ingredientData = ingredient as any;
+            
+            // Try OpenLCA-based calculation first
+            if (ingredientData.name && ingredientData.amount) {
+              try {
+                const { OpenLCAService } = await import('./OpenLCAService');
+                const impactData = await OpenLCAService.calculateIngredientImpact(
+                  ingredientData.name,
+                  Number(ingredientData.amount) || 0,
+                  ingredientData.unit || 'kg'
+                );
+                
+                if (impactData && impactData.waterFootprint > 0) {
+                  ingredientWater += impactData.waterFootprint;
+                  console.log(`🌱 OpenLCA water footprint for ${ingredientData.name}: ${impactData.waterFootprint}L`);
+                  continue;
+                }
+              } catch (error) {
+                console.warn(`OpenLCA calculation failed for ${ingredientData.name}:`, error);
+              }
+            }
+            
+            // Fallback to manual waterUsage field if OpenLCA unavailable
             if (ingredientData.waterUsage) {
               ingredientWater += Number(ingredientData.waterUsage) || 0;
+              console.log(`📊 Manual water usage for ${ingredientData.name}: ${ingredientData.waterUsage}L`);
             }
           }
-          // Convert liters to liters (no conversion needed, keeping in liters for internal calculation)
+          
           totalAgriculturalWater += ingredientWater * productionVolume;
           continue;
         }

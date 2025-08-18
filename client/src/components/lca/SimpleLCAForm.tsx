@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Leaf, Truck, Factory, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { IngredientSelector, type IngredientInput } from './IngredientSelector';
 
 // Simple LCA data schema focusing on essential fields only
 const simpleLCASchema = z.object({
@@ -62,6 +63,7 @@ const cropDefaults: Record<string, Partial<SimpleLCAForm['agriculture']>> = {
 
 export default function SimpleLCAForm({ productId, existingData, onComplete, className }: SimpleLCAFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ingredients, setIngredients] = useState<IngredientInput[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

@@ -474,7 +474,22 @@ export const olcaFlowMappings = pgTable("olca_flow_mappings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// OpenLCA Process Mappings - For mapping processes to OpenLCA processes
+// LCA Process Mappings - Translation dictionary connecting user-friendly ingredient names to ecoinvent database processes
+export const lcaProcessMappings = pgTable("lca_process_mappings", {
+  id: serial("id").primaryKey(),
+  materialName: varchar("material_name").notNull(), // User-friendly ingredient name (e.g., "Molasses, from sugarcane")
+  category: varchar("category").notNull(), // Process category (e.g., "Agriculture", "Energy", "Transport")
+  ecoinventProcessUuid: varchar("ecoinvent_process_uuid").notNull(), // Precise process ID in ecoinvent database
+  databaseVersion: varchar("database_version").notNull().default("3.8"), // ecoinvent database version
+  olcaProcessName: varchar("olca_process_name").notNull(), // Full process name in ecoinvent
+  region: varchar("region"), // Geographic region for process
+  unit: varchar("unit"), // Standard unit for this process (kg, L, etc.)
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Keep legacy table for backward compatibility
 export const olcaProcessMappings = pgTable("olca_process_mappings", {
   id: serial("id").primaryKey(),
   processName: varchar("process_name").notNull(),

@@ -7,7 +7,7 @@ import Stripe from "stripe";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData, lcaProcessMappings } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and, gte, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -4263,6 +4263,29 @@ Be precise and quote actual text from the content, not generic terms.`;
     } catch (error) {
       console.error('Error downloading enhanced report:', error);
       res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // ============ LCA INGREDIENT ENDPOINTS ============
+  
+  // GET /api/lca/ingredients - Get available ingredients from process mappings
+  app.get('/api/lca/ingredients', async (req, res) => {
+    try {
+      const ingredients = await db
+        .select({
+          materialName: lcaProcessMappings.materialName,
+          unit: lcaProcessMappings.unit
+        })
+        .from(lcaProcessMappings)
+        .where(eq(lcaProcessMappings.category, 'Agriculture'));
+      
+      res.json(ingredients.map(ing => ({
+        materialName: ing.materialName,
+        unit: ing.unit || 'kg'
+      })));
+    } catch (error) {
+      console.error('Error fetching LCA ingredients:', error);
+      res.status(500).json({ error: 'Failed to fetch ingredients' });
     }
   });
 

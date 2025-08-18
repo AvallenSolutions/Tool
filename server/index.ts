@@ -88,6 +88,14 @@ app.use((req, res, next) => {
     console.warn("LCA service initialization failed (OpenLCA may not be available):", errorMessage);
   }
   
+  // Initialize OpenLCA ingredient mappings
+  try {
+    const { OpenLCAService } = await import('./services/OpenLCAService');
+    await OpenLCAService.initializeCommonIngredients();
+  } catch (error) {
+    console.warn("Failed to initialize ingredient mappings:", error);
+  }
+  
   const server = await registerRoutes(app);
   
   // Add sample report route
