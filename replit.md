@@ -8,6 +8,15 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (August 18, 2025)
+
+**KPI TRACKING SYSTEM COMPLETED:**
+- ✅ **ADD KPI FUNCTIONALITY:** Fixed non-functional "Add KPI" button - complete dialog form now working
+- ✅ **AUTHENTICATION FIXES:** Resolved user ID extraction issues in development mode for KPI endpoints  
+- ✅ **FORM VALIDATION:** Implemented comprehensive KPI creation with name, category, target, unit, and deadline
+- ✅ **BACKEND API:** Created `/api/kpis` endpoint with proper validation and database integration
+- ✅ **ERROR HANDLING:** Added proper TypeScript error fixes and API response handling
+
 ## Recent Changes (August 17, 2025)
 
 **OBJECT STORAGE & ADMIN SYSTEM FIXES COMPLETED:**
