@@ -1439,6 +1439,52 @@ export default function EnhancedProductForm({
                             />
                           </div>
 
+                          <div className="grid grid-cols-1 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.organic`}
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                  <FormLabel>Organic certified</FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="flex justify-between items-center pt-2">
+                            <SupplierSelectionModal
+                              inputType="ingredient"
+                              onSelect={(supplier) => {
+                                // Auto-fill this specific ingredient with supplier data
+                                const productAttrs = supplier.productAttributes || {};
+                                form.setValue(`ingredients.${index}.name`, supplier.productName || '');
+                                form.setValue(`ingredients.${index}.origin`, productAttrs.origin_country || '');
+                                form.setValue(`ingredients.${index}.supplier`, supplier.supplierName || '');
+                                form.setValue(`ingredients.${index}.organic`, productAttrs.organic_certified || false);
+                                if (productAttrs.typical_usage_per_unit) {
+                                  form.setValue(`ingredients.${index}.amount`, productAttrs.typical_usage_per_unit);
+                                }
+                              }}
+                              onManualEntry={() => {}}
+                              selectedProduct={null}
+                            >
+                              <Button type="button" variant="ghost" size="sm">
+                                <Search className="w-3 h-3 mr-1" />
+                                Select from Suppliers
+                              </Button>
+                            </SupplierSelectionModal>
+
+                            <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                              OpenLCA + Supplier Data
+                            </div>
+                          </div>
+
                           <div className="bg-blue-50 p-3 rounded border border-blue-200">
                             <p className="text-xs text-blue-700">
                               <strong>Automated via OpenLCA:</strong> Water footprint, carbon emissions, land use, and biodiversity impact are calculated automatically using ecoinvent database. Manual entry of yield, fertilizer usage, and diesel consumption is no longer required.
@@ -1482,6 +1528,68 @@ export default function EnhancedProductForm({
                         Add Another Ingredient ({form.watch('ingredients').length}/10)
                       </Button>
                     )}
+
+                    {/* Water Dilution Section - Restored */}
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Package className="w-4 h-4 text-blue-600" />
+                          Water Dilution
+                        </CardTitle>
+                        <p className="text-xs text-blue-600">
+                          Water used to dilute from distillation/barrel strength to bottling strength
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="waterDilution.amount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Water Amount *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1"
+                                    placeholder="e.g., 250" 
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Volume of water added per bottle
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="waterDilution.unit"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Unit *</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select unit" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="ml">Milliliters per bottle</SelectItem>
+                                    <SelectItem value="l">Liters per bottle</SelectItem>
+                                    <SelectItem value="l_per_100l">Liters per 100L product</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
 
