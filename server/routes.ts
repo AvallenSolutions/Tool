@@ -7,7 +7,7 @@ import Stripe from "stripe";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and, gte, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
