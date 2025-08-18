@@ -48,6 +48,7 @@ export function useRealtimeMessaging(options: UseRealtimeMessagingOptions) {
         lastPollRef.current = new Date();
         
         if (!isConnected) {
+          console.log('Polling connection established');
           setIsConnected(true);
           setConnectionStatus('connected');
           onConnect?.();
