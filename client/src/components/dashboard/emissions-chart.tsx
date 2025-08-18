@@ -3,10 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 export default function EmissionsChart() {
-  const { data: metrics, isLoading } = useQuery({
-    queryKey: ["/api/dashboard/metrics"],
+  // Fetch actual footprint data from carbon calculator
+  const { data: footprintData, isLoading: footprintLoading } = useQuery({
+    queryKey: ["/api/company/footprint"],
     retry: false,
   });
+  
+  const { data: automatedData, isLoading: automatedLoading } = useQuery({
+    queryKey: ["/api/company/footprint/scope3/automated"],
+    retry: false,
+  });
+  
+  const isLoading = footprintLoading || automatedLoading;
 
   if (isLoading) {
     return (
@@ -25,10 +33,43 @@ export default function EmissionsChart() {
     );
   }
 
-  const scope1 = metrics?.scope1 || 0;
-  const scope2 = metrics?.scope2 || 0;
-  const scope3 = metrics?.scope3 || 0;
+  // Calculate scope emissions from real footprint data
+  const calculateScopeEmissions = (scope: number) => {
+    if (!footprintData?.success || !footprintData?.data) return 0;
+    
+    return footprintData.data
+      .filter((item: any) => item.scope === scope)
+      .reduce((total: number, item: any) => total + parseFloat(item.calculatedEmissions || 0), 0);
+  };
+  
+  const scope1 = calculateScopeEmissions(1) / 1000; // Convert kg to tonnes
+  const scope2 = calculateScopeEmissions(2) / 1000; // Convert kg to tonnes
+  
+  // Get Scope 3 from automated calculations (includes product LCA + fuel-related)
+  const scope3 = automatedData?.success ? (automatedData.data.totalEmissions / 1000) : 0; // Convert to tonnes
+  
   const total = scope1 + scope2 + scope3;
+
+  // Get detailed breakdown for tooltips
+  const getScope1Details = () => {
+    if (!footprintData?.success || !footprintData?.data) return [];
+    return footprintData.data
+      .filter((item: any) => item.scope === 1)
+      .map((item: any) => ({
+        type: item.dataType,
+        emissions: parseFloat(item.calculatedEmissions || 0) / 1000,
+        unit: item.unit
+      }));
+  };
+  
+  const getScope3Details = () => {
+    if (!automatedData?.success || !automatedData?.data?.categories) return [];
+    const cats = automatedData.data.categories;
+    return [
+      { type: 'Purchased Goods & Services', emissions: cats.purchasedGoodsServices?.emissions || 0 },
+      { type: 'Fuel & Energy Related', emissions: cats.fuelEnergyRelated?.emissions || 0 }
+    ];
+  };
 
   const data = [
     {
@@ -36,18 +77,21 @@ export default function EmissionsChart() {
       value: scope1,
       percentage: total > 0 ? Math.round((scope1 / total) * 100) : 0,
       color: "hsl(143, 69%, 38%)", // avallen-green
+      details: getScope1Details(),
     },
     {
-      name: "Scope 2 (Energy)",
+      name: "Scope 2 (Energy)", 
       value: scope2,
       percentage: total > 0 ? Math.round((scope2 / total) * 100) : 0,
       color: "hsl(210, 11%, 33%)", // slate-gray
+      details: [{ type: 'Electricity', emissions: scope2, unit: 'kWh' }],
     },
     {
       name: "Scope 3 (Supply Chain)",
       value: scope3,
       percentage: total > 0 ? Math.round((scope3 / total) * 100) : 0,
       color: "hsl(40, 85%, 39%)", // muted-gold
+      details: getScope3Details(),
     },
   ];
 
@@ -55,11 +99,22 @@ export default function EmissionsChart() {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border border-light-gray rounded-lg shadow-lg">
-          <p className="text-slate-gray font-medium">{data.name}</p>
-          <p className="text-slate-gray">
-            {data.value.toFixed(1)}t ({data.percentage}%)
+        <div className="bg-white p-3 border border-light-gray rounded-lg shadow-lg min-w-[200px]">
+          <p className="text-slate-gray font-medium mb-2">{data.name}</p>
+          <p className="text-slate-gray font-semibold">
+            {data.value.toFixed(1)} tonnes CO2e ({data.percentage}%)
           </p>
+          {data.details && data.details.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Breakdown:</p>
+              {data.details.map((detail: any, index: number) => (
+                <div key={index} className="text-xs text-gray-600 flex justify-between">
+                  <span>{detail.type}</span>
+                  <span>{detail.emissions.toFixed(1)}t</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
@@ -87,7 +142,7 @@ export default function EmissionsChart() {
               <span className="text-sm text-slate-gray">{entry.value}</span>
             </div>
             <span className="text-sm font-medium text-slate-gray">
-              {entry.payload?.value?.toFixed(1) || 0}t ({entry.payload?.percentage || 0}%)
+              {entry.payload?.value?.toFixed(1) || 0} tonnes ({entry.payload?.percentage || 0}%)
             </span>
           </div>
         ))}
