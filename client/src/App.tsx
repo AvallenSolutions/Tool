@@ -143,6 +143,7 @@ function Router() {
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
       <Route path="/app/admin/supplier-management" component={SupplierManagement} />
       <Route path="/app/admin/products" component={AdminProductManagement} />
+      <Route path="/app/admin/products/create" component={CreateEnhancedProduct} />
       <Route path="/app/collaboration" component={CollaborationHub} />
       <Route path="/app/admin/product-management" component={AdminProductManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />

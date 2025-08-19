@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,8 @@ import {
   X,
   Eye,
   Package,
-  Clock
+  Clock,
+  Plus
 } from "lucide-react";
 
 interface ProductForReview {
@@ -30,6 +32,7 @@ interface ProductForReview {
 
 export default function ProductManagement() {
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   const { data: pendingProducts, isLoading } = useQuery<ProductForReview[]>({
     queryKey: ['/api/admin/products/pending'],
@@ -120,14 +123,23 @@ export default function ProductManagement() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Product Review Queue</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Product Management</h1>
                 <p className="text-muted-foreground">
-                  Review and approve pending product submissions
+                  Create new products and review pending submissions
                 </p>
               </div>
-              <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
-                {pendingCount} pending review
-              </Badge>
+              <div className="flex items-center gap-3">
+                <Button 
+                  onClick={() => navigate('/app/admin/products/create')}
+                  className="bg-avallen-green hover:bg-avallen-green/90"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Product
+                </Button>
+                <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
+                  {pendingCount} pending review
+                </Badge>
+              </div>
             </div>
 
             {/* Products List */}
