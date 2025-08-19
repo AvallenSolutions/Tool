@@ -2236,6 +2236,134 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ END AUTOMATED SCOPE 3 CALCULATION FUNCTIONS ============
 
+  // ============ DASHBOARD METRICS ENDPOINT ============
+  
+  // Get dashboard metrics (aggregated company data)
+  app.get('/api/dashboard/metrics', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { products } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      // Get all products for the company
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, company.id));
+
+      let totalCO2e = 0; // in tonnes
+      let totalWaterUsage = 0; // in litres
+      let totalWasteGenerated = 0; // in tonnes
+      
+      console.log(`📊 Dashboard metrics calculation for ${companyProducts.length} products`);
+      
+      for (const product of companyProducts) {
+        let productEmissions = 0;
+        let productWaterUsage = 0;
+        let productWaste = 0;
+        
+        console.log(`🧮 Processing product: ${product.name} (ID: ${product.id})`);
+        
+        // Calculate ingredient emissions using OpenLCA
+        if (product.ingredients && Array.isArray(product.ingredients)) {
+          for (const ingredient of product.ingredients) {
+            if (ingredient.name && ingredient.amount > 0) {
+              try {
+                const { OpenLCAService } = await import('./services/OpenLCAService');
+                const impactData = await OpenLCAService.calculateIngredientImpact(
+                  ingredient.name,
+                  ingredient.amount,
+                  ingredient.unit || 'kg'
+                );
+                
+                productEmissions += impactData.carbonFootprint;
+                productWaterUsage += impactData.waterFootprint;
+                
+                console.log(`🌱 OpenLCA ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${impactData.carbonFootprint} kg CO2e`);
+                console.log(`🌱 OpenLCA water footprint for ${ingredient.name}: ${impactData.waterFootprint}L`);
+              } catch (error) {
+                console.error(`Error calculating OpenLCA impact for ${ingredient.name}:`, error);
+              }
+            }
+          }
+        }
+        
+        // Add packaging emissions (glass bottle calculation)
+        if (product.bottleMaterial === 'glass' && product.bottleWeight) {
+          const bottleWeightKg = parseFloat(product.bottleWeight) / 1000;
+          const recycledContent = parseFloat(product.bottleRecycledContent || '0') / 100;
+          const virginGlassEmissionFactor = 0.7; // kg CO2e per kg glass
+          const recycledGlassEmissionFactor = 0.35; // kg CO2e per kg recycled glass
+          
+          const glassEmissions = bottleWeightKg * (
+            (1 - recycledContent) * virginGlassEmissionFactor + 
+            recycledContent * recycledGlassEmissionFactor
+          );
+          
+          productEmissions += glassEmissions;
+          console.log(`🍾 Glass bottle: ${product.bottleWeight}g, ${product.bottleRecycledContent}% recycled = ${glassEmissions.toFixed(3)} kg CO2e`);
+        }
+        
+        // Add label and closure emissions (small but realistic)
+        if (product.labelWeight) {
+          const labelEmissions = (parseFloat(product.labelWeight) / 1000) * 1.2; // 1.2 kg CO2e per kg paper
+          productEmissions += labelEmissions;
+        }
+        
+        if (product.closureMaterial === 'aluminum' && product.closureWeight) {
+          const closureEmissions = (parseFloat(product.closureWeight) / 1000) * 8.5; // 8.5 kg CO2e per kg aluminum
+          productEmissions += closureEmissions;
+        }
+        
+        // Store carbon footprint for the product
+        const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
+        if (productEmissions > 0) {
+          await EnhancedLCACalculationService.storeCarbonFootprint(product.id, productEmissions);
+        }
+        
+        console.log(`💾 Stored carbon footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO2e`);
+        
+        // Calculate annual emissions based on production volume
+        const annualProduction = parseFloat(product.annualProductionVolume || '0');
+        const annualEmissions = (productEmissions * annualProduction) / 1000; // Convert to tonnes
+        
+        console.log(`📊 ${product.name} per-unit emissions: ${productEmissions.toFixed(3)} kg CO2e per unit`);
+        console.log(`🏭 ${product.name} annual production: ${annualProduction.toLocaleString()} units`);
+        console.log(`🌍 ${product.name} total annual emissions: ${annualEmissions.toFixed(1)} tonnes CO2e`);
+        
+        totalCO2e += annualEmissions;
+        totalWaterUsage += productWaterUsage * annualProduction;
+        totalWasteGenerated += productWaste * annualProduction / 1000; // Convert to tonnes
+      }
+      
+      console.log(`📈 Total dashboard metrics:`);
+      console.log(`   CO2e: ${totalCO2e.toFixed(1)} tonnes`);
+      console.log(`   Water: ${totalWaterUsage.toFixed(0)} litres`);
+      console.log(`   Waste: ${totalWasteGenerated.toFixed(1)} tonnes`);
+      
+      res.json({
+        totalCO2e: Math.round(totalCO2e * 10) / 10, // Round to 1 decimal
+        waterUsage: Math.round(totalWaterUsage),
+        wasteGenerated: Math.round(totalWasteGenerated * 10) / 10
+      });
+      
+    } catch (error) {
+      console.error('Error fetching dashboard metrics:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // ============ END COMPANY FOOTPRINT DATA ENDPOINTS ============
 
   // ============ SUPPLIER INVITATION ENDPOINTS ============
