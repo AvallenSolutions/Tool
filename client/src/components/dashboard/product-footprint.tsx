@@ -7,9 +7,13 @@ import { Leaf, Droplets } from "lucide-react";
 export default function ProductFootprint() {
   const [selectedProduct, setSelectedProduct] = useState<string>("");
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading, dataUpdatedAt } = useQuery({
     queryKey: ["/api/products"],
     retry: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache data (React Query v5)
   });
 
   if (isLoading) {
@@ -71,9 +75,17 @@ export default function ProductFootprint() {
                   <p className="text-sm text-gray-500">Per {currentProduct.size} bottle</p>
                 </div>
               </div>
-              <span className="text-lg font-bold text-slate-gray">
-                {currentProduct.carbonFootprint?.toFixed(1) || '0.0'} kg CO2e
-              </span>
+              <div className="text-right">
+                <span className="text-lg font-bold text-slate-gray">
+                  {parseFloat(currentProduct.carbonFootprint?.toString() || '0').toFixed(3)} kg CO2e
+                </span>
+                <div className="text-xs text-green-600 mt-1">
+                  ✓ Real-time data
+                </div>
+                <div className="text-xs text-gray-400">
+                  Updated: {new Date(dataUpdatedAt).toLocaleTimeString()}
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-lightest-gray rounded-lg">
@@ -97,19 +109,19 @@ export default function ProductFootprint() {
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-gray">Raw materials</span>
                   <span className="font-medium">
-                    {(currentProduct.carbonFootprint * 0.5)?.toFixed(1) || '0.0'} kg CO2e
+                    {(parseFloat(currentProduct.carbonFootprint?.toString() || '0') * 0.5)?.toFixed(3) || '0.000'} kg CO2e
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-gray">Production</span>
                   <span className="font-medium">
-                    {(currentProduct.carbonFootprint * 0.3)?.toFixed(1) || '0.0'} kg CO2e
+                    {(parseFloat(currentProduct.carbonFootprint?.toString() || '0') * 0.3)?.toFixed(3) || '0.000'} kg CO2e
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-gray">Packaging</span>
                   <span className="font-medium">
-                    {(currentProduct.carbonFootprint * 0.2)?.toFixed(1) || '0.0'} kg CO2e
+                    {(parseFloat(currentProduct.carbonFootprint?.toString() || '0') * 0.2)?.toFixed(3) || '0.000'} kg CO2e
                   </span>
                 </div>
               </div>
