@@ -130,7 +130,7 @@ export default function ProductManagement() {
               </div>
               <div className="flex items-center gap-3">
                 <Button 
-                  onClick={() => navigate('/app/admin/products/create')}
+                  onClick={() => navigate('/app/product-registration')}
                   className="bg-avallen-green hover:bg-avallen-green/90"
                 >
                   <Plus className="h-4 w-4 mr-2" />
