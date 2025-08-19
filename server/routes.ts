@@ -4406,7 +4406,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       // Calculate actual LCA metrics using the enhanced service
       const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
       
-      // Prepare LCA data from product
+      // Prepare LCA data from product with actual packaging data
       const lcaData = {
         agriculture: {
           yieldTonPerHectare: 50, // Default for sugarcane
@@ -4428,6 +4428,24 @@ Be precise and quote actual text from the content, not generic terms.`;
           distillation: {
             distillationRounds: 2,
             energySourceType: 'electric' as const
+          }
+        },
+        packagingDetailed: {
+          container: {
+            materialType: product.bottleMaterial as 'glass',
+            weightGrams: parseFloat(product.bottleWeight || '530'),
+            recycledContentPercentage: parseFloat(product.bottleRecycledContent || '61'),
+            transportDistanceKm: 100
+          },
+          label: {
+            materialType: product.labelMaterial as 'paper',
+            weightGrams: parseFloat(product.labelWeight || '1.2'),
+            inkType: 'conventional' as const
+          },
+          closure: {
+            materialType: product.closureMaterial as 'aluminum',
+            weightGrams: 25,
+            hasLiner: true
           }
         }
       };
