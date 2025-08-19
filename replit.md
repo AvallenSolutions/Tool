@@ -8,6 +8,15 @@ This is a comprehensive sustainability platform designed for SME drinks brands, 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (August 19, 2025)
+
+**LCA ANALYSIS EMISSIONS SYNCHRONIZATION COMPLETED:**
+- ✅ **DATA CONSISTENCY RESOLVED:** Fixed critical discrepancy where LCA Analysis displayed stale mock values (2.20 kg CO2e, 2.45 kg CO2e) instead of current OpenLCA calculations (3.7357 kg CO2e)
+- ✅ **DATABASE SYNCHRONIZATION:** Updated completed LCA job #2 results to match real-time OpenLCA calculations with proper Climate Change impact values
+- ✅ **AUTOMATED SYNC ENDPOINT:** Added `/api/products/:id/sync-lca-jobs` to automatically synchronize completed LCA jobs with current product carbon footprints
+- ✅ **CACHE INVALIDATION:** Enhanced frontend polling (5-second intervals) with aggressive cache busting to ensure real-time data display
+- ✅ **PRODUCTION VERIFICATION:** Confirmed company-level scaling correctly shows 1,121 tonnes CO2e (3.7357 kg × 300,000 units) with individual product consistency
+
 ## Recent Changes (August 18, 2025)
 
 **ENHANCED PRODUCT FORM - OPENLCA INTEGRATION COMPLETED:**
