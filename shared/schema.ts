@@ -1221,6 +1221,47 @@ export const insertCustomReportSchema = createInsertSchema(customReports).omit({
   updatedAt: true,
 });
 
+// New KPIs table for storing preset and custom KPI definitions
+export const kpis = pgTable("kpis", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id), // NULL for preset KPIs
+  kpiName: varchar("kpi_name", { length: 255 }).notNull(),
+  kpiType: varchar("kpi_type", { length: 50 }).notNull(), // 'Environmental', 'Social', 'Engagement'
+  unit: varchar("unit", { length: 50 }).notNull(),
+  formulaJson: jsonb("formula_json").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// New project goals table for qualitative milestone tracking
+export const projectGoals = pgTable("project_goals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  goalTitle: varchar("goal_title", { length: 255 }).notNull(),
+  milestones: jsonb("milestones").default('[]').notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Dashboard layout column will be added to companies table via migration
+
+// Export types for new tables
+export type KPI = typeof kpis.$inferSelect;
+export type InsertKPI = typeof kpis.$inferInsert;
+export const insertKPISchema = createInsertSchema(kpis).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ProjectGoal = typeof projectGoals.$inferSelect;
+export type InsertProjectGoal = typeof projectGoals.$inferInsert;
+export const insertProjectGoalSchema = createInsertSchema(projectGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Collaboration and messaging tables
 export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),

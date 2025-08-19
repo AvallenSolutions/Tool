@@ -33,7 +33,7 @@ import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { suggestionService } from "./services/suggestionService";
-import { kpiService } from "./services/kpiService";
+import { kpiCalculationService } from "./services/kpiService";
 import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences } from "@shared/schema";
@@ -3831,8 +3831,8 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // GET /api/kpi-data - Get current KPI dashboard data
-  app.get('/api/kpi-data', isAuthenticated, async (req, res) => {
+  // GET /api/dashboard/kpis - Get current KPI dashboard data with calculations
+  app.get('/api/dashboard/kpis', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub || user?.id;
@@ -3847,8 +3847,39 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const kpiData = await kpiService.getKPIData(company.id);
-      res.json(kpiData);
+      const dashboardData = await kpiCalculationService.getKPIDashboardData(company.id);
+      res.json(dashboardData);
+    } catch (error) {
+      console.error('Error getting KPI dashboard data:', error);
+      res.status(500).json({ error: 'Failed to get KPI dashboard data' });
+    }
+  });
+
+  // Legacy endpoint for backward compatibility
+  app.get('/api/kpi-data', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const dashboardData = await kpiCalculationService.getKPIDashboardData(company.id);
+      
+      // Transform to legacy format
+      const legacyResponse = {
+        kpis: dashboardData.kpis,
+        overallProgress: dashboardData.overallProgress,
+        summary: dashboardData.summary
+      };
+      
+      res.json(legacyResponse);
     } catch (error) {
       console.error('Error getting KPI data:', error);
       res.status(500).json({ error: 'Failed to get KPI data' });
@@ -3908,6 +3939,196 @@ Be precise and quote actual text from the content, not generic terms.`;
     } catch (error) {
       console.error('Error updating KPI:', error);
       res.status(500).json({ error: 'Failed to update KPI' });
+    }
+  });
+
+  // POST /api/kpis/custom - Create a custom KPI
+  app.post('/api/kpis/custom', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { kpiName, kpiType, unit, numeratorDataPoint, denominatorDataPoint } = req.body;
+      
+      if (!kpiName || !kpiType || !unit || !numeratorDataPoint) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      const { kpis } = await import('@shared/schema');
+      
+      // Create formula JSON based on inputs
+      const formulaJson = denominatorDataPoint 
+        ? { numerator: numeratorDataPoint, denominator: denominatorDataPoint }
+        : { dataPoint: numeratorDataPoint };
+      
+      const [newKPI] = await db
+        .insert(kpis)
+        .values({
+          companyId: company.id,
+          kpiName,
+          kpiType,
+          unit,
+          formulaJson,
+        })
+        .returning();
+      
+      res.status(201).json({ 
+        success: true, 
+        kpi: newKPI,
+        message: 'Custom KPI created successfully' 
+      });
+      
+    } catch (error) {
+      console.error('Error creating custom KPI:', error);
+      res.status(500).json({ error: 'Failed to create custom KPI' });
+    }
+  });
+
+  // POST /api/goals/project - Create a project goal
+  app.post('/api/goals/project', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { goalTitle, milestones } = req.body;
+      
+      if (!goalTitle) {
+        return res.status(400).json({ error: 'Goal title is required' });
+      }
+      
+      const { projectGoals } = await import('@shared/schema');
+      
+      const [newProjectGoal] = await db
+        .insert(projectGoals)
+        .values({
+          companyId: company.id,
+          goalTitle,
+          milestones: milestones || [],
+        })
+        .returning();
+      
+      res.status(201).json({ 
+        success: true, 
+        projectGoal: newProjectGoal,
+        message: 'Project goal created successfully' 
+      });
+      
+    } catch (error) {
+      console.error('Error creating project goal:', error);
+      res.status(500).json({ error: 'Failed to create project goal' });
+    }
+  });
+
+  // PUT /api/dashboard/layout - Save dashboard layout
+  app.put('/api/dashboard/layout', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { layout } = req.body;
+      
+      if (!layout) {
+        return res.status(400).json({ error: 'Layout data is required' });
+      }
+      
+      const { companies } = await import('@shared/schema');
+      
+      await db
+        .update(companies)
+        .set({ 
+          dashboardLayout: layout,
+          updatedAt: new Date()
+        })
+        .where(eq(companies.id, company.id));
+      
+      res.json({ 
+        success: true, 
+        message: 'Dashboard layout saved successfully' 
+      });
+      
+    } catch (error) {
+      console.error('Error saving dashboard layout:', error);
+      res.status(500).json({ error: 'Failed to save dashboard layout' });
+    }
+  });
+
+  // PUT /api/goals/project/:id/milestones - Update project goal milestones
+  app.put('/api/goals/project/:id/milestones', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { id } = req.params;
+      const { milestones } = req.body;
+      
+      if (!milestones) {
+        return res.status(400).json({ error: 'Milestones data is required' });
+      }
+      
+      const { projectGoals } = await import('@shared/schema');
+      const { db } = await import('./db');
+      
+      const [updatedGoal] = await db
+        .update(projectGoals)
+        .set({ 
+          milestones,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(projectGoals.id, id),
+          eq(projectGoals.companyId, company.id)
+        ))
+        .returning();
+        
+      if (!updatedGoal) {
+        return res.status(404).json({ error: 'Project goal not found' });
+      }
+      
+      res.json({ 
+        success: true, 
+        projectGoal: updatedGoal,
+        message: 'Project milestones updated successfully' 
+      });
+      
+    } catch (error) {
+      console.error('Error updating project milestones:', error);
+      res.status(500).json({ error: 'Failed to update project milestones' });
     }
   });
 
