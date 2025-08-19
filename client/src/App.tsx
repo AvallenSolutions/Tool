@@ -45,6 +45,7 @@ import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
 import CollaborationHub from "@/pages/CollaborationHub";
 import ProductLcaPage from "@/pages/ProductLcaPage";
+import { KPIsPage } from "@/pages/kpis";
 
 function SimpleTestComponent() {
   return (
@@ -103,6 +104,12 @@ function SimpleTestComponent() {
             >
               Test Carbon Footprint Calculator
             </button>
+            <button 
+              onClick={() => window.location.href = '/app/kpis'}
+              className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors"
+            >
+              KPI & Goal Management
+            </button>
 
           </div>
         </div>
@@ -137,6 +144,7 @@ function Router() {
       <Route path="/app/lca" component={LCAPage} />
       <Route path="/app/company" component={Company} />
       <Route path="/app/settings" component={Settings} />
+      <Route path="/app/kpis" component={KPIsPage} />
       <Route path="/app/admin" component={AdminDashboardMain} />
       <Route path="/app/admin/suppliers/:id/edit" component={SupplierEdit} />
       <Route path="/app/admin/suppliers/:id" component={AdminSupplierDetail} />

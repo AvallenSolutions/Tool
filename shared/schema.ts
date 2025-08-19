@@ -11,6 +11,7 @@ import {
   decimal,
   uuid,
   date,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1461,3 +1462,66 @@ export const insertNotificationPreferenceSchema = createInsertSchema(notificatio
 // Export types for ESG data table
 export type EsgData = typeof esgData.$inferSelect;
 export type InsertEsgData = z.infer<typeof insertEsgDataSchema>;
+
+// ==== ENHANCED KPI & GOAL-SETTING SYSTEM ====
+
+// KPI Definitions table - Master library of available KPIs
+export const kpiDefinitions = pgTable("kpi_definitions", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  kpiName: varchar("kpi_name", { length: 255 }).notNull().unique(),
+  kpiCategory: varchar("kpi_category", { length: 50 }).notNull(),
+  unit: varchar("unit", { length: 50 }).notNull(),
+  formulaJson: jsonb("formula_json").$type<{
+    numerator: string;
+    denominator?: string;
+    calculation_type: 'ratio' | 'absolute' | 'percentage';
+    description?: string;
+  }>().notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Company KPI Goals table - User-set goals for specific KPIs
+export const companyKpiGoals = pgTable("company_kpi_goals", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  kpiDefinitionId: text("kpi_definition_id").notNull().references(() => kpiDefinitions.id),
+  targetReductionPercentage: numeric("target_reduction_percentage", { precision: 5, scale: 2 }).notNull(),
+  targetDate: date("target_date").notNull(),
+  baselineValue: numeric("baseline_value", { precision: 10, scale: 4 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Relations for KPI system
+export const kpiDefinitionsRelations = relations(kpiDefinitions, ({ many }) => ({
+  companyGoals: many(companyKpiGoals),
+}));
+
+export const companyKpiGoalsRelations = relations(companyKpiGoals, ({ one }) => ({
+  company: one(companies, {
+    fields: [companyKpiGoals.companyId],
+    references: [companies.id],
+  }),
+  kpiDefinition: one(kpiDefinitions, {
+    fields: [companyKpiGoals.kpiDefinitionId],
+    references: [kpiDefinitions.id],
+  }),
+}));
+
+// Type exports for KPI system
+export type KpiDefinition = typeof kpiDefinitions.$inferSelect;
+export type InsertKpiDefinition = typeof kpiDefinitions.$inferInsert;
+export const insertKpiDefinitionSchema = createInsertSchema(kpiDefinitions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type CompanyKpiGoal = typeof companyKpiGoals.$inferSelect;
+export type InsertCompanyKpiGoal = typeof companyKpiGoals.$inferInsert;
+export const insertCompanyKpiGoalSchema = createInsertSchema(companyKpiGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});

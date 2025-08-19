@@ -1,6 +1,18 @@
 import { db } from "../db";
-import { eq, and, isNull, or } from "drizzle-orm";
-import { companyFootprintData, companyGoals, companies, products, kpis, projectGoals } from "@shared/schema";
+import { eq, and, isNull, or, desc } from "drizzle-orm";
+import { 
+  companyFootprintData, 
+  companyGoals, 
+  companies, 
+  products, 
+  kpis, 
+  projectGoals,
+  kpiDefinitions,
+  companyKpiGoals,
+  type KpiDefinition,
+  type CompanyKpiGoal,
+  type InsertCompanyKpiGoal
+} from "@shared/schema";
 
 export interface DashboardKPIData {
   id: string;
@@ -446,3 +458,312 @@ export class KPICalculationService {
 
 // Export singleton instance
 export const kpiCalculationService = new KPICalculationService();
+
+// ==== ENHANCED KPI & GOAL-SETTING SERVICE ====
+
+export class EnhancedKPIService {
+  
+  /**
+   * Get all available KPI definitions from the library
+   */
+  async getKpiDefinitions(): Promise<KpiDefinition[]> {
+    try {
+      return await db
+        .select()
+        .from(kpiDefinitions)
+        .orderBy(kpiDefinitions.kpiCategory, kpiDefinitions.kpiName);
+    } catch (error) {
+      console.error('Error fetching KPI definitions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get KPI definitions filtered by category
+   */
+  async getKpiDefinitionsByCategory(category: string): Promise<KpiDefinition[]> {
+    try {
+      return await db
+        .select()
+        .from(kpiDefinitions)
+        .where(eq(kpiDefinitions.kpiCategory, category))
+        .orderBy(kpiDefinitions.kpiName);
+    } catch (error) {
+      console.error('Error fetching KPI definitions by category:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get company's active KPI goals with definitions
+   */
+  async getCompanyKpiGoals(companyId: number): Promise<(CompanyKpiGoal & { kpiDefinition: KpiDefinition })[]> {
+    try {
+      return await db
+        .select({
+          id: companyKpiGoals.id,
+          companyId: companyKpiGoals.companyId,
+          kpiDefinitionId: companyKpiGoals.kpiDefinitionId,
+          targetReductionPercentage: companyKpiGoals.targetReductionPercentage,
+          targetDate: companyKpiGoals.targetDate,
+          baselineValue: companyKpiGoals.baselineValue,
+          isActive: companyKpiGoals.isActive,
+          createdAt: companyKpiGoals.createdAt,
+          updatedAt: companyKpiGoals.updatedAt,
+          kpiDefinition: {
+            id: kpiDefinitions.id,
+            kpiName: kpiDefinitions.kpiName,
+            kpiCategory: kpiDefinitions.kpiCategory,
+            unit: kpiDefinitions.unit,
+            formulaJson: kpiDefinitions.formulaJson,
+            description: kpiDefinitions.description,
+            createdAt: kpiDefinitions.createdAt,
+          }
+        })
+        .from(companyKpiGoals)
+        .innerJoin(kpiDefinitions, eq(companyKpiGoals.kpiDefinitionId, kpiDefinitions.id))
+        .where(and(
+          eq(companyKpiGoals.companyId, companyId),
+          eq(companyKpiGoals.isActive, true)
+        ))
+        .orderBy(desc(companyKpiGoals.createdAt));
+    } catch (error) {
+      console.error('Error fetching company KPI goals:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Create a new KPI goal for a company
+   */
+  async createKpiGoal(goalData: InsertCompanyKpiGoal): Promise<CompanyKpiGoal | null> {
+    try {
+      const [newGoal] = await db
+        .insert(companyKpiGoals)
+        .values(goalData)
+        .returning();
+      
+      return newGoal;
+    } catch (error) {
+      console.error('Error creating KPI goal:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update an existing KPI goal
+   */
+  async updateKpiGoal(goalId: string, updates: Partial<InsertCompanyKpiGoal>): Promise<CompanyKpiGoal | null> {
+    try {
+      const [updatedGoal] = await db
+        .update(companyKpiGoals)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(companyKpiGoals.id, goalId))
+        .returning();
+      
+      return updatedGoal;
+    } catch (error) {
+      console.error('Error updating KPI goal:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Deactivate a KPI goal (soft delete)
+   */
+  async deactivateKpiGoal(goalId: string): Promise<boolean> {
+    try {
+      await db
+        .update(companyKpiGoals)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(companyKpiGoals.id, goalId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error deactivating KPI goal:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Calculate current KPI value using the formula and real data
+   */
+  async calculateCurrentKpiValue(kpiDefinition: KpiDefinition, companyId: number): Promise<number> {
+    try {
+      const formula = kpiDefinition.formulaJson;
+      
+      // Use the existing KPI calculation service
+      const calcService = kpiCalculationService;
+      
+      switch (formula.calculation_type) {
+        case 'ratio':
+          if (formula.numerator && formula.denominator) {
+            const numerator = await this.getFormulaValue(formula.numerator, companyId, calcService);
+            const denominator = await this.getFormulaValue(formula.denominator, companyId, calcService);
+            return denominator > 0 ? numerator / denominator : 0;
+          }
+          break;
+          
+        case 'percentage':
+          if (formula.numerator) {
+            // Handle percentage calculations (e.g., renewable energy %)
+            const value = await this.getFormulaValue(formula.numerator, companyId, calcService);
+            return value;
+          }
+          break;
+          
+        case 'absolute':
+          if (formula.numerator) {
+            return await this.getFormulaValue(formula.numerator, companyId, calcService);
+          }
+          break;
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error('Error calculating current KPI value:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Helper method to get formula value based on data reference
+   */
+  private async getFormulaValue(reference: string, companyId: number, calcService: any): Promise<number> {
+    switch (reference) {
+      case 'totalCarbonEmissions':
+        return await calcService.calculateTotalCarbonFootprint(companyId);
+      case 'totalBottlesProduced':
+        return await calcService.calculateTotalProductionVolume(companyId);
+      case 'scope1Emissions + scope2Emissions + scope3Emissions':
+        return await calcService.calculateTotalCarbonFootprint(companyId);
+      case 'totalWaterUsage':
+        return await calcService.calculateTotalWaterConsumption(companyId);
+      case 'renewableEnergyConsumption / totalEnergyConsumption * 100':
+        const renewable = await calcService.calculateRenewableEnergyKwh(companyId);
+        const total = await calcService.calculateTotalEnergyKwh(companyId);
+        return total > 0 ? (renewable / total) * 100 : 0;
+      case '(wasteGenerated - wasteRecycled) / wasteGenerated * 100':
+        const wasteTotal = await calcService.calculateTotalWasteGenerated(companyId);
+        const wasteRecycled = await calcService.calculateRecycledWaste(companyId);
+        return wasteTotal > 0 ? ((wasteTotal - wasteRecycled) / wasteTotal) * 100 : 0;
+      case 'verifiedSuppliers / totalSuppliers * 100':
+        return await calcService.calculateSupplierVerificationRate(companyId);
+      case 'localSuppliers / totalSuppliers * 100':
+        const localVolume = await calcService.calculateLocalIngredientsVolume(companyId);
+        const totalVolume = await calcService.calculateTotalIngredientsVolume(companyId);
+        return totalVolume > 0 ? (localVolume / totalVolume) * 100 : 0;
+      case 'totalEnergyConsumed':
+        return await calcService.calculateTotalEnergyConsumption(companyId);
+      default:
+        return 0;
+    }
+  }
+
+  /**
+   * Calculate progress towards a KPI goal
+   */
+  calculateGoalProgress(currentValue: number, baselineValue: number, targetReductionPercentage: number): {
+    progress: number;
+    status: 'on-track' | 'at-risk' | 'behind' | 'achieved';
+    targetValue: number;
+  } {
+    const targetValue = baselineValue * (1 - targetReductionPercentage / 100);
+    const totalReduction = baselineValue - targetValue;
+    const currentReduction = baselineValue - currentValue;
+    
+    let progress = totalReduction > 0 ? (currentReduction / totalReduction) * 100 : 0;
+    progress = Math.max(0, Math.min(100, progress)); // Clamp between 0-100
+    
+    let status: 'on-track' | 'at-risk' | 'behind' | 'achieved';
+    
+    if (progress >= 100) {
+      status = 'achieved';
+    } else if (progress >= 75) {
+      status = 'on-track';
+    } else if (progress >= 50) {
+      status = 'at-risk';
+    } else {
+      status = 'behind';
+    }
+    
+    return { progress, status, targetValue };
+  }
+
+  /**
+   * Get comprehensive KPI dashboard data with goals
+   */
+  async getKpiDashboardData(companyId: number): Promise<{
+    kpiGoals: Array<{
+      id: string;
+      name: string;
+      category: string;
+      unit: string;
+      currentValue: number;
+      baselineValue: number;
+      targetValue: number;
+      targetReductionPercentage: number;
+      targetDate: string;
+      progress: number;
+      status: 'on-track' | 'at-risk' | 'behind' | 'achieved';
+      description?: string;
+    }>;
+    summary: {
+      total: number;
+      onTrack: number;
+      atRisk: number;
+      behind: number;
+      achieved: number;
+    };
+  }> {
+    try {
+      const goals = await this.getCompanyKpiGoals(companyId);
+      
+      const kpiGoals = await Promise.all(
+        goals.map(async (goal) => {
+          const currentValue = await this.calculateCurrentKpiValue(goal.kpiDefinition, companyId);
+          const { progress, status, targetValue } = this.calculateGoalProgress(
+            currentValue,
+            parseFloat(goal.baselineValue.toString()),
+            parseFloat(goal.targetReductionPercentage.toString())
+          );
+          
+          return {
+            id: goal.id,
+            name: goal.kpiDefinition.kpiName,
+            category: goal.kpiDefinition.kpiCategory,
+            unit: goal.kpiDefinition.unit,
+            currentValue,
+            baselineValue: parseFloat(goal.baselineValue.toString()),
+            targetValue,
+            targetReductionPercentage: parseFloat(goal.targetReductionPercentage.toString()),
+            targetDate: goal.targetDate,
+            progress,
+            status,
+            description: goal.kpiDefinition.description,
+          };
+        })
+      );
+      
+      // Calculate summary
+      const summary = {
+        total: kpiGoals.length,
+        onTrack: kpiGoals.filter(kpi => kpi.status === 'on-track').length,
+        atRisk: kpiGoals.filter(kpi => kpi.status === 'at-risk').length,
+        behind: kpiGoals.filter(kpi => kpi.status === 'behind').length,
+        achieved: kpiGoals.filter(kpi => kpi.status === 'achieved').length,
+      };
+      
+      return { kpiGoals, summary };
+    } catch (error) {
+      console.error('Error getting KPI dashboard data:', error);
+      return {
+        kpiGoals: [],
+        summary: { total: 0, onTrack: 0, atRisk: 0, behind: 0, achieved: 0 }
+      };
+    }
+  }
+}
+
+// Export enhanced KPI service instance
+export const enhancedKpiService = new EnhancedKPIService();

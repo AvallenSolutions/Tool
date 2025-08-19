@@ -33,7 +33,7 @@ import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { suggestionService } from "./services/suggestionService";
-import { kpiCalculationService } from "./services/kpiService";
+import { kpiCalculationService, enhancedKpiService } from "./services/kpiService";
 import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences } from "@shared/schema";
@@ -3993,6 +3993,174 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // ==== ENHANCED KPI & GOAL-SETTING API ROUTES ====
+
+  // GET /api/enhanced-kpis/definitions - Get all KPI definitions from the library
+  app.get('/api/enhanced-kpis/definitions', isAuthenticated, async (req, res) => {
+    try {
+      const { category } = req.query;
+      
+      let definitions;
+      if (category && typeof category === 'string') {
+        definitions = await enhancedKpiService.getKpiDefinitionsByCategory(category);
+      } else {
+        definitions = await enhancedKpiService.getKpiDefinitions();
+      }
+      
+      res.json({ success: true, definitions });
+    } catch (error) {
+      console.error('Error fetching KPI definitions:', error);
+      res.status(500).json({ error: 'Failed to fetch KPI definitions' });
+    }
+  });
+
+  // GET /api/enhanced-kpis/goals - Get company's KPI goals
+  app.get('/api/enhanced-kpis/goals', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const goals = await enhancedKpiService.getCompanyKpiGoals(company.id);
+      res.json({ success: true, goals });
+    } catch (error) {
+      console.error('Error fetching company KPI goals:', error);
+      res.status(500).json({ error: 'Failed to fetch KPI goals' });
+    }
+  });
+
+  // POST /api/enhanced-kpis/goals - Create a new KPI goal
+  app.post('/api/enhanced-kpis/goals', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { kpiDefinitionId, targetReductionPercentage, targetDate, baselineValue } = req.body;
+      
+      if (!kpiDefinitionId || !targetReductionPercentage || !targetDate || !baselineValue) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: kpiDefinitionId, targetReductionPercentage, targetDate, baselineValue' 
+        });
+      }
+      
+      const goalData = {
+        companyId: company.id,
+        kpiDefinitionId,
+        targetReductionPercentage: targetReductionPercentage.toString(),
+        targetDate,
+        baselineValue: baselineValue.toString(),
+        isActive: true,
+      };
+      
+      const newGoal = await enhancedKpiService.createKpiGoal(goalData);
+      
+      if (!newGoal) {
+        return res.status(500).json({ error: 'Failed to create KPI goal' });
+      }
+      
+      res.status(201).json({ 
+        success: true, 
+        goal: newGoal,
+        message: 'KPI goal created successfully' 
+      });
+    } catch (error) {
+      console.error('Error creating KPI goal:', error);
+      res.status(500).json({ error: 'Failed to create KPI goal' });
+    }
+  });
+
+  // PUT /api/enhanced-kpis/goals/:goalId - Update a KPI goal
+  app.put('/api/enhanced-kpis/goals/:goalId', isAuthenticated, async (req, res) => {
+    try {
+      const { goalId } = req.params;
+      const updates = req.body;
+      
+      // Convert numeric fields to strings for database storage
+      if (updates.targetReductionPercentage) {
+        updates.targetReductionPercentage = updates.targetReductionPercentage.toString();
+      }
+      if (updates.baselineValue) {
+        updates.baselineValue = updates.baselineValue.toString();
+      }
+      
+      const updatedGoal = await enhancedKpiService.updateKpiGoal(goalId, updates);
+      
+      if (!updatedGoal) {
+        return res.status(404).json({ error: 'KPI goal not found' });
+      }
+      
+      res.json({ 
+        success: true, 
+        goal: updatedGoal,
+        message: 'KPI goal updated successfully' 
+      });
+    } catch (error) {
+      console.error('Error updating KPI goal:', error);
+      res.status(500).json({ error: 'Failed to update KPI goal' });
+    }
+  });
+
+  // DELETE /api/enhanced-kpis/goals/:goalId - Deactivate a KPI goal
+  app.delete('/api/enhanced-kpis/goals/:goalId', isAuthenticated, async (req, res) => {
+    try {
+      const { goalId } = req.params;
+      
+      const success = await enhancedKpiService.deactivateKpiGoal(goalId);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'KPI goal not found' });
+      }
+      
+      res.json({ 
+        success: true,
+        message: 'KPI goal deactivated successfully' 
+      });
+    } catch (error) {
+      console.error('Error deactivating KPI goal:', error);
+      res.status(500).json({ error: 'Failed to deactivate KPI goal' });
+    }
+  });
+
+  // GET /api/enhanced-kpis/dashboard - Get comprehensive KPI dashboard data
+  app.get('/api/enhanced-kpis/dashboard', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const dashboardData = await enhancedKpiService.getKpiDashboardData(company.id);
+      res.json({ success: true, data: dashboardData });
+    } catch (error) {
+      console.error('Error fetching enhanced KPI dashboard data:', error);
+      res.status(500).json({ error: 'Failed to fetch KPI dashboard data' });
+    }
+  });
+
   // POST /api/goals/project - Create a project goal
   app.post('/api/goals/project', isAuthenticated, async (req, res) => {
     try {
@@ -4147,7 +4315,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const goalsData = await kpiService.getSMARTGoals(company.id);
+      const goalsData = await enhancedKpiService.getCompanyKpiGoals(company.id);
       res.json(goalsData);
     } catch (error) {
       console.error('Error getting SMART goals:', error);
@@ -4170,7 +4338,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const goal = await kpiService.createSMARTGoal(company.id, req.body);
+      const goal = await enhancedKpiService.createKpiGoal({ companyId: company.id, ...req.body });
       res.json(goal);
     } catch (error) {
       console.error('Error creating SMART goal:', error);
