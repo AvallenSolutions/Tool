@@ -41,6 +41,16 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// GWP Factors table for ISO-compliant GHG calculations
+export const gwpFactors = pgTable("gwp_factors", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  gasName: varchar("gas_name", { length: 100 }).notNull().unique(),
+  gasFormula: varchar("gas_formula", { length: 50 }).notNull().unique(),
+  gwp100yrAr5: integer("gwp_100yr_ar5").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Companies table
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),

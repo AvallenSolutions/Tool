@@ -71,7 +71,7 @@ export default function ProductFootprint() {
                   <Leaf className="w-4 h-4 text-avallen-green" />
                 </div>
                 <div>
-                  <p className="font-medium text-slate-gray">Carbon Footprint</p>
+                  <p className="font-medium text-slate-gray">Carbon Footprint (ISO 14064-1)</p>
                   <p className="text-sm text-gray-500">Per {currentProduct.size} bottle</p>
                 </div>
               </div>

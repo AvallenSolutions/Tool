@@ -33,13 +33,35 @@ interface LCAJob {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   progress: number;
   results?: {
-    totalCarbonFootprint: number;
+    total_co2e: number; // ISO-compliant total
+    totalCarbonFootprint: number; // Legacy field
     totalWaterFootprint: number;
+    ghg_breakdown: Array<{
+      gas_name: string;
+      mass_kg: number;
+      gwp_factor: number;
+      co2e: number;
+    }>;
     impactsByCategory: Array<{
       category: string;
       impact: number;
       unit: string;
     }>;
+    water_footprint: {
+      total_liters: number;
+      agricultural_water: number;
+      processing_water: number;
+    };
+    waste_output: {
+      total_kg: number;
+      recyclable_kg: number;
+      hazardous_kg: number;
+    };
+    metadata?: {
+      iso_compliant?: boolean;
+      lci_flows_count?: number;
+      gwp_factors_used?: string[];
+    };
     calculationDate: string;
   };
   errorMessage?: string;
