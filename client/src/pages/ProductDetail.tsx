@@ -1154,9 +1154,6 @@ function LCATabContent({ product }: { product: Product }) {
           metrics={(lcaData as any).metrics}
         />
       )}
-
-      {/* LCA Calculation Card - Real-time LCA Results */}
-      <LCACalculationCard product={product} />
       
       {/* Enhanced OpenLCA Integration Status */}
       <Card>
