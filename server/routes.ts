@@ -2326,13 +2326,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           productEmissions += closureEmissions;
         }
         
-        // Store carbon footprint for the product
-        const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
-        if (productEmissions > 0) {
-          await EnhancedLCACalculationService.storeCarbonFootprint(product.id, productEmissions);
-        }
-        
-        console.log(`💾 Stored carbon footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO2e`);
+        console.log(`💾 Calculated carbon footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO2e`);
         
         // Calculate annual emissions based on production volume
         const annualProduction = parseFloat(product.annualProductionVolume || '0');

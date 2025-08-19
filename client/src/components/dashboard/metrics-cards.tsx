@@ -3,9 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, Droplets, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 
 export default function MetricsCards() {
-  const { data: metrics, isLoading } = useQuery({
+  const { data: metrics, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/metrics"],
     retry: false,
+  });
+
+  console.log('📊 MetricsCards Debug:', {
+    isLoading,
+    metrics,
+    error: error?.message
   });
 
   if (isLoading) {
