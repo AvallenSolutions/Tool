@@ -21,7 +21,7 @@ import { HelpBubble } from '@/components/ui/help-bubble';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { IngredientSelector, type IngredientInput } from '@/components/lca/IngredientSelector';
+import { IngredientSelector } from '@/components/lca/IngredientSelector';
 import '@/styles/shepherd.css';
 
 // Enhanced Product Schema with all 8 tabs including LCA Data Collection
@@ -510,11 +510,23 @@ export default function EnhancedProductForm({
   const [lcaProgress, setLcaProgress] = useState<number>(0);
   const [lcaStatus, setLcaStatus] = useState<'idle' | 'calculating' | 'completed' | 'failed'>('idle');
 
-  // Fetch available ingredients from OpenLCA
-  const { data: availableIngredients = [], isLoading: isLoadingIngredients } = useQuery<{materialName: string; unit: string}[]>({
-    queryKey: ['/api/lca/ingredients'],
+  // Category-based ingredient selection state
+  const [selectedIngredientCategories, setSelectedIngredientCategories] = useState<{ [key: number]: string }>({});
+  
+  // Fetch available categories
+  const { data: availableCategories = [] } = useQuery<string[]>({
+    queryKey: ['/api/lca/categories'],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+  
+  // Fetch ingredients based on selected categories
+  const getIngredientsForCategory = (category: string) => {
+    return useQuery<{materialName: string; unit: string; subcategory: string}[]>({
+      queryKey: ['/api/lca/ingredients', { subcategory: category }],
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      enabled: Boolean(category),
+    });
+  };
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1309,32 +1321,57 @@ export default function EnhancedProductForm({
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Category Selection */}
                             <FormField
                               control={form.control}
-                              name={`ingredients.${index}.name`}
+                              name={`ingredients.${index}.category`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Material Name *</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormLabel>Ingredient Category *</FormLabel>
+                                  <Select 
+                                    onValueChange={(value) => {
+                                      field.onChange(value);
+                                      setSelectedIngredientCategories(prev => ({ ...prev, [index]: value }));
+                                      // Clear the ingredient name when category changes
+                                      form.setValue(`ingredients.${index}.name`, '');
+                                    }} 
+                                    value={field.value || ''}
+                                  >
                                     <FormControl>
                                       <SelectTrigger>
-                                        <SelectValue placeholder="Select OpenLCA material" />
+                                        <SelectValue placeholder="Select category first" />
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      {availableIngredients.map((ingredient, idx) => (
-                                        <SelectItem key={`${ingredient.materialName}-${idx}`} value={ingredient.materialName}>
-                                          {ingredient.materialName}
+                                      {availableCategories.map((category) => (
+                                        <SelectItem key={category} value={category}>
+                                          <div>
+                                            <div className="font-medium">{category}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                              {category === 'Ethanol' && 'Base alcohol sources'}
+                                              {category === 'Grains' && 'Cereal crops for fermentation'}
+                                              {category === 'Fruits' && 'Fresh fruits for juice/fermentation'}
+                                              {category === 'Botanicals' && 'Herbs, spices, flavorings'}
+                                              {category === 'Additives' && 'Sugars, water, processing aids'}
+                                            </div>
+                                          </div>
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
                                   </Select>
                                   <FormDescription>
-                                    Select from scientifically validated OpenLCA materials
+                                    Choose the primary category for your ingredient
                                   </FormDescription>
                                   <FormMessage />
                                 </FormItem>
                               )}
+                            />
+                            
+                            {/* Ingredient Selection */}
+                            <IngredientSelector 
+                              form={form}
+                              index={index}
+                              selectedCategory={selectedIngredientCategories[index]}
                             />
                             
                             <FormField

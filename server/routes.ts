@@ -9,7 +9,7 @@ import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData, lcaProcessMappings } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, ilike, or, and, gte, gt } from "drizzle-orm";
+import { eq, desc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
@@ -5213,13 +5213,22 @@ Be precise and quote actual text from the content, not generic terms.`;
   // GET /api/lca/ingredients - Get available ingredients from process mappings
   app.get('/api/lca/ingredients', async (req, res) => {
     try {
-      const ingredients = await db
+      const { subcategory } = req.query;
+      
+      let query = db
         .select({
           materialName: lcaProcessMappings.materialName,
-          unit: lcaProcessMappings.unit
+          unit: lcaProcessMappings.unit,
+          subcategory: lcaProcessMappings.subcategory
         })
-        .from(lcaProcessMappings)
-        .where(eq(lcaProcessMappings.category, 'Agriculture'));
+        .from(lcaProcessMappings);
+      
+      // Filter by subcategory if provided
+      if (subcategory && typeof subcategory === 'string') {
+        query = query.where(eq(lcaProcessMappings.subcategory, subcategory));
+      }
+      
+      const ingredients = await query;
       
       // Deduplicate ingredients by materialName
       const uniqueIngredients = ingredients.reduce((acc, ing) => {
@@ -5227,16 +5236,40 @@ Be precise and quote actual text from the content, not generic terms.`;
         if (!existing) {
           acc.push({
             materialName: ing.materialName,
-            unit: ing.unit || 'kg'
+            unit: ing.unit || 'kg',
+            subcategory: ing.subcategory
           });
         }
         return acc;
-      }, [] as Array<{materialName: string; unit: string}>);
+      }, [] as Array<{materialName: string; unit: string; subcategory: string}>);
       
       res.json(uniqueIngredients);
     } catch (error) {
       console.error('Error fetching LCA ingredients:', error);
       res.status(500).json({ error: 'Failed to fetch ingredients' });
+    }
+  });
+
+  // GET /api/lca/categories - Get available ingredient categories
+  app.get('/api/lca/categories', async (req, res) => {
+    try {
+      const categories = await db
+        .selectDistinct({
+          subcategory: lcaProcessMappings.subcategory
+        })
+        .from(lcaProcessMappings)
+        .where(ne(lcaProcessMappings.subcategory, null));
+      
+      const categoryList = categories
+        .map(cat => cat.subcategory)
+        .filter(Boolean)
+        .filter(cat => cat !== null)
+        .sort();
+      
+      res.json(categoryList);
+    } catch (error) {
+      console.error('Error fetching LCA categories:', error);
+      res.status(500).json({ error: 'Failed to fetch categories' });
     }
   });
 

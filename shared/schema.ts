@@ -491,6 +491,7 @@ export const lcaProcessMappings = pgTable("lca_process_mappings", {
   id: serial("id").primaryKey(),
   materialName: varchar("material_name").notNull(), // User-friendly ingredient name (e.g., "Molasses, from sugarcane")
   category: varchar("category").notNull(), // Process category (e.g., "Agriculture", "Energy", "Transport")
+  subcategory: varchar("subcategory"), // Hierarchical subcategory (e.g., "Grains", "Fruits", "Botanicals")
   ecoinventProcessUuid: varchar("ecoinvent_process_uuid").notNull(), // Precise process ID in ecoinvent database
   databaseVersion: varchar("database_version").notNull().default("3.8"), // ecoinvent database version
   olcaProcessName: varchar("olca_process_name").notNull(), // Full process name in ecoinvent
