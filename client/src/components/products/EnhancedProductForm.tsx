@@ -1373,7 +1373,10 @@ export default function EnhancedProductForm({
                               index={index}
                               selectedCategory={selectedIngredientCategories[index]}
                             />
-                            
+                          </div>
+
+                          {/* Amount and Unit - Side by Side */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
                               name={`ingredients.${index}.amount`}
@@ -1396,9 +1399,7 @@ export default function EnhancedProductForm({
                                 </FormItem>
                               )}
                             />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
                             <FormField
                               control={form.control}
                               name={`ingredients.${index}.unit`}
@@ -1422,7 +1423,9 @@ export default function EnhancedProductForm({
                                 </FormItem>
                               )}
                             />
-                            
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
                               name={`ingredients.${index}.origin`}
