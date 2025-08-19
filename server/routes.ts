@@ -4516,7 +4516,17 @@ Be precise and quote actual text from the content, not generic terms.`;
       const puppeteer = await import('puppeteer');
       const browser = await puppeteer.default.launch({ 
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ],
+        executablePath: '/usr/bin/chromium'
       });
       const page = await browser.newPage();
 
