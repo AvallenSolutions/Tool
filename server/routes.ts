@@ -3674,7 +3674,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       });
     } catch (error) {
       console.error('Error debugging suggestions:', error);
-      res.status(500).json({ error: 'Failed to debug suggestions', details: error.message });
+      res.status(500).json({ error: 'Failed to debug suggestions', details: (error as Error).message });
     }
   });
   
@@ -3701,7 +3701,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       res.json({ suggestions });
     } catch (error) {
       console.error('Error getting next steps:', error);
-      res.status(500).json({ error: 'Failed to get suggestions', details: error.message });
+      res.status(500).json({ error: 'Failed to get suggestions', details: (error as Error).message });
     }
   });
 
@@ -3732,13 +3732,14 @@ Be precise and quote actual text from the content, not generic terms.`;
   // GET /api/smart-goals - Get SMART goals for the company
   app.get('/api/smart-goals', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
-      if (!user?.id) {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       // Get company by owner ID
-      const company = await dbStorage.getCompanyByOwner(user.id);
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
@@ -3754,13 +3755,14 @@ Be precise and quote actual text from the content, not generic terms.`;
   // POST /api/smart-goals - Create a new SMART goal
   app.post('/api/smart-goals', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
-      if (!user?.id) {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       // Get company by owner ID
-      const company = await dbStorage.getCompanyByOwner(user.id);
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
@@ -3776,13 +3778,14 @@ Be precise and quote actual text from the content, not generic terms.`;
   // GET /api/goals - Get all goals for the company
   app.get('/api/goals', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user;
-      if (!user?.id) {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       // Get company by owner ID
-      const company = await dbStorage.getCompanyByOwner(user.id);
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(400).json({ error: 'User not associated with a company' });
       }
@@ -4160,13 +4163,11 @@ Be precise and quote actual text from the content, not generic terms.`;
         reportingPeriodEnd: company.currentReportingPeriodEnd,
         status: 'generating',
         jobId,
-        totalScope1: 0,
-        totalScope2: 0,
-        totalScope3: 0,
-        totalWaterUsage: 0,
-        totalWasteGenerated: 0,
-        totalEnergyConsumption: 0,
-        totalRenewableEnergyUsage: 0,
+        totalScope1: '0',
+        totalScope2: '0',
+        totalScope3: '0',
+        totalWaterUsage: '0',
+        totalWasteGenerated: '0'
       };
 
       const [newReport] = await db
@@ -4184,13 +4185,11 @@ Be precise and quote actual text from the content, not generic terms.`;
               status: 'completed',
               completedAt: new Date(),
               // Add some sample data
-              totalScope1: 150.5,
-              totalScope2: 89.2,
-              totalScope3: 420.8,
-              totalWaterUsage: 15000,
-              totalWasteGenerated: 2500,
-              totalEnergyConsumption: 85000,
-              totalRenewableEnergyUsage: 42500,
+              totalScope1: '150.5',
+              totalScope2: '89.2',
+              totalScope3: '420.8',
+              totalWaterUsage: '15000',
+              totalWasteGenerated: '2500'
             })
             .where(eq(reports.id, newReport.id));
         } catch (error) {
