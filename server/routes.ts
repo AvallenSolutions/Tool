@@ -2593,7 +2593,10 @@ Be precise and quote actual text from the content, not generic terms.`;
       let query = db
         .select()
         .from(verifiedSuppliers)
-        .where(eq(verifiedSuppliers.verificationStatus, 'verified'));
+        .where(and(
+          eq(verifiedSuppliers.verificationStatus, 'verified'),
+          eq(verifiedSuppliers.isVerified, true)
+        ));
         
       if (category) {
         query = db
@@ -2601,6 +2604,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           .from(verifiedSuppliers) 
           .where(and(
             eq(verifiedSuppliers.verificationStatus, 'verified'),
+            eq(verifiedSuppliers.isVerified, true),
             eq(verifiedSuppliers.supplierCategory, category)
           ));
       }
