@@ -4653,35 +4653,18 @@ Be precise and quote actual text from the content, not generic terms.`;
       await page.setViewport({ width: 1200, height: 800 });
       await page.setDefaultTimeout(30000);
 
-      // Calculate actual metrics using the enhanced LCA service
+      // Calculate actual metrics using the enhanced LCA service with corrected data
       const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
       
-      const lcaData = {
-        agriculture: {
-          yieldTonPerHectare: 50,
-          dieselLPerHectare: 100,
-          fertilizer: {
-            nitrogenKgPerHectare: 150,
-            phosphorusKgPerHectare: 50
-          },
-          landUse: {
-            farmingPractice: 'conventional' as const
-          }
-        },
-        processing: {
-          waterM3PerTonCrop: 3.5,
-          electricityKwhPerTonCrop: 200,
-          fermentation: {
-            fermentationTime: 7
-          },
-          distillation: {
-            distillationRounds: 2,
-            energySourceType: 'electric' as const
-          }
-        }
-      };
-
+      // Use empty lcaData so it only uses the realistic calculations from ingredients
+      const lcaData = {};
       const lcaResults = await EnhancedLCACalculationService.calculateEnhancedLCA(product, lcaData, 1);
+      
+      console.log('PDF Generation - LCA Results:', {
+        totalCarbon: lcaResults.totalCarbonFootprint,
+        totalWater: lcaResults.totalWaterFootprint,
+        breakdown: lcaResults.breakdown
+      });
       
       const carbonFootprint = lcaResults.totalCarbonFootprint;
       const waterFootprint = lcaResults.totalWaterFootprint;
@@ -4874,9 +4857,16 @@ Be precise and quote actual text from the content, not generic terms.`;
         throw new Error('Generated PDF buffer is empty');
       }
 
+      console.log(`PDF generated successfully: ${pdfBuffer.length} bytes`);
+
+      // Set proper headers for PDF download
       res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Length', pdfBuffer.length.toString());
       res.setHeader('Content-Disposition', `attachment; filename="Sustainability_Report_${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf"`);
-      res.send(pdfBuffer);
+      res.setHeader('Cache-Control', 'no-cache');
+      
+      // Send the PDF buffer directly
+      res.end(pdfBuffer);
 
     } catch (error) {
       console.error('Error generating product sustainability PDF:', error);
