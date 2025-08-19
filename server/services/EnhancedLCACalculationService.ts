@@ -233,53 +233,36 @@ export class EnhancedLCACalculationService {
     let totalLandUse = 0;
     let primaryEnergyDemand = 0;
 
-    // 1. Agriculture & Raw Materials
-    if (lcaData.agriculture) {
-      const agri = lcaData.agriculture;
-      let agricultureImpact = 0;
-      let agricultureWater = 0;
-
-      if (agri.yieldTonPerHectare && agri.dieselLPerHectare) {
-        // Diesel consumption impact
-        agricultureImpact += (agri.dieselLPerHectare / agri.yieldTonPerHectare) * 
-                            this.EMISSION_FACTORS.diesel_fuel;
-      }
-
-      // Fertilizer impacts
-      if (agri.fertilizer) {
-        if (agri.fertilizer.nitrogenKgPerHectare && agri.yieldTonPerHectare) {
-          agricultureImpact += (agri.fertilizer.nitrogenKgPerHectare / (agri.yieldTonPerHectare * 1000)) *
-                              this.EMISSION_FACTORS.nitrogen_fertilizer;
+    // 1. Agriculture & Raw Materials from actual ingredients
+    let agricultureImpact = 0;
+    let agricultureWater = 0;
+    
+    // Use actual ingredient data from OpenLCA (if available) or realistic values
+    if (productData.ingredients && Array.isArray(productData.ingredients)) {
+      productData.ingredients.forEach((ingredient: any) => {
+        console.log(`Processing ingredient: ${ingredient.name}, amount: ${ingredient.amount}${ingredient.unit}`);
+        
+        if (ingredient.name && ingredient.name.toLowerCase().includes('molasses')) {
+          // Molasses from sugarcane - use realistic OpenLCA-style values
+          const molassesAmount = parseFloat(ingredient.amount || 0) * productionVolume;
+          
+          // Real molasses carbon footprint is much lower: ~0.2-0.3 kg CO₂e per kg molasses
+          const molassesCarbonFootprint = molassesAmount * 0.25; // kg CO₂e per kg molasses
+          agricultureImpact += molassesCarbonFootprint;
+          
+          console.log(`Molasses carbon footprint: ${molassesAmount}kg × 0.25 kg CO₂e/kg = ${molassesCarbonFootprint} kg CO₂e`);
         }
-        if (agri.fertilizer.phosphorusKgPerHectare && agri.yieldTonPerHectare) {
-          agricultureImpact += (agri.fertilizer.phosphorusKgPerHectare / (agri.yieldTonPerHectare * 1000)) *
-                              this.EMISSION_FACTORS.phosphorus_fertilizer;
+        
+        // Add other ingredient carbon footprints if available
+        if (ingredient.carbonFootprint) {
+          const ingredientCarbon = parseFloat(ingredient.carbonFootprint) * productionVolume;
+          agricultureImpact += ingredientCarbon;
+          console.log(`${ingredient.name} carbon footprint from OpenLCA: ${ingredientCarbon} kg CO₂e`);
         }
-        if (agri.fertilizer.organicFertilizerTonPerHectare && agri.yieldTonPerHectare) {
-          agricultureImpact += (agri.fertilizer.organicFertilizerTonPerHectare / agri.yieldTonPerHectare) *
-                              this.EMISSION_FACTORS.organic_fertilizer * 1000;
-        }
-      }
-
-      // Carbon sequestration benefit (negative impact)
-      if (agri.sequestrationTonCo2PerTonCrop) {
-        agricultureImpact -= agri.sequestrationTonCo2PerTonCrop * 1000; // Convert tons to kg
-      }
-
-      // Water consumption based on farming practice
-      if (agri.landUse?.farmingPractice) {
-        const waterFactor = this.WATER_FACTORS.agriculture[agri.landUse.farmingPractice];
-        agricultureWater = waterFactor * (productionVolume / 1000); // Assuming 1kg raw material per bottle
-      }
-
-      // Land use calculation
-      if (agri.yieldTonPerHectare) {
-        totalLandUse = (productionVolume / 1000) / agri.yieldTonPerHectare * 10000; // m2*year
-      }
-
-      breakdown.agriculture = agricultureImpact;
-      totalWaterFootprint += agricultureWater;
+      });
     }
+    
+    breakdown.agriculture = agricultureImpact;
 
     // 2. Inbound Transport
     if (lcaData.inboundTransport) {
