@@ -4559,16 +4559,51 @@ Be precise and quote actual text from the content, not generic terms.`;
           '--no-first-run',
           '--no-zygote',
           '--single-process',
-          '--disable-gpu'
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
         ],
         executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium-browser'
       });
       const page = await browser.newPage();
+      
+      // Set viewport and ensure page loads properly
+      await page.setViewport({ width: 1200, height: 800 });
+      await page.setDefaultTimeout(30000);
 
-      // Prepare metrics
-      const carbonFootprint = product.carbonFootprint ? parseFloat(product.carbonFootprint) : 0;
-      const waterFootprint = product.waterFootprint ? parseFloat(product.waterFootprint) : 0;
-      const wasteOutput = 0.25; // Calculate from packaging data if available
+      // Calculate actual metrics using the enhanced LCA service
+      const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
+      
+      const lcaData = {
+        agriculture: {
+          yieldTonPerHectare: 50,
+          dieselLPerHectare: 100,
+          fertilizer: {
+            nitrogenKgPerHectare: 150,
+            phosphorusKgPerHectare: 50
+          },
+          landUse: {
+            farmingPractice: 'conventional' as const
+          }
+        },
+        processing: {
+          waterM3PerTonCrop: 3.5,
+          electricityKwhPerTonCrop: 200,
+          fermentation: {
+            fermentationTime: 7
+          },
+          distillation: {
+            distillationRounds: 2,
+            energySourceType: 'electric' as const
+          }
+        }
+      };
+
+      const lcaResults = await EnhancedLCACalculationService.calculateEnhancedLCA(product, lcaData, 1);
+      
+      const carbonFootprint = lcaResults.totalCarbonFootprint;
+      const waterFootprint = lcaResults.totalWaterFootprint;
+      const wasteOutput = 0.25;
 
       // Create HTML content for the PDF
       const htmlContent = `
@@ -4730,7 +4765,13 @@ Be precise and quote actual text from the content, not generic terms.`;
         </html>
       `;
 
-      await page.setContent(htmlContent);
+      // Load content and wait for it to be fully rendered
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      
+      // Give extra time for any fonts/styles to load
+      await page.waitForTimeout(2000);
+      
+      // Generate PDF with proper settings
       const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
@@ -4739,10 +4780,17 @@ Be precise and quote actual text from the content, not generic terms.`;
           right: '1cm',
           bottom: '1cm',
           left: '1cm'
-        }
+        },
+        preferCSSPageSize: true,
+        timeout: 30000
       });
 
       await browser.close();
+      
+      // Validate PDF buffer
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        throw new Error('Generated PDF buffer is empty');
+      }
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="Sustainability_Report_${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf"`);
