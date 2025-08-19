@@ -1352,7 +1352,9 @@ export default function EnhancedProductForm({
                                               {category === 'Grains' && 'Cereal crops for fermentation'}
                                               {category === 'Fruits' && 'Fresh fruits for juice/fermentation'}
                                               {category === 'Botanicals' && 'Herbs, spices, flavorings'}
-                                              {category === 'Additives' && 'Sugars, water, processing aids'}
+                                              {category === 'Agave' && 'Agave species and products'}
+                                              {category === 'Sugar Products' && 'Molasses, syrups, fermentable sugars'}
+                                              {category === 'Additives' && 'Essences, water, processing aids'}
                                             </div>
                                           </div>
                                         </SelectItem>

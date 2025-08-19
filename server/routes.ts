@@ -5255,8 +5255,8 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       console.log('🔍 Fetching LCA categories...');
       
-      // Simple hardcoded response while debugging
-      const hardcodedCategories = ['Ethanol', 'Grains', 'Fruits', 'Botanicals', 'Additives'];
+      // Updated categories including new Agave and Sugar Products
+      const hardcodedCategories = ['Ethanol', 'Grains', 'Fruits', 'Botanicals', 'Agave', 'Sugar Products', 'Additives'];
       console.log('✅ Returning hardcoded categories:', hardcodedCategories);
       res.json(hardcodedCategories);
       
