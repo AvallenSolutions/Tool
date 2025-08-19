@@ -2082,22 +2082,21 @@ Be precise and quote actual text from the content, not generic terms.`;
           }
         }
         
-        // Apply production volume
-        const productionVolume = parseFloat(product.annualProductionVolume || '1');
-        const totalProductEmissions = productEmissions * productionVolume;
+        // FIXED: Use per-unit emissions for consistency with individual product pages
+        // The carbon footprint should represent the per-unit impact, not total annual impact
+        console.log(`📊 ${product.name} per-unit emissions: ${productEmissions.toFixed(3)} kg CO2e per unit`);
         
-        console.log(`📊 ${product.name} total: ${productEmissions.toFixed(3)} kg CO2e per unit × ${productionVolume} units = ${totalProductEmissions.toFixed(0)} kg CO2e`);
-        
-        totalEmissions += totalProductEmissions;
+        // Store per-unit emissions for consistency
+        totalEmissions += productEmissions;
         details.push({
           productId: product.id,
           name: product.name,
-          emissions: totalProductEmissions
+          emissions: productEmissions // Per-unit emissions for consistency
         });
       }
       
       return {
-        totalEmissions: totalEmissions / 1000, // Convert to tonnes CO2e
+        totalEmissions: totalEmissions / 1000, // Convert to tonnes CO2e (per-unit totals)
         productCount: products.length,
         details
       };
