@@ -21,6 +21,7 @@ import {
   Plus,
   BarChart3
 } from "lucide-react";
+import { KPIDetailModal } from './KPIDetailModal';
 
 interface KPIData {
   id: string;
@@ -95,8 +96,15 @@ const statusConfig = {
 
 export function KPITracking() {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedKPI, setSelectedKPI] = useState<KPIData | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  const handleKPIClick = (kpi: KPIData) => {
+    setSelectedKPI(kpi);
+    setIsDetailModalOpen(true);
+  };
   
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<NewKPIFormData>();
   const { data, isLoading, error } = useQuery<KPIResponse>({
@@ -293,7 +301,8 @@ export function KPITracking() {
               return (
                 <div
                   key={kpi.id}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50 hover:bg-white"
+                  className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50 hover:bg-white cursor-pointer"
+                  onClick={() => handleKPIClick(kpi)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -457,6 +466,13 @@ export function KPITracking() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* KPI Detail Modal */}
+      <KPIDetailModal
+        kpi={selectedKPI}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
     </div>
   );
 }

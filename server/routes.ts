@@ -3855,6 +3855,62 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Update KPI current value endpoint
+  app.post('/api/kpi-data/update', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { kpiId, currentValue } = req.body;
+      
+      if (!kpiId || currentValue === undefined) {
+        return res.status(400).json({ error: 'Missing required fields: kpiId, currentValue' });
+      }
+      
+      // Update KPI in company_goals table (since KPIs are stored there)
+      const { companyGoals } = await import('@shared/schema');
+      
+      const [updatedGoal] = await db
+        .update(companyGoals)
+        .set({ 
+          startValue: currentValue.toString(),
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(companyGoals.id, kpiId),
+          eq(companyGoals.companyId, company.id)
+        ))
+        .returning();
+        
+      if (!updatedGoal) {
+        return res.status(404).json({ error: 'KPI not found' });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'KPI updated successfully',
+        kpi: {
+          id: updatedGoal.id,
+          current: parseFloat(updatedGoal.startValue || '0'),
+          target: parseFloat(updatedGoal.targetValue || '100')
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error updating KPI:', error);
+      res.status(500).json({ error: 'Failed to update KPI' });
+    }
+  });
+
   // GET /api/smart-goals - Get SMART goals for the company
   app.get('/api/smart-goals', isAuthenticated, async (req, res) => {
     try {

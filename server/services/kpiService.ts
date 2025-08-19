@@ -23,57 +23,154 @@ export interface DashboardKPIs {
 export class KPIService {
   
   /**
-   * Phase 3: Get KPI data in the format expected by the KPITracking component
+   * Get KPI data from real database integration
    */
   async getKPIData(companyId: number) {
-    // Mock data for Phase 3 demonstration
-    return {
-      kpis: [
-        {
-          id: '1',
+    try {
+      // Get actual company footprint data for real metrics
+      const companyData = await db
+        .select()
+        .from(companyFootprintData)
+        .where(eq(companyFootprintData.companyId, companyId))
+        .limit(1);
+
+      // Get company goals from database
+      const goals = await db
+        .select()
+        .from(companyGoals)
+        .where(eq(companyGoals.companyId, companyId));
+
+      // Calculate real KPIs based on actual data
+      const kpis = [];
+
+      // 1. Carbon Footprint KPI (from actual emissions data)
+      const totalCarbonFootprint = await this.calculateTotalCarbonFootprint(companyId);
+      if (totalCarbonFootprint > 0) {
+        const carbonTarget = 1000; // Default target, could come from goals table
+        kpis.push({
+          id: 'carbon-footprint',
           name: 'Carbon Footprint Reduction',
-          current: 750,
-          target: 1000,
-          unit: 'tCO2e',
+          current: Math.round(totalCarbonFootprint * 100) / 100,
+          target: carbonTarget,
+          unit: 'kg CO₂e',
           category: 'emissions' as const,
-          trend: 'down' as const,
-          trendValue: -15,
+          trend: totalCarbonFootprint < carbonTarget * 0.8 ? 'down' as const : 'up' as const,
+          trendValue: Math.round(((carbonTarget - totalCarbonFootprint) / carbonTarget) * 100),
           deadline: '2025-12-31',
-          status: 'on-track' as const,
-        },
-        {
-          id: '2',
-          name: 'Energy Efficiency',
-          current: 85,
-          target: 90,
-          unit: '%',
-          category: 'efficiency' as const,
-          trend: 'up' as const,
-          trendValue: 8,
-          deadline: '2025-06-30',
-          status: 'on-track' as const,
-        },
-        {
-          id: '3',
+          status: totalCarbonFootprint < carbonTarget * 0.8 ? 'on-track' as const : 
+                 totalCarbonFootprint < carbonTarget ? 'at-risk' as const : 'behind' as const,
+        });
+      }
+
+      // 2. Energy Efficiency KPI (based on renewable energy usage)
+      if (companyData.length > 0) {
+        const renewablePercent = parseFloat(companyData[0].renewableEnergyPercent?.toString() || '0');
+        kpis.push({
+          id: 'energy-efficiency',
           name: 'Renewable Energy Usage',
-          current: 45,
+          current: renewablePercent,
           target: 80,
           unit: '%',
-          category: 'sustainability' as const,
-          trend: 'up' as const,
-          trendValue: 12,
-          deadline: '2025-09-30',
-          status: 'behind' as const,
-        }
-      ],
-      overallProgress: 73,
-      summary: {
-        total: 3,
-        onTrack: 2,
-        atRisk: 0,
-        achieved: 0,
+          category: 'efficiency' as const,
+          trend: renewablePercent > 50 ? 'up' as const : 'down' as const,
+          trendValue: Math.round(renewablePercent - 40), // Compared to baseline of 40%
+          deadline: '2025-06-30',
+          status: renewablePercent >= 64 ? 'on-track' as const : 
+                 renewablePercent >= 40 ? 'at-risk' as const : 'behind' as const,
+        });
       }
-    };
+
+      // 3. Water Usage Efficiency KPI
+      const totalWaterFootprint = await this.calculateWaterIntensity(companyId);
+      if (totalWaterFootprint > 0) {
+        const waterTarget = 5000; // L per unit target
+        kpis.push({
+          id: 'water-efficiency',
+          name: 'Water Usage Efficiency',
+          current: Math.round(totalWaterFootprint * 100) / 100,
+          target: waterTarget,
+          unit: 'L/unit',
+          category: 'sustainability' as const,
+          trend: totalWaterFootprint < waterTarget * 0.9 ? 'down' as const : 'up' as const,
+          trendValue: Math.round(((waterTarget - totalWaterFootprint) / waterTarget) * 100),
+          deadline: '2025-09-30',
+          status: totalWaterFootprint < waterTarget * 0.8 ? 'on-track' as const :
+                 totalWaterFootprint < waterTarget ? 'at-risk' as const : 'behind' as const,
+        });
+      }
+
+      // Add any custom KPIs from company_goals table
+      for (const goal of goals) {
+        kpis.push({
+          id: goal.id,
+          name: goal.kpiName || 'Custom Goal',
+          current: parseFloat(goal.startValue || '0'),
+          target: parseFloat(goal.targetValue || '100'),
+          unit: 'units', // Could be enhanced to store unit in goals table
+          category: 'sustainability' as const,
+          trend: 'stable' as const,
+          trendValue: 0,
+          deadline: goal.targetDate || '2025-12-31',
+          status: 'on-track' as const,
+        });
+      }
+
+      // If no real data available, provide one default KPI
+      if (kpis.length === 0) {
+        kpis.push({
+          id: 'default-sustainability',
+          name: 'Sustainability Progress',
+          current: 0,
+          target: 100,
+          unit: '%',
+          category: 'sustainability' as const,
+          trend: 'stable' as const,
+          trendValue: 0,
+          deadline: '2025-12-31',
+          status: 'behind' as const,
+        });
+      }
+
+      // Calculate summary statistics
+      const onTrack = kpis.filter(k => k.status === 'on-track').length;
+      const atRisk = kpis.filter(k => k.status === 'at-risk').length;
+      const behind = kpis.filter(k => k.status === 'behind').length;
+      const achieved = kpis.filter(k => k.status === 'achieved').length;
+
+      const overallProgress = kpis.length > 0 
+        ? Math.round((kpis.reduce((sum, kpi) => sum + (kpi.current / kpi.target) * 100, 0) / kpis.length))
+        : 0;
+
+      return {
+        kpis,
+        overallProgress,
+        summary: {
+          total: kpis.length,
+          onTrack,
+          atRisk,
+          achieved,
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching KPI data:', error);
+      // Return minimal data on error
+      return {
+        kpis: [{
+          id: 'error-fallback',
+          name: 'Data Collection Required',
+          current: 0,
+          target: 100,
+          unit: '%',
+          category: 'compliance' as const,
+          trend: 'stable' as const,
+          trendValue: 0,
+          deadline: '2025-12-31',
+          status: 'behind' as const,
+        }],
+        overallProgress: 0,
+        summary: { total: 1, onTrack: 0, atRisk: 0, achieved: 0 }
+      };
+    }
   }
 
   /**
