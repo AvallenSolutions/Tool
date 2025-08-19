@@ -246,26 +246,13 @@ const enhancedProductSchema = z.object({
   
   // LCA Data Collection Tab - Enhanced granular data collection
   lcaData: z.object({
-    // Section 1: Agriculture & Raw Materials
+    // Section 1: Agriculture & Raw Materials - OpenLCA Automated
     agriculture: z.object({
-      mainCropType: z.string().optional(),
-      yieldTonPerHectare: z.number().positive().optional(),
-      dieselLPerHectare: z.number().nonnegative().optional(),
-      sequestrationTonCo2PerTonCrop: z.number().nonnegative().optional(),
-      fertilizer: z.object({
-        nitrogenKgPerHectare: z.number().nonnegative().optional(),
-        phosphorusKgPerHectare: z.number().nonnegative().optional(),
-        potassiumKgPerHectare: z.number().nonnegative().optional(),
-        organicFertilizerTonPerHectare: z.number().nonnegative().optional(),
-      }).optional(),
-      landUse: z.object({
-        farmingPractice: z.enum(['conventional', 'organic', 'biodynamic', 'regenerative']).optional(),
-        biodiversityIndex: z.number().min(0).max(10).optional(),
-        soilQualityIndex: z.number().min(0).max(10).optional(),
-      }).optional(),
-      biodiversityImpactScore: z.number().optional(),
-      soilQualityIndex: z.number().optional(),
-      carbonSequestrationRate: z.number().optional(),
+      mainCropType: z.string().optional(), // Only keep main crop type for reference
+      // Note: Manual agriculture fields removed - now handled by OpenLCA automation
+      biodiversityImpactScore: z.number().optional(), // OpenLCA calculated
+      soilQualityIndex: z.number().optional(), // OpenLCA calculated  
+      carbonSequestrationRate: z.number().optional(), // OpenLCA calculated
     }),
     
     // Section 2: Inbound Transport
@@ -605,12 +592,8 @@ export default function EnhancedProductForm({
       endOfLife: { returnableContainer: false, recyclingRate: 0, disposalMethod: '', consumerEducation: '' },
       lcaData: {
         agriculture: {
-          mainCropType: '',
-          yieldTonPerHectare: 0,
-          dieselLPerHectare: 0,
-          sequestrationTonCo2PerTonCrop: 0,
-          fertilizer: { nitrogenKgPerHectare: 0, phosphorusKgPerHectare: 0, potassiumKgPerHectare: 0, organicFertilizerTonPerHectare: 0 },
-          landUse: { farmingPractice: undefined, biodiversityIndex: 0, soilQualityIndex: 0 },
+          mainCropType: '', // Only main crop type kept for reference
+          // Manual agriculture fields removed - handled by OpenLCA automation
         },
         inboundTransport: { distanceKm: 0, mode: undefined, fuelEfficiencyLper100km: 0, loadFactor: 0, refrigerationRequired: false },
         processing: {
@@ -930,16 +913,7 @@ export default function EnhancedProductForm({
           form.setValue('lcaData.agriculture.mainCropType', primaryIngredient.name);
         }
         
-        // Auto-fill agricultural data from ingredients
-        if (primaryIngredient?.yieldPerHectare) {
-          form.setValue('lcaData.agriculture.yieldTonPerHectare', primaryIngredient.yieldPerHectare);
-        }
-        if (primaryIngredient?.dieselUsage) {
-          form.setValue('lcaData.agriculture.dieselLPerHectare', primaryIngredient.dieselUsage);
-        }
-        if (primaryIngredient?.carbonSequestration) {
-          form.setValue('lcaData.agriculture.sequestrationTonCo2PerTonCrop', primaryIngredient.carbonSequestration);
-        }
+        // Note: Agricultural data is now handled by OpenLCA automation instead of manual sync
         if (primaryIngredient?.transportDistance) {
           form.setValue('lcaData.inboundTransport.distanceKm', primaryIngredient.transportDistance);
         }
@@ -3522,206 +3496,52 @@ export default function EnhancedProductForm({
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="lcaData.agriculture.yieldTonPerHectare"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          Yield (tons/hectare)
-                          <HelpBubble 
-                            title="Agricultural Yield"
-                            content="The amount of raw material harvested per hectare of land. Higher yields generally mean better land use efficiency and lower environmental impact per unit.<br><br><strong>Typical yields:</strong><br>• <strong>Barley:</strong> 6-8 tons/hectare<br>• <strong>Grapes:</strong> 10-15 tons/hectare<br>• <strong>Apples:</strong> 20-40 tons/hectare<br>• <strong>Sugar Cane:</strong> 70-100 tons/hectare<br><br><strong>Factors affecting yield:</strong><br>• Climate and soil quality<br>• Farming practices (organic vs conventional)<br>• Use of fertilizers and pesticides<br>• Irrigation methods"
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.1"
-                            placeholder="25.5" 
-                            {...field} 
-                            name="lcaData.agriculture.mainCrop.yieldTonPerHectare"
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="lcaData.agriculture.dieselLPerHectare"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          Diesel Consumption (L/hectare)
-                          <HelpBubble 
-                            title="Agricultural Diesel Usage"
-                            content="Fuel consumption for farming operations including plowing, planting, harvesting, and transport within the farm.<br><br><strong>Typical consumption:</strong><br>• <strong>Cereal crops:</strong> 80-120 L/hectare<br>• <strong>Vineyards:</strong> 150-250 L/hectare<br>• <strong>Orchards:</strong> 200-300 L/hectare<br><br><strong>Major uses:</strong><br>• Soil preparation (30-40%)<br>• Harvesting (25-35%)<br>• Spraying/fertilizing (20-25%)<br>• Transport on farm (10-15%)<br><br><strong>Impact:</strong> Each liter of diesel produces ~2.7 kg CO₂"
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.1"
-                            placeholder="120.5" 
-                            {...field}
-                            name="lcaData.agriculture.mainCrop.dieselLPerHectare"
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="lcaData.agriculture.sequestrationTonCo2PerTonCrop"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          Carbon Sequestration (tCO2/ton crop)
-                          <HelpBubble 
-                            title="Carbon Sequestration"
-                            content="The amount of CO₂ absorbed from the atmosphere and stored in soil and plant biomass per ton of crop produced. This is a credit that reduces the overall carbon footprint.<br><br><strong>Typical values:</strong><br>• <strong>Annual crops (barley/wheat):</strong> 0.1-0.3 tCO₂/ton<br>• <strong>Perennial crops (grapes):</strong> 0.2-0.5 tCO₂/ton<br>• <strong>Tree crops (apples):</strong> 0.3-0.8 tCO₂/ton<br><br><strong>Factors increasing sequestration:</strong><br>• Cover crops and crop rotation<br>• Reduced tillage practices<br>• Organic matter management<br>• Agroforestry systems"
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="0.15" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Fertilizer Sub-section */}
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium">Fertilizer Application</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="lcaData.agriculture.fertilizer.nitrogenKgPerHectare"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nitrogen (kg/hectare)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              step="0.1"
-                              placeholder="150" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="lcaData.agriculture.fertilizer.phosphorusKgPerHectare"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phosphorus (kg/hectare)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              step="0.1"
-                              placeholder="60" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                {/* OpenLCA Automation Status */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <div>
+                      <h4 className="font-medium text-green-900">🤖 OpenLCA Automation Active</h4>
+                      <p className="text-sm text-green-700 mt-1">
+                        Manual agriculture data entry has been replaced with automated OpenLCA ecoinvent database calculations. 
+                        All agriculture impact data is now calculated automatically from your ingredient selections.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Land Use Sub-section */}
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium">Land Use & Practices</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="lcaData.agriculture.landUse.farmingPractice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Farming Practice</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select practice" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="conventional">Conventional</SelectItem>
-                              <SelectItem value="organic">Organic</SelectItem>
-                              <SelectItem value="biodynamic">Biodynamic</SelectItem>
-                              <SelectItem value="regenerative">Regenerative</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="lcaData.agriculture.landUse.biodiversityIndex"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Biodiversity Index (0-10)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              min="0" 
-                              max="10"
-                              step="0.1"
-                              placeholder="7.5" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="lcaData.agriculture.landUse.soilQualityIndex"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Soil Quality Index (0-10)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              min="0" 
-                              max="10"
-                              step="0.1"
-                              placeholder="8.0" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                {/* Enhanced OpenLCA Information */}
+                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-medium text-blue-900">📊 Automated LCA Data Sources</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="font-medium text-blue-800">Agriculture & Raw Materials</h5>
+                      <ul className="text-blue-700 mt-1 space-y-1 text-xs">
+                        <li>• Yield calculations from ecoinvent database</li>
+                        <li>• Diesel consumption by crop type & region</li>
+                        <li>• Carbon sequestration rates (crop-specific)</li>
+                        <li>• Fertilizer application rates (N, P, K)</li>
+                        <li>• Farming practice impact factors</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-blue-800">Environmental Impact Coverage</h5>
+                      <ul className="text-blue-700 mt-1 space-y-1 text-xs">
+                        <li>• Land use efficiency metrics</li>
+                        <li>• Water footprint calculations</li>
+                        <li>• Biodiversity impact assessment</li>
+                        <li>• Soil quality considerations</li>
+                        <li>• 7-gas GHG impact modeling</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="mt-3 p-3 bg-blue-100 rounded border border-blue-300">
+                    <p className="text-xs text-blue-800">
+                      <strong>✓ ISO 14040/14044 Compliant:</strong> All calculations follow international LCA standards 
+                      with full transparency and audit trail capabilities.
+                    </p>
                   </div>
                 </div>
               </CardContent>
