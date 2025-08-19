@@ -19,6 +19,14 @@ import LcaHeader from '@/components/lca/LcaHeader';
 import PrimaryBreakdownCharts from '@/components/lca/PrimaryBreakdownCharts';
 import DetailedAnalysisTabs from '@/components/lca/DetailedAnalysisTabs';
 import ActionableInsights from '@/components/lca/ActionableInsights';
+import ProductSustainabilityHeader from '@/components/lca/ProductSustainabilityHeader';
+import ProductPDFExport from '@/components/lca/ProductPDFExport';
+
+interface Product {
+  id: number;
+  name: string;
+  [key: string]: any;
+}
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
   // Handle full Google Cloud Storage URLs - extract the UUID from the path
@@ -1102,7 +1110,7 @@ function ProductDetail() {
 // LCA Tab Content Component
 function LCATabContent({ product }: { product: Product }) {
   const { data: lcaData, isLoading, error } = useQuery({
-    queryKey: ['/api/reports/1/visual-data'],
+    queryKey: [`/api/products/${product.id}/lca-visual-data`],
     enabled: !!product,
   });
 
@@ -1139,6 +1147,14 @@ function LCATabContent({ product }: { product: Product }) {
 
   return (
     <div className="space-y-6">
+      {/* Product Sustainability Header with Key Metrics */}
+      {lcaData && (lcaData as any).product && (lcaData as any).metrics && (
+        <ProductSustainabilityHeader 
+          product={(lcaData as any).product}
+          metrics={(lcaData as any).metrics}
+        />
+      )}
+
       {/* LCA Calculation Card - Real-time LCA Results */}
       <LCACalculationCard product={product} />
       
@@ -1182,28 +1198,22 @@ function LCATabContent({ product }: { product: Product }) {
       </Card>
 
       {/* Detailed LCA Analysis Components */}
-      {lcaData ? (
+      {lcaData && (lcaData as any).breakdown ? (
         <>
-          {/* Section 1: Header with Key Metrics */}
-          <LcaHeader 
-            product={lcaData.product}
-            metrics={lcaData.metrics}
-          />
-
           {/* Section 2: Primary Breakdown Charts */}
           <PrimaryBreakdownCharts 
-            carbonBreakdown={lcaData.breakdown.carbon}
-            waterBreakdown={lcaData.breakdown.water}
+            carbonBreakdown={(lcaData as any).breakdown.carbon}
+            waterBreakdown={(lcaData as any).breakdown.water}
           />
 
           {/* Section 3: Detailed Analysis Tabs */}
           <DetailedAnalysisTabs 
-            detailedAnalysis={lcaData.detailedAnalysis}
+            detailedAnalysis={(lcaData as any).detailedAnalysis}
           />
 
           {/* Section 4: Actionable Insights */}
           <ActionableInsights 
-            insights={lcaData.insights}
+            insights={(lcaData as any).insights}
           />
         </>
       ) : (
@@ -1220,6 +1230,9 @@ function LCATabContent({ product }: { product: Product }) {
           </CardContent>
         </Card>
       )}
+
+      {/* PDF Export Section - Always visible at bottom */}
+      <ProductPDFExport product={product} />
 
       {/* Raw Materials & Ingredients Impact - Supporting Detail */}
       {(() => {
