@@ -109,11 +109,19 @@ export default function ProductEdit() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Immediate cache invalidation
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products", id] });
+      
+      // FIXED: Add delayed refetch to handle backend calculation timing
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        queryClient.refetchQueries({ queryKey: ["/api/products"] });
+      }, 1500); // Wait for backend carbon footprint calculation to complete
+      
       toast({
         title: "Product Updated",
-        description: `${data.name} has been successfully updated.`,
+        description: `${data.name} has been successfully updated with updated carbon footprint.`,
       });
       navigate(`/app/products/${id}`);
     },
