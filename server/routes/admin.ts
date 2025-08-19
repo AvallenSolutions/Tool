@@ -461,6 +461,7 @@ router.put('/suppliers/:supplierId/verify', async (req: AdminRequest, res: Respo
       .update(verifiedSuppliers)
       .set({
         verificationStatus: 'verified',
+        isVerified: true,
         verifiedBy: adminUserId,
         verifiedAt: new Date(),
         updatedAt: new Date()
