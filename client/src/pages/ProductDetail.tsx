@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   ArrowLeft, Package, Building2, FileText, Globe, Mail,
   Weight, Ruler, Recycle, Award, Info, Wheat, Box, Factory, 
-  Leaf, Truck, Edit, Droplets
+  Leaf, Truck, Edit, Droplets, CheckCircle, Beaker
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
@@ -1088,6 +1088,122 @@ function ProductDetail() {
               <div className="space-y-6">
                 {/* LCA Calculation Card - Real-time LCA Results */}
                 <LCACalculationCard product={product} />
+                
+                {/* OpenLCA Integration Status */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      OpenLCA Integration Status
+                    </CardTitle>
+                    <CardDescription>
+                      Automated environmental impact calculations using ecoinvent LCI database
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="font-medium text-green-800">Agriculture Data</span>
+                        </div>
+                        <p className="text-sm text-green-700">Automated yield, water, and carbon calculations from ingredient selection</p>
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span className="font-medium text-blue-800">7-Gas GHG Analysis</span>
+                        </div>
+                        <p className="text-sm text-blue-700">ISO 14064-1 compliant greenhouse gas breakdown with IPCC AR5 factors</p>
+                      </div>
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          <span className="font-medium text-purple-800">Impact Categories</span>
+                        </div>
+                        <p className="text-sm text-purple-700">Comprehensive environmental impact assessment across multiple categories</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Enhanced LCA Data Overview - Comprehensive Results Display */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Beaker className="w-5 h-5 text-blue-600" />
+                      Comprehensive Environmental Analysis
+                    </CardTitle>
+                    <CardDescription>
+                      Complete lifecycle assessment results including 7-gas GHG breakdown, water usage, and waste analysis
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {/* Carbon Footprint Summary */}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Leaf className="w-5 h-5 text-green-600" />
+                          <span className="font-semibold text-green-800">Total Carbon Footprint</span>
+                        </div>
+                        <div className="text-2xl font-bold text-green-900 mb-2">
+                          {product.carbonFootprint ? `${parseFloat(product.carbonFootprint).toFixed(2)} kg CO₂e` : 'Calculating...'}
+                        </div>
+                        <p className="text-sm text-green-700">ISO 14040/14044 compliant calculation using 7-gas methodology</p>
+                      </div>
+
+                      {/* Water Footprint Summary */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Droplets className="w-5 h-5 text-blue-600" />
+                          <span className="font-semibold text-blue-800">Total Water Footprint</span>
+                        </div>
+                        <div className="text-2xl font-bold text-blue-900 mb-2">
+                          {product.waterFootprint ? `${parseFloat(product.waterFootprint).toFixed(2)} L` : 'Calculating...'}
+                        </div>
+                        <p className="text-sm text-blue-700">Includes agricultural, processing, and cleaning water usage</p>
+                      </div>
+
+                      {/* LCA Status */}
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <CheckCircle className="w-5 h-5 text-purple-600" />
+                          <span className="font-semibold text-purple-800">Analysis Status</span>
+                        </div>
+                        <div className="text-lg font-bold text-purple-900 mb-2">
+                          {product.carbonFootprint && product.waterFootprint ? 'Complete' : 'In Progress'}
+                        </div>
+                        <p className="text-sm text-purple-700">OpenLCA automated calculations with ecoinvent database</p>
+                      </div>
+                    </div>
+
+                    {/* Detailed Breakdown Section */}
+                    {product.carbonFootprint && product.waterFootprint && (
+                      <div className="mt-6 space-y-4">
+                        <Separator />
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600 mb-4">
+                            Detailed breakdown available in the <strong>LCA Calculation Card</strong> above including:
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="flex items-center gap-2 justify-center">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span>7-Gas GHG Analysis (CO₂, CH₄, N₂O, etc.)</span>
+                            </div>
+                            <div className="flex items-center gap-2 justify-center">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span>Water Footprint Breakdown</span>
+                            </div>
+                            <div className="flex items-center gap-2 justify-center">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              <span>Waste Output Analysis</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
                 
                 {/* Additional LCA Data Display */}
                 {(() => {

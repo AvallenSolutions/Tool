@@ -72,7 +72,7 @@ interface LCAJob {
 
 export default function LCACalculationCard({ product }: LCACalculationCardProps) {
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
-  const [showResults, setShowResults] = useState(false);
+  const [showResults, setShowResults] = useState(true); // Default to true for better visibility
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -340,7 +340,8 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-avallen-green" />
-                <span className="text-sm font-medium">Latest Results</span>
+                <span className="text-sm font-medium">Comprehensive LCA Results</span>
+                <Badge variant="secondary" className="text-xs">ISO 14040/14044 Compliant</Badge>
               </div>
               <Button
                 variant="outline"
@@ -416,6 +417,42 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
                         <div className="text-blue-600 font-medium">Processing</div>
                         <div className="text-blue-800">{latestCompletedJob.results.water_footprint.processing_water?.toFixed(1) || '0.0'} L</div>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Waste Output Breakdown */}
+                {latestCompletedJob.results.waste_output && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Waste Output Analysis</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-gray-50 p-2 rounded text-sm">
+                        <div className="text-gray-600 font-medium">Total Waste</div>
+                        <div className="text-gray-800">{latestCompletedJob.results.waste_output.total_kg?.toFixed(2) || '0.00'} kg</div>
+                      </div>
+                      <div className="bg-green-50 p-2 rounded text-sm">
+                        <div className="text-green-600 font-medium">Recyclable</div>
+                        <div className="text-green-800">{latestCompletedJob.results.waste_output.recyclable_kg?.toFixed(2) || '0.00'} kg</div>
+                      </div>
+                      <div className="bg-red-50 p-2 rounded text-sm">
+                        <div className="text-red-600 font-medium">Hazardous</div>
+                        <div className="text-red-800">{latestCompletedJob.results.waste_output.hazardous_kg?.toFixed(2) || '0.00'} kg</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Impact Categories Breakdown */}
+                {latestCompletedJob.results.impactsByCategory && latestCompletedJob.results.impactsByCategory.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Environmental Impact Categories</h4>
+                    <div className="space-y-1">
+                      {latestCompletedJob.results.impactsByCategory.map((impact, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
+                          <span className="font-medium text-gray-700">{impact.category}</span>
+                          <span className="text-gray-600">{impact.impact?.toFixed(3)} {impact.unit}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
