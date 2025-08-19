@@ -15,6 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
 import LCACalculationCard from '@/components/lca/LCACalculationCard';
 import { Link } from 'wouter';
+import LcaHeader from '@/components/lca/LcaHeader';
+import PrimaryBreakdownCharts from '@/components/lca/PrimaryBreakdownCharts';
+import DetailedAnalysisTabs from '@/components/lca/DetailedAnalysisTabs';
+import ActionableInsights from '@/components/lca/ActionableInsights';
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
   // Handle full Google Cloud Storage URLs - extract the UUID from the path
@@ -1086,541 +1090,202 @@ function ProductDetail() {
 
             {/* LCA Tab */}
             <TabsContent value="lca">
-              <div className="space-y-6">
-                {/* Link to Detailed LCA Page */}
-                <Card className="border-avallen-green/20 bg-avallen-green/5">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">View Comprehensive LCA Analysis</h3>
-                        <p className="text-gray-600">Access detailed environmental impact breakdown, charts, and actionable insights.</p>
-                      </div>
-                      <Link href={`/app/products/${product.id}/lca`}>
-                        <a className="inline-flex items-center gap-2 px-4 py-2 bg-avallen-green text-white rounded-lg hover:bg-avallen-green/90 transition-colors">
-                          <BarChart3 className="w-4 h-4" />
-                          View Detailed Analysis
-                        </a>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* LCA Calculation Card - Real-time LCA Results */}
-                <LCACalculationCard product={product} />
-                
-                {/* OpenLCA Integration Status */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      OpenLCA Integration Status
-                    </CardTitle>
-                    <CardDescription>
-                      Automated environmental impact calculations using ecoinvent LCI database
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="font-medium text-green-800">Agriculture Data</span>
-                        </div>
-                        <p className="text-sm text-green-700">Automated yield, water, and carbon calculations from ingredient selection</p>
-                      </div>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="font-medium text-blue-800">7-Gas GHG Analysis</span>
-                        </div>
-                        <p className="text-sm text-blue-700">ISO 14064-1 compliant greenhouse gas breakdown with IPCC AR5 factors</p>
-                      </div>
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                          <span className="font-medium text-purple-800">Impact Categories</span>
-                        </div>
-                        <p className="text-sm text-purple-700">Comprehensive environmental impact assessment across multiple categories</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Enhanced LCA Data Overview - Comprehensive Results Display */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Beaker className="w-5 h-5 text-blue-600" />
-                      Comprehensive Environmental Analysis
-                    </CardTitle>
-                    <CardDescription>
-                      Complete lifecycle assessment results including 7-gas GHG breakdown, water usage, and waste analysis
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {/* Carbon Footprint Summary */}
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Leaf className="w-5 h-5 text-green-600" />
-                          <span className="font-semibold text-green-800">Total Carbon Footprint</span>
-                        </div>
-                        <div className="text-2xl font-bold text-green-900 mb-2">
-                          {product.carbonFootprint ? `${parseFloat(product.carbonFootprint).toFixed(2)} kg CO₂e` : 'Calculating...'}
-                        </div>
-                        <p className="text-sm text-green-700">ISO 14040/14044 compliant calculation using 7-gas methodology</p>
-                      </div>
-
-                      {/* Water Footprint Summary */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Droplets className="w-5 h-5 text-blue-600" />
-                          <span className="font-semibold text-blue-800">Total Water Footprint</span>
-                        </div>
-                        <div className="text-2xl font-bold text-blue-900 mb-2">
-                          {product.waterFootprint ? `${parseFloat(product.waterFootprint).toFixed(2)} L` : 'Calculating...'}
-                        </div>
-                        <p className="text-sm text-blue-700">Includes agricultural, processing, and cleaning water usage</p>
-                      </div>
-
-                      {/* LCA Status */}
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <CheckCircle className="w-5 h-5 text-purple-600" />
-                          <span className="font-semibold text-purple-800">Analysis Status</span>
-                        </div>
-                        <div className="text-lg font-bold text-purple-900 mb-2">
-                          {product.carbonFootprint && product.waterFootprint ? 'Complete' : 'In Progress'}
-                        </div>
-                        <p className="text-sm text-purple-700">OpenLCA automated calculations with ecoinvent database</p>
-                      </div>
-                    </div>
-
-                    {/* Detailed Breakdown Section */}
-                    {product.carbonFootprint && product.waterFootprint && (
-                      <div className="mt-6 space-y-4">
-                        <Separator />
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-4">
-                            Detailed breakdown available in the <strong>LCA Calculation Card</strong> above including:
-                          </p>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div className="flex items-center gap-2 justify-center">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span>7-Gas GHG Analysis (CO₂, CH₄, N₂O, etc.)</span>
-                            </div>
-                            <div className="flex items-center gap-2 justify-center">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              <span>Water Footprint Breakdown</span>
-                            </div>
-                            <div className="flex items-center gap-2 justify-center">
-                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                              <span>Waste Output Analysis</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Additional LCA Data Display */}
-                {(() => {
-                  // Parse all JSON data sources for additional context
-                  let lcaData: any = {};
-                  let productionData: any = {};
-                  let ingredients: any[] = [];
-                  
-                  try {
-                    if (product.lcaData) {
-                      lcaData = typeof product.lcaData === 'string' ? JSON.parse(product.lcaData) : product.lcaData;
-                    }
-                    if (product.productionMethods) {
-                      productionData = typeof product.productionMethods === 'string' ? JSON.parse(product.productionMethods) : product.productionMethods;
-                    }
-                    if (product.ingredients) {
-                      ingredients = Array.isArray(product.ingredients) ? product.ingredients : JSON.parse(product.ingredients || '[]');
-                    }
-                  } catch (e) {
-                    console.warn('Failed to parse LCA data:', e);
-                  }
-
-                  // Convert string numbers to actual numbers for display
-                  const toNum = (val: any) => val ? (typeof val === 'string' ? parseFloat(val) : val) : 0;
-
-                  return (
-                    <div className="space-y-6">
-
-                    {/* Raw Materials & Ingredients Impact - OpenLCA Enhanced */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Wheat className="w-5 h-5" />
-                          Raw Materials Environmental Impact
-                        </CardTitle>
-                        <CardDescription>
-                          OpenLCA ecoinvent database provides automated environmental calculations
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {ingredients.length > 0 ? (
-                          <div className="space-y-4">
-                            {ingredients.map((ingredient: any, index: number) => (
-                              <div key={index} className="border rounded-lg p-4 bg-green-50">
-                                <div className="flex justify-between items-center mb-3">
-                                  <h4 className="font-medium text-lg">{ingredient.name}</h4>
-                                  <div className="text-sm text-green-600 font-medium">
-                                    {toNum(ingredient.amount)} {ingredient.unit}
-                                    <Badge variant="secondary" className="ml-2 text-xs">OpenLCA Validated</Badge>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                  <div>
-                                    <label className="text-gray-600">Origin Country</label>
-                                    <p className="font-medium">{ingredient.origin || 'Not specified'}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-gray-600">Transport Distance</label>
-                                    <p className="font-medium">{toNum(ingredient.transportDistance)} km</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-gray-600">Water Usage</label>
-                                    <p className="font-medium">{toNum(ingredient.waterUsage)} L</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-gray-600">Processing Energy</label>
-                                    <p className="font-medium">{toNum(ingredient.processingEnergy)} kWh</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-gray-600">Organic Certified</label>
-                                    <Badge variant={ingredient.organic ? "default" : "outline"}>
-                                      {ingredient.organic ? 'Organic' : 'Conventional'}
-                                    </Badge>
-                                  </div>
-                                  <div>
-                                    <label className="text-gray-600">Biodiversity Impact</label>
-                                    <p className="font-medium">{toNum(ingredient.biodiversityImpact)}/10</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-gray-600">Soil Quality Index</label>
-                                    <p className="font-medium">{toNum(ingredient.soilQualityIndex)}/10</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-gray-600">Carbon Sequestration</label>
-                                    <p className="font-medium">{toNum(ingredient.carbonSequestration)} kg CO₂</p>
-                                  </div>
-                                </div>
-                                <div className="mt-3 text-xs text-green-600 bg-green-100 p-2 rounded">
-                                  <strong>OpenLCA Automation:</strong> Carbon footprint, water usage, and land use data 
-                                  calculated automatically from ecoinvent LCI database. Manual agriculture field entry no longer required.
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8">
-                            <Wheat className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                            <p className="text-gray-500">No ingredient data available</p>
-                            <p className="text-xs text-gray-400 mt-1">Add ingredients to see OpenLCA environmental calculations</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    {/* Manufacturing & Production Impact */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Factory className="w-5 h-5" />
-                          Manufacturing & Production Impact
-                        </CardTitle>
-                        <CardDescription>Production process environmental footprint</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Production Overview */}
-                          <div className="space-y-4">
-                            <h4 className="font-medium text-gray-900">Production Overview</h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Production Model</label>
-                                <p className="text-gray-800 capitalize">{product.productionModel || productionData.productionModel || 'Not specified'}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Annual Volume</label>
-                                <p className="text-gray-800">
-                                  {toNum(product.annualProductionVolume || productionData.annualProductionVolume).toLocaleString()} {product.productionUnit || productionData.productionUnit || 'units'}
-                                </p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Facility Location</label>
-                                <p className="text-gray-800">{productionData.facilityLocation || 'Not specified'}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Energy Source</label>
-                                <p className="text-gray-800">{productionData.energySource || 'Not specified'}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Energy Consumption */}
-                          <div className="space-y-4">
-                            <h4 className="font-medium text-gray-900">Energy Consumption</h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Electricity</label>
-                                <p className="text-gray-800">{toNum(product.electricityKwh || productionData.energyConsumption?.electricityKwh)} kWh</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Natural Gas</label>
-                                <p className="text-gray-800">{toNum(product.gasM3 || productionData.energyConsumption?.gasM3)} m³</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Steam</label>
-                                <p className="text-gray-800">{toNum(product.steamKg || productionData.energyConsumption?.steamKg)} kg</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Fuel</label>
-                                <p className="text-gray-800">{toNum(product.fuelLiters || productionData.energyConsumption?.fuelLiters)} L</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Renewable Energy</label>
-                                <p className="text-gray-800">{toNum(product.renewableEnergyPercent || productionData.energyConsumption?.renewableEnergyPercent)}%</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Water Usage */}
-                          <div className="space-y-4">
-                            <h4 className="font-medium text-gray-900">Water Usage</h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Process Water</label>
-                                <p className="text-gray-800">{toNum(product.processWaterLiters || productionData.waterUsage?.processWaterLiters)} L</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Cleaning Water</label>
-                                <p className="text-gray-800">{toNum(product.cleaningWaterLiters || productionData.waterUsage?.cleaningWaterLiters)} L</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Cooling Water</label>
-                                <p className="text-gray-800">{toNum(product.coolingWaterLiters || productionData.waterUsage?.coolingWaterLiters)} L</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Wastewater Treatment</label>
-                                <Badge variant={(product.wasteWaterTreatment || productionData.waterUsage?.wasteWaterTreatment) ? "default" : "outline"}>
-                                  {(product.wasteWaterTreatment || productionData.waterUsage?.wasteWaterTreatment) ? "Yes" : "No"}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Waste Management */}
-                          <div className="space-y-4">
-                            <h4 className="font-medium text-gray-900">Waste Management</h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Organic Waste</label>
-                                <p className="text-gray-800">{toNum(product.organicWasteKg || productionData.wasteGeneration?.organicWasteKg)} kg</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Packaging Waste</label>
-                                <p className="text-gray-800">{toNum(product.packagingWasteKg || productionData.wasteGeneration?.packagingWasteKg)} kg</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Hazardous Waste</label>
-                                <p className="text-gray-800">{toNum(product.hazardousWasteKg || productionData.wasteGeneration?.hazardousWasteKg)} kg</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Waste Recycled</label>
-                                <p className="text-gray-800">{toNum(product.wasteRecycledPercent || productionData.wasteGeneration?.wasteRecycledPercent)}%</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Packaging Impact */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Package className="w-5 h-5" />
-                          Packaging Environmental Impact
-                        </CardTitle>
-                        <CardDescription>Packaging materials and their environmental footprint</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {/* Primary Container */}
-                          <div className="space-y-4">
-                            <h4 className="font-medium text-gray-900">Primary Container</h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Material</label>
-                                <p className="text-gray-800 capitalize">{product.bottleMaterial || 'Not specified'}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Weight</label>
-                                <p className="text-gray-800">{toNum(product.bottleWeight)} g</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Recycled Content</label>
-                                <p className="text-gray-800">{toNum(product.bottleRecycledContent)}%</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Color</label>
-                                <p className="text-gray-800">{product.bottleColor || 'Not specified'}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Labels & Closure */}
-                          <div className="space-y-4">
-                            <h4 className="font-medium text-gray-900">Labels & Closure</h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Label Material</label>
-                                <p className="text-gray-800 capitalize">{product.labelMaterial || 'Not specified'}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Label Weight</label>
-                                <p className="text-gray-800">{toNum(product.labelWeight)} g</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Closure Type</label>
-                                <p className="text-gray-800 capitalize">{product.closureType || 'Not specified'}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Closure Material</label>
-                                <p className="text-gray-800 capitalize">{product.closureMaterial || 'Not specified'}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Closure Weight</label>
-                                <p className="text-gray-800">{toNum(product.closureWeight)} g</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Secondary Packaging */}
-                          <div className="space-y-4">
-                            <h4 className="font-medium text-gray-900">Secondary Packaging</h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Has Secondary Packaging</label>
-                                <Badge variant={product.hasSecondaryPackaging ? "default" : "outline"}>
-                                  {product.hasSecondaryPackaging ? "Yes" : "No"}
-                                </Badge>
-                              </div>
-                              {product.hasSecondaryPackaging && (
-                                <>
-                                  <div>
-                                    <label className="text-sm font-medium text-gray-600">Box Material</label>
-                                    <p className="text-gray-800 capitalize">{product.boxMaterial || 'Not specified'}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium text-gray-600">Box Weight</label>
-                                    <p className="text-gray-800">{toNum(product.boxWeight)} g</p>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Distribution & Transportation Impact */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Truck className="w-5 h-5" />
-                          Distribution & Transportation Impact
-                        </CardTitle>
-                        <CardDescription>Transportation and distribution environmental footprint</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Average Transport Distance</label>
-                              <p className="text-gray-800">{toNum(product.averageTransportDistance || lcaData.distribution?.avgDistanceToDcKm)} km</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Primary Transport Mode</label>
-                              <p className="text-gray-800 capitalize">{product.primaryTransportMode || lcaData.distribution?.primaryTransportMode || 'Not specified'}</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Cold Chain Required</label>
-                              <Badge variant={product.coldChainRequired ? "default" : "outline"}>
-                                {product.coldChainRequired ? "Yes" : "No"}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Palletization Efficiency</label>
-                              <p className="text-gray-800">{toNum(lcaData.distribution?.palletizationEfficiency)}%</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Packaging Efficiency</label>
-                              <p className="text-gray-800">{toNum(product.packagingEfficiency)}%</p>
-                            </div>
-                            {lcaData.distribution?.temperatureRangeCelsius && (
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">Temperature Range</label>
-                                <p className="text-gray-800">
-                                  {lcaData.distribution.temperatureRangeCelsius.min}°C to {lcaData.distribution.temperatureRangeCelsius.max}°C
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* End-of-Life Impact */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Recycle className="w-5 h-5" />
-                          End-of-Life Environmental Impact
-                        </CardTitle>
-                        <CardDescription>Recycling, disposal and end-of-life management</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Recycling Rate</label>
-                            <p className="text-gray-800">{toNum(product.recyclingRate)}%</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Disposal Method</label>
-                            <p className="text-gray-800 capitalize">{product.disposalMethod || 'Not specified'}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Returnable Container</label>
-                            <Badge variant={product.returnableContainer ? "default" : "outline"}>
-                              {product.returnableContainer ? "Yes" : "No"}
-                            </Badge>
-                          </div>
-                        </div>
-                        {product.consumerEducation && (
-                          <div className="mt-4">
-                            <label className="text-sm font-medium text-gray-600">Consumer Education</label>
-                            <p className="text-gray-800 mt-1">{product.consumerEducation}</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                    </div>
-                  );
-                })()}
-              </div>
+              <LCATabContent product={product} />
             </TabsContent>
           </Tabs>
         </main>
       </div>
+    </div>
+  );
+}
+
+// LCA Tab Content Component
+function LCATabContent({ product }: { product: Product }) {
+  const { data: lcaData, isLoading, error } = useQuery({
+    queryKey: ['/api/reports/1/visual-data'],
+    enabled: !!product,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-avallen-green border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading comprehensive LCA analysis...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-red-600 mb-4">Failed to load LCA analysis data</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-avallen-green text-white rounded-lg hover:bg-avallen-green/90"
+            >
+              Try Again
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* LCA Calculation Card - Real-time LCA Results */}
+      <LCACalculationCard product={product} />
+      
+      {/* Enhanced OpenLCA Integration Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            OpenLCA Integration Status
+            <Badge variant="secondary" className="ml-2 text-xs">ISO 14040/14044 Compliant</Badge>
+          </CardTitle>
+          <CardDescription>
+            Automated environmental impact calculations using ecoinvent v3.9 LCI database with IPCC AR5 GWP factors
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="font-medium text-green-800">Agriculture Data</span>
+              </div>
+              <p className="text-sm text-green-700">Automated yield, water, and carbon calculations from ingredient selection</p>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="font-medium text-blue-800">7-Gas GHG Analysis</span>
+              </div>
+              <p className="text-sm text-blue-700">ISO 14064-1 compliant greenhouse gas breakdown with IPCC AR5 factors</p>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <span className="font-medium text-purple-800">Impact Categories</span>
+              </div>
+              <p className="text-sm text-purple-700">Comprehensive environmental impact assessment across multiple categories</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detailed LCA Analysis Components */}
+      {lcaData ? (
+        <>
+          {/* Section 1: Header with Key Metrics */}
+          <LcaHeader 
+            product={lcaData.product}
+            metrics={lcaData.metrics}
+          />
+
+          {/* Section 2: Primary Breakdown Charts */}
+          <PrimaryBreakdownCharts 
+            carbonBreakdown={lcaData.breakdown.carbon}
+            waterBreakdown={lcaData.breakdown.water}
+          />
+
+          {/* Section 3: Detailed Analysis Tabs */}
+          <DetailedAnalysisTabs 
+            detailedAnalysis={lcaData.detailedAnalysis}
+          />
+
+          {/* Section 4: Actionable Insights */}
+          <ActionableInsights 
+            insights={lcaData.insights}
+          />
+        </>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Comprehensive Analysis Loading</h3>
+            <p className="text-gray-600 mb-4">
+              Environmental impact analysis will appear here once data is available.
+            </p>
+            <p className="text-sm text-gray-500">
+              Run LCA calculation above to generate detailed breakdown charts and insights.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Raw Materials & Ingredients Impact - Supporting Detail */}
+      {(() => {
+        let ingredients: any[] = [];
+        try {
+          if (product.ingredients) {
+            ingredients = Array.isArray(product.ingredients) ? product.ingredients : JSON.parse(product.ingredients || '[]');
+          }
+        } catch (e) {
+          console.warn('Failed to parse ingredients:', e);
+        }
+
+        const toNum = (val: any) => val ? (typeof val === 'string' ? parseFloat(val) : val) : 0;
+
+        return ingredients.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wheat className="w-5 h-5" />
+                Raw Materials Environmental Impact
+                <Badge variant="outline" className="ml-2 text-xs">OpenLCA Enhanced</Badge>
+              </CardTitle>
+              <CardDescription>
+                OpenLCA ecoinvent database provides automated environmental calculations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {ingredients.map((ingredient: any, index: number) => (
+                  <div key={index} className="border rounded-lg p-4 bg-green-50">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium text-lg">{ingredient.name}</h4>
+                      <div className="text-sm text-green-600 font-medium">
+                        {toNum(ingredient.amount)} {ingredient.unit}
+                        <Badge variant="secondary" className="ml-2 text-xs">OpenLCA Validated</Badge>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <label className="text-gray-600">Origin Country</label>
+                        <p className="font-medium">{ingredient.origin || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="text-gray-600">Transport Distance</label>
+                        <p className="font-medium">{toNum(ingredient.transportDistance)} km</p>
+                      </div>
+                      <div>
+                        <label className="text-gray-600">Water Usage</label>
+                        <p className="font-medium">{toNum(ingredient.waterUsage)} L</p>
+                      </div>
+                      <div>
+                        <label className="text-gray-600">Processing Energy</label>
+                        <p className="font-medium">{toNum(ingredient.processingEnergy)} kWh</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-xs text-green-600 bg-green-100 p-2 rounded">
+                      <strong>OpenLCA Automation:</strong> Carbon footprint, water usage, and land use data 
+                      calculated automatically from ecoinvent LCI database. Manual agriculture field entry no longer required.
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null;
+      })()}
     </div>
   );
 }
