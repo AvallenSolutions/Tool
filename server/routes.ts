@@ -4561,7 +4561,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           '--single-process',
           '--disable-gpu'
         ],
-        executablePath: '/usr/bin/chromium'
+        executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium-browser'
       });
       const page = await browser.newPage();
 
