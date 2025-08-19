@@ -44,6 +44,7 @@ import GreenwashGuardian from "@/pages/GreenwashGuardian";
 import LCAPage from "@/pages/LCAPage";
 import TestRunner from "@/pages/TestRunner";
 import CollaborationHub from "@/pages/CollaborationHub";
+import ProductLcaPage from "@/pages/ProductLcaPage";
 
 function SimpleTestComponent() {
   return (
@@ -123,6 +124,7 @@ function Router() {
       <Route path="/app/products/create/enhanced" component={CreateEnhancedProduct} />
       <Route path="/app/products/:id/enhanced" component={CreateEnhancedProduct} />
       <Route path="/app/products/:id/edit" component={ProductEdit} />
+      <Route path="/app/products/:productId/lca" component={ProductLcaPage} />
       <Route path="/app/products/:id" component={ProductDetail} />
       <Route path="/app/reports" component={Reports} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />

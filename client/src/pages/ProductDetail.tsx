@@ -9,11 +9,12 @@ import { Separator } from '@/components/ui/separator';
 import { 
   ArrowLeft, Package, Building2, FileText, Globe, Mail,
   Weight, Ruler, Recycle, Award, Info, Wheat, Box, Factory, 
-  Leaf, Truck, Edit, Droplets, CheckCircle, Beaker
+  Leaf, Truck, Edit, Droplets, CheckCircle, Beaker, BarChart3
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
 import LCACalculationCard from '@/components/lca/LCACalculationCard';
+import { Link } from 'wouter';
 
 function ImageDisplay({ photo, productName, index }: { photo: string, productName: string, index: number }) {
   // Handle full Google Cloud Storage URLs - extract the UUID from the path
@@ -1086,6 +1087,24 @@ function ProductDetail() {
             {/* LCA Tab */}
             <TabsContent value="lca">
               <div className="space-y-6">
+                {/* Link to Detailed LCA Page */}
+                <Card className="border-avallen-green/20 bg-avallen-green/5">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">View Comprehensive LCA Analysis</h3>
+                        <p className="text-gray-600">Access detailed environmental impact breakdown, charts, and actionable insights.</p>
+                      </div>
+                      <Link href={`/app/products/${product.id}/lca`}>
+                        <a className="inline-flex items-center gap-2 px-4 py-2 bg-avallen-green text-white rounded-lg hover:bg-avallen-green/90 transition-colors">
+                          <BarChart3 className="w-4 h-4" />
+                          View Detailed Analysis
+                        </a>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* LCA Calculation Card - Real-time LCA Results */}
                 <LCACalculationCard product={product} />
                 

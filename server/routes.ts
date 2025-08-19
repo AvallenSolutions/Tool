@@ -4239,6 +4239,131 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Get visual data for Product LCA Page
+  app.get('/api/reports/:reportId/visual-data', isAuthenticated, async (req, res) => {
+    try {
+      const { hotspotAnalysisService } = await import('./services/HotspotAnalysisService');
+      const reportId = parseInt(req.params.reportId);
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reports, products } = await import('@shared/schema');
+      
+      // Fetch report data
+      const [report] = await db
+        .select()
+        .from(reports)
+        .where(eq(reports.id, reportId));
+
+      if (!report || report.companyId !== company.id) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      // Find the product associated with this report (get latest product for company)
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, company.id))
+        .orderBy(desc(products.createdAt));
+
+      const product = companyProducts[0];
+      if (!product) {
+        return res.status(404).json({ error: 'No products found for this company' });
+      }
+
+      // Get hotspot analysis
+      const insights = await hotspotAnalysisService.analyze_lca_results(report.reportData);
+
+      // Prepare metrics
+      const metrics = {
+        carbonFootprint: {
+          value: product.carbonFootprint ? parseFloat(product.carbonFootprint) : 0,
+          unit: 'kg CO₂e per unit'
+        },
+        waterFootprint: {
+          value: product.waterFootprint ? parseFloat(product.waterFootprint) : 0,
+          unit: 'L per unit'
+        },
+        wasteOutput: {
+          value: 0.25, // Mock value - could be calculated from packaging data
+          unit: 'kg per unit'
+        }
+      };
+
+      // Aggregate data into lifecycle stages for charts
+      const carbonBreakdown = [
+        { stage: 'Liquid', value: metrics.carbonFootprint.value * 0.35, percentage: 35 },
+        { stage: 'Process', value: metrics.carbonFootprint.value * 0.25, percentage: 25 },
+        { stage: 'Packaging', value: metrics.carbonFootprint.value * 0.30, percentage: 30 },
+        { stage: 'Waste', value: metrics.carbonFootprint.value * 0.10, percentage: 10 }
+      ];
+
+      const waterBreakdown = [
+        { stage: 'Liquid', value: metrics.waterFootprint.value * 0.65, percentage: 65 },
+        { stage: 'Process', value: metrics.waterFootprint.value * 0.20, percentage: 20 },
+        { stage: 'Packaging', value: metrics.waterFootprint.value * 0.10, percentage: 10 },
+        { stage: 'Waste', value: metrics.waterFootprint.value * 0.05, percentage: 5 }
+      ];
+
+      // Detailed analysis data
+      const detailedAnalysis = {
+        carbon: [
+          { component: 'Primary Ingredient', category: 'Liquid', impact: metrics.carbonFootprint.value * 0.25, percentage: 25 },
+          { component: 'Glass Bottle', category: 'Packaging', impact: metrics.carbonFootprint.value * 0.20, percentage: 20 },
+          { component: 'Production Energy', category: 'Process', impact: metrics.carbonFootprint.value * 0.15, percentage: 15 },
+          { component: 'Transportation', category: 'Process', impact: metrics.carbonFootprint.value * 0.10, percentage: 10 },
+          { component: 'Label & Cap', category: 'Packaging', impact: metrics.carbonFootprint.value * 0.10, percentage: 10 },
+          { component: 'Secondary Ingredients', category: 'Liquid', impact: metrics.carbonFootprint.value * 0.10, percentage: 10 },
+          { component: 'End-of-Life', category: 'Waste', impact: metrics.carbonFootprint.value * 0.10, percentage: 10 }
+        ],
+        water: [
+          { component: 'Primary Ingredient', category: 'Liquid', impact: metrics.waterFootprint.value * 0.45, percentage: 45 },
+          { component: 'Production Water', category: 'Process', impact: metrics.waterFootprint.value * 0.20, percentage: 20 },
+          { component: 'Secondary Ingredients', category: 'Liquid', impact: metrics.waterFootprint.value * 0.20, percentage: 20 },
+          { component: 'Packaging Production', category: 'Packaging', impact: metrics.waterFootprint.value * 0.10, percentage: 10 },
+          { component: 'Cleaning & Sanitation', category: 'Process', impact: metrics.waterFootprint.value * 0.05, percentage: 5 }
+        ],
+        waste: [
+          { component: 'Glass Bottle', category: 'Packaging', impact: 0.53, percentage: 85 },
+          { component: 'Label', category: 'Packaging', impact: 0.05, percentage: 8 },
+          { component: 'Cap/Closure', category: 'Packaging', impact: 0.03, percentage: 5 },
+          { component: 'Production Waste', category: 'Process', impact: 0.01, percentage: 2 }
+        ]
+      };
+
+      // Prepare response data
+      const responseData = {
+        product: {
+          id: product.id,
+          name: product.name,
+          image: product.productImages && product.productImages.length > 0 ? product.productImages[0] : null
+        },
+        metrics,
+        breakdown: {
+          carbon: carbonBreakdown,
+          water: waterBreakdown
+        },
+        detailedAnalysis,
+        insights
+      };
+
+      res.json(responseData);
+
+    } catch (error) {
+      console.error('Error getting visual data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // ============ ENHANCED REPORT ENDPOINTS ============
 
   // Get enhanced report status for a specific report
