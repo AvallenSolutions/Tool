@@ -5221,10 +5221,19 @@ Be precise and quote actual text from the content, not generic terms.`;
         .from(lcaProcessMappings)
         .where(eq(lcaProcessMappings.category, 'Agriculture'));
       
-      res.json(ingredients.map(ing => ({
-        materialName: ing.materialName,
-        unit: ing.unit || 'kg'
-      })));
+      // Deduplicate ingredients by materialName
+      const uniqueIngredients = ingredients.reduce((acc, ing) => {
+        const existing = acc.find(item => item.materialName === ing.materialName);
+        if (!existing) {
+          acc.push({
+            materialName: ing.materialName,
+            unit: ing.unit || 'kg'
+          });
+        }
+        return acc;
+      }, [] as Array<{materialName: string; unit: string}>);
+      
+      res.json(uniqueIngredients);
     } catch (error) {
       console.error('Error fetching LCA ingredients:', error);
       res.status(500).json({ error: 'Failed to fetch ingredients' });
