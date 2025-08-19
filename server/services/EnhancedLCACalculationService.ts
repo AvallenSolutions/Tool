@@ -378,6 +378,41 @@ export class EnhancedLCACalculationService {
       totalWaterFootprint += processingWater;
     }
 
+    // Add ingredient water footprint from OpenLCA data and manual entries
+    if (productData.ingredients && Array.isArray(productData.ingredients)) {
+      productData.ingredients.forEach((ingredient: any) => {
+        if (ingredient.waterUsage) {
+          const ingredientWater = parseFloat(ingredient.waterUsage) * productionVolume;
+          console.log(`Adding ingredient water footprint: ${ingredient.name} = ${ingredientWater}L`);
+          totalWaterFootprint += ingredientWater;
+        }
+        
+        // Add molasses water footprint from OpenLCA data
+        if (ingredient.name && ingredient.name.toLowerCase().includes('molasses')) {
+          // Molasses from sugarcane typically has high water footprint
+          const molassesWaterFootprint = parseFloat(ingredient.amount || 0) * 15 * productionVolume; // ~15L per kg molasses
+          console.log(`Adding molasses water footprint: ${molassesWaterFootprint}L`);
+          totalWaterFootprint += molassesWaterFootprint;
+        }
+      });
+    }
+
+    // Add water dilution from product data (manual entry)
+    if (productData.waterDilution?.amount) {
+      let dilutionWater = 0;
+      const dilutionAmount = parseFloat(productData.waterDilution.amount) || 0;
+      
+      // Convert to liters per unit based on unit type
+      if (productData.waterDilution.unit === 'ml') {
+        dilutionWater = (dilutionAmount / 1000) * productionVolume; // Convert ml to L
+      } else if (productData.waterDilution.unit === 'L') {
+        dilutionWater = dilutionAmount * productionVolume;
+      }
+      
+      console.log(`Adding water dilution: ${dilutionAmount} ${productData.waterDilution.unit} per bottle = ${dilutionWater}L total for ${productionVolume} units`);
+      totalWaterFootprint += dilutionWater;
+    }
+
     // 4. Enhanced Packaging
     if (lcaData.packagingDetailed) {
       const pkg = lcaData.packagingDetailed;
