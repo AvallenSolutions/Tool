@@ -2618,6 +2618,12 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Main product creation endpoint (Enhanced Product Form)
   // GET products endpoint
   app.get('/api/products', async (req, res) => {
+    // Add cache-busting headers
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     try {
       const { products } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
@@ -2736,6 +2742,12 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // GET individual product endpoint
   app.get('/api/products/:id', async (req, res) => {
+    // Add cache-busting headers
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     try {
       const { products } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');

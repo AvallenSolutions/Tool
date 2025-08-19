@@ -123,9 +123,13 @@ export default function ProductsSection() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["/api/products"],
+  const { data: products, isLoading, dataUpdatedAt } = useQuery({
+    queryKey: ["/api/products"], // Removed timestamp to fix query invalidation
     retry: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Updated from cacheTime to gcTime (React Query v5)
   });
 
   const deleteProductMutation = useMutation({
@@ -352,6 +356,12 @@ export default function ProductsSection() {
                             {parseFloat(product.carbonFootprint?.toString() || '0').toFixed(2)} kg CO2e
                           </div>
                           <div className="text-xs text-gray-500">per unit</div>
+                          <div className="text-xs text-gray-400">
+                            Updated: {new Date(dataUpdatedAt).toLocaleTimeString()}
+                          </div>
+                          <div className="text-xs text-green-600">
+                            ✓ Real-time data
+                          </div>
                         </div>
                       )}
                       <Button

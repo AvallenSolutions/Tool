@@ -113,15 +113,26 @@ export default function ProductEdit() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products", id] });
       
-      // FIXED: Add delayed refetch to handle backend calculation timing
+      // ENHANCED: Aggressive cache invalidation with immediate and delayed refresh
+      queryClient.removeQueries({ queryKey: ["/api/products"] }); // Remove all cached data
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      
+      // Multiple delayed refreshes to ensure backend calculations complete
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        queryClient.removeQueries({ queryKey: ["/api/products"] });
         queryClient.refetchQueries({ queryKey: ["/api/products"] });
-      }, 1500); // Wait for backend carbon footprint calculation to complete
+        console.log('🔄 First refresh: Carbon footprint should be updated');
+      }, 1000);
+      
+      setTimeout(() => {
+        queryClient.removeQueries({ queryKey: ["/api/products"] });
+        queryClient.refetchQueries({ queryKey: ["/api/products"] });
+        console.log('🔄 Second refresh: Ensuring latest carbon footprint data');
+      }, 2500);
       
       toast({
         title: "Product Updated",
-        description: `${data.name} has been successfully updated with updated carbon footprint.`,
+        description: `${data.name} has been successfully updated. Carbon footprint will refresh automatically.`,
       });
       navigate(`/app/products/${id}`);
     },
