@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,12 +95,15 @@ export function KPIDetailModal({ kpi, isOpen, onClose }: KPIDetailModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg bg-white border shadow-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Activity className="w-5 h-5" />
             {kpi.name}
           </DialogTitle>
+          <DialogDescription>
+            Track and update your sustainability KPI progress
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
