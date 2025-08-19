@@ -84,18 +84,35 @@ export function KPIsPage() {
   // Fetch KPI definitions
   const { data: definitionsData, isLoading: definitionsLoading } = useQuery({
     queryKey: selectedCategory === 'all' ? ['/api/enhanced-kpis/definitions'] : ['/api/enhanced-kpis/definitions', selectedCategory],
-    queryFn: () => selectedCategory === 'all' ? apiRequest(`/api/enhanced-kpis/definitions`) : apiRequest(`/api/enhanced-kpis/definitions?category=${selectedCategory}`),
+    queryFn: async () => {
+      const url = selectedCategory === 'all' ? '/api/enhanced-kpis/definitions' : `/api/enhanced-kpis/definitions?category=${selectedCategory}`;
+      const response = await fetch(url);
+      return await response.json();
+    },
   });
 
   // Fetch dashboard data (existing goals and progress)
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ['/api/enhanced-kpis/dashboard'],
-    queryFn: () => apiRequest('/api/enhanced-kpis/dashboard'),
+    queryFn: async () => {
+      const response = await fetch('/api/enhanced-kpis/dashboard');
+      return await response.json();
+    },
   });
 
   // Create goal mutation
   const createGoalMutation = useMutation({
-    mutationFn: (goalData: any) => apiRequest('/api/enhanced-kpis/goals', { method: 'POST', body: goalData }),
+    mutationFn: async (goalData: any) => {
+      const response = await fetch('/api/enhanced-kpis/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(goalData),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create goal');
+      }
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/goals'] });
