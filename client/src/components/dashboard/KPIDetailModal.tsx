@@ -15,11 +15,12 @@ interface KPIData {
   current: number;
   target: number;
   unit: string;
-  category: 'emissions' | 'efficiency' | 'sustainability' | 'compliance';
+  category: 'environmental' | 'social' | 'engagement';
   trend: 'up' | 'down' | 'stable';
   trendValue: number;
   deadline?: string;
   status: 'on-track' | 'at-risk' | 'behind' | 'achieved';
+  isCustom: boolean;
 }
 
 interface KPIDetailModalProps {
@@ -29,10 +30,9 @@ interface KPIDetailModalProps {
 }
 
 const categoryConfig = {
-  emissions: { color: 'bg-red-100 text-red-800', label: 'Emissions' },
-  efficiency: { color: 'bg-blue-100 text-blue-800', label: 'Efficiency' },
-  sustainability: { color: 'bg-green-100 text-green-800', label: 'Sustainability' },
-  compliance: { color: 'bg-purple-100 text-purple-800', label: 'Compliance' },
+  environmental: { color: 'bg-green-100 text-green-800', label: 'Environmental' },
+  social: { color: 'bg-blue-100 text-blue-800', label: 'Social' },
+  engagement: { color: 'bg-purple-100 text-purple-800', label: 'Engagement' },
 };
 
 const statusConfig = {

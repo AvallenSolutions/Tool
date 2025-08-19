@@ -142,11 +142,13 @@ export function KPITracking() {
 
   const createKPIMutation = useMutation({
     mutationFn: async (kpiData: NewKPIFormData) => {
-      return await apiRequest('/api/kpis/custom', {
+      const response = await fetch('/api/kpis/custom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(kpiData),
       });
+      if (!response.ok) throw new Error('Failed to create KPI');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/kpis'] });
@@ -168,11 +170,13 @@ export function KPITracking() {
 
   const createProjectGoalMutation = useMutation({
     mutationFn: async (goalData: { goalTitle: string; milestones: Array<{ text: string; isComplete: boolean }> }) => {
-      return await apiRequest('/api/goals/project', {
+      const response = await fetch('/api/goals/project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(goalData),
       });
+      if (!response.ok) throw new Error('Failed to create goal');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/kpis'] });
@@ -195,11 +199,13 @@ export function KPITracking() {
 
   const updateMilestonesMutation = useMutation({
     mutationFn: async ({ goalId, milestones }: { goalId: string; milestones: Array<{ text: string; isComplete: boolean }> }) => {
-      return await apiRequest(`/api/goals/project/${goalId}/milestones`, {
+      const response = await fetch(`/api/goals/project/${goalId}/milestones`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ milestones }),
       });
+      if (!response.ok) throw new Error('Failed to update milestones');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/kpis'] });
@@ -232,8 +238,9 @@ export function KPITracking() {
       return;
     }
 
+    const goalTitleValue = document.querySelector<HTMLInputElement>('#goalTitle')?.value || '';
     const goalData = {
-      goalTitle: watch('goalTitle') || '',
+      goalTitle: goalTitleValue,
       milestones: validMilestones.map(text => ({ text, isComplete: false }))
     };
 
@@ -503,7 +510,7 @@ export function KPITracking() {
 
             <div>
               <Label htmlFor="kpiType">Category</Label>
-              <Select onValueChange={(value) => setValue('kpiType', value as any)}>
+              <Select onValueChange={(value) => setValue('kpiType', value as any)} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -529,7 +536,7 @@ export function KPITracking() {
 
             <div>
               <Label htmlFor="numeratorDataPoint">Numerator Data Point</Label>
-              <Select onValueChange={(value) => setValue('numeratorDataPoint', value)}>
+              <Select onValueChange={(value) => setValue('numeratorDataPoint', value)} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select numerator data" />
                 </SelectTrigger>
@@ -545,12 +552,12 @@ export function KPITracking() {
 
             <div>
               <Label htmlFor="denominatorDataPoint">Denominator Data Point (Optional)</Label>
-              <Select onValueChange={(value) => setValue('denominatorDataPoint', value)}>
+              <Select onValueChange={(value) => setValue('denominatorDataPoint', value === 'none' ? undefined : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select denominator data (for ratios)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (Simple Value)</SelectItem>
+                  <SelectItem value="none">None (Simple Value)</SelectItem>
                   {dataPointOptions.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
