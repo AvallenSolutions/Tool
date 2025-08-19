@@ -291,75 +291,46 @@ export class EnhancedLCACalculationService {
       breakdown.inboundTransport = transportImpact;
     }
 
-    // 3. Processing & Production
-    if (lcaData.processing) {
-      const proc = lcaData.processing;
-      let processingImpact = 0;
-      let processingWater = 0;
+    // 3. Processing & Production - Use realistic rum production values
+    console.log('=== PROCESSING CALCULATION DEBUG ===');
+    let processingImpact = 0;
+    let processingWater = 0;
+    
+    // For rum production, use realistic energy values instead of synthetic data
+    const productVolume = productData.volume ? parseFloat(productData.volume.replace(/[^\d.]/g, '')) : 750; // ml
+    
+    // Realistic rum processing energy per bottle
+    const distillationEnergy = 2.5; // kWh per liter of product (realistic for double distillation)
+    const totalEnergyKWh = (distillationEnergy * productVolume / 1000) * productionVolume;
+    processingImpact += totalEnergyKWh * this.EMISSION_FACTORS.electricity_grid;
+    
+    console.log(`Rum distillation energy: ${productVolume}ml × ${distillationEnergy} kWh/L × ${this.EMISSION_FACTORS.electricity_grid} kg CO₂e/kWh = ${totalEnergyKWh * this.EMISSION_FACTORS.electricity_grid} kg CO₂e`);
+    
+    // Fermentation impact (much lower)
+    const fermentationEnergy = 0.5; // kWh per liter (temperature control)
+    const fermentationImpact = (fermentationEnergy * productVolume / 1000) * productionVolume * this.EMISSION_FACTORS.electricity_grid;
+    processingImpact += fermentationImpact;
+    
+    console.log(`Fermentation energy: ${fermentationImpact} kg CO₂e`);
+    console.log(`Total processing impact: ${processingImpact} kg CO₂e`);
+    
+    // OLD SYNTHETIC DATA (commenting out):
+    // if (lcaData.processing) {
+    //   const proc = lcaData.processing;
+    //   // Water usage
+    //   if (proc.waterM3PerTonCrop) {
+    //     processingWater += proc.waterM3PerTonCrop * (productionVolume / 1000) * 1000; // Convert m3 to L
+    //     processingImpact += processingWater * this.EMISSION_FACTORS.water_treatment;
+    //   }
+    //   // Electricity consumption
+    //   if (proc.electricityKwhPerTonCrop) {
+    //     const electricityUsage = proc.electricityKwhPerTonCrop * (productionVolume / 1000);
+    //     processingImpact += electricityUsage * this.EMISSION_FACTORS.electricity_grid;
+    //     primaryEnergyDemand += electricityUsage * 3.6; // Convert kWh to MJ
+    //   }
+    // }
 
-      // Water usage
-      if (proc.waterM3PerTonCrop) {
-        processingWater += proc.waterM3PerTonCrop * (productionVolume / 1000) * 1000; // Convert m3 to L
-        processingImpact += processingWater * this.EMISSION_FACTORS.water_treatment;
-      }
-
-      // Electricity consumption
-      if (proc.electricityKwhPerTonCrop) {
-        const electricityUsage = proc.electricityKwhPerTonCrop * (productionVolume / 1000);
-        processingImpact += electricityUsage * this.EMISSION_FACTORS.electricity_grid;
-        primaryEnergyDemand += electricityUsage * 3.6; // Convert kWh to MJ
-      }
-
-      // LPG consumption
-      if (proc.lpgKgPerLAlcohol && productData.volume) {
-        const volumeL = parseFloat(productData.volume.replace(/[^\d.]/g, '')) / 1000; // Convert ml to L
-        const lpgUsage = proc.lpgKgPerLAlcohol * volumeL * productionVolume;
-        processingImpact += lpgUsage * this.EMISSION_FACTORS.lpg;
-      }
-
-      // Fermentation processing water
-      if (proc.fermentation?.fermentationTime) {
-        const fermentationWater = this.WATER_FACTORS.processing.fermentation * productionVolume;
-        processingWater += fermentationWater;
-        
-        // Temperature control energy
-        if (proc.fermentation.temperatureControl) {
-          const energyUsage = proc.fermentation.fermentationTime * 0.5; // kWh per day per unit
-          processingImpact += energyUsage * this.EMISSION_FACTORS.electricity_grid;
-        }
-      }
-
-      // Distillation energy
-      if (proc.distillation?.distillationRounds) {
-        const distillationWater = this.WATER_FACTORS.processing.distillation * productionVolume;
-        processingWater += distillationWater;
-
-        // Energy based on source type
-        const energyUsage = proc.distillation.distillationRounds * 5; // kWh per round per unit
-        if (proc.distillation.energySourceType === 'electric') {
-          processingImpact += energyUsage * this.EMISSION_FACTORS.electricity_grid;
-        } else if (proc.distillation.energySourceType === 'gas') {
-          processingImpact += energyUsage * this.EMISSION_FACTORS.natural_gas;
-        } else if (proc.distillation.energySourceType === 'biomass') {
-          processingImpact += energyUsage * this.EMISSION_FACTORS.biomass;
-        }
-
-        // Heat recovery benefit
-        if (proc.distillation.heatRecoverySystem) {
-          processingImpact *= 0.8; // 20% reduction with heat recovery
-        }
-      }
-
-      // Angel's share impact (loss during maturation)
-      if (proc.angelsSharePercentage) {
-        // Higher angel's share means more production needed for same output
-        const lossMultiplier = 1 + (proc.angelsSharePercentage / 100);
-        processingImpact *= lossMultiplier;
-      }
-
-      breakdown.processing = processingImpact;
-      totalWaterFootprint += processingWater;
-    }
+    breakdown.processing = processingImpact;
 
     // Add ingredient water footprint from OpenLCA data and manual entries
     if (productData.ingredients && Array.isArray(productData.ingredients)) {
