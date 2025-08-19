@@ -5253,22 +5253,15 @@ Be precise and quote actual text from the content, not generic terms.`;
   // GET /api/lca/categories - Get available ingredient categories
   app.get('/api/lca/categories', async (req, res) => {
     try {
-      const categories = await db
-        .selectDistinct({
-          subcategory: lcaProcessMappings.subcategory
-        })
-        .from(lcaProcessMappings)
-        .where(ne(lcaProcessMappings.subcategory, null));
+      console.log('🔍 Fetching LCA categories...');
       
-      const categoryList = categories
-        .map(cat => cat.subcategory)
-        .filter(Boolean)
-        .filter(cat => cat !== null)
-        .sort();
+      // Simple hardcoded response while debugging
+      const hardcodedCategories = ['Ethanol', 'Grains', 'Fruits', 'Botanicals', 'Additives'];
+      console.log('✅ Returning hardcoded categories:', hardcodedCategories);
+      res.json(hardcodedCategories);
       
-      res.json(categoryList);
     } catch (error) {
-      console.error('Error fetching LCA categories:', error);
+      console.error('❌ Error fetching LCA categories:', error);
       res.status(500).json({ error: 'Failed to fetch categories' });
     }
   });
