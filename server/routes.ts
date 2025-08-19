@@ -4769,7 +4769,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
       
       // Give extra time for any fonts/styles to load
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Generate PDF with proper settings
       const pdfBuffer = await page.pdf({
