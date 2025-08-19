@@ -2052,33 +2052,64 @@ Be precise and quote actual text from the content, not generic terms.`;
         let productEmissions = 0;
         console.log(`🧮 Processing product: ${product.name} (ID: ${product.id})`);
         
-        // Use the pre-calculated LCA carbon footprint if available
-        const lcaFootprint = parseFloat(product.carbonFootprint || '0');
-        if (lcaFootprint > 0) {
-          productEmissions = lcaFootprint;
-          console.log(`📊 Using pre-calculated LCA: ${productEmissions} kg CO2e per unit`);
-        } else {
-          // Fallback calculation only if no LCA data exists
-          console.log(`⚠️ No LCA data found, using fallback calculation`);
+        // FIXED: Calculate emissions using OpenLCA for all ingredients
+        console.log(`🧮 Calculating OpenLCA-based emissions for ${product.name}`);
+        
+        let ingredientEmissions = 0;
+        let packagingEmissions = 0;
+        
+        // Calculate ingredient emissions using OpenLCA
+        if (product.ingredients && Array.isArray(product.ingredients)) {
+          console.log(`📋 Found ${product.ingredients.length} ingredients`);
           
-          // Calculate ingredient emissions
-          if (product.ingredients && Array.isArray(product.ingredients)) {
-            console.log(`📋 Found ${product.ingredients.length} ingredients`);
-            for (const ingredient of product.ingredients) {
-              // Simple emission factor: 0.5 kg CO2e per kg of ingredient (conservative estimate)
-              const ingredientEmissions = (ingredient.amount || 0) * 0.5;
-              productEmissions += ingredientEmissions;
-              console.log(`🌾 ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${ingredientEmissions} kg CO2e`);
+          for (const ingredient of product.ingredients) {
+            if (ingredient.name && ingredient.amount > 0) {
+              try {
+                const { OpenLCAService } = await import('./services/OpenLCAService');
+                const impactData = await OpenLCAService.calculateIngredientImpact(
+                  ingredient.name,
+                  ingredient.amount,
+                  ingredient.unit || 'kg'
+                );
+                
+                if (impactData?.carbonFootprint > 0) {
+                  ingredientEmissions += impactData.carbonFootprint;
+                  console.log(`🌱 OpenLCA ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${impactData.carbonFootprint.toFixed(3)} kg CO2e`);
+                } else {
+                  // Fallback only if OpenLCA fails
+                  const fallbackEmissions = (ingredient.amount || 0) * 0.5;
+                  ingredientEmissions += fallbackEmissions;
+                  console.log(`⚠️ Fallback ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${fallbackEmissions} kg CO2e`);
+                }
+              } catch (error) {
+                console.error(`Error calculating OpenLCA impact for ${ingredient.name}:`, error);
+                const fallbackEmissions = (ingredient.amount || 0) * 0.5;
+                ingredientEmissions += fallbackEmissions;
+                console.log(`⚠️ Fallback ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${fallbackEmissions} kg CO2e`);
+              }
             }
           }
-          
-          // Calculate packaging emissions (simplified)
-          if (product.bottleWeight) {
-            // Glass: 0.85 kg CO2e/kg, with recycled content reduction
-            const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
-            const glassEmissions = parseFloat(product.bottleWeight) * 0.85 * (1 - recycledReduction);
-            productEmissions += glassEmissions;
-            console.log(`🍾 Glass bottle: ${product.bottleWeight}g, ${product.bottleRecycledContent}% recycled = ${glassEmissions.toFixed(3)} kg CO2e`);
+        }
+        
+        // Calculate packaging emissions
+        if (product.bottleWeight) {
+          const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
+          const glassEmissions = (parseFloat(product.bottleWeight) / 1000) * 0.85 * (1 - recycledReduction); // Convert g to kg
+          packagingEmissions += glassEmissions;
+          console.log(`🍾 Glass bottle: ${product.bottleWeight}g, ${product.bottleRecycledContent}% recycled = ${glassEmissions.toFixed(3)} kg CO2e`);
+        }
+        
+        productEmissions = ingredientEmissions + packagingEmissions;
+        
+        // Store calculated carbon footprint in database for future use
+        if (productEmissions > 0) {
+          try {
+            await dbStorage.updateProduct(product.id, { 
+              carbonFootprint: productEmissions.toString() 
+            });
+            console.log(`💾 Stored carbon footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO2e`);
+          } catch (error) {
+            console.error(`Error storing carbon footprint for ${product.name}:`, error);
           }
         }
         
@@ -2870,11 +2901,146 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Product not found' });
       }
 
+      // FIXED: Trigger carbon footprint recalculation after product update
+      if (updateData.ingredients || updateData.bottleWeight || updateData.bottleRecycledContent) {
+        console.log('🔄 Triggering carbon footprint recalculation for updated product');
+        
+        try {
+          let newCarbonFootprint = 0;
+          
+          // Recalculate ingredient emissions using OpenLCA
+          if (updatedProduct.ingredients && Array.isArray(updatedProduct.ingredients)) {
+            for (const ingredient of updatedProduct.ingredients) {
+              if (ingredient.name && ingredient.amount > 0) {
+                try {
+                  const { OpenLCAService } = await import('./services/OpenLCAService');
+                  const impactData = await OpenLCAService.calculateIngredientImpact(
+                    ingredient.name,
+                    ingredient.amount,
+                    ingredient.unit || 'kg'
+                  );
+                  
+                  if (impactData?.carbonFootprint > 0) {
+                    newCarbonFootprint += impactData.carbonFootprint;
+                    console.log(`🌱 Recalc OpenLCA ${ingredient.name}: ${impactData.carbonFootprint.toFixed(3)} kg CO2e`);
+                  }
+                } catch (error) {
+                  console.warn(`OpenLCA recalculation failed for ${ingredient.name}:`, error);
+                }
+              }
+            }
+          }
+          
+          // Add packaging emissions
+          if (updatedProduct.bottleWeight) {
+            const recycledReduction = (parseFloat(updatedProduct.bottleRecycledContent || '0') / 100);
+            const glassEmissions = (parseFloat(updatedProduct.bottleWeight) / 1000) * 0.85 * (1 - recycledReduction);
+            newCarbonFootprint += glassEmissions;
+          }
+          
+          // Update carbon footprint in database
+          if (newCarbonFootprint > 0) {
+            await db
+              .update(products)
+              .set({ carbonFootprint: newCarbonFootprint.toString() })
+              .where(eq(products.id, productId));
+            
+            console.log(`💾 Updated carbon footprint: ${newCarbonFootprint.toFixed(3)} kg CO2e`);
+            
+            // Return updated product with new carbon footprint
+            const [finalProduct] = await db
+              .select()
+              .from(products)
+              .where(eq(products.id, productId));
+            
+            res.json(finalProduct);
+            return;
+          }
+        } catch (error) {
+          console.error('Error recalculating carbon footprint:', error);
+        }
+      }
+
       console.log('Product updated successfully:', updatedProduct);
       res.json(updatedProduct);
     } catch (error) {
       console.error('Error updating product:', error);
       res.status(500).json({ error: 'Failed to update product', details: error.message });
+    }
+  });
+
+  // Manual carbon footprint recalculation endpoint
+  app.post('/api/products/:id/recalculate-carbon', async (req, res) => {
+    try {
+      const { products } = await import('@shared/schema');
+      const productId = parseInt(req.params.id);
+      
+      console.log(`🔄 Manual carbon footprint recalculation for product ${productId}`);
+      
+      const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, productId));
+        
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      let newCarbonFootprint = 0;
+      
+      // Calculate ingredient emissions using OpenLCA
+      if (product.ingredients && Array.isArray(product.ingredients)) {
+        for (const ingredient of product.ingredients) {
+          if (ingredient.name && ingredient.amount > 0) {
+            try {
+              const { OpenLCAService } = await import('./services/OpenLCAService');
+              const impactData = await OpenLCAService.calculateIngredientImpact(
+                ingredient.name,
+                ingredient.amount,
+                ingredient.unit || 'kg'
+              );
+              
+              if (impactData?.carbonFootprint > 0) {
+                newCarbonFootprint += impactData.carbonFootprint;
+                console.log(`🌱 Manual recalc ${ingredient.name}: ${impactData.carbonFootprint.toFixed(3)} kg CO2e`);
+              }
+            } catch (error) {
+              console.warn(`OpenLCA manual recalculation failed for ${ingredient.name}:`, error);
+            }
+          }
+        }
+      }
+      
+      // Add packaging emissions
+      if (product.bottleWeight) {
+        const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
+        const glassEmissions = (parseFloat(product.bottleWeight) / 1000) * 0.85 * (1 - recycledReduction);
+        newCarbonFootprint += glassEmissions;
+      }
+      
+      // Update carbon footprint in database
+      await db
+        .update(products)
+        .set({ carbonFootprint: newCarbonFootprint.toString() })
+        .where(eq(products.id, productId));
+      
+      console.log(`💾 Manual recalc complete: ${newCarbonFootprint.toFixed(3)} kg CO2e`);
+      
+      const [updatedProduct] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, productId));
+      
+      res.json({
+        success: true,
+        product: updatedProduct,
+        carbonFootprint: newCarbonFootprint,
+        message: 'Carbon footprint recalculated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error in manual carbon footprint recalculation:', error);
+      res.status(500).json({ error: 'Failed to recalculate carbon footprint' });
     }
   });
 

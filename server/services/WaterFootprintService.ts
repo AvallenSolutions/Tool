@@ -86,6 +86,11 @@ export class WaterFootprintService {
                 if (impactData && impactData.waterFootprint > 0) {
                   ingredientWater += impactData.waterFootprint;
                   console.log(`🌱 OpenLCA water footprint for ${ingredientData.name}: ${impactData.waterFootprint}L`);
+                  
+                  // ADDITION: Also calculate and store carbon footprint alongside water footprint
+                  if (impactData.carbonFootprint > 0) {
+                    console.log(`🌱 OpenLCA carbon footprint for ${ingredientData.name}: ${impactData.carbonFootprint} kg CO2e`);
+                  }
                   continue;
                 }
               } catch (error) {
