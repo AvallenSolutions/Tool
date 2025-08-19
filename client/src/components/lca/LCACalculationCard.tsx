@@ -372,19 +372,85 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
               </div>
             </div>
 
-            {showResults && latestCompletedJob.results.impactsByCategory && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">Impact by Category</h4>
-                <div className="space-y-2">
-                  {latestCompletedJob.results.impactsByCategory.map((impact, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <span className="text-sm text-gray-600">{impact.category}</span>
-                      <span className="text-sm font-medium">
-                        {impact.impact.toFixed(4)} {impact.unit}
-                      </span>
+            {showResults && (
+              <div className="space-y-4">
+                {/* ISO-Compliant 7-Gas GHG Breakdown */}
+                {latestCompletedJob.results.ghg_breakdown && latestCompletedJob.results.ghg_breakdown.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-medium text-gray-700">ISO 14064-1 GHG Breakdown</h4>
+                      <Badge variant="secondary" className="text-xs">7 Greenhouse Gases</Badge>
                     </div>
-                  ))}
-                </div>
+                    <div className="space-y-2">
+                      {latestCompletedJob.results.ghg_breakdown.map((ghg, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm p-3 bg-green-50 rounded-lg border-l-4 border-l-green-500">
+                          <div className="flex-1">
+                            <div className="font-medium text-green-800">{ghg.gas_name}</div>
+                            <div className="text-xs text-green-600">
+                              {ghg.mass_kg.toFixed(4)} kg × GWP {ghg.gwp_factor}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-green-900">{ghg.co2e.toFixed(3)}</div>
+                            <div className="text-xs text-green-600">kg CO₂eq</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-xs text-green-600 bg-green-100 p-2 rounded">
+                      <strong>IPCC AR5 GWP factors:</strong> Scientifically validated global warming potentials used for ISO-compliant calculations
+                    </div>
+                  </div>
+                )}
+
+                {/* Water Footprint Breakdown */}
+                {latestCompletedJob.results.water_footprint && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Water Footprint Breakdown</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-blue-50 p-2 rounded text-sm">
+                        <div className="text-blue-600 font-medium">Agricultural</div>
+                        <div className="text-blue-800">{latestCompletedJob.results.water_footprint.agricultural_water?.toFixed(1) || '0.0'} L</div>
+                      </div>
+                      <div className="bg-blue-50 p-2 rounded text-sm">
+                        <div className="text-blue-600 font-medium">Processing</div>
+                        <div className="text-blue-800">{latestCompletedJob.results.water_footprint.processing_water?.toFixed(1) || '0.0'} L</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Calculation Metadata for Transparency */}
+                {latestCompletedJob.results.metadata && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Calculation Audit Trail</h4>
+                    <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded space-y-1">
+                      <div>• LCI Flows Processed: {latestCompletedJob.results.metadata.lci_flows_count || 'N/A'}</div>
+                      {latestCompletedJob.results.metadata.gwp_factors_used && (
+                        <div>• GWP Factors Used: {latestCompletedJob.results.metadata.gwp_factors_used.length} greenhouse gases</div>
+                      )}
+                      <div>• ISO 14064-1 Compliant: {latestCompletedJob.results.metadata.iso_compliant ? '✓ Yes' : '✗ No'}</div>
+                      <div>• Calculation Date: {new Date(latestCompletedJob.results.calculationDate).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Legacy Impact Categories (fallback) */}
+                {latestCompletedJob.results.impactsByCategory && !latestCompletedJob.results.ghg_breakdown && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Impact by Category</h4>
+                    <div className="space-y-2">
+                      {latestCompletedJob.results.impactsByCategory.map((impact, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <span className="text-sm text-gray-600">{impact.category}</span>
+                          <span className="text-sm font-medium">
+                            {impact.impact.toFixed(4)} {impact.unit}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

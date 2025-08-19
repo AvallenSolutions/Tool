@@ -133,7 +133,7 @@ export const products = pgTable("products", {
   annualProductionVolume: decimal("annual_production_volume", { precision: 10, scale: 2 }),
   productionUnit: varchar("production_unit").default("bottles"), // bottles, liters, cases, kg
   
-  // Enhanced Ingredients (comprehensive JSONB structure)
+  // Enhanced Ingredients (comprehensive JSONB structure - OpenLCA integrated)
   ingredients: jsonb("ingredients").$type<Array<{
     name: string;
     type: 'grain' | 'fruit' | 'botanical' | 'additive' | 'water' | 'yeast' | 'other';
@@ -145,6 +145,8 @@ export const products = pgTable("products", {
     transportMode?: 'truck' | 'rail' | 'ship' | 'air' | 'pipeline';
     supplier?: string;
     processingMethod?: string;
+    // Note: Manual agriculture fields (yield, diesel, fertilizer, farming practices) 
+    // removed in favor of automated OpenLCA ecoinvent calculations
   }>>(),
   
   // Packaging - Primary Container

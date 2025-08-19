@@ -51,12 +51,7 @@ const enhancedProductSchema = z.object({
     origin: z.string().optional(),
     organic: z.boolean().default(false),
     supplier: z.string().optional(),
-    // Additional agriculture fields for comprehensive LCA data collection
-    yieldPerHectare: z.coerce.number().optional(),
-    farmingPractice: z.enum(['conventional', 'organic', 'biodynamic', 'regenerative']).optional(),
-    nitrogenFertilizer: z.coerce.number().optional(),
-    phosphorusFertilizer: z.coerce.number().optional(),
-    dieselUsage: z.coerce.number().optional(),
+    // Manual agriculture fields removed - automated via OpenLCA ecoinvent calculations
     transportDistance: z.coerce.number().optional(),
     processingEnergy: z.coerce.number().optional(),
     waterUsage: z.coerce.number().optional(),
@@ -552,8 +547,7 @@ export default function EnhancedProductForm({
       waterDilution: { amount: 0, unit: 'ml' },
       ingredients: [{ 
         name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '',
-        yieldPerHectare: 0, farmingPractice: undefined, nitrogenFertilizer: 0, phosphorusFertilizer: 0,
-        dieselUsage: 0, transportDistance: 0, processingEnergy: 0, waterUsage: 0
+        transportDistance: 0, processingEnergy: 0, waterUsage: 0
       }],
       packaging: {
         primaryContainer: { material: '', weight: 0, recycledContent: 0, recyclability: '', color: '', thickness: 0, origin: '' },
@@ -1485,9 +1479,9 @@ export default function EnhancedProductForm({
                             </div>
                           </div>
 
-                          <div className="bg-blue-50 p-3 rounded border border-blue-200">
-                            <p className="text-xs text-blue-700">
-                              <strong>Automated via OpenLCA:</strong> Water footprint, carbon emissions, land use, and biodiversity impact are calculated automatically using ecoinvent database. Manual entry of yield, fertilizer usage, and diesel consumption is no longer required.
+                          <div className="bg-green-50 p-3 rounded border border-green-200">
+                            <p className="text-xs text-green-700">
+                              <strong>ISO-Compliant OpenLCA Integration:</strong> Environmental impact calculations (carbon footprint, water usage, land use, biodiversity) are now fully automated using the ecoinvent LCI database. Manual agriculture data entry has been replaced with scientifically validated calculations.
                             </p>
                           </div>
                         </CardContent>
@@ -1511,11 +1505,6 @@ export default function EnhancedProductForm({
                               origin: '',
                               organic: false,
                               supplier: '',
-                              yieldPerHectare: 0,
-                              farmingPractice: undefined,
-                              nitrogenFertilizer: 0,
-                              phosphorusFertilizer: 0,
-                              dieselUsage: 0,
                               transportDistance: 0,
                               processingEnergy: 0,
                               waterUsage: 0
