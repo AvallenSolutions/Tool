@@ -54,10 +54,12 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch LCA history for this product
+  // Fetch LCA history for this product with aggressive cache invalidation
   const { data: lcaHistory = [], isLoading: historyLoading } = useQuery<LCAJob[]>({
     queryKey: ["/api/lca/product", product.id, "history"],
-    refetchInterval: currentJobId ? 2000 : false, // Poll every 2 seconds if job is running
+    refetchInterval: currentJobId ? 2000 : 5000, // Poll every 5 seconds to catch sync updates
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Always consider data stale for real-time sync
     retry: false,
   });
 

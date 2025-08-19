@@ -4559,6 +4559,70 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // LCA Job Synchronization - Update completed jobs with current OpenLCA results
+  app.post('/api/products/:id/sync-lca-jobs', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const product = await dbStorage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Get current carbon footprint from OpenLCA calculations
+      const currentCarbonFootprint = parseFloat(product.carbonFootprint || '0');
+      
+      if (currentCarbonFootprint <= 0) {
+        return res.status(400).json({ error: 'Product has no calculated carbon footprint' });
+      }
+
+      // Update all completed LCA jobs for this product with current results
+      const completedJobs = await db
+        .select()
+        .from(lcaCalculationJobs)
+        .where(
+          and(
+            eq(lcaCalculationJobs.productId, productId),
+            eq(lcaCalculationJobs.status, 'completed')
+          )
+        );
+
+      let updatedJobs = 0;
+      for (const job of completedJobs) {
+        const updatedResults = {
+          ...job.results,
+          totalCarbonFootprint: currentCarbonFootprint,
+          impactsByCategory: [
+            { category: 'Climate Change', impact: currentCarbonFootprint, unit: 'kg CO2e' },
+            ...(job.results?.impactsByCategory?.filter((impact: any) => impact.category !== 'Climate Change') || [])
+          ],
+          calculationDate: new Date().toISOString(),
+          syncedAt: new Date().toISOString()
+        };
+
+        await db
+          .update(lcaCalculationJobs)
+          .set({ results: updatedResults })
+          .where(eq(lcaCalculationJobs.id, job.id));
+        
+        updatedJobs++;
+      }
+
+      console.log(`🔄 Synchronized ${updatedJobs} LCA jobs for product ${product.name} with current carbon footprint: ${currentCarbonFootprint} kg CO2e`);
+
+      res.json({
+        success: true,
+        updatedJobs,
+        currentCarbonFootprint,
+        message: `Successfully synchronized ${updatedJobs} LCA jobs with current calculations`
+      });
+
+    } catch (error) {
+      console.error('Error synchronizing LCA jobs:', error);
+      res.status(500).json({ error: 'Failed to synchronize LCA jobs' });
+    }
+  });
+
   const server = createServer(app);
   
   // Initialize WebSocket service
