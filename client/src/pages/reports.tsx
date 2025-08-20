@@ -20,6 +20,8 @@ export default function Reports() {
   const { data: reports, isLoading: reportsLoading } = useQuery({
     queryKey: ["/api/reports"],
     retry: false,
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
   });
 
   // Fetch LCA calculation reports
@@ -70,6 +72,10 @@ export default function Reports() {
       }, 500);
       return;
     }
+    
+    // Clear all report-related cache when component mounts
+    queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+    queryClient.removeQueries({ queryKey: ["/api/reports"] });
   }, [isAuthenticated, isLoading, toast]);
 
   if (isLoading) {
