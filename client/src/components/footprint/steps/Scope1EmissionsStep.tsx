@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Info, Flame, Car, Zap, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 import { FootprintData } from '../FootprintWizard';
 
 interface Scope1EmissionsStepProps {
@@ -20,6 +22,7 @@ interface Scope1EmissionsStepProps {
 }
 
 interface EmissionEntry {
+  id?: number;
   dataType: string;
   value: string;
   unit: string;
@@ -124,6 +127,8 @@ const SCOPE1_DATA_TYPES = [
 ];
 
 export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, isLoading }: Scope1EmissionsStepProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [entries, setEntries] = useState<EmissionEntry[]>([]);
   const [newEntry, setNewEntry] = useState<EmissionEntry>({
     dataType: '',
@@ -132,17 +137,45 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
     description: ''
   });
 
-  // Load existing Scope 1 data
+  // Delete entry mutation
+  const deleteEntryMutation = useMutation({
+    mutationFn: async (entryId: number) => {
+      const response = await fetch(`/api/company/footprint/${entryId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete entry');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/company/footprint'] });
+      toast({
+        title: "Entry Deleted",
+        description: "The emission entry has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete the entry. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Load existing Scope 1 data with IDs
   useEffect(() => {
     const scope1Data = existingData.filter(item => item.scope === 1);
     if (scope1Data.length > 0) {
       const loadedEntries = scope1Data.map(item => ({
+        id: item.id,
         dataType: item.dataType,
         value: item.value,
         unit: item.unit,
         description: item.metadata?.description || ''
       }));
       setEntries(loadedEntries);
+    } else {
+      setEntries([]); // Clear entries when no data
     }
   }, [existingData]);
 
@@ -259,9 +292,14 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
 
   // Remove entry
   const removeEntry = (index: number) => {
-    const updatedEntries = entries.filter((_, i) => i !== index);
-    setEntries(updatedEntries);
-    // TODO: Delete from backend when delete API is implemented
+    const entryToDelete = entries[index];
+    if (entryToDelete?.id) {
+      deleteEntryMutation.mutate(entryToDelete.id);
+    } else {
+      // For new entries without ID, just remove from local state
+      const updatedEntries = entries.filter((_, i) => i !== index);
+      setEntries(updatedEntries);
+    }
   };
 
   const selectedDataType = SCOPE1_DATA_TYPES.find(type => type.id === newEntry.dataType);
@@ -310,6 +348,7 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
                         variant="outline"
                         size="sm"
                         onClick={() => removeEntry(index)}
+                        disabled={deleteEntryMutation.isPending}
                         className="text-red-600 hover:text-red-800"
                       >
                         <Trash2 className="h-4 w-4" />

@@ -93,26 +93,38 @@ export function FootprintWizard() {
     },
   });
 
-  // Calculate total emissions for each scope to match displayed totals exactly
-  const calculateScopeEmissions = (scope: number): number => {
-    // Fixed values to match the target calculation and displayed totals
-    const targetTotalKg = 483943.76;
+  // Calculate total emissions from actual database data
+  const calculateActualTotal = (): number => {
+    if (!existingData?.data || !automatedData?.data) return 0;
     
-    if (scope === 1) {
-      // Scope 1: Use the exact displayed total (4,942 kg from screenshot)
-      return 4942;
+    // Calculate manual Scope 1 + 2 emissions from footprint data
+    let manualEmissions = 0;
+    for (const entry of existingData.data) {
+      if (entry.scope === 1 || entry.scope === 2) {
+        manualEmissions += parseFloat(entry.calculatedEmissions) || 0;
+      }
     }
     
-    if (scope === 2) {
-      // Scope 2: Currently shows 0 in the display, so return 0
-      return 0;
+    // Add automated Scope 3 emissions (convert tonnes to kg)
+    const automatedEmissions = automatedData.data.totalEmissions * 1000 || 0;
+    
+    return manualEmissions + automatedEmissions;
+  };
+
+  // Calculate total emissions for each scope from actual data
+  const calculateScopeEmissions = (scope: number): number => {
+    if (!existingData?.data) return 0;
+    
+    if (scope === 1 || scope === 2) {
+      // Sum actual emissions for manual scopes
+      return existingData.data
+        .filter(entry => entry.scope === scope)
+        .reduce((total, entry) => total + (parseFloat(entry.calculatedEmissions) || 0), 0);
     }
     
     if (scope === 3) {
-      // Scope 3: Calculate to reach the target total
-      const scope1Total = 4942;
-      const scope2Total = 0;
-      return targetTotalKg - scope1Total - scope2Total;
+      // Use automated Scope 3 data (convert tonnes to kg)
+      return (automatedData?.data?.totalEmissions || 0) * 1000;
     }
     
     return 0;
@@ -229,7 +241,7 @@ export function FootprintWizard() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-2xl font-bold text-green-600">
-                  {(483943.76).toLocaleString()} kg CO₂e
+                  {calculateActualTotal().toLocaleString()} kg CO₂e
                 </div>
                 <p className="text-sm text-slate-600">Total Calculated Emissions</p>
               </div>
