@@ -312,10 +312,17 @@ function ProductDetail() {
                   {product.ingredients ? (
                     <div className="space-y-4">
                       {(() => {
-                        if (Array.isArray(product.ingredients)) return product.ingredients;
+                        console.log('🔍 ProductDetail - Raw ingredients data:', product.ingredients);
+                        if (Array.isArray(product.ingredients)) {
+                          console.log('✅ ProductDetail - Using array ingredients:', product.ingredients);
+                          return product.ingredients;
+                        }
                         try {
-                          return JSON.parse(product.ingredients);
+                          const parsed = JSON.parse(product.ingredients);
+                          console.log('✅ ProductDetail - Parsed ingredients:', parsed);
+                          return parsed;
                         } catch {
+                          console.log('❌ ProductDetail - Failed to parse ingredients, returning empty array');
                           return []; // Return empty array if parsing fails
                         }
                       })().map((ingredient: any, index: number) => (

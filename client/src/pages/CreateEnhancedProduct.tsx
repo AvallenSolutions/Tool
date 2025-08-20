@@ -258,7 +258,12 @@ export default function CreateEnhancedProduct() {
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
         if (product.id) {
           queryClient.invalidateQueries({ queryKey: ["/api/products", product.id.toString()] });
+          // Also invalidate any cached ProductDetail queries (matches ProductDetail.tsx queryKey)
+          queryClient.invalidateQueries({ queryKey: ["product", product.id.toString()] });
+          queryClient.invalidateQueries({ queryKey: ["product", product.id] });
         }
+        
+        console.log('🔄 Query cache invalidated for product:', product.id);
         
         toast({
           title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
