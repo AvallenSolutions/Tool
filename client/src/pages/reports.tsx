@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf } from "lucide-react";
 import { EnhancedReportButton } from "@/components/EnhancedReportButton";
+import { ReportProgressTracker } from "@/components/reports/ReportProgressTracker";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Reports() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingReportId, setGeneratingReportId] = useState<number | null>(null);
 
   const { data: reports, isLoading: reportsLoading } = useQuery({
     queryKey: ["/api/reports"],
@@ -35,11 +37,12 @@ export default function Reports() {
       const response = await apiRequest("POST", "/api/reports/generate", { reportType });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setGeneratingReportId(data.reportId);
       queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
       toast({
-        title: "Report Generation Started",
-        description: "Your sustainability report is being generated. This may take a few minutes.",
+        title: "Report Generation Started", 
+        description: "Your sustainability report is being generated with live data. Watch the progress below.",
       });
       setIsGenerating(false);
     },
@@ -51,12 +54,22 @@ export default function Reports() {
         variant: "destructive",
       });
       setIsGenerating(false);
+      setGeneratingReportId(null);
     },
   });
 
   const handleGenerateReport = async (reportType: 'sustainability' | 'lca' = 'sustainability') => {
     setIsGenerating(true);
     generateReportMutation.mutate(reportType);
+  };
+
+  const handleProgressComplete = () => {
+    setGeneratingReportId(null);
+    queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+    toast({
+      title: "Report Generated Successfully",
+      description: "Your sustainability report has been completed using live data from your account.",
+    });
   };
 
   useEffect(() => {
@@ -205,6 +218,16 @@ export default function Reports() {
               Generate LCA Report
             </Button>
           </div>
+
+          {/* Progress Tracker */}
+          {generatingReportId && (
+            <div className="flex justify-center">
+              <ReportProgressTracker 
+                reportId={generatingReportId}
+                onComplete={handleProgressComplete}
+              />
+            </div>
+          )}
 
           {/* Annual Reports Section */}
           <div>

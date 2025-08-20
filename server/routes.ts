@@ -4924,6 +4924,11 @@ Be precise and quote actual text from the content, not generic terms.`;
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 85, stage: 'Finalizing sustainability report...' };
           console.log(`Report ${newReport.id}: Completing report with live data...`);
           
+          // Calculate total carbon footprint (convert kg to tonnes)
+          const totalCarbonFootprint = (scope1Total + scope2Total + scope3Total) / 1000;
+          
+          console.log(`Report ${newReport.id}: Final calculations - Scope 1: ${scope1Total}kg, Scope 2: ${scope2Total}kg, Scope 3: ${scope3Total}kg, Total: ${totalCarbonFootprint} tonnes`);
+          
           await db
             .update(reports)
             .set({ 
@@ -4933,7 +4938,8 @@ Be precise and quote actual text from the content, not generic terms.`;
               totalScope2: scope2Total.toString(), 
               totalScope3: scope3Total.toString(),
               totalWaterUsage: Math.round(waterUsage).toString(),
-              totalWasteGenerated: Math.round(wasteGenerated).toString()
+              totalWasteGenerated: Math.round(wasteGenerated).toString(),
+              totalCarbonFootprint: totalCarbonFootprint.toString()
             })
             .where(eq(reports.id, newReport.id));
             
@@ -4991,8 +4997,8 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Get report generation progress
-  app.get('/api/reports/:id/progress', isAuthenticated, async (req, res) => {
+  // Get report generation progress (no auth required for progress tracking)
+  app.get('/api/reports/:id/progress', async (req, res) => {
     try {
       const reportId = parseInt(req.params.id);
       const progressKey = `report_progress_${reportId}`;
