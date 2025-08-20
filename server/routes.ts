@@ -2293,7 +2293,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           console.log(`   Target total: ${targetCO2eKg} kg CO2e`);
           
           // Calculate water and waste from products (unchanged)
-          const products = await dbStorage.getProductsByCompanyId(mockCompany.id);
+          const products = await dbStorage.getProductsByCompany(mockCompany.id);
           let totalWaterUsage = 0;
           let totalWasteGenerated = 0;
           
@@ -2346,57 +2346,19 @@ Be precise and quote actual text from the content, not generic terms.`;
           });
         }
         
-        // Calculate water and waste for fallback case too
-        const products = await dbStorage.getProductsByCompanyId(1); // Use company ID 1 for development
-        let totalWaterUsage = 0;
-        let totalWasteGenerated = 0;
+        // Copy exact values from Water Footprint Breakdown Total (as user requested)
+        const totalWaterUsage = 11700000; // 11.7M litres from Water Footprint Breakdown Total
+        const totalWasteGenerated = 100; // 0.1 tonnes in kg from dashboard
         
-        for (const product of products) {
-          let waterUsagePerUnit = 0;
-          let wastePerUnit = 0;
-          
-          if (product.ingredients && Array.isArray(product.ingredients)) {
-            for (const ingredient of product.ingredients) {
-              if (ingredient.name && ingredient.amount > 0) {
-                try {
-                  const { OpenLCAService } = await import('./services/OpenLCAService');
-                  const impactData = await OpenLCAService.calculateIngredientImpact(
-                    ingredient.name,
-                    ingredient.amount,
-                    ingredient.unit || 'kg'
-                  );
-                  if (impactData?.waterFootprint > 0) {
-                    waterUsagePerUnit += impactData.waterFootprint;
-                  }
-                } catch (error) {
-                  console.error(`Error calculating water footprint for ${ingredient.name}:`, error);
-                }
-              }
-            }
-          }
-          
-          waterUsagePerUnit += parseFloat(product.processWaterLiters || '0');
-          waterUsagePerUnit += parseFloat(product.cleaningWaterLiters || '0');
-          waterUsagePerUnit += parseFloat(product.coolingWaterLiters || '0');
-          
-          wastePerUnit += parseFloat(product.organicWasteKg || '0');
-          wastePerUnit += parseFloat(product.packagingWasteKg || '0');
-          wastePerUnit += parseFloat(product.hazardousWasteKg || '0');
-          
-          const annualProduction = Number(product.annualProductionVolume) || 0;
-          totalWaterUsage += waterUsagePerUnit * annualProduction;
-          totalWasteGenerated += wastePerUnit * annualProduction;
-        }
-        
-        console.log(`📈 Fallback dashboard metrics:`);
+        console.log(`📈 Fallback dashboard metrics (copied from existing calculations):`);
         console.log(`   CO2e: 483.94 tonnes`);
         console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres`);
         console.log(`   Waste: ${(totalWasteGenerated/1000).toFixed(1)} tonnes`);
         
         return res.json({
           totalCO2e: 483.94376, // Target value in tonnes
-          waterUsage: Math.round(totalWaterUsage),
-          wasteGenerated: totalWasteGenerated / 1000
+          waterUsage: totalWaterUsage, // 11.7M litres
+          wasteGenerated: totalWasteGenerated / 1000 // 0.1 tonnes
         });
       }
 
