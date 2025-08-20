@@ -29,25 +29,29 @@ export function ReportProgressTracker({ reportId, onComplete }: ReportProgressTr
 
     const pollProgress = async () => {
       try {
+        console.log(`📊 Polling progress for report ${reportId}...`);
         const response = await fetch(`/api/reports/${reportId}/progress`);
         const data = await response.json();
+        console.log(`📊 Progress API response:`, data);
 
-        if (data.progress !== null) {
+        if (data.progress !== null && data.progress !== undefined) {
+          console.log(`📊 Setting progress data:`, data);
           setProgressData(data);
           
           // Stop polling if completed or error
           if (data.completed || data.error) {
+            console.log(`📊 Report ${reportId} finished:`, { completed: data.completed, error: data.error });
             setIsPolling(false);
             if (data.completed && !data.error && onComplete) {
               onComplete();
             }
           }
         } else {
-          // No progress data found, stop polling
-          setIsPolling(false);
+          console.log(`📊 No progress data found for report ${reportId}, continuing to poll...`);
+          // Keep polling for a bit longer before giving up
         }
       } catch (error) {
-        console.error('Error fetching progress:', error);
+        console.error('📊 Error fetching progress:', error);
         setIsPolling(false);
       }
     };

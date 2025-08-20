@@ -4872,12 +4872,16 @@ Be precise and quote actual text from the content, not generic terms.`;
             reportId: newReport.id,
             progress: 0, 
             stage: 'Initializing report generation...',
-            startTime: Date.now()
+            startTime: Date.now(),
+            completed: false,
+            error: false
           };
+          console.log(`📊 Initialized progress for report ${newReport.id}:`, (global as any)[progressKey]);
           
           // Step 1: Calculate footprint data (25% progress)
-          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 10, stage: 'Calculating emissions data...' };
-          console.log(`Report ${newReport.id}: Calculating emissions data...`);
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 25, stage: 'Calculating emissions data...' };
+          console.log(`📊 Report ${newReport.id}: Step 1 - Calculating emissions data... (25%)`);
+          console.log(`📊 Progress updated:`, (global as any)[progressKey]);
           
           const footprintData = await dbStorage.getCompanyFootprintData(company.id);
           
@@ -4888,8 +4892,9 @@ Be precise and quote actual text from the content, not generic terms.`;
           }
           
           // Step 2: Calculate Scope 3 emissions using Dashboard method (50% progress)
-          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 35, stage: 'Calculating Scope 3 emissions using Dashboard method...' };
-          console.log(`Report ${newReport.id}: Calculating Scope 3 emissions using Dashboard method...`);
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 50, stage: 'Calculating Scope 3 emissions using Dashboard method...' };
+          console.log(`📊 Report ${newReport.id}: Step 2 - Calculating Scope 3 emissions using Dashboard method... (50%)`);
+          console.log(`📊 Progress updated:`, (global as any)[progressKey]);
           
           // Use same calculation as Dashboard MetricsCards component
           const { calculatePurchasedGoodsEmissions, calculateFuelEnergyUpstreamEmissions } = await import('./services/AutomatedEmissionsCalculator');
@@ -4905,8 +4910,9 @@ Be precise and quote actual text from the content, not generic terms.`;
           console.log(`Report ${newReport.id}: Scope 3 breakdown - Purchased Goods: ${purchasedGoods.totalEmissions} tonnes, Fuel Energy: ${fuelEnergy.totalEmissions} tonnes, Total: ${scope3TotalTonnes} tonnes (${scope3Total} kg)`);
           
           // Step 3: Calculate water and waste metrics using Dashboard method (75% progress)
-          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 65, stage: 'Calculating water and waste metrics...' };
-          console.log(`Report ${newReport.id}: Calculating water and waste metrics using Dashboard method...`);
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 75, stage: 'Calculating water and waste metrics...' };
+          console.log(`📊 Report ${newReport.id}: Step 3 - Calculating water and waste metrics using Dashboard method... (75%)`);
+          console.log(`📊 Progress updated:`, (global as any)[progressKey]);
           
           const { products: productsTable } = await import('@shared/schema');
           const companyProducts = await db.select().from(productsTable).where(eq(productsTable.companyId, company.id));
@@ -4927,9 +4933,10 @@ Be precise and quote actual text from the content, not generic terms.`;
           // Match Dashboard: wasteGenerated = 0.1 tonnes (100kg), not 159000
           wasteGenerated = 100; // 0.1 tonnes in kg to match Dashboard
           
-          // Step 4: Finalizing report (90% progress)
-          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 85, stage: 'Finalizing sustainability report...' };
-          console.log(`Report ${newReport.id}: Completing report with live data...`);
+          // Step 4: Finalizing report (90% progress)  
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 90, stage: 'Finalizing sustainability report...' };
+          console.log(`📊 Report ${newReport.id}: Step 4 - Finalizing sustainability report... (90%)`);
+          console.log(`📊 Progress updated:`, (global as any)[progressKey]);
           
           // Calculate total carbon footprint using Dashboard method for consistency
           // Dashboard shows: Manual Scope 1+2 (19280.6kg) + Automated Scope 3 (478651.16kg) = 497.932 tonnes
@@ -4953,21 +4960,22 @@ Be precise and quote actual text from the content, not generic terms.`;
             })
             .where(eq(reports.id, newReport.id));
             
-          // Complete progress tracking
+          // Mark as completed (100% progress)
           (global as any)[progressKey] = { 
             ...(global as any)[progressKey], 
             progress: 100, 
-            stage: 'Report generation completed!',
+            stage: 'Report generation completed successfully',
             completed: true,
             completedAt: Date.now()
           };
+          console.log(`📊 Report ${newReport.id}: Generation completed successfully (100%)`);
+          console.log(`📊 Final progress:`, (global as any)[progressKey]);
           
-          console.log(`Report ${newReport.id}: Generation completed successfully`);
-          
-          // Clean up progress after 30 seconds
+          // Clean up progress after 2 minutes (enough time for frontend to see completion)
           setTimeout(() => {
+            console.log(`📊 Cleaning up progress data for report ${newReport.id}`);
             delete (global as any)[progressKey];
-          }, 30000);
+          }, 120000);
           
         } catch (error) {
           console.error(`Report ${newReport.id}: Generation failed:`, error);
@@ -5014,15 +5022,20 @@ Be precise and quote actual text from the content, not generic terms.`;
       const reportId = parseInt(req.params.id);
       const progressKey = `report_progress_${reportId}`;
       
+      console.log(`📊 Progress API called for report ${reportId}, key: ${progressKey}`);
       const progress = (global as any)[progressKey] || null;
+      console.log(`📊 Progress data found:`, progress);
       
       if (!progress) {
+        console.log(`📊 No progress data in memory, checking database for report ${reportId}...`);
         // Check if the report exists and is completed in the database
         const { reports } = await import('@shared/schema');
         const [report] = await db
           .select()
           .from(reports)
           .where(eq(reports.id, reportId));
+        
+        console.log(`📊 Database report found:`, report ? { id: report.id, status: report.status } : 'null');
           
         if (report) {
           if (report.status === 'completed') {
