@@ -3,14 +3,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, Droplets, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 
 export default function MetricsCards() {
+  // Fetch company carbon footprint data (same as FootprintWizard "Overall Progress")
+  const { data: footprintData } = useQuery({
+    queryKey: ['/api/company/footprint'],
+    staleTime: 0,
+  });
+
+  // Fetch automated Scope 3 data for complete carbon footprint calculation
+  const { data: automatedData } = useQuery({
+    queryKey: ['/api/company/footprint/scope3/automated'],
+  });
+
+  // Fetch dashboard metrics for water and waste (non-carbon metrics)
   const { data: metrics, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/metrics"],
     retry: false,
   });
 
+  // Calculate CO2e the same way as FootprintWizard "Overall Progress"
+  const calculateTotalCO2e = () => {
+    if (!footprintData?.data || !automatedData?.data) return 0;
+    
+    // Manual Scope 1 + 2 emissions from footprint data
+    let manualEmissions = 0;
+    for (const entry of footprintData.data) {
+      if (entry.scope === 1 || entry.scope === 2) {
+        manualEmissions += parseFloat(entry.calculatedEmissions) || 0;
+      }
+    }
+    
+    // Automated Scope 3 emissions
+    const automatedEmissions = automatedData.data.totalEmissions * 1000 || 0; // Convert tonnes to kg
+    
+    const totalKg = manualEmissions + automatedEmissions;
+    return totalKg / 1000; // Convert back to tonnes for display
+  };
+
   console.log('📊 MetricsCards Debug:', {
     isLoading,
     metrics,
+    footprintData,
+    automatedData,
+    calculatedCO2e: calculateTotalCO2e(),
     error: error?.message
   });
 
@@ -32,7 +66,7 @@ export default function MetricsCards() {
     );
   }
 
-  const totalCO2e = metrics?.totalCO2e || 0;
+  const totalCO2e = calculateTotalCO2e();
   const waterUsage = metrics?.waterUsage || 0;
   const wasteGenerated = metrics?.wasteGenerated || 0;
 
