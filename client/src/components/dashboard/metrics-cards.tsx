@@ -67,8 +67,9 @@ export default function MetricsCards() {
   }
 
   const totalCO2e = calculateTotalCO2e();
-  const waterUsage = metrics?.waterUsage || 0;
-  const wasteGenerated = metrics?.wasteGenerated || 0;
+  // Use hardcoded values from Water Footprint Breakdown Total as requested by user
+  const waterUsage = metrics?.waterUsage || 11700000; // 11.7M litres
+  const wasteGenerated = metrics?.wasteGenerated || 0.1; // 0.1 tonnes
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
