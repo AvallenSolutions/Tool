@@ -94,9 +94,12 @@ export function SMARTGoals() {
   });
 
   const createGoalMutation = useMutation({
-    mutationFn: (goalData: CreateGoalData) => 
-      apiRequest('/api/smart-goals', 'POST', goalData),
-    onSuccess: () => {
+    mutationFn: (goalData: CreateGoalData) => {
+      console.log('🎯 SMARTGoals: Mutation starting with data:', goalData);
+      return apiRequest('POST', '/api/smart-goals', goalData);
+    },
+    onSuccess: (data) => {
+      console.log('🎯 SMARTGoals: Mutation successful:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
       setIsCreateOpen(false);
       toast({
@@ -104,7 +107,8 @@ export function SMARTGoals() {
         description: "Your SMART goal has been created successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('🎯 SMARTGoals: Mutation error:', error);
       toast({
         title: "Error",
         description: "Failed to create goal. Please try again.",
@@ -350,6 +354,7 @@ function CreateGoalDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🎯 SMARTGoals: Form submitted with data:', formData);
     onSubmit(formData);
   };
 
