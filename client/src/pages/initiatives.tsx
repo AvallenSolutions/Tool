@@ -145,9 +145,12 @@ export default function InitiativesPage() {
       // Refresh the goals data to reflect the saved changes
       queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
       
+      const selectedCount = selectedGoals.size;
+      const narrativeCount = Array.from(goalNarratives.values()).filter(n => n?.trim().length > 0).length;
+      
       toast({
         title: "✅ Goals Saved Successfully!",
-        description: `${result.updated || selectedGoals.size} SMART goals and their narratives have been saved for the Report Builder. You can now access them in the Sustainability Initiatives block.`,
+        description: `${selectedCount} SMART goal${selectedCount !== 1 ? 's' : ''} and ${narrativeCount} narrative${narrativeCount !== 1 ? 's' : ''} saved for the Report Builder. You can now access them in the Sustainability Initiatives block.`,
         duration: 5000,
       });
     } catch (error: any) {
