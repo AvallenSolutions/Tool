@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,105 @@ import { GripVertical, Plus, Eye, Download, Settings, BarChart3, FileText, Users
 import AIWritingAssistant from '@/components/ai-writing-assistant';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+
+// Preview components for each block type
+function CompanyStoryPreview() {
+  const { data: companyStory } = useQuery({
+    queryKey: ['/api/company/story'],
+  });
+
+  return (
+    <div className="space-y-4">
+      {companyStory?.missionStatement && (
+        <div>
+          <h4 className="font-semibold text-green-700 mb-2">Mission Statement</h4>
+          <p className="text-gray-700">{companyStory.missionStatement}</p>
+        </div>
+      )}
+      {companyStory?.visionStatement && (
+        <div>
+          <h4 className="font-semibold text-green-700 mb-2">Vision Statement</h4>
+          <p className="text-gray-700">{companyStory.visionStatement}</p>
+        </div>
+      )}
+      {companyStory?.strategicPillars && companyStory.strategicPillars.length > 0 && (
+        <div>
+          <h4 className="font-semibold text-green-700 mb-2">Strategic Pillars</h4>
+          <div className="space-y-2">
+            {companyStory.strategicPillars.map((pillar: any, index: number) => (
+              <div key={index} className="border-l-4 border-green-500 pl-4">
+                <h5 className="font-medium">{pillar.name}</h5>
+                <p className="text-sm text-gray-600">{pillar.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MetricsSummaryPreview() {
+  const { data: footprintData } = useQuery({
+    queryKey: ['/api/footprint-data'],
+  });
+
+  const totalCO2e = footprintData?.data?.reduce((sum: number, item: any) => 
+    sum + parseFloat(item.calculatedEmissions || 0), 0
+  ) || 0;
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <div className="text-center p-4 bg-green-50 rounded-lg">
+        <div className="text-2xl font-bold text-green-700">{totalCO2e.toFixed(1)}</div>
+        <div className="text-sm text-gray-600">tonnes CO₂e</div>
+      </div>
+      <div className="text-center p-4 bg-blue-50 rounded-lg">
+        <div className="text-2xl font-bold text-blue-700">11.7M</div>
+        <div className="text-sm text-gray-600">litres water</div>
+      </div>
+      <div className="text-center p-4 bg-purple-50 rounded-lg">
+        <div className="text-2xl font-bold text-purple-700">0.1</div>
+        <div className="text-sm text-gray-600">tonnes waste</div>
+      </div>
+    </div>
+  );
+}
+
+function InitiativesPreview() {
+  const { data: initiatives } = useQuery({
+    queryKey: ['/api/initiatives'],
+  });
+
+  return (
+    <div className="space-y-3">
+      {initiatives && initiatives.length > 0 ? (
+        initiatives.map((initiative: any) => (
+          <div key={initiative.id} className="p-3 border border-gray-200 rounded-lg">
+            <h5 className="font-medium text-gray-900">{initiative.initiativeName}</h5>
+            <p className="text-sm text-gray-600 mt-1">{initiative.description}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`px-2 py-1 text-xs rounded-full ${
+                initiative.status === 'active' ? 'bg-green-100 text-green-700' :
+                initiative.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                'bg-gray-100 text-gray-700'
+              }`}>
+                {initiative.status}
+              </span>
+              {initiative.strategicPillar && (
+                <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
+                  {initiative.strategicPillar}
+                </span>
+              )}
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 italic">No initiatives found. Create some in the Initiatives section.</p>
+      )}
+    </div>
+  );
+}
 
 interface ReportBlock {
   id: string;
@@ -58,6 +157,7 @@ export default function ReportBuilderPage() {
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [selectedAudience, setSelectedAudience] = useState<string>('stakeholders');
+  const [activeTab, setActiveTab] = useState('builder');
 
   // Fetch existing templates
   const { data: templates } = useQuery<ReportTemplate[]>({
@@ -87,6 +187,57 @@ export default function ReportBuilderPage() {
       });
     }
   }, [currentTemplate]);
+
+  // Render preview for each block type
+  const renderBlockPreview = (blockType: string) => {
+    switch (blockType) {
+      case 'company_story':
+        return <CompanyStoryPreview />;
+      case 'metrics_summary':
+        return <MetricsSummaryPreview />;
+      case 'initiatives':
+        return <InitiativesPreview />;
+      case 'carbon_footprint':
+        return (
+          <div className="space-y-3">
+            <p className="text-gray-700">Carbon footprint analysis with scope 1, 2, and 3 emissions breakdown.</p>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm text-green-700">This section will show detailed carbon emissions data from your footprint calculator.</p>
+            </div>
+          </div>
+        );
+      case 'water_usage':
+        return (
+          <div className="space-y-3">
+            <p className="text-gray-700">Water footprint analysis showing consumption patterns and conservation efforts.</p>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-700">Water usage data will be displayed with charts and trends.</p>
+            </div>
+          </div>
+        );
+      case 'kpi_progress':
+        return (
+          <div className="space-y-3">
+            <p className="text-gray-700">Key Performance Indicators tracking progress toward sustainability goals.</p>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <p className="text-sm text-purple-700">KPI data and progress charts will be shown here.</p>
+            </div>
+          </div>
+        );
+      case 'custom_text':
+        return (
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-gray-700">Your custom text content will appear here. Use the settings to edit this content.</p>
+          </div>
+        );
+      default:
+        return (
+          <div className="bg-gray-50 p-3 rounded">
+            <em className="text-gray-600">Preview for {blockType} will be implemented soon.</em>
+          </div>
+        );
+    }
+  };
 
   // Save template mutation
   const saveTemplateMutation = useMutation({
@@ -270,7 +421,7 @@ export default function ReportBuilderPage() {
           <Button onClick={() => currentTemplate && saveTemplateMutation.mutate(currentTemplate)}>
             Save Template
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setActiveTab('preview')}>
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
@@ -281,7 +432,7 @@ export default function ReportBuilderPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="builder" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="builder">Report Builder</TabsTrigger>
           <TabsTrigger value="preview">Live Preview</TabsTrigger>
@@ -418,16 +569,23 @@ export default function ReportBuilderPage() {
                 .filter(block => block.isVisible)
                 .sort((a, b) => a.order - b.order)
                 .map((block) => (
-                  <div key={block.id} className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-3">
+                  <div key={block.id} className="p-6 border border-gray-200 rounded-lg bg-white shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
                       {getBlockIcon(block.type)}
-                      <h3 className="font-semibold">{block.title}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">{block.title}</h3>
                     </div>
-                    <div className="text-gray-600 bg-gray-50 p-3 rounded">
-                      <em>[{block.type} content will be rendered here with live data]</em>
+                    <div className="prose prose-sm max-w-none">
+                      {renderBlockPreview(block.type)}
                     </div>
                   </div>
                 ))}
+              {currentTemplate.blocks.filter(block => block.isVisible).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No visible blocks in this report template.</p>
+                  <p className="text-sm">Add blocks in the Report Builder tab to see a preview.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
