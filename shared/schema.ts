@@ -1610,6 +1610,8 @@ export const smartGoals = pgTable("smart_goals", {
   targetDate: date("target_date").notNull(),
   category: varchar("category", { length: 50 }).default("sustainability").notNull(),
   status: varchar("status", { length: 20 }).default("active").notNull(), // active, completed, paused
+  narrative: text("narrative"), // For report builder integration
+  selectedForReport: boolean("selected_for_report").default(false), // For report builder integration
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

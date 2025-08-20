@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,8 @@ import { Target, CheckCircle, Clock, Pause, Filter, Calendar, Flag } from 'lucid
 import AIWritingAssistant from '@/components/ai-writing-assistant';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface SmartGoal {
   id: string;
@@ -24,6 +26,8 @@ interface SmartGoal {
   targetDate: string;
   category: string;
   status: string;
+  narrative?: string;
+  selectedForReport?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +48,9 @@ export default function InitiativesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const queryClient = useQueryClient();
 
   // Fetch SMART Goals
   const { data: smartGoalsResponse, isLoading: goalsLoading } = useQuery<SmartGoalsResponse>({
@@ -52,6 +59,26 @@ export default function InitiativesPage() {
   
   const goals = smartGoalsResponse?.goals || [];
   const summary = smartGoalsResponse?.summary;
+
+  // Initialize selected goals and narratives from database data
+  useEffect(() => {
+    if (goals.length > 0) {
+      const selectedFromDb = new Set<string>();
+      const narrativesFromDb = new Map<string, string>();
+      
+      goals.forEach(goal => {
+        if (goal.selectedForReport) {
+          selectedFromDb.add(goal.id);
+        }
+        if (goal.narrative) {
+          narrativesFromDb.set(goal.id, goal.narrative);
+        }
+      });
+      
+      setSelectedGoals(selectedFromDb);
+      setGoalNarratives(narrativesFromDb);
+    }
+  }, [goals]);
 
   // Filter goals based on current filter settings
   const filteredGoals = goals.filter(goal => {
@@ -79,6 +106,37 @@ export default function InitiativesPage() {
     const newNarratives = new Map(goalNarratives);
     newNarratives.set(goalId, narrative);
     setGoalNarratives(newNarratives);
+  };
+
+  // Save selected goals and narratives to database
+  const saveSelectedGoals = async () => {
+    setIsSaving(true);
+    try {
+      const goalUpdates = goals.map(goal => ({
+        id: goal.id,
+        selectedForReport: selectedGoals.has(goal.id),
+        narrative: goalNarratives.get(goal.id) || null
+      }));
+
+      await apiRequest('/api/smart-goals/batch', 'PUT', { goalUpdates });
+      
+      // Refresh the goals data to reflect the saved changes
+      queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
+      
+      toast({
+        title: "Success",
+        description: `${selectedGoals.size} goals and narratives saved for report building`
+      });
+    } catch (error) {
+      console.error('Error saving goals:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save goals for report building",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const selectAllVisible = () => {
@@ -450,11 +508,26 @@ export default function InitiativesPage() {
                   </div>
                   
                   <div className="flex gap-3">
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      Generate Report Preview
+                    <Button 
+                      onClick={saveSelectedGoals}
+                      disabled={isSaving || selectedGoals.size === 0}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isSaving ? (
+                        <>
+                          <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        'Save for Report Builder'
+                      )}
                     </Button>
-                    <Button variant="outline">
-                      Export Selected Goals
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.location.href = '/report-builder'}
+                      disabled={selectedGoals.size === 0}
+                    >
+                      Open Report Builder
                     </Button>
                   </div>
                 </CardContent>
