@@ -29,9 +29,12 @@ interface Initiative {
 
 interface KPIGoal {
   id: string;
-  kpiName: string;
-  targetValue: string;
+  title: string;
+  description: string;
   targetDate: string;
+  priority: string;
+  category: string;
+  status: string;
 }
 
 export default function InitiativesPage() {
@@ -53,16 +56,18 @@ export default function InitiativesPage() {
   });
 
   // Fetch KPI goals
-  const { data: kpiGoals, isLoading: kpiLoading } = useQuery<KPIGoal[]>({
+  const { data: smartGoalsResponse, isLoading: kpiLoading } = useQuery<{goals: KPIGoal[], summary: any}>({
     queryKey: ['/api/smart-goals'],
   });
+  
+  const kpiGoals = smartGoalsResponse?.goals || [];
 
   // Create/update initiative mutation
   const saveInitiativeMutation = useMutation({
     mutationFn: async (data: Partial<Initiative>) => {
       const url = editingInitiative ? `/api/initiatives/${editingInitiative.id}` : '/api/initiatives';
       const method = editingInitiative ? 'PUT' : 'POST';
-      return apiRequest(url, method, data);
+      return apiRequest(method, url, data);
     },
     onSuccess: () => {
       toast({
@@ -253,7 +258,7 @@ export default function InitiativesPage() {
                     <SelectItem value="none">No KPI Link</SelectItem>
                     {kpiGoals?.map((goal) => (
                       <SelectItem key={goal.id} value={goal.id}>
-                        {goal.kpiName} - Target: {goal.targetValue} by {new Date(goal.targetDate).toLocaleDateString()}
+                        {goal.title} - Due: {new Date(goal.targetDate).toLocaleDateString()}
                       </SelectItem>
                     ))}
                   </SelectContent>
