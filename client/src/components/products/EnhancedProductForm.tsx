@@ -837,7 +837,8 @@ export default function EnhancedProductForm({
       ...preparedData,
       productImages
     };
-    console.log('📤 Calling onSubmit with:', submissionData);
+    console.log('📤 Final submission data:', submissionData);
+    console.log('📤 Ingredients being submitted:', submissionData.ingredients);
     onSubmit(submissionData);
   };
 

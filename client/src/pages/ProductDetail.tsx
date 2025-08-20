@@ -75,17 +75,20 @@ function ProductDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
 
-  // Use API endpoint for product data
+  // Use API endpoint for product data with cache busting
   const { data: product, isLoading: productLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
-      console.log('Fetching product with ID:', id);
-      const response = await fetch(`/api/products/${id}`);
+      console.log('🔍 Fetching product with ID:', id);
+      // Add cache busting parameter to ensure fresh data
+      const cacheBust = `?_=${Date.now()}`;
+      const response = await fetch(`/api/products/${id}${cacheBust}`);
       if (!response.ok) {
         throw new Error('Failed to fetch product');
       }
       const data = await response.json();
-      console.log('Product data from API:', data);
+      console.log('🔍 Fresh product data from API:', data);
+      console.log('🔍 Fresh ingredients data:', data.ingredients);
       
       // Map API response to expected format - productImages from API
       console.log('Raw productImages from API:', data.productImages);
@@ -95,6 +98,9 @@ function ProductDetail() {
       };
     },
     enabled: !!id,
+    // Force refetch on every access to ensure we get fresh data
+    staleTime: 0,
+    gcTime: 0,
   });
 
   if (productLoading) {
@@ -352,12 +358,7 @@ function ProductDetail() {
                                 <Badge className="bg-green-100 text-green-800">Organic</Badge>
                               </div>
                             )}
-                            {ingredient.supplier && (
-                              <div>
-                                <span className="font-medium text-gray-600">Supplier:</span>
-                                <p>{ingredient.supplier}</p>
-                              </div>
-                            )}
+
                           </div>
                           
                           {/* Agriculture & Sourcing Details */}

@@ -253,7 +253,7 @@ export default function CreateEnhancedProduct() {
       setIsNavigating(false);
       
       try {
-        // Invalidate queries safely
+        // Invalidate queries safely with more aggressive cache clearing
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
         if (product.id) {
@@ -261,9 +261,12 @@ export default function CreateEnhancedProduct() {
           // Also invalidate any cached ProductDetail queries (matches ProductDetail.tsx queryKey)
           queryClient.invalidateQueries({ queryKey: ["product", product.id.toString()] });
           queryClient.invalidateQueries({ queryKey: ["product", product.id] });
+          
+          // Force refetch the specific product data
+          queryClient.refetchQueries({ queryKey: ["product", product.id.toString()] });
         }
         
-        console.log('🔄 Query cache invalidated for product:', product.id);
+        console.log('🔄 Query cache invalidated and refetched for product:', product.id);
         
         toast({
           title: isEditMode ? "✅ Product Updated Successfully!" : "✅ Enhanced Product Created!",
