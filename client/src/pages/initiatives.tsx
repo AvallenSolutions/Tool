@@ -12,6 +12,8 @@ import { Plus, Target, CheckCircle, Clock, Pause, Trash2, Link } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import AIWritingAssistant from '@/components/ai-writing-assistant';
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
 
 interface Initiative {
   id?: string;
@@ -144,31 +146,36 @@ export default function InitiativesPage() {
 
   if (initiativesLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+      <div className="flex h-screen bg-lightest-gray">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header title="Sustainability Initiatives" subtitle="Loading initiatives..." />
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="grid gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sustainability Initiatives</h1>
-          <p className="text-gray-600 mt-2">
-            Track and manage your sustainability projects linked to KPI goals
-          </p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setEditingInitiative(null); }}>
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="Sustainability Initiatives" subtitle="Track and manage your sustainability projects linked to KPI goals" />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="container mx-auto max-w-6xl">
+            <div className="flex items-center justify-between mb-8">
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => { resetForm(); setEditingInitiative(null); }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Initiative
             </Button>
@@ -390,6 +397,9 @@ export default function InitiativesPage() {
           </div>
         </div>
       )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
