@@ -52,19 +52,21 @@ function CompanyStoryPreview() {
 }
 
 function MetricsSummaryPreview() {
+  // Use the exact same API endpoints as the dashboard
+  const { data: footprintData } = useQuery({
+    queryKey: ['/api/company/footprint'],
+    staleTime: 0,
+  });
+
+  const { data: automatedData } = useQuery({
+    queryKey: ['/api/company/footprint/scope3/automated'],
+  });
+
   const { data: dashboardMetrics } = useQuery({
     queryKey: ['/api/dashboard/metrics'],
   });
 
-  const { data: footprintData } = useQuery({
-    queryKey: ['/api/footprint-data'],
-  });
-
-  const { data: automatedData } = useQuery({
-    queryKey: ['/api/automated-data'],
-  });
-
-  // Calculate CO2e the same way as the dashboard metrics cards
+  // Calculate CO2e exactly the same way as the dashboard
   const calculateTotalCO2e = () => {
     if (!footprintData?.data || !automatedData?.data) return 0;
     
@@ -84,17 +86,17 @@ function MetricsSummaryPreview() {
   };
 
   const totalCO2e = calculateTotalCO2e();
-  const waterUsage = dashboardMetrics?.waterUsage || 11.7;
+  const waterUsage = dashboardMetrics?.waterUsage || 11700000; // 11.7M litres (same as dashboard)
   const wasteGenerated = dashboardMetrics?.wasteGenerated || 0.1;
 
   return (
     <div className="grid grid-cols-3 gap-4">
       <div className="text-center p-4 bg-green-50 rounded-lg">
-        <div className="text-2xl font-bold text-green-700">{totalCO2e.toFixed(1)}</div>
+        <div className="text-2xl font-bold text-green-700">{totalCO2e.toLocaleString()}</div>
         <div className="text-sm text-gray-600">tonnes CO₂e</div>
       </div>
       <div className="text-center p-4 bg-blue-50 rounded-lg">
-        <div className="text-2xl font-bold text-blue-700">{waterUsage}M</div>
+        <div className="text-2xl font-bold text-blue-700">{(waterUsage / 1000000).toFixed(1)}M</div>
         <div className="text-sm text-gray-600">litres water</div>
       </div>
       <div className="text-center p-4 bg-purple-50 rounded-lg">
