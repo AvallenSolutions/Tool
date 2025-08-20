@@ -5011,6 +5011,45 @@ Be precise and quote actual text from the content, not generic terms.`;
       const progress = (global as any)[progressKey] || null;
       
       if (!progress) {
+        // Check if the report exists and is completed in the database
+        const { reports } = await import('@shared/schema');
+        const [report] = await db
+          .select()
+          .from(reports)
+          .where(eq(reports.id, reportId));
+          
+        if (report) {
+          if (report.status === 'completed') {
+            // Return completion data for completed reports
+            const startTime = report.createdAt?.getTime() || Date.now();
+            const completedAt = report.updatedAt?.getTime() || Date.now();
+            return res.json({
+              reportId: reportId,
+              progress: 100,
+              stage: 'Report generation completed successfully',
+              completed: true,
+              error: false,
+              startTime: startTime,
+              completedAt: completedAt,
+              elapsedTime: completedAt - startTime
+            });
+          } else if (report.status === 'failed') {
+            // Return error data for failed reports
+            const startTime = report.createdAt?.getTime() || Date.now();
+            const completedAt = report.updatedAt?.getTime() || Date.now();
+            return res.json({
+              reportId: reportId,
+              progress: 0,
+              stage: 'Report generation failed',
+              completed: true,
+              error: true,
+              startTime: startTime,
+              completedAt: completedAt,
+              elapsedTime: completedAt - startTime
+            });
+          }
+        }
+        
         return res.json({ 
           progress: null,
           message: 'No active generation process found' 
