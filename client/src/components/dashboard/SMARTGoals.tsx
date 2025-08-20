@@ -246,9 +246,9 @@ export function SMARTGoals() {
         <CardContent>
           <div className="space-y-4">
             {goals.map((goal) => {
-              const statusStyle = statusConfig[goal.status];
-              const priorityStyle = priorityConfig[goal.priority];
-              const categoryStyle = categoryConfig[goal.category];
+              const statusStyle = statusConfig[goal.status as keyof typeof statusConfig];
+              const priorityStyle = priorityConfig[goal.priority as keyof typeof priorityConfig];
+              const categoryStyle = categoryConfig[goal.category as keyof typeof categoryConfig];
               const StatusIcon = statusStyle.icon;
               const isOverdue = new Date(goal.targetDate) < new Date() && goal.status !== 'completed';
               
