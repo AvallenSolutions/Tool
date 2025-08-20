@@ -121,9 +121,25 @@ export default function InitiativesPage() {
       
       console.log('Sending goal updates:', goalUpdates);
 
-      const response = await apiRequest('PUT', '/api/smart-goals/batch', { goalUpdates });
-      const result = await response.json();
+      console.log('Making API request to /api/smart-goals/batch with PUT method');
       
+      // Try making the request directly to bypass error throwing
+      const rawResponse = await fetch('/api/smart-goals/batch', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goalUpdates }),
+        credentials: 'include',
+      });
+      
+      console.log('Raw response status:', rawResponse.status, rawResponse.statusText);
+      
+      if (!rawResponse.ok) {
+        const errorText = await rawResponse.text();
+        console.error('Response error:', errorText);
+        throw new Error(`${rawResponse.status}: ${errorText}`);
+      }
+      
+      const result = await rawResponse.json();
       console.log('Save response:', result);
       
       // Refresh the goals data to reflect the saved changes
