@@ -52,13 +52,40 @@ function CompanyStoryPreview() {
 }
 
 function MetricsSummaryPreview() {
+  const { data: dashboardMetrics } = useQuery({
+    queryKey: ['/api/dashboard/metrics'],
+  });
+
   const { data: footprintData } = useQuery({
     queryKey: ['/api/footprint-data'],
   });
 
-  const totalCO2e = footprintData?.data?.reduce((sum: number, item: any) => 
-    sum + parseFloat(item.calculatedEmissions || 0), 0
-  ) || 0;
+  const { data: automatedData } = useQuery({
+    queryKey: ['/api/automated-data'],
+  });
+
+  // Calculate CO2e the same way as the dashboard metrics cards
+  const calculateTotalCO2e = () => {
+    if (!footprintData?.data || !automatedData?.data) return 0;
+    
+    // Manual Scope 1 + 2 emissions from footprint data
+    let manualEmissions = 0;
+    for (const entry of footprintData.data) {
+      if (entry.scope === 1 || entry.scope === 2) {
+        manualEmissions += parseFloat(entry.calculatedEmissions) || 0;
+      }
+    }
+    
+    // Automated Scope 3 emissions
+    const automatedEmissions = automatedData.data.totalEmissions * 1000 || 0; // Convert tonnes to kg
+    
+    const totalKg = manualEmissions + automatedEmissions;
+    return totalKg / 1000; // Convert back to tonnes for display
+  };
+
+  const totalCO2e = calculateTotalCO2e();
+  const waterUsage = dashboardMetrics?.waterUsage || 11.7;
+  const wasteGenerated = dashboardMetrics?.wasteGenerated || 0.1;
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -67,11 +94,11 @@ function MetricsSummaryPreview() {
         <div className="text-sm text-gray-600">tonnes CO₂e</div>
       </div>
       <div className="text-center p-4 bg-blue-50 rounded-lg">
-        <div className="text-2xl font-bold text-blue-700">11.7M</div>
+        <div className="text-2xl font-bold text-blue-700">{waterUsage}M</div>
         <div className="text-sm text-gray-600">litres water</div>
       </div>
       <div className="text-center p-4 bg-purple-50 rounded-lg">
-        <div className="text-2xl font-bold text-purple-700">0.1</div>
+        <div className="text-2xl font-bold text-purple-700">{wasteGenerated}</div>
         <div className="text-sm text-gray-600">tonnes waste</div>
       </div>
     </div>
