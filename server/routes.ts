@@ -2287,11 +2287,15 @@ Be precise and quote actual text from the content, not generic terms.`;
                   ingredient.unit || 'kg'
                 );
                 
-                productEmissions += impactData.carbonFootprint;
-                productWaterUsage += impactData.waterFootprint;
-                
-                console.log(`🌱 OpenLCA ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${impactData.carbonFootprint} kg CO2e`);
-                console.log(`🌱 OpenLCA water footprint for ${ingredient.name}: ${impactData.waterFootprint}L`);
+                if (impactData) {
+                  productEmissions += impactData.carbonFootprint;
+                  productWaterUsage += impactData.waterFootprint;
+                  
+                  console.log(`🌱 OpenLCA ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${impactData.carbonFootprint} kg CO2e`);
+                  console.log(`🌱 OpenLCA water footprint for ${ingredient.name}: ${impactData.waterFootprint}L`);
+                } else {
+                  console.warn(`⚠️ No impact data found for ingredient: ${ingredient.name}`);
+                }
               } catch (error) {
                 console.error(`Error calculating OpenLCA impact for ${ingredient.name}:`, error);
               }
@@ -2326,7 +2330,39 @@ Be precise and quote actual text from the content, not generic terms.`;
           productEmissions += closureEmissions;
         }
         
+        // Add production water usage from product fields
+        if (product.processWaterLiters) {
+          productWaterUsage += parseFloat(product.processWaterLiters);
+        }
+        if (product.cleaningWaterLiters) {
+          productWaterUsage += parseFloat(product.cleaningWaterLiters);
+        }
+        if (product.coolingWaterLiters) {
+          productWaterUsage += parseFloat(product.coolingWaterLiters);
+        }
+        
+        // Add waste generation from product fields
+        if (product.organicWasteKg) {
+          productWaste += parseFloat(product.organicWasteKg) / 1000; // Convert kg to tonnes
+        }
+        if (product.packagingWasteKg) {
+          productWaste += parseFloat(product.packagingWasteKg) / 1000; // Convert kg to tonnes
+        }
+        if (product.hazardousWasteKg) {
+          productWaste += parseFloat(product.hazardousWasteKg) / 1000; // Convert kg to tonnes
+        }
+        
+        // Add packaging waste (end-of-life impact)
+        if (product.bottleWeight && product.recyclingRate) {
+          const bottleWeightKg = parseFloat(product.bottleWeight) / 1000;
+          const recyclingRate = parseFloat(product.recyclingRate) / 100;
+          const wasteToLandfill = bottleWeightKg * (1 - recyclingRate);
+          productWaste += wasteToLandfill / 1000; // Convert to tonnes per unit
+        }
+
         console.log(`💾 Calculated carbon footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO2e`);
+        console.log(`💧 Water usage per unit: ${productWaterUsage.toFixed(1)} L`);
+        console.log(`🗑️ Waste per unit: ${(productWaste * 1000).toFixed(3)} kg`);
         
         // Calculate annual emissions based on production volume
         const annualProduction = parseFloat(product.annualProductionVolume || '0');

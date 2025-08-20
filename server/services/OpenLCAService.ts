@@ -354,6 +354,14 @@ export class OpenLCAService {
         energyConsumption: 2.1, // MJ per kg
         landUse: 0.85 // m2*year per kg
       },
+      'sugar-molasses-cane': {
+        processUuid: 'sugar-molasses-cane',
+        processName: 'Molasses, cane',
+        waterFootprint: 26.0, // L per kg (based on ecoinvent 3.8 water consumption)
+        carbonFootprint: 0.89, // kg CO2eq per kg
+        energyConsumption: 2.1, // MJ per kg
+        landUse: 0.85 // m2*year per kg
+      },
       'apples-at-farm-uuid': {
         processUuid: 'apples-at-farm-uuid',
         processName: 'Apple production, at farm',
