@@ -19,6 +19,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
+import CompanyStorySection from "@/components/company/CompanyStorySection";
 
 // Sustainability data constants extracted from Settings
 const certificationOptions = [
@@ -423,6 +424,9 @@ export default function Company() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Company Story Section */}
+              <CompanyStorySection />
 
               {/* Enhanced Environmental Certifications */}
               <Card className="border-l-4 border-l-green-500">

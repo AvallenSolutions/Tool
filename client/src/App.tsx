@@ -46,7 +46,7 @@ import TestRunner from "@/pages/TestRunner";
 import CollaborationHub from "@/pages/CollaborationHub";
 import ProductLcaPage from "@/pages/ProductLcaPage";
 import { KPIsPage } from "@/pages/kpis";
-import CompanyStoryPage from "@/pages/story";
+// Company story now integrated into Company page
 import InitiativesPage from "@/pages/initiatives";
 import ReportBuilderPage from "@/pages/report-builder";
 
@@ -170,7 +170,7 @@ function Router() {
       <Route path="/app/admin/users" component={UserManagement} />
       <Route path="/app/admin/analytics" component={PerformanceAnalytics} />
       <Route path="/app/admin/messaging" component={AdminMessagingPage} />
-      <Route path="/app/story" component={CompanyStoryPage} />
+      <Route path="/app/story" component={() => { window.location.replace('/app/company'); return null; }} />
       <Route path="/app/initiatives" component={InitiativesPage} />
       <Route path="/app/report-builder" component={ReportBuilderPage} />
       <Route path="/app/test" component={TestRunner} />
