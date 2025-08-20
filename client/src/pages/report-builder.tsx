@@ -142,6 +142,136 @@ function InitiativesPreview() {
   );
 }
 
+function CarbonFootprintPreview() {
+  const { data: footprintData } = useQuery({
+    queryKey: ['/api/company/footprint'],
+  });
+
+  const { data: automatedData } = useQuery({
+    queryKey: ['/api/company/footprint/scope3/automated'],
+  });
+
+  if (!footprintData?.data && !automatedData?.data) {
+    return (
+      <div className="text-center py-6 text-gray-500">
+        <p>No footprint data available. Complete the Carbon Footprint Calculator to see detailed analysis.</p>
+      </div>
+    );
+  }
+
+  // Group manual data by scope
+  const scope1Data = footprintData?.data?.filter((item: any) => item.scope === 1) || [];
+  const scope2Data = footprintData?.data?.filter((item: any) => item.scope === 2) || [];
+  
+  // Calculate totals
+  const scope1Total = scope1Data.reduce((sum: number, item: any) => sum + parseFloat(item.calculatedEmissions || 0), 0);
+  const scope2Total = scope2Data.reduce((sum: number, item: any) => sum + parseFloat(item.calculatedEmissions || 0), 0);
+  const scope3Total = (automatedData?.data?.totalEmissions || 0) * 1000; // Convert tonnes to kg
+
+  const totalEmissions = scope1Total + scope2Total + scope3Total;
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center p-4 bg-red-50 rounded-lg border">
+          <div className="text-xl font-bold text-red-700">{(scope1Total / 1000).toFixed(1)}</div>
+          <div className="text-sm text-gray-600">Scope 1 (tonnes CO₂e)</div>
+          <div className="text-xs text-gray-500 mt-1">Direct emissions</div>
+        </div>
+        <div className="text-center p-4 bg-orange-50 rounded-lg border">
+          <div className="text-xl font-bold text-orange-700">{(scope2Total / 1000).toFixed(1)}</div>
+          <div className="text-sm text-gray-600">Scope 2 (tonnes CO₂e)</div>
+          <div className="text-xs text-gray-500 mt-1">Energy emissions</div>
+        </div>
+        <div className="text-center p-4 bg-blue-50 rounded-lg border">
+          <div className="text-xl font-bold text-blue-700">{(scope3Total / 1000).toFixed(1)}</div>
+          <div className="text-sm text-gray-600">Scope 3 (tonnes CO₂e)</div>
+          <div className="text-xs text-gray-500 mt-1">Value chain emissions</div>
+        </div>
+      </div>
+
+      {/* Detailed Breakdown */}
+      <div className="space-y-4">
+        {scope1Data.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              Scope 1: Direct Emissions
+            </h4>
+            <div className="space-y-2">
+              {scope1Data.map((item: any, index: number) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium">{item.dataType.replace(/_/g, ' ').toUpperCase()}</div>
+                    <div className="text-sm text-gray-600">{item.value} {item.unit}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{(parseFloat(item.calculatedEmissions) / 1000).toFixed(2)} t CO₂e</div>
+                    <div className="text-sm text-gray-500">Factor: {item.emissionsFactor}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {scope2Data.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+              Scope 2: Energy Emissions
+            </h4>
+            <div className="space-y-2">
+              {scope2Data.map((item: any, index: number) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium">{item.dataType.replace(/_/g, ' ').toUpperCase()}</div>
+                    <div className="text-sm text-gray-600">{item.value} {item.unit}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{(parseFloat(item.calculatedEmissions) / 1000).toFixed(2)} t CO₂e</div>
+                    <div className="text-sm text-gray-500">Factor: {item.emissionsFactor}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {automatedData?.data && (
+          <div>
+            <h4 className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              Scope 3: Value Chain Emissions
+            </h4>
+            <div className="p-3 bg-gray-50 rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-medium">PURCHASED GOODS & SERVICES</div>
+                  <div className="text-sm text-gray-600">Automated product-based calculations</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold">{automatedData.data.totalEmissions.toFixed(1)} t CO₂e</div>
+                  <div className="text-sm text-gray-500">From {automatedData.data.productCount} products</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Total Summary */}
+      <div className="border-t pt-4">
+        <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+          <div className="font-semibold text-lg">Total Carbon Footprint</div>
+          <div className="text-2xl font-bold text-green-700">{(totalEmissions / 1000).toFixed(1)} tonnes CO₂e</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface ReportBlock {
   id: string;
   type: 'company_story' | 'metrics_summary' | 'initiatives' | 'kpi_progress' | 'carbon_footprint' | 'water_usage' | 'custom_text';
@@ -227,14 +357,7 @@ export default function ReportBuilderPage() {
       case 'initiatives':
         return <InitiativesPreview />;
       case 'carbon_footprint':
-        return (
-          <div className="space-y-3">
-            <p className="text-gray-700">Carbon footprint analysis with scope 1, 2, and 3 emissions breakdown.</p>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-green-700">This section will show detailed carbon emissions data from your footprint calculator.</p>
-            </div>
-          </div>
-        );
+        return <CarbonFootprintPreview />;
       case 'water_usage':
         return (
           <div className="space-y-3">
