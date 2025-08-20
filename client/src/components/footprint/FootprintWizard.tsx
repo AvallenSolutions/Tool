@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, ArrowLeft, ArrowRight, Save, Calculator, Trash2 } from 'lucide-react';
+import { CheckCircle, Circle, ArrowLeft, ArrowRight, Save, Calculator, Trash2, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Scope1EmissionsStep } from './steps/Scope1EmissionsStep';
 import { Scope2EmissionsStep } from './steps/Scope2EmissionsStep';
