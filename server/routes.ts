@@ -4030,49 +4030,21 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'Missing required fields: kpiId, currentValue' });
       }
       
-      // Update KPI in company_goals table (since KPIs are stored there)
-      const { companyGoals } = await import('@shared/schema');
+      // KPIs are calculated dynamically from underlying data, not stored directly
+      // Instead of updating a KPI's "current value", we need to create/update the underlying data
+      // For now, we'll return an informative error explaining that KPIs are calculated values
       
-      console.log('🔍 Searching for KPI with ID:', kpiId, 'in company:', company.id);
+      console.log('⚠️ KPI current values are calculated dynamically and cannot be updated directly');
       
-      const [updatedGoal] = await db
-        .update(companyGoals)
-        .set({ 
-          startValue: currentValue.toString(),
-          updatedAt: new Date()
-        })
-        .where(and(
-          eq(companyGoals.id, kpiId),
-          eq(companyGoals.companyId, company.id)
-        ))
-        .returning();
-        
-      console.log('📝 Update result:', updatedGoal ? 'SUCCESS' : 'NO RECORD FOUND');
-        
-      if (!updatedGoal) {
-        console.log('❌ KPI not found with ID:', kpiId);
-        return res.status(404).json({ error: 'KPI not found' });
-      }
-      
-      console.log('✅ KPI updated successfully:', {
-        id: updatedGoal.id,
-        newValue: updatedGoal.startValue,
-        target: updatedGoal.targetValue
-      });
-      
-      res.json({ 
-        success: true, 
-        message: 'KPI updated successfully',
-        kpi: {
-          id: updatedGoal.id,
-          current: parseFloat(updatedGoal.startValue || '0'),
-          target: parseFloat(updatedGoal.targetValue || '100')
-        }
+      return res.status(400).json({ 
+        error: 'KPI values are calculated from underlying data and cannot be updated directly',
+        message: 'KPIs calculate their values from company operational data (energy consumption, emissions, production volume, etc.). To change a KPI value, update the underlying data sources through the appropriate forms.',
+        suggestion: 'Use the Company Footprint Calculator or Product Management pages to update the data that feeds into this KPI calculation.'
       });
       
     } catch (error) {
-      console.error('Error updating KPI:', error);
-      res.status(500).json({ error: 'Failed to update KPI' });
+      console.error('Error processing KPI update request:', error);
+      res.status(500).json({ error: 'Failed to process KPI update request' });
     }
   });
 

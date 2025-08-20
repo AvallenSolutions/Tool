@@ -75,12 +75,24 @@ export function KPIDetailModal({ kpi, isOpen, onClose }: KPIDetailModalProps) {
       setNewValue('');
       onClose();
     },
-    onError: () => {
-      toast({
-        title: 'Update Failed',
-        description: 'Failed to update KPI. Please try again.',
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Failed to update KPI. Please try again.';
+      
+      // Check if this is the architectural limitation error
+      if (errorMessage.includes('calculated from underlying data')) {
+        toast({
+          title: 'KPI Values Are Calculated',
+          description: 'KPI values are automatically calculated from your company data. Update the underlying data sources through the Company Footprint Calculator or Product Management pages instead.',
+          variant: 'destructive',
+          duration: 8000,
+        });
+      } else {
+        toast({
+          title: 'Update Failed',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
     },
   });
 

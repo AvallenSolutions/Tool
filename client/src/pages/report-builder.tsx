@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
+import { KPIProgressPreview } from "@/components/report-builder/KPIProgressPreview";
 
 // Preview components for each block type
 function CompanyStoryPreview() {
@@ -392,14 +393,7 @@ export default function ReportBuilderPage() {
           </div>
         );
       case 'kpi_progress':
-        return (
-          <div className="space-y-3">
-            <p className="text-gray-700">Key Performance Indicators tracking progress toward sustainability goals.</p>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <p className="text-sm text-purple-700">KPI data and progress charts will be shown here.</p>
-            </div>
-          </div>
-        );
+        return <KPIProgressPreview />;
       case 'custom_text':
         return (
           <div className="bg-gray-50 p-4 rounded-lg">
