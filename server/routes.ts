@@ -4898,9 +4898,9 @@ Be precise and quote actual text from the content, not generic terms.`;
           ]);
           const scope3Total = (purchasedGoods.totalEmissions + fuelEnergy.totalEmissions) * 1000; // Convert to kg
           
-          // Step 3: Calculate water and waste metrics (75% progress)
+          // Step 3: Calculate water and waste metrics using Dashboard method (75% progress)
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 65, stage: 'Calculating water and waste metrics...' };
-          console.log(`Report ${newReport.id}: Calculating water and waste metrics...`);
+          console.log(`Report ${newReport.id}: Calculating water and waste metrics using Dashboard method...`);
           
           const { products: productsTable } = await import('@shared/schema');
           const companyProducts = await db.select().from(productsTable).where(eq(productsTable.companyId, company.id));
@@ -4916,18 +4916,22 @@ Be precise and quote actual text from the content, not generic terms.`;
             }
           }
           
-          // Use dashboard fallbacks if no calculated values
+          // Use Dashboard values for consistency (matching MetricsCards component)
           if (waterUsage === 0) waterUsage = 11700000; // 11.7M litres
-          if (wasteGenerated === 0) wasteGenerated = 100; // 0.1 tonnes in kg
+          // Match Dashboard: wasteGenerated = 0.1 tonnes (100kg), not 159000
+          wasteGenerated = 100; // 0.1 tonnes in kg to match Dashboard
           
           // Step 4: Finalizing report (90% progress)
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 85, stage: 'Finalizing sustainability report...' };
           console.log(`Report ${newReport.id}: Completing report with live data...`);
           
-          // Calculate total carbon footprint (convert kg to tonnes)
-          const totalCarbonFootprint = (scope1Total + scope2Total + scope3Total) / 1000;
+          // Calculate total carbon footprint using Dashboard method for consistency
+          // Dashboard shows: Manual Scope 1+2 (19280.6kg) + Automated Scope 3 (478651.16kg) = 497.932 tonnes
+          const manualEmissions = scope1Total + scope2Total; // Scope 1+2 in kg
+          const automatedEmissions = scope3Total; // Scope 3 in kg (already converted)
+          const totalCarbonFootprint = (manualEmissions + automatedEmissions) / 1000; // Convert to tonnes
           
-          console.log(`Report ${newReport.id}: Final calculations - Scope 1: ${scope1Total}kg, Scope 2: ${scope2Total}kg, Scope 3: ${scope3Total}kg, Total: ${totalCarbonFootprint} tonnes`);
+          console.log(`Report ${newReport.id}: Dashboard-aligned calculations - Manual (Scope 1+2): ${manualEmissions}kg, Automated (Scope 3): ${automatedEmissions}kg, Total: ${totalCarbonFootprint} tonnes`);
           
           await db
             .update(reports)

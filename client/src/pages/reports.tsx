@@ -25,6 +25,9 @@ export default function Reports() {
     gcTime: 0, // Don't cache data
   });
 
+  // Ensure reports is always an array to prevent TypeScript errors
+  const reportsData = Array.isArray(reports) ? reports : [];
+
   // Fetch LCA calculation reports
   const { data: lcaReports, isLoading: lcaReportsLoading } = useQuery({
     queryKey: ["/api/lca/reports"],
@@ -130,9 +133,9 @@ export default function Reports() {
     }
   };
 
-  // Separate reports by type
-  const annualReports = reports?.filter((report: any) => report.reportType === 'annual') || [];
-  const lcaReportsData = reports?.filter((report: any) => report.reportType === 'lca') || [];
+  // Separate reports by type with proper null checks
+  const annualReports = reportsData.filter((report: any) => report.reportType === 'annual') || [];
+  const lcaReportsData = reportsData.filter((report: any) => report.reportType === 'lca') || [];
   const productLcaReports = lcaReports || [];
 
   return (
@@ -383,7 +386,7 @@ export default function Reports() {
               </div>
               
               <div className="grid gap-4">
-                {productLcaReports && productLcaReports.length > 0 ? (
+                {Array.isArray(productLcaReports) && productLcaReports.length > 0 ? (
                   productLcaReports.map((product: any, index: number) => (
                     <Card key={index} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-purple-300">
                       <CardContent className="p-6">
