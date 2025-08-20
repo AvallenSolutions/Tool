@@ -13,6 +13,8 @@ import { GripVertical, Plus, Eye, Download, Settings, BarChart3, FileText, Users
 import AIWritingAssistant from '@/components/ai-writing-assistant';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
 
 // Preview components for each block type
 function CompanyStoryPreview() {
@@ -516,18 +518,30 @@ export default function ReportBuilderPage() {
   };
 
   if (!currentTemplate) {
-    return <div className="container mx-auto p-6">Loading...</div>;
+    return (
+      <div className="flex h-screen bg-lightest-gray">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header title="Report Builder" subtitle="Loading report templates..." />
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="flex h-screen bg-lightest-gray">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="Dynamic Report Builder" subtitle="Create customized sustainability reports with drag-and-drop content blocks" />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="container mx-auto max-w-7xl">
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dynamic Report Builder</h1>
-          <p className="text-gray-600 mt-2">
-            Create customized sustainability reports with drag-and-drop content blocks
-          </p>
-        </div>
         <div className="flex gap-2">
           <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
             <DialogTrigger asChild>
@@ -787,6 +801,9 @@ export default function ReportBuilderPage() {
           </Card>
         </TabsContent>
       </Tabs>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
