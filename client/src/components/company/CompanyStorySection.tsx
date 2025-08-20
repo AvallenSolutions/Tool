@@ -42,7 +42,8 @@ export default function CompanyStorySection() {
   // Save company story mutation
   const saveStoryMutation = useMutation({
     mutationFn: async (data: Partial<CompanyStory>) => {
-      return apiRequest('/api/company/story', 'POST', data);
+      const res = await apiRequest('POST', '/api/company/story', data);
+      return await res.json();
     },
     onSuccess: (data: any) => {
       setFormData(data);

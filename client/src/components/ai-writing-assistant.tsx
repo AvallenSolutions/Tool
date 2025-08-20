@@ -85,15 +85,17 @@ export default function AIWritingAssistant({
         }
       }
 
-      const response = await apiRequest('/api/ai/generate-content', 'POST', {
+      const res = await apiRequest('POST', '/api/ai/generate-content', {
         prompt,
         contentType,
         tone: selectedTone,
         length: selectedLength,
         generateMultiple: true
       });
+      
+      const response = await res.json();
 
-      if (response.suggestions && response.suggestions.length > 0) {
+      if (response?.suggestions && response.suggestions.length > 0) {
         setGeneratedOptions(response.suggestions);
       } else {
         toast({

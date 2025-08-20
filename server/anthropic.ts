@@ -120,3 +120,27 @@ export async function analyzeDocument(base64Image: string): Promise<{ descriptio
     throw new Error("Failed to analyze document");
   }
 }
+
+// AI Content Generation for Dynamic Report Builder
+export async function generateSustainabilityContent(prompt: string): Promise<string> {
+  try {
+    const response = await anthropic.messages.create({
+      model: DEFAULT_MODEL_STR, // "claude-sonnet-4-20250514"
+      max_tokens: 1500,
+      messages: [{
+        role: "user",
+        content: prompt
+      }]
+    });
+
+    const content = response.content[0];
+    if (content.type === 'text') {
+      return content.text;
+    } else {
+      throw new Error('Unexpected response format from Anthropic API');
+    }
+  } catch (error) {
+    console.error("Error generating sustainability content:", error);
+    throw new Error("Failed to generate sustainability content");
+  }
+}
