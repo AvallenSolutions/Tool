@@ -171,7 +171,9 @@ export function SMARTGoals() {
     );
   }
 
-  const { goals, summary } = data;
+  // Handle both old and new API response structures
+  const goals = Array.isArray(data) ? data : (data?.goals || []);
+  const summary = data?.summary || { total: 0, active: 0, completed: 0, overdue: 0 };
 
   return (
     <div className="space-y-6">
@@ -183,7 +185,7 @@ export function SMARTGoals() {
               <Target className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium">Total Goals</span>
             </div>
-            <p className="text-2xl font-bold mt-1">{summary.total}</p>
+            <p className="text-2xl font-bold mt-1">{summary?.total || 0}</p>
           </CardContent>
         </Card>
         
@@ -193,7 +195,7 @@ export function SMARTGoals() {
               <Clock className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium">Active</span>
             </div>
-            <p className="text-2xl font-bold mt-1 text-blue-600">{summary.active}</p>
+            <p className="text-2xl font-bold mt-1 text-blue-600">{summary?.active || 0}</p>
           </CardContent>
         </Card>
         
@@ -203,7 +205,7 @@ export function SMARTGoals() {
               <CheckCircle className="w-4 h-4 text-green-500" />
               <span className="text-sm font-medium">Completed</span>
             </div>
-            <p className="text-2xl font-bold mt-1 text-green-600">{summary.completed}</p>
+            <p className="text-2xl font-bold mt-1 text-green-600">{summary?.completed || 0}</p>
           </CardContent>
         </Card>
         
@@ -213,7 +215,7 @@ export function SMARTGoals() {
               <AlertTriangle className="w-4 h-4 text-red-500" />
               <span className="text-sm font-medium">Overdue</span>
             </div>
-            <p className="text-2xl font-bold mt-1 text-red-600">{summary.overdue}</p>
+            <p className="text-2xl font-bold mt-1 text-red-600">{summary?.overdue || 0}</p>
           </CardContent>
         </Card>
       </div>
