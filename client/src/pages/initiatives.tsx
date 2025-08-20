@@ -223,14 +223,14 @@ export default function InitiativesPage() {
               <div>
                 <Label htmlFor="kpi">Link to KPI Goal (Optional)</Label>
                 <Select 
-                  value={formData.linkedKpiGoalId || ''} 
-                  onValueChange={(value) => setFormData({ ...formData, linkedKpiGoalId: value || null })}
+                  value={formData.linkedKpiGoalId || 'none'} 
+                  onValueChange={(value) => setFormData({ ...formData, linkedKpiGoalId: value === 'none' ? null : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a KPI goal to link" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="">No KPI Link</SelectItem>
+                    <SelectItem value="none">No KPI Link</SelectItem>
                     {kpiGoals?.map((goal) => (
                       <SelectItem key={goal.id} value={goal.id}>
                         {goal.kpiName} - Target: {goal.targetValue} by {new Date(goal.targetDate).toLocaleDateString()}

@@ -5241,6 +5241,49 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Update initiative endpoint
+  app.put('/api/initiatives/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { initiatives, insertInitiativeSchema } = await import('@shared/schema');
+      const initiativeId = req.params.id;
+      
+      const validatedData = insertInitiativeSchema.parse({ 
+        companyId: company.id,
+        ...req.body 
+      });
+
+      const [result] = await db
+        .update(initiatives)
+        .set({
+          initiativeName: validatedData.initiativeName,
+          description: validatedData.description,
+          linkedKpiGoalId: validatedData.linkedKpiGoalId,
+          strategicPillar: validatedData.strategicPillar,
+          status: validatedData.status,
+          updatedAt: new Date()
+        })
+        .where(eq(initiatives.id, initiativeId))
+        .returning();
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error updating initiative:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Report Template Management
   app.post('/api/report-templates', isAuthenticated, async (req, res) => {
     try {
