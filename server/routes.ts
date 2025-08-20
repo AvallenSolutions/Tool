@@ -1932,6 +1932,18 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Update company footprint data entry
   app.put('/api/company/footprint/:id', isAuthenticated, async (req: any, res: any) => {
     try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
       const { id } = req.params;
       const { value, unit, metadata } = req.body;
       
@@ -1939,8 +1951,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'value and unit are required' });
       }
       
-      // Recalculate emissions
-      const currentData = await dbStorage.getCompanyFootprintData(0, undefined, undefined);
+      // Get the existing record for this company
+      const currentData = await dbStorage.getCompanyFootprintData(company.id, undefined, undefined);
       const existingRecord = currentData.find(d => d.id === parseInt(id));
       
       if (!existingRecord) {
@@ -1949,6 +1961,8 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       const emissionsFactor = getEmissionsFactor(existingRecord.dataType, unit);
       const calculatedEmissions = parseFloat(value) * emissionsFactor;
+      
+      console.log(`💡 UPDATE Emission calculation: ${existingRecord.dataType} ${value} ${unit} = ${calculatedEmissions} kg CO2e (factor: ${emissionsFactor})`);
       
       const updatedData = await dbStorage.updateFootprintData(parseInt(id), {
         value: value.toString(),
@@ -2397,6 +2411,49 @@ Be precise and quote actual text from the content, not generic terms.`;
       
     } catch (error) {
       console.error('Error fetching dashboard metrics:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Recalculate all emission factors for existing entries
+  app.post('/api/company/footprint/recalculate', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      const allData = await dbStorage.getCompanyFootprintData(company.id);
+      const updatedEntries = [];
+      
+      for (const entry of allData) {
+        const emissionsFactor = getEmissionsFactor(entry.dataType, entry.unit);
+        const calculatedEmissions = parseFloat(entry.value) * emissionsFactor;
+        
+        console.log(`💡 RECALC: ${entry.dataType} ${entry.value} ${entry.unit} = ${calculatedEmissions} kg CO2e (factor: ${emissionsFactor})`);
+        
+        const updated = await dbStorage.updateFootprintData(entry.id, {
+          emissionsFactor: emissionsFactor.toString(),
+          calculatedEmissions: calculatedEmissions.toString()
+        });
+        
+        updatedEntries.push(updated);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Recalculated ${updatedEntries.length} entries`,
+        data: updatedEntries 
+      });
+    } catch (error) {
+      console.error('Error recalculating footprint data:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });

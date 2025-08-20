@@ -93,6 +93,27 @@ export function FootprintWizard() {
     },
   });
 
+  // Recalculate emission factors mutation
+  const recalculateMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/company/footprint/recalculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error('Failed to recalculate');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/company/footprint'] });
+      queryClient.refetchQueries({ queryKey: ['/api/company/footprint'] }); // Force immediate refetch
+      toast({
+        title: "Calculations Updated",
+        description: "All emission factors have been recalculated with updated values.",
+      });
+    },
+  });
+
   // Calculate total emissions from actual database data
   const calculateActualTotal = (): number => {
     console.log('🔍 calculateActualTotal called', { 
@@ -259,16 +280,28 @@ export function FootprintWizard() {
               </div>
               
               {existingData?.data && existingData.data.length > 0 && (
-                <Button
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => clearMutation.mutate()}
-                  disabled={clearMutation.isPending}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  {clearMutation.isPending ? 'Clearing...' : 'Clear All Data'}
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => recalculateMutation.mutate()}
+                    disabled={recalculateMutation.isPending}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    {recalculateMutation.isPending ? 'Updating...' : 'Recalculate'}
+                  </Button>
+                  <Button
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => clearMutation.mutate()}
+                    disabled={clearMutation.isPending}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {clearMutation.isPending ? 'Clearing...' : 'Clear All Data'}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
