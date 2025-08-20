@@ -5241,6 +5241,76 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Report Template Management
+  app.post('/api/report-templates', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Store template in database (using customReports table for now)
+      const { customReports } = await import('@shared/schema');
+      const templateData = {
+        companyId: company.id,
+        reportTitle: req.body.templateName,
+        reportLayout: req.body // Store entire template structure
+      };
+
+      const [result] = await db.insert(customReports).values(templateData).returning();
+      res.json(result);
+    } catch (error) {
+      console.error('Error saving report template:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/report-templates', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { customReports } = await import('@shared/schema');
+      const templates = await db
+        .select()
+        .from(customReports)
+        .where(eq(customReports.companyId, company.id))
+        .orderBy(desc(customReports.createdAt));
+
+      // Transform to expected format
+      const formattedTemplates = templates.map(template => ({
+        id: template.id,
+        companyId: template.companyId,
+        templateName: template.reportTitle,
+        audienceType: (template.reportLayout as any)?.audienceType || 'stakeholders',
+        blocks: (template.reportLayout as any)?.blocks || [],
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      }));
+
+      res.json(formattedTemplates);
+    } catch (error) {
+      console.error('Error fetching report templates:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Get all reports for the authenticated user's company
   app.get('/api/reports', isAuthenticated, async (req, res) => {
     try {
