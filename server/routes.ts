@@ -4887,16 +4887,22 @@ Be precise and quote actual text from the content, not generic terms.`;
             if (entry.scope === 2) scope2Total += parseFloat(entry.calculatedEmissions || '0');
           }
           
-          // Step 2: Calculate Scope 3 emissions (50% progress)
-          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 35, stage: 'Calculating Scope 3 emissions...' };
-          console.log(`Report ${newReport.id}: Calculating Scope 3 emissions...`);
+          // Step 2: Calculate Scope 3 emissions using Dashboard method (50% progress)
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 35, stage: 'Calculating Scope 3 emissions using Dashboard method...' };
+          console.log(`Report ${newReport.id}: Calculating Scope 3 emissions using Dashboard method...`);
           
+          // Use same calculation as Dashboard MetricsCards component
           const { calculatePurchasedGoodsEmissions, calculateFuelEnergyUpstreamEmissions } = await import('./services/AutomatedEmissionsCalculator');
           const [purchasedGoods, fuelEnergy] = await Promise.all([
             calculatePurchasedGoodsEmissions(company.id).catch(() => ({ totalEmissions: 0 })),
             calculateFuelEnergyUpstreamEmissions(company.id).catch(() => ({ totalEmissions: 0 }))
           ]);
-          const scope3Total = (purchasedGoods.totalEmissions + fuelEnergy.totalEmissions) * 1000; // Convert to kg
+          
+          // Match Dashboard calculation exactly: automatedData.data.totalEmissions * 1000
+          const scope3TotalTonnes = purchasedGoods.totalEmissions + fuelEnergy.totalEmissions;
+          const scope3Total = scope3TotalTonnes * 1000; // Convert to kg
+          
+          console.log(`Report ${newReport.id}: Scope 3 breakdown - Purchased Goods: ${purchasedGoods.totalEmissions} tonnes, Fuel Energy: ${fuelEnergy.totalEmissions} tonnes, Total: ${scope3TotalTonnes} tonnes (${scope3Total} kg)`);
           
           // Step 3: Calculate water and waste metrics using Dashboard method (75% progress)
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 65, stage: 'Calculating water and waste metrics...' };
