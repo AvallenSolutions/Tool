@@ -4549,21 +4549,30 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // PUT /api/smart-goals/batch - Batch update SMART goals selection and narratives
   app.put('/api/smart-goals/batch', isAuthenticated, async (req, res) => {
+    console.log('🎯 Batch update endpoint called');
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub || user?.id;
+      console.log('🔐 User ID:', userId);
+      
       if (!userId) {
+        console.log('❌ No user ID found');
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       const company = await dbStorage.getCompanyByOwner(userId);
+      console.log('🏢 Company found:', company?.id);
+      
       if (!company) {
+        console.log('❌ No company found for user');
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const { goalUpdates } = req.body; // Array of { id, narrative?, selectedForReport? }
+      const { goalUpdates } = req.body;
+      console.log('📝 Goal updates received:', goalUpdates?.length, 'items');
       
       if (!Array.isArray(goalUpdates)) {
+        console.log('❌ goalUpdates is not an array');
         return res.status(400).json({ error: 'goalUpdates must be an array' });
       }
       
