@@ -48,6 +48,7 @@ const enhancedProductSchema = z.object({
     amount: z.coerce.number().min(0, "Amount must be positive"),
     unit: z.string().min(1, "Unit is required"),
     type: z.string().optional(),
+    category: z.string().optional(), // Form category field
     origin: z.string().optional(),
     organic: z.boolean().default(false),
     supplier: z.string().optional(),
@@ -437,11 +438,24 @@ const transformDatabaseData = (data: any): any => {
     transformed.waterDilution.amount = toNum(transformed.waterDilution.amount);
   }
 
-  // Transform ingredients
+  // Transform ingredients with type-to-category mapping
   if (transformed.ingredients && Array.isArray(transformed.ingredients)) {
+    // Create mapping from database type to form category
+    const typeToCategory: { [key: string]: string } = {
+      'sugar_product': 'Sugar Products',
+      'grain': 'Grains',
+      'fruit': 'Fruits',
+      'botanical': 'Botanicals',
+      'agave': 'Agave',
+      'ethanol': 'Ethanol',
+      'additive': 'Additives'
+    };
+
     transformed.ingredients = transformed.ingredients.map((ing: any) => ({
       ...ing,
       amount: toNum(ing.amount),
+      // Map database type to form category
+      category: ing.type ? typeToCategory[ing.type] || ing.type : undefined,
       yieldPerHectare: toNum(ing.yieldPerHectare),
       nitrogenFertilizer: toNum(ing.nitrogenFertilizer),
       phosphorusFertilizer: toNum(ing.phosphorusFertilizer),
@@ -545,7 +559,7 @@ export default function EnhancedProductForm({
       status: 'active',
       waterDilution: { amount: 0, unit: 'ml' },
       ingredients: [{ 
-        name: '', amount: 0, unit: 'ml', type: '', origin: '', organic: false, supplier: '',
+        name: '', amount: 0, unit: 'ml', type: '', category: '', origin: '', organic: false, supplier: '',
         transportDistance: 0, processingEnergy: 0, waterUsage: 0
       }],
       packaging: {
@@ -756,6 +770,17 @@ export default function EnhancedProductForm({
       if (transformedData.productImages && Array.isArray(transformedData.productImages)) {
         setProductImages(transformedData.productImages);
       }
+
+      // Initialize selectedIngredientCategories from transformed ingredient data
+      if (transformedData.ingredients && Array.isArray(transformedData.ingredients)) {
+        const categoryMap: { [key: number]: string } = {};
+        transformedData.ingredients.forEach((ingredient: any, index: number) => {
+          if (ingredient.category) {
+            categoryMap[index] = ingredient.category;
+          }
+        });
+        setSelectedIngredientCategories(categoryMap);
+      }
     }
   }, [initialData, form]);
 
@@ -786,8 +811,30 @@ export default function EnhancedProductForm({
     console.log('📋 Form data:', data);
     console.log('🖼️ Product images:', productImages);
     
+    // Convert form data back to database format
+    const preparedData = { ...data };
+    
+    // Map category back to type for database storage
+    if (preparedData.ingredients && Array.isArray(preparedData.ingredients)) {
+      const categoryToType: { [key: string]: string } = {
+        'Sugar Products': 'sugar_product',
+        'Grains': 'grain',
+        'Fruits': 'fruit',
+        'Botanicals': 'botanical',
+        'Agave': 'agave',
+        'Ethanol': 'ethanol',
+        'Additives': 'additive'
+      };
+
+      preparedData.ingredients = preparedData.ingredients.map((ing: any) => ({
+        ...ing,
+        // Map form category back to database type
+        type: ing.category ? categoryToType[ing.category] || ing.category : ing.type
+      }));
+    }
+    
     const submissionData = {
-      ...data,
+      ...preparedData,
       productImages
     };
     console.log('📤 Calling onSubmit with:', submissionData);
