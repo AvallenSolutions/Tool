@@ -110,6 +110,12 @@ function SimpleTestComponent() {
             >
               KPI & Goal Management
             </button>
+            <button 
+              onClick={() => window.location.href = '/app/reports'}
+              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Sustainability Reports
+            </button>
 
           </div>
         </div>
