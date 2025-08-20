@@ -4006,23 +4006,34 @@ Be precise and quote actual text from the content, not generic terms.`;
       const user = req.user as any;
       const userId = user?.claims?.sub || user?.id;
       
+      console.log('🎯 KPI update request received');
+      console.log('   User ID:', userId);
+      console.log('   Request body:', JSON.stringify(req.body, null, 2));
+      
       if (!userId) {
+        console.log('❌ User not authenticated');
         return res.status(401).json({ error: 'User not authenticated' });
       }
       
       const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
+        console.log('❌ User not associated with a company');
         return res.status(400).json({ error: 'User not associated with a company' });
       }
+      
+      console.log('✅ Company found:', company.id, company.name);
       
       const { kpiId, currentValue } = req.body;
       
       if (!kpiId || currentValue === undefined) {
+        console.log('❌ Missing required fields:', { kpiId, currentValue });
         return res.status(400).json({ error: 'Missing required fields: kpiId, currentValue' });
       }
       
       // Update KPI in company_goals table (since KPIs are stored there)
       const { companyGoals } = await import('@shared/schema');
+      
+      console.log('🔍 Searching for KPI with ID:', kpiId, 'in company:', company.id);
       
       const [updatedGoal] = await db
         .update(companyGoals)
@@ -4036,9 +4047,18 @@ Be precise and quote actual text from the content, not generic terms.`;
         ))
         .returning();
         
+      console.log('📝 Update result:', updatedGoal ? 'SUCCESS' : 'NO RECORD FOUND');
+        
       if (!updatedGoal) {
+        console.log('❌ KPI not found with ID:', kpiId);
         return res.status(404).json({ error: 'KPI not found' });
       }
+      
+      console.log('✅ KPI updated successfully:', {
+        id: updatedGoal.id,
+        newValue: updatedGoal.startValue,
+        target: updatedGoal.targetValue
+      });
       
       res.json({ 
         success: true, 

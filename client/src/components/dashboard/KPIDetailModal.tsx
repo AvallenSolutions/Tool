@@ -49,16 +49,25 @@ export function KPIDetailModal({ kpi, isOpen, onClose }: KPIDetailModalProps) {
 
   const updateKPIMutation = useMutation({
     mutationFn: async (data: { kpiId: string; currentValue: number }) => {
+      console.log('🎯 Updating KPI with data:', data);
       const response = await fetch('/api/kpi-data/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update KPI');
-      return response.json();
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ KPI update failed:', response.status, errorText);
+        throw new Error(`Failed to update KPI: ${response.status} ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ KPI update successful:', result);
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/kpi-data'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/kpis'] });
       toast({
         title: 'KPI Updated',
         description: 'The KPI value has been updated successfully.',
