@@ -121,14 +121,17 @@ export default function InitiativesPage() {
       
       console.log('Sending goal updates:', goalUpdates);
 
-      await apiRequest('PUT', '/api/smart-goals/batch', { goalUpdates });
+      const response = await apiRequest('PUT', '/api/smart-goals/batch', { goalUpdates });
+      const result = await response.json();
+      
+      console.log('Save response:', result);
       
       // Refresh the goals data to reflect the saved changes
       queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
       
       toast({
         title: "✅ Goals Saved Successfully!",
-        description: `${selectedGoals.size} SMART goals and their narratives have been saved for the Report Builder. You can now access them in the Sustainability Initiatives block.`,
+        description: `${result.updated || selectedGoals.size} SMART goals and their narratives have been saved for the Report Builder. You can now access them in the Sustainability Initiatives block.`,
         duration: 5000,
       });
     } catch (error: any) {

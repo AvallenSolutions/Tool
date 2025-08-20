@@ -4577,19 +4577,38 @@ Be precise and quote actual text from the content, not generic terms.`;
         
         console.log('Updating goal:', update.id, 'with data:', updateData);
         
-        const [result] = await db
-          .update(smartGoals)
-          .set(updateData)
-          .where(and(eq(smartGoals.id, update.id), eq(smartGoals.companyId, company.id)))
-          .returning();
-          
-        if (result) results.push(result);
+        try {
+          const [result] = await db
+            .update(smartGoals)
+            .set(updateData)
+            .where(and(eq(smartGoals.id, update.id), eq(smartGoals.companyId, company.id)))
+            .returning();
+            
+          if (result) {
+            results.push(result);
+            console.log('Successfully updated goal:', result.id);
+          } else {
+            console.log('Goal not found or not updated:', update.id);
+          }
+        } catch (updateError) {
+          console.error('Error updating individual goal:', update.id, updateError);
+        }
       }
       
-      res.json({ updated: results.length, goals: results });
+      console.log(`Batch update completed: ${results.length}/${goalUpdates.length} goals updated`);
+      res.json({ 
+        success: true,
+        updated: results.length, 
+        total: goalUpdates.length,
+        goals: results 
+      });
     } catch (error) {
       console.error('Error batch updating SMART goals:', error);
-      res.status(500).json({ error: 'Failed to batch update SMART goals' });
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to batch update SMART goals',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
