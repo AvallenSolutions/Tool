@@ -253,11 +253,7 @@ export function FootprintWizard() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-2xl font-bold text-green-600">
-                  {(() => {
-                    const total = calculateActualTotal();
-                    console.log('🔍 Displaying total:', total);
-                    return total.toLocaleString();
-                  })()} kg CO₂e
+                  {calculateActualTotal().toLocaleString()} kg CO₂e
                 </div>
                 <p className="text-sm text-slate-600">Total Calculated Emissions</p>
               </div>

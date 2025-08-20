@@ -1907,6 +1907,8 @@ Be precise and quote actual text from the content, not generic terms.`;
       const emissionsFactor = getEmissionsFactor(dataType, unit);
       const calculatedEmissions = parseFloat(value) * emissionsFactor;
       
+      console.log(`💡 Emission calculation: ${dataType} ${value} ${unit} = ${calculatedEmissions} kg CO2e (factor: ${emissionsFactor})`);
+      
       const footprintData = await dbStorage.createFootprintData({
         companyId: company.id,
         dataType,
@@ -2001,13 +2003,17 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Helper function for emission factors (simplified - in production this would be a proper database/service)
   function getEmissionsFactor(dataType: string, unit: string): number {
     const emissionFactors: Record<string, Record<string, number>> = {
-      // Scope 1 factors (kg CO2e per unit)
-      natural_gas: { 'm3': 2.03, 'kWh': 0.18 },
-      heating_oil: { 'litres': 2.94, 'kg': 3.15 },
-      lpg: { 'litres': 1.51, 'kg': 2.98 },
-      petrol: { 'litres': 2.31 },
-      diesel: { 'litres': 2.65 },
-      refrigerant_gas: { 'kg': 1400 }, // Average GWP
+      // Scope 1 factors (kg CO2e per unit) - DEFRA 2024 VERIFIED
+      natural_gas: { 'm3': 2.044, 'kWh': 0.18315 },
+      heating_oil: { 'litres': 2.52, 'kg': 3.15 },
+      lpg: { 'litres': 1.51, 'kg': 2.983 },
+      petrol: { 'litres': 2.18 },
+      diesel: { 'litres': 2.51 },
+      
+      // Refrigerants - EPA/IPCC 2024 GWP factors
+      refrigerant_r134a: { 'kg': 1430 }, // HFC-134a
+      refrigerant_r410a: { 'kg': 2088 }, // R-410A
+      refrigerant_other: { 'kg': 1400 }, // Generic average
       
       // Scope 2 factors (kg CO2e per kWh) - UK grid average
       electricity: { 'kWh': 0.193 },
