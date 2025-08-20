@@ -349,7 +349,7 @@ export default function InitiativesPage() {
                           <div className="flex items-center gap-2 text-sm text-blue-600">
                             <Link className="h-4 w-4" />
                             <span>
-                              Linked to: {linkedKpi.kpiName} (Target: {linkedKpi.targetValue} by {new Date(linkedKpi.targetDate).toLocaleDateString()})
+                              Linked to: {linkedKpi.title} (Due: {new Date(linkedKpi.targetDate).toLocaleDateString()})
                             </span>
                           </div>
                         )}
