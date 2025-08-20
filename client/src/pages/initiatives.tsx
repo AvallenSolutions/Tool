@@ -1,125 +1,94 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Target, CheckCircle, Clock, Pause, Trash2, Link } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Target, CheckCircle, Clock, Pause, Filter, Calendar, Flag } from 'lucide-react';
 import AIWritingAssistant from '@/components/ai-writing-assistant';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 
-interface Initiative {
-  id?: string;
-  companyId: number;
-  initiativeName: string;
-  description: string | null;
-  linkedKpiGoalId: string | null;
-  strategicPillar: string | null;
-  status: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface KPIGoal {
+interface SmartGoal {
   id: string;
   title: string;
   description: string;
-  targetDate: string;
+  specific: string;
+  measurable: string;
+  achievable: string;
+  relevant: string;
+  timeBound: string;
   priority: string;
+  targetDate: string;
   category: string;
   status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SmartGoalsResponse {
+  goals: SmartGoal[];
+  summary: {
+    total: number;
+    active: number;
+    completed: number;
+    overdue: number;
+  };
 }
 
 export default function InitiativesPage() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingInitiative, setEditingInitiative] = useState<Initiative | null>(null);
-  const [formData, setFormData] = useState<Partial<Initiative>>({
-    initiativeName: '',
-    description: '',
-    linkedKpiGoalId: null,
-    strategicPillar: 'Planet',
-    status: 'active'
-  });
+  const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set());
+  const [goalNarratives, setGoalNarratives] = useState<Map<string, string>>(new Map());
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Fetch initiatives
-  const { data: initiatives, isLoading: initiativesLoading } = useQuery<Initiative[]>({
-    queryKey: ['/api/initiatives'],
-  });
-
-  // Fetch KPI goals
-  const { data: smartGoalsResponse, isLoading: kpiLoading } = useQuery<{goals: KPIGoal[], summary: any}>({
+  // Fetch SMART Goals
+  const { data: smartGoalsResponse, isLoading: goalsLoading } = useQuery<SmartGoalsResponse>({
     queryKey: ['/api/smart-goals'],
   });
   
-  const kpiGoals = smartGoalsResponse?.goals || [];
+  const goals = smartGoalsResponse?.goals || [];
+  const summary = smartGoalsResponse?.summary;
 
-  // Create/update initiative mutation
-  const saveInitiativeMutation = useMutation({
-    mutationFn: async (data: Partial<Initiative>) => {
-      const url = editingInitiative ? `/api/initiatives/${editingInitiative.id}` : '/api/initiatives';
-      const method = editingInitiative ? 'PUT' : 'POST';
-      return apiRequest(method, url, data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: editingInitiative ? "Initiative updated successfully" : "Initiative created successfully"
-      });
-      setIsDialogOpen(false);
-      setEditingInitiative(null);
-      resetForm();
-      queryClient.invalidateQueries({ queryKey: ['/api/initiatives'] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to save initiative",
-        variant: "destructive"
-      });
-    }
+  // Filter goals based on current filter settings
+  const filteredGoals = goals.filter(goal => {
+    if (statusFilter !== 'all' && goal.status !== statusFilter) return false;
+    if (priorityFilter !== 'all' && goal.priority !== priorityFilter) return false;
+    if (categoryFilter !== 'all' && goal.category !== categoryFilter) return false;
+    return true;
   });
 
-  const resetForm = () => {
-    setFormData({
-      initiativeName: '',
-      description: '',
-      linkedKpiGoalId: null,
-      strategicPillar: 'Planet',
-      status: 'active'
-    });
-  };
-
-  const handleEdit = (initiative: Initiative) => {
-    setEditingInitiative(initiative);
-    setFormData({
-      initiativeName: initiative.initiativeName,
-      description: initiative.description,
-      linkedKpiGoalId: initiative.linkedKpiGoalId,
-      strategicPillar: initiative.strategicPillar,
-      status: initiative.status
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleSave = () => {
-    if (!formData.initiativeName?.trim()) {
-      toast({
-        title: "Error",
-        description: "Initiative name is required",
-        variant: "destructive"
-      });
-      return;
+  const handleGoalSelection = (goalId: string, isSelected: boolean) => {
+    const newSelected = new Set(selectedGoals);
+    if (isSelected) {
+      newSelected.add(goalId);
+    } else {
+      newSelected.delete(goalId);
+      // Remove narrative when deselecting
+      const newNarratives = new Map(goalNarratives);
+      newNarratives.delete(goalId);
+      setGoalNarratives(newNarratives);
     }
-    saveInitiativeMutation.mutate(formData);
+    setSelectedGoals(newSelected);
+  };
+
+  const updateNarrative = (goalId: string, narrative: string) => {
+    const newNarratives = new Map(goalNarratives);
+    newNarratives.set(goalId, narrative);
+    setGoalNarratives(newNarratives);
+  };
+
+  const selectAllVisible = () => {
+    const allVisibleIds = new Set([...selectedGoals, ...filteredGoals.map(g => g.id)]);
+    setSelectedGoals(allVisibleIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedGoals(new Set());
+    setGoalNarratives(new Map());
   };
 
   const getStatusColor = (status: string) => {
@@ -140,21 +109,42 @@ export default function InitiativesPage() {
     }
   };
 
-  const getPillarColor = (pillar: string) => {
-    switch (pillar) {
-      case 'Planet': return 'bg-green-100 text-green-800';
-      case 'People': return 'bg-blue-100 text-blue-800';
-      case 'Principles': return 'bg-purple-100 text-purple-800';
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  if (initiativesLoading) {
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'emissions': return 'bg-red-100 text-red-800';
+      case 'efficiency': return 'bg-blue-100 text-blue-800';
+      case 'sustainability': return 'bg-green-100 text-green-800';
+      case 'compliance': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTimeProgress = (targetDate: string) => {
+    const target = new Date(targetDate);
+    const now = new Date();
+    const diffTime = target.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return { label: 'Overdue', color: 'text-red-600', days: Math.abs(diffDays) };
+    if (diffDays <= 30) return { label: 'Due soon', color: 'text-yellow-600', days: diffDays };
+    return { label: 'On track', color: 'text-green-600', days: diffDays };
+  };
+
+  if (goalsLoading) {
     return (
       <div className="flex h-screen bg-lightest-gray">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header title="Sustainability Initiatives" subtitle="Loading initiatives..." />
+          <Header title="SMART Goals Reporting" subtitle="Loading goals..." />
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="animate-pulse space-y-6">
               <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -174,234 +164,303 @@ export default function InitiativesPage() {
     <div className="flex h-screen bg-lightest-gray">
       <Sidebar />
       <div className="flex-1 flex flex-col">
-        <Header title="Sustainability Initiatives" subtitle="Track and manage your sustainability projects linked to KPI goals" />
+        <Header title="SMART Goals Reporting" subtitle="Select goals and create compelling narratives for your sustainability reports" />
         <main className="flex-1 p-6 overflow-y-auto">
-          <div className="container mx-auto max-w-6xl">
-            <div className="flex items-center justify-between mb-8">
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => { resetForm(); setEditingInitiative(null); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Initiative
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md bg-white border shadow-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingInitiative ? 'Edit Initiative' : 'Create New Initiative'}
-              </DialogTitle>
-              <DialogDescription>
-                Add a sustainability initiative and link it to your KPI goals
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Initiative Name</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g., Carbon Offset Program"
-                  value={formData.initiativeName || ''}
-                  onChange={(e) => setFormData({ ...formData, initiativeName: e.target.value })}
-                />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="description">Description</Label>
-                  <AIWritingAssistant
-                    currentText={formData.description || ''}
-                    contentType="initiative_description"
-                    onTextUpdate={(newText) => setFormData({ ...formData, description: newText })}
-                    companyContext={{
-                      industry: 'Beverages',
-                      size: 'SME',
-                      values: ['Sustainability', 'Innovation', 'Quality']
-                    }}
-                  />
-                </div>
-                <Textarea
-                  id="description"
-                  placeholder="Describe the initiative and its goals..."
-                  value={formData.description || ''}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pillar">Strategic Pillar</Label>
-                <Select 
-                  value={formData.strategicPillar || 'Planet'} 
-                  onValueChange={(value) => setFormData({ ...formData, strategicPillar: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select pillar" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="Planet">Planet</SelectItem>
-                    <SelectItem value="People">People</SelectItem>
-                    <SelectItem value="Principles">Principles</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="kpi">Link to KPI Goal (Optional)</Label>
-                <Select 
-                  value={formData.linkedKpiGoalId || 'none'} 
-                  onValueChange={(value) => setFormData({ ...formData, linkedKpiGoalId: value === 'none' ? null : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a KPI goal to link" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="none">No KPI Link</SelectItem>
-                    {kpiGoals?.map((goal) => (
-                      <SelectItem key={goal.id} value={goal.id}>
-                        {goal.title} - Due: {new Date(goal.targetDate).toLocaleDateString()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={formData.status || 'active'} 
-                  onValueChange={(value) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  disabled={saveInitiativeMutation.isPending}
-                >
-                  {saveInitiativeMutation.isPending ? 'Saving...' : 'Save Initiative'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="grid gap-6">
-        {initiatives?.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No initiatives yet</h3>
-              <p className="text-gray-500 mb-4">
-                Create your first sustainability initiative to start tracking progress
-              </p>
-              <Button onClick={() => { resetForm(); setEditingInitiative(null); setIsDialogOpen(true); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Initiative
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {initiatives?.map((initiative) => {
-              const linkedKpi = kpiGoals?.find(goal => goal.id === initiative.linkedKpiGoalId);
-              
-              return (
-                <Card key={initiative.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-lg">{initiative.initiativeName}</CardTitle>
-                          <Badge className={getStatusColor(initiative.status)}>
-                            <div className="flex items-center gap-1">
-                              {getStatusIcon(initiative.status)}
-                              {initiative.status}
-                            </div>
-                          </Badge>
-                          {initiative.strategicPillar && (
-                            <Badge variant="outline" className={getPillarColor(initiative.strategicPillar)}>
-                              {initiative.strategicPillar}
-                            </Badge>
-                          )}
-                        </div>
-                        {initiative.description && (
-                          <CardDescription className="text-sm text-gray-600 mb-3">
-                            {initiative.description}
-                          </CardDescription>
-                        )}
-                        {linkedKpi && (
-                          <div className="flex items-center gap-2 text-sm text-blue-600">
-                            <Link className="h-4 w-4" />
-                            <span>
-                              Linked to: {linkedKpi.title} (Due: {new Date(linkedKpi.targetDate).toLocaleDateString()})
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(initiative)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
+          <div className="container mx-auto max-w-7xl">
+            
+            {/* Summary Statistics */}
+            {summary && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-slate-gray">{summary.total}</div>
+                    <div className="text-sm text-gray-600">Total Goals</div>
+                  </CardContent>
                 </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-green-600">{summary.active}</div>
+                    <div className="text-sm text-gray-600">Active Goals</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-blue-600">{summary.completed}</div>
+                    <div className="text-sm text-gray-600">Completed Goals</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-red-600">{summary.overdue}</div>
+                    <div className="text-sm text-gray-600">Overdue Goals</div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-      {initiatives && initiatives.length > 0 && (
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-medium text-blue-900 mb-2">Initiative Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-blue-700 font-medium">Total:</span>
-              <span className="ml-2">{initiatives.length}</span>
-            </div>
-            <div>
-              <span className="text-green-700 font-medium">Active:</span>
-              <span className="ml-2">{initiatives.filter(i => i.status === 'active').length}</span>
-            </div>
-            <div>
-              <span className="text-blue-700 font-medium">Completed:</span>
-              <span className="ml-2">{initiatives.filter(i => i.status === 'completed').length}</span>
-            </div>
-            <div>
-              <span className="text-purple-700 font-medium">KPI Linked:</span>
-              <span className="ml-2">{initiatives.filter(i => i.linkedKpiGoalId).length}</span>
-            </div>
-          </div>
-        </div>
-      )}
+            {/* Filter Controls */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filters & Selection
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border shadow-lg">
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="paused">Paused</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Priority" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border shadow-lg">
+                        <SelectItem value="all">All Priority</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border shadow-lg">
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="emissions">Emissions</SelectItem>
+                        <SelectItem value="efficiency">Efficiency</SelectItem>
+                        <SelectItem value="sustainability">Sustainability</SelectItem>
+                        <SelectItem value="compliance">Compliance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex-1"></div>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={selectAllVisible}>
+                      Select All Visible
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={clearSelection}>
+                      Clear Selection
+                    </Button>
+                  </div>
+                </div>
+                
+                {selectedGoals.size > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <div className="text-sm font-medium text-blue-900">
+                      {selectedGoals.size} goal{selectedGoals.size !== 1 ? 's' : ''} selected for reporting
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* SMART Goals Grid */}
+            {filteredGoals.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No goals found</h3>
+                  <p className="text-gray-600 mb-6">
+                    {goals.length === 0 
+                      ? 'Create your first SMART goal to get started with reporting' 
+                      : 'Try adjusting your filters to see more goals'
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-6">
+                {filteredGoals.map((goal) => {
+                  const isSelected = selectedGoals.has(goal.id);
+                  const narrative = goalNarratives.get(goal.id) || '';
+                  const timeProgress = getTimeProgress(goal.targetDate);
+                  
+                  return (
+                    <Card key={goal.id} className={`hover:shadow-md transition-all ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start gap-4">
+                          {/* Selection Checkbox */}
+                          <div className="pt-1">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={(checked) => handleGoalSelection(goal.id, !!checked)}
+                              className="data-[state=checked]:bg-blue-600"
+                            />
+                          </div>
+                          
+                          {/* Goal Content */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <CardTitle className="text-lg mb-2">{goal.title}</CardTitle>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                  <Badge className={getStatusColor(goal.status)}>
+                                    <div className="flex items-center gap-1">
+                                      {getStatusIcon(goal.status)}
+                                      {goal.status}
+                                    </div>
+                                  </Badge>
+                                  <Badge className={getPriorityColor(goal.priority)}>
+                                    <Flag className="h-3 w-3 mr-1" />
+                                    {goal.priority}
+                                  </Badge>
+                                  <Badge className={getCategoryColor(goal.category)} variant="outline">
+                                    {goal.category}
+                                  </Badge>
+                                  <Badge variant="outline" className={timeProgress.color}>
+                                    <Calendar className="h-3 w-3 mr-1" />
+                                    {timeProgress.label} ({timeProgress.days} days)
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Goal Description */}
+                            {goal.description && (
+                              <CardDescription className="text-sm text-gray-600 mb-4">
+                                {goal.description}
+                              </CardDescription>
+                            )}
+                            
+                            {/* SMART Framework Details */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-sm">
+                              {goal.specific && (
+                                <div className="bg-gray-50 p-3 rounded">
+                                  <div className="font-semibold text-gray-700 mb-1">Specific</div>
+                                  <div className="text-gray-600">{goal.specific}</div>
+                                </div>
+                              )}
+                              {goal.measurable && (
+                                <div className="bg-gray-50 p-3 rounded">
+                                  <div className="font-semibold text-gray-700 mb-1">Measurable</div>
+                                  <div className="text-gray-600">{goal.measurable}</div>
+                                </div>
+                              )}
+                              {goal.achievable && (
+                                <div className="bg-gray-50 p-3 rounded">
+                                  <div className="font-semibold text-gray-700 mb-1">Achievable</div>
+                                  <div className="text-gray-600">{goal.achievable}</div>
+                                </div>
+                              )}
+                              {goal.relevant && (
+                                <div className="bg-gray-50 p-3 rounded">
+                                  <div className="font-semibold text-gray-700 mb-1">Relevant</div>
+                                  <div className="text-gray-600">{goal.relevant}</div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Time Bound */}
+                            {goal.timeBound && (
+                              <div className="bg-blue-50 p-3 rounded mb-4 text-sm">
+                                <div className="font-semibold text-blue-700 mb-1">Time-bound</div>
+                                <div className="text-blue-600">{goal.timeBound}</div>
+                                <div className="text-xs text-blue-500 mt-1">
+                                  Target Date: {new Date(goal.targetDate).toLocaleDateString()}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Narrative Section - Only show when selected */}
+                            {isSelected && (
+                              <div className="border-t pt-4 mt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-semibold text-gray-700">Goal Narrative for Report</h4>
+                                  <AIWritingAssistant
+                                    currentText={narrative}
+                                    contentType="initiative_description"
+                                    onTextUpdate={(newText) => updateNarrative(goal.id, newText)}
+                                    companyContext={{
+                                      industry: 'Beverages',
+                                      size: 'SME',
+                                      values: ['Sustainability', 'Innovation', 'Quality']
+                                    }}
+                                  />
+                                </div>
+                                <Textarea
+                                  placeholder={`Write a compelling narrative about "${goal.title}" for your sustainability report. Describe progress, impact, and strategic importance...`}
+                                  value={narrative}
+                                  onChange={(e) => updateNarrative(goal.id, e.target.value)}
+                                  rows={4}
+                                  className="resize-none"
+                                />
+                                <div className="text-xs text-gray-500 mt-1">
+                                  This narrative will be included in your sustainability report for this goal.
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Reporting Summary - Only show when goals are selected */}
+            {selectedGoals.size > 0 && (
+              <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Report Preparation Summary
+                  </CardTitle>
+                  <CardDescription>
+                    Review your selected goals and narratives before generating your sustainability report
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{selectedGoals.size}</div>
+                      <div className="text-sm text-gray-600">Goals Selected</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {Array.from(goalNarratives.values()).filter(n => n.trim().length > 0).length}
+                      </div>
+                      <div className="text-sm text-gray-600">Narratives Written</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {Math.round((Array.from(goalNarratives.values()).filter(n => n.trim().length > 0).length / selectedGoals.size) * 100) || 0}%
+                      </div>
+                      <div className="text-sm text-gray-600">Completion Rate</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      Generate Report Preview
+                    </Button>
+                    <Button variant="outline">
+                      Export Selected Goals
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
           </div>
         </main>
       </div>
