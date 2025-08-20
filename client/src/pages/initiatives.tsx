@@ -51,6 +51,7 @@ export default function InitiativesPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Fetch SMART Goals
   const { data: smartGoalsResponse, isLoading: goalsLoading } = useQuery<SmartGoalsResponse>({
@@ -118,21 +119,23 @@ export default function InitiativesPage() {
         narrative: goalNarratives.get(goal.id) || null
       }));
 
-      await apiRequest('/api/smart-goals/batch', 'PUT', { goalUpdates });
+      await apiRequest('PUT', '/api/smart-goals/batch', { goalUpdates });
       
       // Refresh the goals data to reflect the saved changes
       queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
       
       toast({
-        title: "Success",
-        description: `${selectedGoals.size} goals and narratives saved for report building`
+        title: "✅ Goals Saved Successfully!",
+        description: `${selectedGoals.size} SMART goals and their narratives have been saved for the Report Builder. You can now access them in the Sustainability Initiatives block.`,
+        duration: 5000,
       });
     } catch (error) {
       console.error('Error saving goals:', error);
       toast({
-        title: "Error",
-        description: "Failed to save goals for report building",
-        variant: "destructive"
+        title: "❌ Save Failed",
+        description: "There was an error saving your goals. Please try again or contact support if the issue persists.",
+        variant: "destructive",
+        duration: 5000,
       });
     } finally {
       setIsSaving(false);
