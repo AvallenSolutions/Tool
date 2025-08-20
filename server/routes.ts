@@ -4891,7 +4891,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 35, stage: 'Calculating Scope 3 emissions...' };
           console.log(`Report ${newReport.id}: Calculating Scope 3 emissions...`);
           
-          const { calculatePurchasedGoodsEmissions, calculateFuelEnergyUpstreamEmissions } = await import('../server/services/AutomatedEmissionsCalculator');
+          const { calculatePurchasedGoodsEmissions, calculateFuelEnergyUpstreamEmissions } = await import('./services/AutomatedEmissionsCalculator');
           const [purchasedGoods, fuelEnergy] = await Promise.all([
             calculatePurchasedGoodsEmissions(company.id).catch(() => ({ totalEmissions: 0 })),
             calculateFuelEnergyUpstreamEmissions(company.id).catch(() => ({ totalEmissions: 0 }))
@@ -4988,6 +4988,7 @@ Be precise and quote actual text from the content, not generic terms.`;
 
       res.json({ 
         success: true, 
+        reportId: newReport.id,
         report: newReport,
         message: 'Report generation started'
       });
