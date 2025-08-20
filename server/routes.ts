@@ -2091,10 +2091,17 @@ Be precise and quote actual text from the content, not generic terms.`;
           }
         }
         
-        // Calculate packaging emissions
+        // Calculate packaging emissions (standardized with dashboard calculation)
         if (product.bottleWeight) {
-          const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
-          const glassEmissions = (parseFloat(product.bottleWeight) / 1000) * 0.85 * (1 - recycledReduction); // Convert g to kg
+          const bottleWeightKg = parseFloat(product.bottleWeight) / 1000;
+          const recycledContent = parseFloat(product.bottleRecycledContent || '0') / 100;
+          const virginGlassEmissionFactor = 0.7; // kg CO2e per kg glass
+          const recycledGlassEmissionFactor = 0.35; // kg CO2e per kg recycled glass
+          
+          const glassEmissions = bottleWeightKg * (
+            (1 - recycledContent) * virginGlassEmissionFactor + 
+            recycledContent * recycledGlassEmissionFactor
+          );
           packagingEmissions += glassEmissions;
           console.log(`🍾 Glass bottle: ${product.bottleWeight}g, ${product.bottleRecycledContent}% recycled = ${glassEmissions.toFixed(3)} kg CO2e`);
         }
@@ -3109,10 +3116,17 @@ Be precise and quote actual text from the content, not generic terms.`;
             }
           }
           
-          // Add packaging emissions
+          // Add packaging emissions (standardized calculation)
           if (updatedProduct.bottleWeight) {
-            const recycledReduction = (parseFloat(updatedProduct.bottleRecycledContent || '0') / 100);
-            const glassEmissions = (parseFloat(updatedProduct.bottleWeight) / 1000) * 0.85 * (1 - recycledReduction);
+            const bottleWeightKg = parseFloat(updatedProduct.bottleWeight) / 1000;
+            const recycledContent = parseFloat(updatedProduct.bottleRecycledContent || '0') / 100;
+            const virginGlassEmissionFactor = 0.7; // kg CO2e per kg glass
+            const recycledGlassEmissionFactor = 0.35; // kg CO2e per kg recycled glass
+            
+            const glassEmissions = bottleWeightKg * (
+              (1 - recycledContent) * virginGlassEmissionFactor + 
+              recycledContent * recycledGlassEmissionFactor
+            );
             newCarbonFootprint += glassEmissions;
           }
           
@@ -3189,10 +3203,17 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // Add packaging emissions
+      // Add packaging emissions (standardized calculation)
       if (product.bottleWeight) {
-        const recycledReduction = (parseFloat(product.bottleRecycledContent || '0') / 100);
-        const glassEmissions = (parseFloat(product.bottleWeight) / 1000) * 0.85 * (1 - recycledReduction);
+        const bottleWeightKg = parseFloat(product.bottleWeight) / 1000;
+        const recycledContent = parseFloat(product.bottleRecycledContent || '0') / 100;
+        const virginGlassEmissionFactor = 0.7; // kg CO2e per kg glass
+        const recycledGlassEmissionFactor = 0.35; // kg CO2e per kg recycled glass
+        
+        const glassEmissions = bottleWeightKg * (
+          (1 - recycledContent) * virginGlassEmissionFactor + 
+          recycledContent * recycledGlassEmissionFactor
+        );
         newCarbonFootprint += glassEmissions;
       }
       
