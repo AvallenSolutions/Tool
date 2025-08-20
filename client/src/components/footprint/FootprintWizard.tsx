@@ -281,11 +281,6 @@ export function FootprintWizard() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{step.title}</p>
-                        {step.emissionsTotal > 0 && (
-                          <p className="text-xs text-slate-500">
-                            {step.emissionsTotal.toLocaleString()} kg CO₂e
-                          </p>
-                        )}
                       </div>
                     </div>
                   </button>
