@@ -46,6 +46,7 @@ import TestRunner from "@/pages/TestRunner";
 import CollaborationHub from "@/pages/CollaborationHub";
 import ProductLcaPage from "@/pages/ProductLcaPage";
 import { KPIsPage } from "@/pages/kpis";
+import CompanyStoryPage from "@/pages/story";
 
 function SimpleTestComponent() {
   return (
@@ -167,6 +168,7 @@ function Router() {
       <Route path="/app/admin/users" component={UserManagement} />
       <Route path="/app/admin/analytics" component={PerformanceAnalytics} />
       <Route path="/app/admin/messaging" component={AdminMessagingPage} />
+      <Route path="/app/story" component={CompanyStoryPage} />
       <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
       <Route path="/supplier-onboarding" component={SupplierOnboarding} />

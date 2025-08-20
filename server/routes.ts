@@ -5091,6 +5091,156 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // === DYNAMIC REPORT BUILDER API ENDPOINTS ===
+  
+  // Company Story Management
+  app.post('/api/company/story', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { companyStory, insertCompanyStorySchema } = await import('@shared/schema');
+      const validatedData = insertCompanyStorySchema.parse({ 
+        companyId: company.id,
+        ...req.body 
+      });
+
+      // Check if story exists and update or insert
+      const [existingStory] = await db
+        .select()
+        .from(companyStory)
+        .where(eq(companyStory.companyId, company.id));
+
+      let result;
+      if (existingStory) {
+        [result] = await db
+          .update(companyStory)
+          .set({ 
+            missionStatement: validatedData.missionStatement,
+            visionStatement: validatedData.visionStatement,
+            strategicPillars: validatedData.strategicPillars,
+            updatedAt: new Date()
+          })
+          .where(eq(companyStory.companyId, company.id))
+          .returning();
+      } else {
+        [result] = await db.insert(companyStory).values(validatedData).returning();
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error saving company story:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/company/story', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { companyStory } = await import('@shared/schema');
+      const [story] = await db
+        .select()
+        .from(companyStory)
+        .where(eq(companyStory.companyId, company.id));
+
+      if (!story) {
+        // Return default structure if no story exists
+        return res.json({
+          companyId: company.id,
+          missionStatement: null,
+          visionStatement: null,
+          strategicPillars: [
+            { name: "Planet", description: "Environmental sustainability and carbon neutrality" },
+            { name: "People", description: "Social responsibility and community impact" },
+            { name: "Principles", description: "Ethical governance and transparency" }
+          ]
+        });
+      }
+
+      res.json(story);
+    } catch (error) {
+      console.error('Error fetching company story:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Initiatives Management
+  app.post('/api/initiatives', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { initiatives, insertInitiativeSchema } = await import('@shared/schema');
+      const validatedData = insertInitiativeSchema.parse({ 
+        companyId: company.id,
+        ...req.body 
+      });
+
+      const [result] = await db.insert(initiatives).values(validatedData).returning();
+      res.json(result);
+    } catch (error) {
+      console.error('Error creating initiative:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/initiatives', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { initiatives } = await import('@shared/schema');
+      const companyInitiatives = await db
+        .select()
+        .from(initiatives)
+        .where(eq(initiatives.companyId, company.id))
+        .orderBy(desc(initiatives.createdAt));
+
+      res.json(companyInitiatives);
+    } catch (error) {
+      console.error('Error fetching initiatives:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Get all reports for the authenticated user's company
   app.get('/api/reports', isAuthenticated, async (req, res) => {
     try {

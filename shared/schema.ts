@@ -70,6 +70,33 @@ export const companies = pgTable("companies", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Company Story table - stores narrative elements for Dynamic Report Builder
+export const companyStory = pgTable("company_story", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id).notNull().unique(),
+  missionStatement: text("mission_statement"),
+  visionStatement: text("vision_statement"),
+  strategicPillars: jsonb("strategic_pillars").$type<Array<{
+    name: string;
+    description: string;
+  }>>(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Initiatives table - stores specific projects linked to KPI goals
+export const initiatives = pgTable("initiatives", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  initiativeName: varchar("initiative_name", { length: 255 }).notNull(),
+  description: text("description"),
+  linkedKpiGoalId: uuid("linked_kpi_goal_id").references(() => companyKpiGoals.id),
+  strategicPillar: varchar("strategic_pillar", { length: 100 }),
+  status: varchar("status", { length: 50 }).default("active"), // active, paused, completed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Company footprint data for carbon emissions tracking
 export const companyFootprintData = pgTable("company_footprint_data", {
   id: serial("id").primaryKey(),
@@ -651,6 +678,11 @@ export const companyRelations = relations(companies, ({ one, many }) => ({
     fields: [companies.id],
     references: [companySustainabilityData.companyId],
   }),
+  companyStory: one(companyStory, {
+    fields: [companies.id],
+    references: [companyStory.companyId],
+  }),
+  initiatives: many(initiatives),
 }));
 
 export const companySustainabilityDataRelations = relations(companySustainabilityData, ({ one }) => ({
@@ -725,6 +757,26 @@ export const reportRelations = relations(reports, ({ one }) => ({
   company: one(companies, {
     fields: [reports.companyId],
     references: [companies.id],
+  }),
+}));
+
+// Company Story Relations
+export const companyStoryRelations = relations(companyStory, ({ one }) => ({
+  company: one(companies, {
+    fields: [companyStory.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Initiatives Relations
+export const initiativesRelations = relations(initiatives, ({ one }) => ({
+  company: one(companies, {
+    fields: [initiatives.companyId],
+    references: [companies.id],
+  }),
+  linkedKpiGoal: one(companyKpiGoals, {
+    fields: [initiatives.linkedKpiGoalId],
+    references: [companyKpiGoals.id],
   }),
 }));
 
@@ -1245,6 +1297,23 @@ export const projectGoals = pgTable("project_goals", {
 });
 
 // Dashboard layout column will be added to companies table via migration
+
+// TypeScript types and insert schemas for Dynamic Report Builder tables
+export type CompanyStory = typeof companyStory.$inferSelect;
+export type InsertCompanyStory = typeof companyStory.$inferInsert;
+export const insertCompanyStorySchema = createInsertSchema(companyStory).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Initiative = typeof initiatives.$inferSelect;
+export type InsertInitiative = typeof initiatives.$inferInsert;
+export const insertInitiativeSchema = createInsertSchema(initiatives).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 // Export types for new tables
 export type KPI = typeof kpis.$inferSelect;
