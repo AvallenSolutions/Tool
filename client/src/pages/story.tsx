@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import AIWritingAssistant from '@/components/ai-writing-assistant';
 import { Separator } from '@/components/ui/separator';
 import { Sparkles, Building2, Target, Users, Leaf } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -199,10 +200,16 @@ export default function CompanyStoryPage() {
                   </div>
                 )}
                 {isEditing && (
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    AI Writing Assistant
-                  </Button>
+                  <AIWritingAssistant
+                    currentText={formData.missionStatement || ''}
+                    contentType="mission"
+                    onTextUpdate={(newText) => setFormData({ ...formData, missionStatement: newText })}
+                    companyContext={{
+                      industry: 'Beverages',
+                      size: 'SME',
+                      values: ['Sustainability', 'Innovation', 'Quality']
+                    }}
+                  />
                 )}
               </div>
             </CardContent>
@@ -238,10 +245,16 @@ export default function CompanyStoryPage() {
                   </div>
                 )}
                 {isEditing && (
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    AI Writing Assistant
-                  </Button>
+                  <AIWritingAssistant
+                    currentText={formData.visionStatement || ''}
+                    contentType="vision"
+                    onTextUpdate={(newText) => setFormData({ ...formData, visionStatement: newText })}
+                    companyContext={{
+                      industry: 'Beverages',
+                      size: 'SME',
+                      values: ['Sustainability', 'Innovation', 'Quality']
+                    }}
+                  />
                 )}
               </div>
             </CardContent>

@@ -5354,6 +5354,74 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // AI Content Generation Endpoint
+  app.post('/api/ai/generate-content', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const { prompt, contentType, tone, length, generateMultiple } = req.body;
+
+      if (!prompt) {
+        return res.status(400).json({ error: 'Prompt is required' });
+      }
+
+      // Enhanced prompt for better results
+      let enhancedPrompt = `You are a professional sustainability communications expert. ${prompt}
+
+Requirements:
+- Tone: ${tone || 'professional'}
+- Length: ${length || 'brief'}
+- Content type: ${contentType || 'general'}
+- Generate ${generateMultiple ? '3 different variations' : '1 option'}
+- Focus on authenticity, clarity, and engagement
+- Ensure content aligns with sustainability best practices
+- Use active voice and concrete language
+
+Please provide ${generateMultiple ? 'exactly 3 different variations, each as a separate paragraph' : 'one well-crafted response'}.`;
+
+      // Use Anthropic API for content generation
+      const { generateSustainabilityContent } = await import('../anthropic');
+      const result = await generateSustainabilityContent(enhancedPrompt);
+      
+      let suggestions: string[];
+      
+      if (generateMultiple) {
+        // Split result into multiple suggestions if requested
+        suggestions = result.split('\n\n').filter(s => s.trim().length > 10).slice(0, 3);
+        if (suggestions.length < 3) {
+          // If we don't have 3 variations, pad with the original
+          while (suggestions.length < 3) {
+            suggestions.push(result);
+          }
+        }
+      } else {
+        suggestions = [result];
+      }
+
+      res.json({
+        suggestions: suggestions.map(s => s.trim()),
+        metadata: {
+          tone,
+          length,
+          contentType,
+          prompt: prompt.substring(0, 100) + '...'
+        }
+      });
+
+    } catch (error) {
+      console.error('AI content generation error:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate content',
+        message: 'AI service temporarily unavailable'
+      });
+    }
+  });
+
   // Get all reports for the authenticated user's company
   app.get('/api/reports', isAuthenticated, async (req, res) => {
     try {

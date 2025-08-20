@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Target, CheckCircle, Clock, Pause, Trash2, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import AIWritingAssistant from '@/components/ai-writing-assistant';
 
 interface Initiative {
   id?: string;
@@ -193,7 +194,19 @@ export default function InitiativesPage() {
               </div>
               
               <div>
-                <Label htmlFor="description">Description</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="description">Description</Label>
+                  <AIWritingAssistant
+                    currentText={formData.description || ''}
+                    contentType="initiative_description"
+                    onTextUpdate={(newText) => setFormData({ ...formData, description: newText })}
+                    companyContext={{
+                      industry: 'Beverages',
+                      size: 'SME',
+                      values: ['Sustainability', 'Innovation', 'Quality']
+                    }}
+                  />
+                </div>
                 <Textarea
                   id="description"
                   placeholder="Describe the initiative and its goals..."
