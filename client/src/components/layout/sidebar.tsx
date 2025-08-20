@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,14 @@ export default function Sidebar() {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
   const [adminExpanded, setAdminExpanded] = useState(false);
+  const [reportsExpanded, setReportsExpanded] = useState(false);
+
+  // Auto-expand Reports section when on any reports-related page
+  useEffect(() => {
+    if (location.startsWith('/app/reports') || location.startsWith('/app/report-builder') || location.startsWith('/app/initiatives')) {
+      setReportsExpanded(true);
+    }
+  }, [location]);
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -18,14 +26,17 @@ export default function Sidebar() {
     { path: "/app/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/app/company", label: "Company", icon: Building2 },
     { path: "/app/products", label: "Products", icon: Package },
-    { path: "/app/reports", label: "Reports", icon: FileText },
-    { path: "/app/initiatives", label: "Initiatives", icon: Target },
-    { path: "/app/report-builder", label: "Report Builder", icon: Sparkles },
     { path: "/app/greenwash-guardian", label: "GreenwashGuardian", icon: Shield },
     { path: "/app/supplier-network", label: "Supplier Network", icon: Users },
     { path: "/app/collaboration", label: "Collaboration Hub", icon: MessageSquare },
     { path: "/app/settings", label: "Settings", icon: Settings },
     { path: "/app/test", label: "Test Runner", icon: TestTube },
+  ];
+
+  const reportsSubItems = [
+    { path: "/app/reports", label: "View Reports", icon: FileText },
+    { path: "/app/report-builder", label: "Report Builder", icon: Sparkles },
+    { path: "/app/initiatives", label: "Initiatives", icon: Target },
   ];
 
   const adminSubItems = [
@@ -71,6 +82,55 @@ export default function Sidebar() {
               </li>
             );
           })}
+          
+          {/* Reports Section with Sub-items */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location.startsWith('/app/reports') || location.startsWith('/app/report-builder') || location.startsWith('/app/initiatives')
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => setReportsExpanded(!reportsExpanded)}
+            >
+              <FileText className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium flex-1 text-left">Reports</span>
+              {reportsExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </Button>
+            
+            {/* Reports Sub-items */}
+            {reportsExpanded && (
+              <ul className="mt-2 ml-4 space-y-1">
+                {reportsSubItems.map((subItem) => {
+                  const SubIcon = subItem.icon;
+                  const isSubActive = location === subItem.path;
+                  
+                  return (
+                    <li key={subItem.path}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
+                          isSubActive
+                            ? "bg-white text-[#209d50] hover:bg-gray-100"
+                            : "text-white/80 hover:bg-green-600 hover:text-white"
+                        }`}
+                        onClick={() => navigate(subItem.path)}
+                      >
+                        <SubIcon className="w-4 h-4 mr-2" />
+                        <span className="font-body text-sm">{subItem.label}</span>
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </li>
           
           {/* Admin Section */}
           {user && user.role === 'admin' && (
