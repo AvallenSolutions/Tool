@@ -4496,57 +4496,6 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // PUT /api/smart-goals/:id - Update a SMART goal (including narrative and selection)
-  app.put('/api/smart-goals/:id', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user?.claims?.sub || user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
-      
-      const company = await dbStorage.getCompanyByOwner(userId);
-      if (!company) {
-        return res.status(400).json({ error: 'User not associated with a company' });
-      }
-      
-      const goalId = req.params.id;
-      const updateData: any = {
-        updatedAt: new Date()
-      };
-      
-      // Update only provided fields
-      if (req.body.title !== undefined) updateData.title = req.body.title;
-      if (req.body.description !== undefined) updateData.description = req.body.description;
-      if (req.body.specific !== undefined) updateData.specific = req.body.specific;
-      if (req.body.measurable !== undefined) updateData.measurable = req.body.measurable;
-      if (req.body.achievable !== undefined) updateData.achievable = req.body.achievable;
-      if (req.body.relevant !== undefined) updateData.relevant = req.body.relevant;
-      if (req.body.timeBound !== undefined) updateData.timeBound = req.body.timeBound;
-      if (req.body.priority !== undefined) updateData.priority = req.body.priority;
-      if (req.body.targetDate !== undefined) updateData.targetDate = req.body.targetDate;
-      if (req.body.category !== undefined) updateData.category = req.body.category;
-      if (req.body.status !== undefined) updateData.status = req.body.status;
-      if (req.body.narrative !== undefined) updateData.narrative = req.body.narrative;
-      if (req.body.selectedForReport !== undefined) updateData.selectedForReport = req.body.selectedForReport;
-      
-      const [result] = await db
-        .update(smartGoals)
-        .set(updateData)
-        .where(and(eq(smartGoals.id, goalId), eq(smartGoals.companyId, company.id)))
-        .returning();
-        
-      if (!result) {
-        return res.status(404).json({ error: 'SMART goal not found' });
-      }
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error updating SMART goal:', error);
-      res.status(500).json({ error: 'Failed to update SMART goal' });
-    }
-  });
-
   // PUT /api/smart-goals/batch - Batch update SMART goals selection and narratives
   app.put('/api/smart-goals/batch', isAuthenticated, async (req, res) => {
     console.log('🎯 Batch update endpoint called');
@@ -4618,6 +4567,57 @@ Be precise and quote actual text from the content, not generic terms.`;
         error: 'Failed to batch update SMART goals',
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // PUT /api/smart-goals/:id - Update a SMART goal (including narrative and selection)
+  app.put('/api/smart-goals/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const goalId = req.params.id;
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+      
+      // Update only provided fields
+      if (req.body.title !== undefined) updateData.title = req.body.title;
+      if (req.body.description !== undefined) updateData.description = req.body.description;
+      if (req.body.specific !== undefined) updateData.specific = req.body.specific;
+      if (req.body.measurable !== undefined) updateData.measurable = req.body.measurable;
+      if (req.body.achievable !== undefined) updateData.achievable = req.body.achievable;
+      if (req.body.relevant !== undefined) updateData.relevant = req.body.relevant;
+      if (req.body.timeBound !== undefined) updateData.timeBound = req.body.timeBound;
+      if (req.body.priority !== undefined) updateData.priority = req.body.priority;
+      if (req.body.targetDate !== undefined) updateData.targetDate = req.body.targetDate;
+      if (req.body.category !== undefined) updateData.category = req.body.category;
+      if (req.body.status !== undefined) updateData.status = req.body.status;
+      if (req.body.narrative !== undefined) updateData.narrative = req.body.narrative;
+      if (req.body.selectedForReport !== undefined) updateData.selectedForReport = req.body.selectedForReport;
+      
+      const [result] = await db
+        .update(smartGoals)
+        .set(updateData)
+        .where(and(eq(smartGoals.id, goalId), eq(smartGoals.companyId, company.id)))
+        .returning();
+        
+      if (!result) {
+        return res.status(404).json({ error: 'SMART goal not found' });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error updating SMART goal:', error);
+      res.status(500).json({ error: 'Failed to update SMART goal' });
     }
   });
 
