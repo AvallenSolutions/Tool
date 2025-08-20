@@ -118,6 +118,8 @@ export default function InitiativesPage() {
         selectedForReport: selectedGoals.has(goal.id),
         narrative: goalNarratives.get(goal.id) || null
       }));
+      
+      console.log('Sending goal updates:', goalUpdates);
 
       await apiRequest('PUT', '/api/smart-goals/batch', { goalUpdates });
       
@@ -129,11 +131,12 @@ export default function InitiativesPage() {
         description: `${selectedGoals.size} SMART goals and their narratives have been saved for the Report Builder. You can now access them in the Sustainability Initiatives block.`,
         duration: 5000,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving goals:', error);
+      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
       toast({
         title: "❌ Save Failed",
-        description: "There was an error saving your goals. Please try again or contact support if the issue persists.",
+        description: `There was an error saving your goals: ${errorMessage}. Please try again.`,
         variant: "destructive",
         duration: 5000,
       });
@@ -498,13 +501,13 @@ export default function InitiativesPage() {
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {Array.from(goalNarratives.values()).filter(n => n.trim().length > 0).length}
+                        {Array.from(goalNarratives.values()).filter(n => n?.trim().length > 0).length}
                       </div>
                       <div className="text-sm text-gray-600">Narratives Written</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {Math.round((Array.from(goalNarratives.values()).filter(n => n.trim().length > 0).length / selectedGoals.size) * 100) || 0}%
+                        {selectedGoals.size > 0 ? Math.round((Array.from(goalNarratives.values()).filter(n => n?.trim().length > 0).length / selectedGoals.size) * 100) : 0}%
                       </div>
                       <div className="text-sm text-gray-600">Completion Rate</div>
                     </div>

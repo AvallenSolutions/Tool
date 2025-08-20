@@ -4575,6 +4575,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         if (update.narrative !== undefined) updateData.narrative = update.narrative;
         if (update.selectedForReport !== undefined) updateData.selectedForReport = update.selectedForReport;
         
+        console.log('Updating goal:', update.id, 'with data:', updateData);
+        
         const [result] = await db
           .update(smartGoals)
           .set(updateData)
