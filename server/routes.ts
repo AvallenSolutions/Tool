@@ -7,7 +7,7 @@ import Stripe from "stripe";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData, lcaProcessMappings } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -4429,8 +4429,22 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const goalsData = await enhancedKpiService.getCompanyKpiGoals(company.id);
-      res.json(goalsData);
+      // Get SMART goals from the new table
+      const goals = await db
+        .select()
+        .from(smartGoals)
+        .where(eq(smartGoals.companyId, company.id))
+        .orderBy(desc(smartGoals.createdAt));
+
+      // Calculate summary statistics
+      const summary = {
+        total: goals.length,
+        active: goals.filter(g => g.status === 'active').length,
+        completed: goals.filter(g => g.status === 'completed').length,
+        overdue: goals.filter(g => g.status === 'active' && new Date(g.targetDate) < new Date()).length,
+      };
+
+      res.json({ goals, summary });
     } catch (error) {
       console.error('Error getting SMART goals:', error);
       res.status(500).json({ error: 'Failed to get SMART goals' });
@@ -4452,8 +4466,28 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'User not associated with a company' });
       }
       
-      const goal = await enhancedKpiService.createKpiGoal({ companyId: company.id, ...req.body });
-      res.json(goal);
+      // Create SMART goal with proper schema
+      const smartGoalData = {
+        companyId: company.id,
+        title: req.body.title,
+        description: req.body.description,
+        specific: req.body.specific,
+        measurable: req.body.measurable,
+        achievable: req.body.achievable,
+        relevant: req.body.relevant,
+        timeBound: req.body.timeBound,
+        priority: req.body.priority || 'medium',
+        targetDate: req.body.targetDate,
+        category: req.body.category || 'sustainability',
+        status: 'active'
+      };
+
+      const [newSmartGoal] = await db
+        .insert(smartGoals)
+        .values(smartGoalData)
+        .returning();
+
+      res.json({ success: true, goal: newSmartGoal });
     } catch (error) {
       console.error('Error creating SMART goal:', error);
       res.status(500).json({ error: 'Failed to create SMART goal' });

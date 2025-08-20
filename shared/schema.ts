@@ -1594,3 +1594,39 @@ export const insertCompanyKpiGoalSchema = createInsertSchema(companyKpiGoals).om
   createdAt: true,
   updatedAt: true,
 });
+
+// SMART Goals table - for structured goal setting
+export const smartGoals = pgTable("smart_goals", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  specific: text("specific"),
+  measurable: text("measurable"),
+  achievable: text("achievable"),
+  relevant: text("relevant"),
+  timeBound: text("time_bound"),
+  priority: varchar("priority", { length: 20 }).default("medium").notNull(),
+  targetDate: date("target_date").notNull(),
+  category: varchar("category", { length: 50 }).default("sustainability").notNull(),
+  status: varchar("status", { length: 20 }).default("active").notNull(), // active, completed, paused
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Relations for SMART Goals
+export const smartGoalsRelations = relations(smartGoals, ({ one }) => ({
+  company: one(companies, {
+    fields: [smartGoals.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Type exports for SMART Goals
+export type SmartGoal = typeof smartGoals.$inferSelect;
+export type InsertSmartGoal = typeof smartGoals.$inferInsert;
+export const insertSmartGoalSchema = createInsertSchema(smartGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
