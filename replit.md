@@ -51,6 +51,7 @@ Preferred communication style: Simple, everyday language.
 - **Data Extraction**: Automated supplier data capture via URL web scraping (cheerio) and PDF document upload (Anthropic API), with mandatory human verification workflow and bulk import capabilities.
 - **Performance Analytics**: Comprehensive real-time platform monitoring with performance metrics, user engagement analytics, and system health indicators.
 - **KPI Tracking System**: Functionality to add, validate, and manage Key Performance Indicators (KPIs).
+- **Dynamic Report Builder**: **FULLY OPERATIONAL** - Comprehensive modular reporting system with drag-and-drop blocks, company story capture, initiative tracking with KPI linking, and AI-assisted content generation. Company Story UX consolidation successfully completed - story functionality seamlessly integrated into Company Overview tab with streamlined navigation and full feature preservation.
 
 ## External Dependencies
 
