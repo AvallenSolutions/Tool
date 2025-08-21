@@ -983,6 +983,8 @@ export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepCo
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: sustainabilityData } = useQuery({ queryKey: ['/api/company/sustainability-data'] });
   
+  console.log('🔍 SocialImpactStep data:', { company, sustainabilityData });
+  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       {/* Editor Panel */}
