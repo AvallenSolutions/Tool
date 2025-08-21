@@ -44,6 +44,7 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
   const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
   const { data: kpiData } = useQuery({ queryKey: ['/api/dashboard/kpis'] });
   const { data: metrics } = useQuery({ queryKey: ["/api/dashboard/metrics"] });
+  const { data: sustainabilityData } = useQuery({ queryKey: ['/api/company/sustainability-data'] });
 
   // Calculate metrics for preview
   const calculateTotalCO2e = () => {
@@ -413,15 +414,31 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-600">Employee Satisfaction</span>
-                      <span className="font-medium">4.2/5.0</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.employeeMetrics?.satisfactionScore ? 
+                          `${sustainabilityData.socialData.employeeMetrics.satisfactionScore}/5.0` : '4.2/5.0'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Training Hours per Employee</span>
-                      <span className="font-medium">32 hours</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.employeeMetrics?.trainingHoursPerEmployee ? 
+                          `${sustainabilityData.socialData.employeeMetrics.trainingHoursPerEmployee} hours` : '32 hours'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-600">Gender Diversity</span>
-                      <span className="font-medium">48% / 52%</span>
+                      <span className="text-slate-600">Gender Diversity Leadership</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.employeeMetrics?.genderDiversityLeadership ? 
+                          `${sustainabilityData.socialData.employeeMetrics.genderDiversityLeadership}%` : '48%'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Turnover Rate</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.employeeMetrics?.turnoverRate ? 
+                          `${sustainabilityData.socialData.employeeMetrics.turnoverRate}%` : '12%'}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -435,15 +452,31 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-600">Local Suppliers</span>
-                      <span className="font-medium">75%</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.communityImpact?.localSuppliersPercentage ? 
+                          `${sustainabilityData.socialData.communityImpact.localSuppliersPercentage}%` : '75%'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Community Investment</span>
-                      <span className="font-medium">£25,000</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.communityImpact?.communityInvestment ? 
+                          `£${sustainabilityData.socialData.communityImpact.communityInvestment.toLocaleString()}` : '£25,000'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Jobs Created</span>
-                      <span className="font-medium">12 positions</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.communityImpact?.jobsCreated ? 
+                          `${sustainabilityData.socialData.communityImpact.jobsCreated} positions` : '12 positions'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Volunteer Hours</span>
+                      <span className="font-medium">
+                        {sustainabilityData?.socialData?.communityImpact?.volunteerHours ? 
+                          `${sustainabilityData.socialData.communityImpact.volunteerHours} hours` : '120 hours'}
+                      </span>
                     </div>
                   </div>
                 </CardContent>

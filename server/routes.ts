@@ -348,14 +348,16 @@ export function registerRoutes(app: Express): Server {
                 <div class="metric-card" style="border-left: 4px solid #7c3aed;">
                   <h4 style="color: #7c3aed; margin-bottom: 10px;">Employee Wellbeing</h4>
                   <p style="margin: 5px 0;">Employee Satisfaction: 4.2/5.0</p>
-                  <p style="margin: 5px 0;">Training Hours: 32 hours/employee</p>
-                  <p style="margin: 5px 0;">Gender Diversity: 48% / 52%</p>
+                  <p style="margin: 5px 0;">Training Hours: 34 hours/employee</p>
+                  <p style="margin: 5px 0;">Gender Diversity Leadership: 26%</p>
+                  <p style="margin: 5px 0;">Turnover Rate: 9%</p>
                 </div>
                 <div class="metric-card" style="border-left: 4px solid #7c3aed;">
                   <h4 style="color: #7c3aed; margin-bottom: 10px;">Community Impact</h4>
                   <p style="margin: 5px 0;">Local Suppliers: 75%</p>
                   <p style="margin: 5px 0;">Community Investment: £25,000</p>
                   <p style="margin: 5px 0;">Jobs Created: 12 positions</p>
+                  <p style="margin: 5px 0;">Volunteer Hours: 120 hours</p>
                 </div>
               </div>
             </div>
