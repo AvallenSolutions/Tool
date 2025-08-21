@@ -746,7 +746,11 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
       return result;
     },
     onSuccess: () => {
-      toast({ description: "Initiative selection saved successfully" });
+      toast({ 
+        title: "Selection Saved",
+        description: "Initiative selection saved successfully",
+        duration: 2000
+      });
       // Only invalidate specific queries that need the updated initiatives data
       queryClient.invalidateQueries({ queryKey: [`/api/reports/guided/${reportId}/wizard-data`], exact: true });
     },
