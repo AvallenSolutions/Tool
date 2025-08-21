@@ -133,10 +133,10 @@ export function registerRoutes(app: Express): Server {
         margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
       });
 
-      // Set response headers for PDF download
-      const filename = `${report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pdf`;
+      // Set response headers for HTML download (print-ready)
+      const filename = `${report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.html`;
       
-      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Type', 'text/html');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.setHeader('Content-Length', pdfBuffer.length);
 
