@@ -2,8 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import JSZip from 'jszip';
 import { PDFService } from '../pdfService';
+import { createRequire } from 'module';
 
-// Dynamic import for officegen to handle potential issues
+// Use createRequire for CommonJS modules in ES modules
+const require = createRequire(import.meta.url);
 const officegen = require('officegen');
 
 export interface ExportOptions {
