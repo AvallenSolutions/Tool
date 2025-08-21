@@ -19,7 +19,8 @@ import {
   Target, 
   TrendingUp, 
   CheckCircle2,
-  Download
+  Download,
+  Users
 } from "lucide-react";
 import {
   IntroductionStep,
@@ -28,6 +29,7 @@ import {
   CarbonFootprintStep,
   InitiativesStep,
   KPITrackingStep,
+  SocialImpactStep,
   SummaryStep
 } from "@/components/guided-report/StepComponents";
 import { ReportPreview } from "@/components/guided-report/ReportPreview";
@@ -86,6 +88,14 @@ const WIZARD_STEPS = [
   },
   {
     id: 7,
+    key: "social_impact",
+    title: "Social Impact",
+    subtitle: "Community engagement & social responsibility",
+    icon: Users,
+    description: "Describe your social initiatives and community impact"
+  },
+  {
+    id: 8,
     key: "summary",
     title: "Summary & Future Goals",
     subtitle: "Conclude with next steps",
@@ -500,6 +510,16 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                     )}
                     
                     {currentStep === 7 && (
+                      <SocialImpactStep
+                        stepKey="social_impact"
+                        content={stepContent['social_impact'] || ""}
+                        onChange={(content) => handleStepContentChange('social_impact', content)}
+                        onSave={() => handleSaveStep('social_impact')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                    
+                    {currentStep === 8 && (
                       <SummaryStep
                         stepKey="summary"
                         content={stepContent['summary'] || ""}

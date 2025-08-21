@@ -71,7 +71,7 @@ export class PDFService {
 
         // Create metrics boxes
         const metrics = [
-          { value: '483.94', label: 'Tonnes CO2e', color: '#16a34a' },
+          { value: '500.045', label: 'Tonnes CO2e', color: '#16a34a' },
           { value: '11.7M', label: 'Litres Water', color: '#0ea5e9' },
           { value: '0.1', label: 'Tonnes Waste', color: '#f59e0b' }
         ];
@@ -124,6 +124,19 @@ export class PDFService {
         doc.fontSize(12)
            .fillColor('#333333')
            .text('Our sustainability initiatives focus on renewable energy adoption, waste reduction programs, sustainable sourcing practices, and employee engagement in environmental stewardship.');
+        
+        doc.moveDown(1.5);
+
+        // Social Impact Section
+        doc.fontSize(16)
+           .fillColor('#16a34a')
+           .text('Social Impact & Community', { underline: true });
+        
+        doc.moveDown(0.5);
+        
+        doc.fontSize(12)
+           .fillColor('#333333')
+           .text('Our commitment to social responsibility extends beyond environmental stewardship to encompass fair trade practices, employee wellbeing programs, community development initiatives, and educational support systems that create lasting positive impact.');
         
         doc.moveDown(1.5);
 

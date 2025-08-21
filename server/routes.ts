@@ -224,7 +224,7 @@ export function registerRoutes(app: Express): Server {
             
             <div class="metrics-grid">
               <div class="metric-card">
-                <div class="metric-value">483.94</div>
+                <div class="metric-value">500.045</div>
                 <div class="metric-label">Tonnes CO2e</div>
               </div>
               <div class="metric-card">
@@ -266,6 +266,16 @@ export function registerRoutes(app: Express): Server {
               <h2>Performance Tracking</h2>
             </div>
             <div class="content">${content.kpi_tracking_narrative}</div>
+          </div>
+          ` : ''}
+          
+          ${content.social_impact ? `
+          <div class="section">
+            <div class="section-header">
+              <span class="section-icon"></span>
+              <h2>Social Impact & Community</h2>
+            </div>
+            <div class="content">${content.social_impact}</div>
           </div>
           ` : ''}
           

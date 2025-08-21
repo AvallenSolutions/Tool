@@ -17,7 +17,11 @@ import {
   CheckCircle2,
   ArrowRight,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Users,
+  Heart,
+  Globe,
+  GraduationCap
 } from "lucide-react";
 import {
   BarChart,
@@ -116,6 +120,7 @@ function AIWritingAssistant({
       carbon_footprint_narrative: `Write a detailed carbon footprint analysis for ${companyName || 'our company'} with a total footprint of 500.045 tonnes CO2e, explaining Scope 1, 2, and 3 emissions, reduction strategies, and progress made. Use a ${selectedTone} tone.`,
       initiatives_narrative: `Write about sustainability initiatives and environmental projects undertaken by ${companyName || 'our company'}, including renewable energy, waste reduction, and sustainable sourcing. Use a ${selectedTone} tone.`,
       kpi_tracking_narrative: `Write about key performance indicators and how ${companyName || 'our company'} tracks and measures sustainability progress over time. Use a ${selectedTone} tone.`,
+      social_impact: `Write about the social impact and community initiatives for ${companyName || 'our company'}, including employee welfare, fair trade practices, community development, and education support programs. Use a ${selectedTone} tone.`,
       summary: `Write a conclusion for a sustainability report that summarizes achievements and outlines future environmental commitments for ${companyName || 'our company'}. Reference the company's carbon footprint of 500.045 tonnes CO2e. Use a ${selectedTone} tone.`
     };
 
@@ -964,6 +969,109 @@ export function SummaryStep({ content, onChange, onSave, isSaving }: StepCompone
               <div className="text-center py-4 text-slate-500">
                 <Target className="w-6 h-6 mx-auto mb-2" />
                 <p className="text-sm">No future goals set</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+// Step 8: Social Impact Component
+export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+  const { data: company } = useQuery({ queryKey: ['/api/company'] });
+  
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+      {/* Editor Panel */}
+      <div className="flex flex-col">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">Social Impact & Community</h3>
+          <p className="text-sm text-slate-600">Describe your company's social initiatives and community engagement.</p>
+        </div>
+        
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="social_impact"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
+        <textarea
+          value={content}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Describe your social impact initiatives, community engagement, and employee welfare programs or use AI assistance above..."
+          className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+        
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-slate-500">
+            {content.length} characters
+          </div>
+          <Button onClick={onSave} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Progress"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Data Panel */}
+      <div className="flex flex-col space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Company Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {company ? (
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium text-slate-900 mb-2">Company Overview</h4>
+                  <div className="grid grid-cols-1 gap-2 text-sm">
+                    <div>
+                      <span className="text-slate-500">Name:</span>
+                      <span className="ml-2 font-medium">{company.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Country:</span>
+                      <span className="ml-2">{company.country}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Industry:</span>
+                      <span className="ml-2">Drinks & Beverages</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium text-slate-900 mb-2">Social Commitments</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-green-500" />
+                      <span className="text-sm">Fair trade practices</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Heart className="w-4 h-4 text-green-500" />
+                      <span className="text-sm">Employee wellbeing programs</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Globe className="w-4 h-4 text-green-500" />
+                      <span className="text-sm">Community development</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <GraduationCap className="w-4 h-4 text-green-500" />
+                      <span className="text-sm">Education support</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 text-slate-500">
+                <Building2 className="w-8 h-8 mx-auto mb-2" />
+                <p>No company information available</p>
+                <p className="text-sm">Complete company setup to view details</p>
               </div>
             )}
           </CardContent>
