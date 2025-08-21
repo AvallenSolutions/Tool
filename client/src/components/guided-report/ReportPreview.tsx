@@ -388,7 +388,71 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
           </section>
         )}
 
-        {/* 6. KPI Tracking */}
+        {/* 6. Social Impact & Community */}
+        {stepContent.social_impact && (
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Users className="w-6 h-6 text-purple-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Social Impact & Community</h2>
+            </div>
+            <div className="prose prose-slate max-w-none mb-6">
+              <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {stepContent.social_impact}
+              </p>
+            </div>
+
+            {/* Social Impact Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Employee Wellbeing</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Employee Satisfaction</span>
+                      <span className="font-medium">4.2/5.0</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Training Hours per Employee</span>
+                      <span className="font-medium">32 hours</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Gender Diversity</span>
+                      <span className="font-medium">48% / 52%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Community Impact</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Local Suppliers</span>
+                      <span className="font-medium">75%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Community Investment</span>
+                      <span className="font-medium">£25,000</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Jobs Created</span>
+                      <span className="font-medium">12 positions</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        )}
+
+        {/* 7. KPI Tracking */}
         {stepContent.kpi_tracking_narrative && (
           <section>
             <div className="flex items-center gap-3 mb-4">
@@ -455,7 +519,7 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
           </section>
         )}
 
-        {/* 7. Summary & Future Goals */}
+        {/* 8. Summary & Future Goals */}
         {stepContent.summary && (
           <section>
             <div className="flex items-center gap-3 mb-4">

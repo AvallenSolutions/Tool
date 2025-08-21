@@ -341,6 +341,24 @@ export function registerRoutes(app: Express): Server {
               <h2>Social Impact & Community</h2>
             </div>
             <div class="content">${content.social_impact}</div>
+            
+            <div class="social-metrics">
+              <h3 style="margin-bottom: 15px; color: #7c3aed;">Key Social Metrics</h3>
+              <div class="metrics-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="metric-card" style="border-left: 4px solid #7c3aed;">
+                  <h4 style="color: #7c3aed; margin-bottom: 10px;">Employee Wellbeing</h4>
+                  <p style="margin: 5px 0;">Employee Satisfaction: 4.2/5.0</p>
+                  <p style="margin: 5px 0;">Training Hours: 32 hours/employee</p>
+                  <p style="margin: 5px 0;">Gender Diversity: 48% / 52%</p>
+                </div>
+                <div class="metric-card" style="border-left: 4px solid #7c3aed;">
+                  <h4 style="color: #7c3aed; margin-bottom: 10px;">Community Impact</h4>
+                  <p style="margin: 5px 0;">Local Suppliers: 75%</p>
+                  <p style="margin: 5px 0;">Community Investment: £25,000</p>
+                  <p style="margin: 5px 0;">Jobs Created: 12 positions</p>
+                </div>
+              </div>
+            </div>
           </div>
           ` : ''}
           
