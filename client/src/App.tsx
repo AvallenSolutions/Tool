@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
+import Welcome from "@/pages/welcome";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
@@ -136,6 +137,7 @@ function Router() {
       <Route path="/" component={SimpleTestComponent} />
       <Route path="/login" component={Login} />
       <Route path="/landing" component={Landing} />
+      <Route path="/app/welcome" component={Welcome} />
       <Route path="/app/greenwash-guardian" component={GreenwashGuardian} />
       <Route path="/app/dashboard" component={Dashboard} />
       <Route path="/app/onboarding" component={Onboarding} />

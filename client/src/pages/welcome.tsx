@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 
-export default function Home() {
+export default function Welcome() {
   const [, navigate] = useLocation();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   
@@ -40,31 +40,12 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-avallen-green/5 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-avallen-green" />
-          <h2 className="text-xl font-semibold text-slate-gray mb-2">Loading your account...</h2>
-          <p className="text-gray-600">Please wait while we set things up.</p>
+          <h2 className="text-xl font-semibold text-slate-gray mb-2">Setting up your account...</h2>
+          <p className="text-gray-600">This should only take a moment.</p>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-avallen-green/5 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-slate-gray mb-2">Redirecting to login...</h2>
-          <p className="text-gray-600">You need to be logged in to access this page.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-avallen-green/5 flex items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-avallen-green" />
-        <h2 className="text-xl font-semibold text-slate-gray mb-2">Setting up your workspace...</h2>
-        <p className="text-gray-600">Just a moment while we prepare everything.</p>
-      </div>
-    </div>
-  );
+  return null;
 }

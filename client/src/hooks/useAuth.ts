@@ -1,19 +1,42 @@
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profileImageUrl: string;
+  role: 'user' | 'admin';
+}
+
 export function useAuth() {
-  // Optimized development auth for testing supplier system
+  const { data: user, isLoading, error } = useQuery<User>({
+    queryKey: ['/api/auth/user'],
+    queryFn: getQueryFn,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Development fallback when user query fails
+  const developmentUser = {
+    id: "44886248",
+    email: "dev44886248@example.com",
+    firstName: "Dev",
+    lastName: "User",
+    profileImageUrl: "",
+    role: "admin" as const
+  };
+
+  const finalUser = user || (process.env.NODE_ENV === 'development' ? developmentUser : null);
+  const isAuthenticated = !!finalUser;
+  const isAdmin = finalUser?.role === 'admin';
+
   return {
-    user: {
-      id: "dev-user",
-      email: "demo@avallen.com",
-      firstName: "Demo",
-      lastName: "User",
-      profileImageUrl: "",
-      role: "admin" as const
-    },
-    isLoading: false,
-    isAuthenticated: true,
-    isAdmin: true,
+    user: finalUser,
+    isLoading,
+    isAuthenticated,
+    isAdmin,
+    error
   };
 }
