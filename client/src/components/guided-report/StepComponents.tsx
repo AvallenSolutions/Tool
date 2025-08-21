@@ -691,9 +691,11 @@ export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: Ste
 // Step 5: Sustainability Initiatives Component
 export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }: StepComponentProps & { stepKey: string }) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
-  const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
-  const { data: initiativesData } = useQuery({ queryKey: ['/api/initiatives'] });
+  const { data: smartGoalsResponse } = useQuery({ queryKey: ['/api/smart-goals'] });
   const [selectedInitiatives, setSelectedInitiatives] = useState<string[]>([]);
+  
+  // Use SMART Goals as initiatives
+  const initiativesData = smartGoalsResponse?.goals || smartGoalsResponse || [];
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -752,8 +754,8 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
       {/* Editor Panel */}
       <div className="flex flex-col">
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Sustainability Initiatives</h3>
-          <p className="text-sm text-slate-600">Choose initiatives to feature and describe their impact.</p>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">SMART Goals Selection</h3>
+          <p className="text-sm text-slate-600">Choose SMART goals from your dashboard to feature as sustainability initiatives in your report.</p>
         </div>
         
         {/* Initiative Selection */}
@@ -761,7 +763,7 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="w-4 h-4" />
-              Select Initiatives to Feature
+              Select SMART Goals to Feature
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -787,15 +789,22 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm text-slate-900">{initiative.initiativeName}</h4>
+                      <h4 className="font-medium text-sm text-slate-900">{initiative.title}</h4>
                       {initiative.description && (
                         <p className="text-xs text-slate-600 mt-1">{initiative.description}</p>
                       )}
-                      {initiative.strategicPillar && (
-                        <Badge variant="outline" className="mt-2 text-xs">
-                          {initiative.strategicPillar}
-                        </Badge>
-                      )}
+                      <div className="flex gap-2 mt-2">
+                        {initiative.priority && (
+                          <Badge variant="outline" className="text-xs">
+                            {initiative.priority} priority
+                          </Badge>
+                        )}
+                        {initiative.category && (
+                          <Badge variant="outline" className="text-xs">
+                            {initiative.category}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -803,14 +812,14 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
             ) : (
               <div className="text-center py-6">
                 <Target className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 mb-3">No initiatives found</p>
-                <p className="text-xs text-gray-400">Create initiatives in your Company settings to feature them in reports</p>
+                <p className="text-sm text-gray-500 mb-3">No SMART goals found</p>
+                <p className="text-xs text-gray-400">Create SMART goals in your dashboard to feature them as initiatives in reports</p>
               </div>
             )}
             {selectedInitiatives.length > 0 && (
               <div className="mt-4 pt-4 border-t">
                 <p className="text-sm text-green-700 font-medium">
-                  {selectedInitiatives.length} initiative{selectedInitiatives.length === 1 ? '' : 's'} selected for report
+                  {selectedInitiatives.length} SMART goal{selectedInitiatives.length === 1 ? '' : 's'} selected for report
                 </p>
               </div>
             )}
@@ -848,7 +857,7 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              Selected Initiatives
+              Selected SMART Goals
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -859,25 +868,37 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
                   .map((initiative: any) => (
                   <div key={initiative.id} className="border rounded-lg p-4 bg-green-50 border-green-200">
                     <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-slate-900">{initiative.initiativeName}</h4>
+                      <h4 className="font-medium text-slate-900">{initiative.title}</h4>
                       <Badge variant="secondary" className="bg-green-100 text-green-700">
                         {initiative.status || 'active'}
                       </Badge>
                     </div>
                     <p className="text-sm text-slate-600 mb-3">{initiative.description}</p>
-                    {initiative.strategicPillar && (
-                      <Badge variant="outline" className="text-xs">
-                        {initiative.strategicPillar}
-                      </Badge>
-                    )}
+                    <div className="flex gap-2">
+                      {initiative.priority && (
+                        <Badge variant="outline" className="text-xs">
+                          {initiative.priority} priority
+                        </Badge>
+                      )}
+                      {initiative.category && (
+                        <Badge variant="outline" className="text-xs">
+                          {initiative.category}
+                        </Badge>
+                      )}
+                      {initiative.targetDate && (
+                        <Badge variant="outline" className="text-xs">
+                          Due: {new Date(initiative.targetDate).toLocaleDateString()}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-6">
                 <Target className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No initiatives selected</p>
-                <p className="text-xs text-gray-400 mt-1">Choose initiatives from the left panel to feature in your report</p>
+                <p className="text-sm text-gray-500">No SMART goals selected</p>
+                <p className="text-xs text-gray-400 mt-1">Choose SMART goals from the left panel to feature in your report</p>
               </div>
             )}
           </CardContent>
@@ -887,14 +908,14 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              SMART Goals Overview
+              All SMART Goals
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {smartGoalsData?.data?.length > 0 ? (
+            {initiativesData?.length > 0 ? (
               <div className="space-y-3">
-                {smartGoalsData.data.slice(0, 2).map((goal: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-3">
+                {initiativesData.slice(0, 3).map((goal: any, index: number) => (
+                  <div key={goal.id || index} className="border rounded-lg p-3">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium text-sm text-slate-900">{goal.title}</h4>
                       <Badge variant={goal.priority === 'high' ? 'destructive' : goal.priority === 'medium' ? 'default' : 'secondary'} className="text-xs">
@@ -902,16 +923,24 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Progress: {goal.progress}%</span>
-                      <span className="text-slate-500">Due: {new Date(goal.targetDate).toLocaleDateString()}</span>
+                      <span className="text-slate-500">Status: {goal.status || 'active'}</span>
+                      {goal.targetDate && (
+                        <span className="text-slate-500">Due: {new Date(goal.targetDate).toLocaleDateString()}</span>
+                      )}
                     </div>
                   </div>
                 ))}
+                {initiativesData.length > 3 && (
+                  <p className="text-xs text-slate-500 text-center pt-2">
+                    +{initiativesData.length - 3} more goals available
+                  </p>
+                )}
               </div>
             ) : (
               <div className="text-center py-4 text-slate-500">
                 <TrendingUp className="w-6 h-6 mx-auto mb-2" />
                 <p className="text-sm">No SMART goals found</p>
+                <p className="text-xs text-gray-400 mt-1">Create SMART goals in your dashboard to use them as initiatives</p>
               </div>
             )}
           </CardContent>
