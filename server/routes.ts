@@ -7065,6 +7065,41 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
 
   // ============ GUIDED REPORT WIZARD API ENDPOINTS ============
 
+  // Fetch guided sustainability reports
+  app.get('/api/reports/guided', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Import the customReports schema
+      const { customReports } = await import('@shared/schema');
+      
+      // Fetch all guided reports for the company
+      const reports = await db
+        .select()
+        .from(customReports)
+        .where(eq(customReports.companyId, company.id))
+        .orderBy(desc(customReports.createdAt));
+
+      res.json(reports);
+    } catch (error) {
+      console.error('Error fetching guided reports:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch guided reports' 
+      });
+    }
+  });
+
   // Create new guided report
   app.post('/api/reports/guided/create', isAuthenticated, async (req, res) => {
     try {

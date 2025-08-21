@@ -27,6 +27,14 @@ export default function Reports() {
     gcTime: 0, // Don't cache data
   });
 
+  // Fetch guided sustainability reports
+  const { data: guidedReports, isLoading: guidedReportsLoading } = useQuery({
+    queryKey: ["/api/reports/guided"],
+    retry: false,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
   // Ensure reports is always an array to prevent TypeScript errors
   const reportsData = Array.isArray(reports) ? reports : [];
 
@@ -134,9 +142,10 @@ export default function Reports() {
     }
   };
 
-  // Separate reports by type with proper null checks - Annual reports removed, using Dynamic Report Builder
+  // Separate reports by type with proper null checks
   const lcaReportsData = reportsData.filter((report: any) => report.reportType === 'lca') || [];
   const productLcaReports = Array.isArray(lcaReports) ? lcaReports : [];
+  const guidedReportsData = Array.isArray(guidedReports) ? guidedReports : [];
 
   return (
     <div className="flex h-screen bg-lightest-gray">
@@ -146,7 +155,21 @@ export default function Reports() {
         <main className="flex-1 p-6 overflow-y-auto space-y-8">
           
           {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <Award className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-600">Sustainability Reports</p>
+                    <p className="text-2xl font-bold text-green-900">{guidedReportsData.length}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
@@ -198,7 +221,77 @@ export default function Reports() {
             </div>
           )}
 
-
+          {/* Guided Sustainability Reports Section */}
+          <div>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Award className="w-5 h-5 text-green-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900">Sustainability Reports</h2>
+            </div>
+            
+            {guidedReportsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {guidedReportsData.length > 0 ? (
+                  guidedReportsData.map((report: any) => (
+                    <Card key={report.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-green-300">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-green-50 rounded-full">
+                              <Award className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg text-gray-900">
+                                {report.reportTitle || 'Sustainability Report'}
+                              </h3>
+                              <p className="text-sm text-gray-500 flex items-center mt-1">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                Created {new Date(report.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={() => setLocation(`/app/guided-report/${report.id}`)}
+                              variant="outline"
+                              size="sm"
+                              className="border-green-500 text-green-600 hover:bg-green-50"
+                            >
+                              Continue Editing
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-gray-600">
+                          <p className="mb-2">Report Type: <span className="font-medium text-gray-800">Guided Sustainability</span></p>
+                          {report.selectedInitiatives && report.selectedInitiatives.length > 0 && (
+                            <p>Selected Initiatives: <span className="font-medium text-gray-800">{report.selectedInitiatives.length}</span></p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="border-2 border-dashed border-gray-300">
+                    <CardContent className="py-12 text-center">
+                      <div className="p-4 bg-green-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                        <Award className="w-10 h-10 text-green-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Sustainability Reports Yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        Create your first guided sustainability report to showcase your environmental impact.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* LCA Reports Section */}
           <div>
