@@ -112,11 +112,11 @@ function AIWritingAssistant({
     const prompts = {
       introduction: `Write a ${selectedTone} introduction for a sustainability report for ${companyName || 'our company'}, highlighting environmental commitment and the purpose of the report.`,
       company_info_narrative: `Write a compelling company story for ${companyName || 'our company'} that focuses on sustainability mission, vision, and approach to environmental responsibility. Use a ${selectedTone} tone.`,
-      key_metrics_narrative: `Write an analysis of key environmental metrics including carbon footprint (483.94 tonnes CO2e), water usage (11.7M litres), and waste generation (0.1 tonnes) for ${companyName || 'our company'}. Use a ${selectedTone} tone.`,
-      carbon_footprint_narrative: `Write a detailed carbon footprint analysis explaining Scope 1, 2, and 3 emissions, reduction strategies, and progress made by ${companyName || 'our company'}. Use a ${selectedTone} tone.`,
+      key_metrics_narrative: `Write an analysis of key environmental metrics including carbon footprint (500.045 tonnes CO2e), water usage (11.7M litres), and waste generation (0.1 tonnes) for ${companyName || 'our company'}. Use a ${selectedTone} tone.`,
+      carbon_footprint_narrative: `Write a detailed carbon footprint analysis for ${companyName || 'our company'} with a total footprint of 500.045 tonnes CO2e, explaining Scope 1, 2, and 3 emissions, reduction strategies, and progress made. Use a ${selectedTone} tone.`,
       initiatives_narrative: `Write about sustainability initiatives and environmental projects undertaken by ${companyName || 'our company'}, including renewable energy, waste reduction, and sustainable sourcing. Use a ${selectedTone} tone.`,
       kpi_tracking_narrative: `Write about key performance indicators and how ${companyName || 'our company'} tracks and measures sustainability progress over time. Use a ${selectedTone} tone.`,
-      summary: `Write a conclusion for a sustainability report that summarizes achievements and outlines future environmental commitments for ${companyName || 'our company'}. Use a ${selectedTone} tone.`
+      summary: `Write a conclusion for a sustainability report that summarizes achievements and outlines future environmental commitments for ${companyName || 'our company'}. Reference the company's carbon footprint of 500.045 tonnes CO2e. Use a ${selectedTone} tone.`
     };
 
     const prompt = prompts[sectionType as keyof typeof prompts] || prompts.introduction;
