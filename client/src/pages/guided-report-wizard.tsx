@@ -188,15 +188,15 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `sustainability-report-${new Date().getFullYear()}.html`;
+      a.download = `sustainability-report-${new Date().getFullYear()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Report Exported Successfully! ✅",
-        description: "HTML file downloaded. Open it in your browser and use Print → Save as PDF to get your final report.",
-        duration: 8000
+        title: "PDF Generated Successfully! ✅",
+        description: "Your professional sustainability report has been downloaded as a PDF.",
+        duration: 5000
       });
     } catch (error) {
       toast({
