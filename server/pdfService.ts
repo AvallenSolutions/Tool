@@ -384,9 +384,12 @@ export class PDFService {
           '--disable-dev-shm-usage',
           '--disable-accelerated-2d-canvas',
           '--disable-gpu',
-          '--window-size=1920x1080'
+          '--window-size=1920x1080',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
         ],
-        headless: true
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
       });
 
       const page = await browser.newPage();
@@ -439,8 +442,11 @@ export class PDFService {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu'
-        ]
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
+        ],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
       });
 
       const page = await browser.newPage();
