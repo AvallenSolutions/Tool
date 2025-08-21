@@ -83,149 +83,130 @@ export class ReportExportService {
     console.log('📊 Creating PowerPoint presentation...');
     
     try {
-      const officegen = require('officegen');
-      const pptx = officegen('pptx');
+      // Use createRequire to properly load CommonJS modules
+      const { createRequire } = await import('module');
+      const require = createRequire(import.meta.url);
+      const PptxGenJS = require('pptxgenjs');
+      const pptx = new PptxGenJS();
       
-      // Set presentation properties (using proper API)
-      pptx.setDocTitle && pptx.setDocTitle(reportData.title);
-      pptx.setDocSubject && pptx.setDocSubject('Sustainability Report');
-      pptx.setDocAuthor && pptx.setDocAuthor(reportData.companyName);
+      // Set presentation properties
+      pptx.author = reportData.companyName;
+      pptx.company = reportData.companyName;
+      pptx.title = reportData.title;
+      pptx.subject = 'Sustainability Report';
       
       // Slide 1: Title Slide
-      const titleSlide = pptx.makeNewSlide();
-      titleSlide.name = 'Title Slide';
+      const titleSlide = pptx.addSlide();
       titleSlide.addText(reportData.title, {
-        x: 'c', y: 20,
-        font_size: 44,
-        font_face: 'Arial',
-        color: 'ff10b981',
+        x: 0.5, y: 1.0, w: 8.5, h: 1.5,
+        fontSize: 44,
+        fontFace: 'Arial',
+        color: '10b981',
         bold: true,
         align: 'center'
       });
       titleSlide.addText(reportData.companyName, {
-        x: 'c', y: 40,
-        font_size: 28,
-        font_face: 'Arial',
-        color: 'ff666666',
+        x: 0.5, y: 2.8, w: 8.5, h: 1.0,
+        fontSize: 28,
+        fontFace: 'Arial',
+        color: '666666',
         align: 'center'
       });
       titleSlide.addText(`Sustainability Report ${new Date().getFullYear()}`, {
-        x: 'c', y: 80,
-        font_size: 18,
-        font_face: 'Arial',
-        color: 'ff888888',
+        x: 0.5, y: 6.0, w: 8.5, h: 0.8,
+        fontSize: 18,
+        fontFace: 'Arial',
+        color: '888888',
         align: 'center'
       });
       
       // Slide 2: Executive Summary
-      const summarySlide = pptx.makeNewSlide();
-      summarySlide.name = 'Executive Summary';
+      const summarySlide = pptx.addSlide();
       summarySlide.addText('Executive Summary', {
-        x: 5, y: 10,
-        font_size: 36,
-        font_face: 'Arial',
-        color: 'ff10b981',
+        x: 0.5, y: 0.5, w: 8.5, h: 1.0,
+        fontSize: 36,
+        fontFace: 'Arial',
+        color: '10b981',
         bold: true
       });
       summarySlide.addText('• Commitment to environmental stewardship\n• Significant progress in carbon reduction\n• Enhanced sustainability initiatives\n• Clear targets for future improvement', {
-        x: 5, y: 25,
-        font_size: 18,
-        font_face: 'Arial',
-        color: 'ff333333'
+        x: 0.5, y: 1.8, w: 8.5, h: 4.0,
+        fontSize: 18,
+        fontFace: 'Arial',
+        color: '333333'
       });
       
       // Slide 3: Key Metrics
-      const metricsSlide = pptx.makeNewSlide();
-      metricsSlide.name = 'Key Environmental Metrics';
+      const metricsSlide = pptx.addSlide();
       metricsSlide.addText('Key Environmental Metrics', {
-        x: 5, y: 10,
-        font_size: 36,
-        font_face: 'Arial',
-        color: 'ff10b981',
+        x: 0.5, y: 0.5, w: 8.5, h: 1.0,
+        fontSize: 36,
+        fontFace: 'Arial',
+        color: '10b981',
         bold: true
       });
       
       const metrics = reportData.metrics || { co2e: 500.045, water: 11700000, waste: 0.1 };
       metricsSlide.addText(`Carbon Footprint: ${metrics.co2e} tonnes CO₂e\nWater Usage: ${(metrics.water / 1000000).toFixed(1)}M litres\nWaste Generated: ${metrics.waste} tonnes`, {
-        x: 5, y: 30,
-        font_size: 20,
-        font_face: 'Arial',
-        color: 'ff2d5016'
+        x: 0.5, y: 2.0, w: 8.5, h: 3.0,
+        fontSize: 20,
+        fontFace: 'Arial',
+        color: '2d5016'
       });
       
       // Slide 4: Carbon Footprint Analysis
-      const carbonSlide = pptx.makeNewSlide();
-      carbonSlide.name = 'Carbon Footprint Analysis';
+      const carbonSlide = pptx.addSlide();
       carbonSlide.addText('Carbon Footprint Analysis', {
-        x: 5, y: 10,
-        font_size: 36,
-        font_face: 'Arial',
-        color: 'ff10b981',
+        x: 0.5, y: 0.5, w: 8.5, h: 1.0,
+        fontSize: 36,
+        fontFace: 'Arial',
+        color: '10b981',
         bold: true
       });
       carbonSlide.addText('Scope 1: Direct emissions from owned sources\nScope 2: Indirect emissions from purchased energy\nScope 3: Other indirect emissions in value chain\n\nFocus areas for reduction:\n• Energy efficiency improvements\n• Renewable energy adoption\n• Supply chain optimization', {
-        x: 5, y: 25,
-        font_size: 16,
-        font_face: 'Arial',
-        color: 'ff333333'
+        x: 0.5, y: 1.8, w: 8.5, h: 4.0,
+        fontSize: 16,
+        fontFace: 'Arial',
+        color: '333333'
       });
       
       // Slide 5: Sustainability Initiatives
-      const initiativesSlide = pptx.makeNewSlide();
-      initiativesSlide.name = 'Sustainability Initiatives';
+      const initiativesSlide = pptx.addSlide();
       initiativesSlide.addText('Sustainability Initiatives', {
-        x: 5, y: 10,
-        font_size: 36,
-        font_face: 'Arial',
-        color: 'ff10b981',
+        x: 0.5, y: 0.5, w: 8.5, h: 1.0,
+        fontSize: 36,
+        fontFace: 'Arial',
+        color: '10b981',
         bold: true
       });
       initiativesSlide.addText('Environmental Programs:\n• Waste reduction and recycling initiatives\n• Water conservation programs\n• Sustainable packaging solutions\n\nSocial Impact:\n• Community engagement programs\n• Employee training and development\n• Local supplier support', {
-        x: 5, y: 25,
-        font_size: 16,
-        font_face: 'Arial',
-        color: 'ff333333'
+        x: 0.5, y: 1.8, w: 8.5, h: 4.0,
+        fontSize: 16,
+        fontFace: 'Arial',
+        color: '333333'
       });
       
       // Slide 6: Future Goals
-      const goalsSlide = pptx.makeNewSlide();
-      goalsSlide.name = 'Future Goals & Commitments';
+      const goalsSlide = pptx.addSlide();
       goalsSlide.addText('Future Goals & Commitments', {
-        x: 5, y: 10,
-        font_size: 36,
-        font_face: 'Arial',
-        color: 'ff10b981',
+        x: 0.5, y: 0.5, w: 8.5, h: 1.0,
+        fontSize: 36,
+        fontFace: 'Arial',
+        color: '10b981',
         bold: true
       });
       goalsSlide.addText('2025 Targets:\n• Reduce carbon emissions by 25%\n• Achieve 50% renewable energy usage\n• Zero waste to landfill\n\nLong-term Vision:\n• Carbon neutral operations by 2030\n• 100% sustainable packaging\n• Industry leadership in sustainability', {
-        x: 5, y: 25,
-        font_size: 16,
-        font_face: 'Arial',
-        color: 'ff333333'
+        x: 0.5, y: 1.8, w: 8.5, h: 4.0,
+        fontSize: 16,
+        fontFace: 'Arial',
+        color: '333333'
       });
       
-      // Generate PowerPoint file
-      return new Promise((resolve, reject) => {
-        const chunks: Buffer[] = [];
-        pptx.generate({
-          'finalize': (written: any) => {
-            console.log('✅ PowerPoint generated successfully, size:', written);
-          },
-          'error': (err: any) => {
-            console.error('❌ PowerPoint generation error:', err);
-            reject(err);
-          }
-        })
-        .on('data', (chunk: Buffer) => {
-          chunks.push(chunk);
-        })
-        .on('end', () => {
-          resolve(Buffer.concat(chunks));
-        })
-        .on('error', (err: any) => {
-          reject(err);
-        });
-      });
+      // Generate the presentation buffer
+      console.log('🔄 Generating PowerPoint buffer...');
+      const buffer = await pptx.write({ outputType: 'nodebuffer' });
+      console.log(`✅ PowerPoint generated: ${buffer.length} bytes`);
+      return buffer;
       
     } catch (error) {
       console.error('❌ PowerPoint creation failed:', error);
