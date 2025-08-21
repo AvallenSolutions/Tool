@@ -83,37 +83,37 @@ export class ReportExportService {
     console.log('📊 Creating PowerPoint presentation...');
     
     try {
-      const officegen = await import('officegen');
-      const pptx = officegen.default('pptx');
+      const officegen = require('officegen');
+      const pptx = officegen('pptx');
       
-      // Set presentation properties
-      pptx.setDocTitle(reportData.title);
-      pptx.setDocSubject('Sustainability Report');
-      pptx.setDocAuthor(reportData.companyName);
+      // Set presentation properties (using proper API)
+      pptx.setDocTitle && pptx.setDocTitle(reportData.title);
+      pptx.setDocSubject && pptx.setDocSubject('Sustainability Report');
+      pptx.setDocAuthor && pptx.setDocAuthor(reportData.companyName);
       
       // Slide 1: Title Slide
       const titleSlide = pptx.makeNewSlide();
       titleSlide.name = 'Title Slide';
       titleSlide.addText(reportData.title, {
-        x: 'c', y: '30%',
+        x: 'c', y: 20,
         font_size: 44,
         font_face: 'Arial',
-        color: options.branding?.primaryColor || '10b981',
+        color: 'ff10b981',
         bold: true,
         align: 'center'
       });
       titleSlide.addText(reportData.companyName, {
-        x: 'c', y: '45%',
+        x: 'c', y: 40,
         font_size: 28,
         font_face: 'Arial',
-        color: '666666',
+        color: 'ff666666',
         align: 'center'
       });
       titleSlide.addText(`Sustainability Report ${new Date().getFullYear()}`, {
-        x: 'c', y: '80%',
+        x: 'c', y: 80,
         font_size: 18,
         font_face: 'Arial',
-        color: '888888',
+        color: 'ff888888',
         align: 'center'
       });
       
@@ -121,87 +121,87 @@ export class ReportExportService {
       const summarySlide = pptx.makeNewSlide();
       summarySlide.name = 'Executive Summary';
       summarySlide.addText('Executive Summary', {
-        x: '5%', y: '10%',
+        x: 5, y: 10,
         font_size: 36,
         font_face: 'Arial',
-        color: options.branding?.primaryColor || '10b981',
+        color: 'ff10b981',
         bold: true
       });
       summarySlide.addText('• Commitment to environmental stewardship\n• Significant progress in carbon reduction\n• Enhanced sustainability initiatives\n• Clear targets for future improvement', {
-        x: '5%', y: '25%',
+        x: 5, y: 25,
         font_size: 18,
         font_face: 'Arial',
-        color: '333333'
+        color: 'ff333333'
       });
       
       // Slide 3: Key Metrics
       const metricsSlide = pptx.makeNewSlide();
       metricsSlide.name = 'Key Environmental Metrics';
       metricsSlide.addText('Key Environmental Metrics', {
-        x: '5%', y: '10%',
+        x: 5, y: 10,
         font_size: 36,
         font_face: 'Arial',
-        color: options.branding?.primaryColor || '10b981',
+        color: 'ff10b981',
         bold: true
       });
       
       const metrics = reportData.metrics || { co2e: 500.045, water: 11700000, waste: 0.1 };
       metricsSlide.addText(`Carbon Footprint: ${metrics.co2e} tonnes CO₂e\nWater Usage: ${(metrics.water / 1000000).toFixed(1)}M litres\nWaste Generated: ${metrics.waste} tonnes`, {
-        x: '5%', y: '30%',
+        x: 5, y: 30,
         font_size: 20,
         font_face: 'Arial',
-        color: '2d5016'
+        color: 'ff2d5016'
       });
       
       // Slide 4: Carbon Footprint Analysis
       const carbonSlide = pptx.makeNewSlide();
       carbonSlide.name = 'Carbon Footprint Analysis';
       carbonSlide.addText('Carbon Footprint Analysis', {
-        x: '5%', y: '10%',
+        x: 5, y: 10,
         font_size: 36,
         font_face: 'Arial',
-        color: options.branding?.primaryColor || '10b981',
+        color: 'ff10b981',
         bold: true
       });
       carbonSlide.addText('Scope 1: Direct emissions from owned sources\nScope 2: Indirect emissions from purchased energy\nScope 3: Other indirect emissions in value chain\n\nFocus areas for reduction:\n• Energy efficiency improvements\n• Renewable energy adoption\n• Supply chain optimization', {
-        x: '5%', y: '25%',
+        x: 5, y: 25,
         font_size: 16,
         font_face: 'Arial',
-        color: '333333'
+        color: 'ff333333'
       });
       
       // Slide 5: Sustainability Initiatives
       const initiativesSlide = pptx.makeNewSlide();
       initiativesSlide.name = 'Sustainability Initiatives';
       initiativesSlide.addText('Sustainability Initiatives', {
-        x: '5%', y: '10%',
+        x: 5, y: 10,
         font_size: 36,
         font_face: 'Arial',
-        color: options.branding?.primaryColor || '10b981',
+        color: 'ff10b981',
         bold: true
       });
       initiativesSlide.addText('Environmental Programs:\n• Waste reduction and recycling initiatives\n• Water conservation programs\n• Sustainable packaging solutions\n\nSocial Impact:\n• Community engagement programs\n• Employee training and development\n• Local supplier support', {
-        x: '5%', y: '25%',
+        x: 5, y: 25,
         font_size: 16,
         font_face: 'Arial',
-        color: '333333'
+        color: 'ff333333'
       });
       
       // Slide 6: Future Goals
       const goalsSlide = pptx.makeNewSlide();
       goalsSlide.name = 'Future Goals & Commitments';
       goalsSlide.addText('Future Goals & Commitments', {
-        x: '5%', y: '10%',
+        x: 5, y: 10,
         font_size: 36,
         font_face: 'Arial',
-        color: options.branding?.primaryColor || '10b981',
+        color: 'ff10b981',
         bold: true
       });
       goalsSlide.addText('2025 Targets:\n• Reduce carbon emissions by 25%\n• Achieve 50% renewable energy usage\n• Zero waste to landfill\n\nLong-term Vision:\n• Carbon neutral operations by 2030\n• 100% sustainable packaging\n• Industry leadership in sustainability', {
-        x: '5%', y: '25%',
+        x: 5, y: 25,
         font_size: 16,
         font_face: 'Arial',
-        color: '333333'
+        color: 'ff333333'
       });
       
       // Generate PowerPoint file
