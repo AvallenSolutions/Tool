@@ -109,7 +109,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       // Fetch the guided report from customReports table
-      const { customReports, companies } = await import('@shared/schema');
+      const { customReports, companies, sustainabilityProfiles } = await import('@shared/schema');
       const [report] = await db
         .select({
           report: customReports,
@@ -132,6 +132,14 @@ export function registerRoutes(app: Express): Server {
         .from(companyData)
         .where(eq(companyData.companyId, report.company?.id || 1))
         .orderBy(desc(companyData.createdAt))
+        .limit(1);
+
+      // Fetch company's sustainability data for social metrics
+      const [sustainabilityData] = await db
+        .select()
+        .from(sustainabilityProfiles)
+        .where(eq(sustainabilityProfiles.companyId, report.company?.id || 1))
+        .orderBy(desc(sustainabilityProfiles.updatedAt))
         .limit(1);
 
       // Calculate metrics from company data
@@ -157,7 +165,7 @@ export function registerRoutes(app: Express): Server {
           category: 'sustainability'
         } : undefined,
         metrics,
-        socialData: report.company?.socialData
+        socialData: sustainabilityData
       };
 
       // Use the enhanced export service

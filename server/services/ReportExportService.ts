@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import JSZip from 'jszip';
 import { PDFService } from '../pdfService';
+import { ModernPDFService } from '../modernPdfService';
 import { google } from 'googleapis';
 
 export interface ExportOptions {
@@ -35,9 +36,11 @@ export interface ReportData {
 
 export class ReportExportService {
   private pdfService: PDFService;
+  private modernPdfService: ModernPDFService;
 
   constructor() {
     this.pdfService = new PDFService();
+    this.modernPdfService = new ModernPDFService();
   }
 
   async exportReport(reportData: ReportData, format: string, options: ExportOptions): Promise<Buffer> {
@@ -62,21 +65,23 @@ export class ReportExportService {
   }
 
   private async exportPDF(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    const htmlContent = this.generateStandardHTML(reportData);
-    return this.pdfService.generateFromHTML(htmlContent, {
-      title: reportData.title,
-      format: 'A4',
-      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
-    });
+    // Use the modern PDF service for better design and layout
+    return this.modernPdfService.generateModernReport(
+      reportData.title,
+      reportData.content,
+      reportData.socialData,
+      options.branding?.companyName || reportData.companyName || 'Demo Company'
+    );
   }
 
   private async exportBrandedPDF(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    const htmlContent = this.generateBrandedHTML(reportData, options.branding);
-    return this.pdfService.generateFromHTML(htmlContent, {
-      title: reportData.title,
-      format: 'A4',
-      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
-    });
+    // Use the modern PDF service with branding options
+    return this.modernPdfService.generateModernReport(
+      reportData.title,
+      reportData.content,
+      reportData.socialData,
+      options.branding?.companyName || reportData.companyName || 'Demo Company'
+    );
   }
 
   private async exportPowerPoint(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
