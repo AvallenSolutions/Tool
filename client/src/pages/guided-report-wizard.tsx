@@ -97,7 +97,7 @@ const WIZARD_STEPS = [
 interface GuidedReportWizardProps {}
 
 export default function GuidedReportWizard({}: GuidedReportWizardProps) {
-  const [match, params] = useRoute("/guided-report/:reportId");
+  const [match, params] = useRoute("/app/guided-report/:reportId");
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
