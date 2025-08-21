@@ -246,10 +246,10 @@ export function SMARTGoals() {
         <CardContent>
           <div className="space-y-4">
             {goals.map((goal) => {
-              const statusStyle = statusConfig[goal.status as keyof typeof statusConfig];
-              const priorityStyle = priorityConfig[goal.priority as keyof typeof priorityConfig];
-              const categoryStyle = categoryConfig[goal.category as keyof typeof categoryConfig];
-              const StatusIcon = statusStyle.icon;
+              const statusStyle = statusConfig[goal.status as keyof typeof statusConfig] || statusConfig.draft;
+              const priorityStyle = priorityConfig[goal.priority as keyof typeof priorityConfig] || priorityConfig.low;
+              const categoryStyle = categoryConfig[goal.category as keyof typeof categoryConfig] || categoryConfig.sustainability;
+              const StatusIcon = statusStyle?.icon || Clock;
               const isOverdue = new Date(goal.targetDate) < new Date() && goal.status !== 'completed';
               
               return (
@@ -261,15 +261,15 @@ export function SMARTGoals() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-gray-900">{goal.title}</h4>
-                        <Badge className={statusStyle.color}>
+                        <Badge className={statusStyle?.color || 'bg-gray-100 text-gray-800'}>
                           <StatusIcon className="w-3 h-3 mr-1" />
-                          {statusStyle.label}
+                          {statusStyle?.label || 'Unknown'}
                         </Badge>
-                        <Badge variant="outline" className={priorityStyle.color}>
-                          {priorityStyle.label}
+                        <Badge variant="outline" className={priorityStyle?.color || 'bg-gray-100 text-gray-800'}>
+                          {priorityStyle?.label || 'Unknown'}
                         </Badge>
-                        <Badge variant="outline" className={categoryStyle.color}>
-                          {categoryStyle.label}
+                        <Badge variant="outline" className={categoryStyle?.color || 'bg-gray-100 text-gray-800'}>
+                          {categoryStyle?.label || 'Unknown'}
                         </Badge>
                         {isOverdue && (
                           <Badge variant="outline" className="bg-red-100 text-red-800">
