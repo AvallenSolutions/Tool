@@ -793,10 +793,10 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
           value={content}
           onChange={(e) => {
             onChange(e.target.value);
-            // Auto-save after 2 seconds of no typing
+            // Auto-save after 2 seconds of no typing, but only if there's content
             clearTimeout((window as any).autoSaveTimer);
             (window as any).autoSaveTimer = setTimeout(() => {
-              if (e.target.value.trim() !== content.trim()) {
+              if (e.target.value.trim() !== content.trim() && e.target.value.trim().length > 0) {
                 onSave();
               }
             }, 2000);
@@ -995,10 +995,10 @@ export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepCom
           value={content}
           onChange={(e) => {
             onChange(e.target.value);
-            // Auto-save after 2 seconds of no typing
+            // Auto-save after 2 seconds of no typing, but only if there's content
             clearTimeout((window as any).autoSaveTimerKPI);
             (window as any).autoSaveTimerKPI = setTimeout(() => {
-              if (e.target.value.trim() !== content.trim()) {
+              if (e.target.value.trim() !== content.trim() && e.target.value.trim().length > 0) {
                 onSave();
               }
             }, 2000);
