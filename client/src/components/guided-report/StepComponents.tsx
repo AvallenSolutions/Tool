@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
   Building2, 
@@ -14,7 +15,9 @@ import {
   Target,
   Lightbulb,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Sparkles,
+  RefreshCw
 } from "lucide-react";
 import {
   BarChart,
@@ -38,9 +41,122 @@ interface StepComponentProps {
   isSaving: boolean;
 }
 
+// AI Writing Assistant Hook
+function useAIAssistant() {
+  const { toast } = useToast();
+
+  const generateContentMutation = useMutation({
+    mutationFn: async ({ prompt, contentType, length = 'medium' }: { 
+      prompt: string; 
+      contentType: string; 
+      length?: 'short' | 'medium' | 'long';
+    }) => {
+      const response = await fetch('/api/ai/generate-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          contentType,
+          tone: 'professional',
+          length
+        }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate content');
+      }
+
+      return response.json();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "AI Generation Failed",
+        description: error.message || "Failed to generate content. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  return {
+    generateContent: generateContentMutation.mutate,
+    isGenerating: generateContentMutation.isPending,
+    generatedContent: generateContentMutation.data?.suggestions?.[0] || null
+  };
+}
+
+// AI Writing Assistant Component
+function AIWritingAssistant({ 
+  sectionType, 
+  companyName, 
+  onContentGenerated,
+  className = "" 
+}: { 
+  sectionType: string;
+  companyName?: string;
+  onContentGenerated: (content: string) => void;
+  className?: string;
+}) {
+  const { generateContent, isGenerating } = useAIAssistant();
+  
+  const handleGenerateContent = () => {
+    const prompts = {
+      introduction: `Write a professional introduction for a sustainability report for ${companyName || 'our company'}, highlighting environmental commitment and the purpose of the report.`,
+      company_info_narrative: `Write a compelling company story for ${companyName || 'our company'} that focuses on sustainability mission, vision, and approach to environmental responsibility.`,
+      key_metrics_narrative: `Write an analysis of key environmental metrics including carbon footprint (483.94 tonnes CO2e), water usage (11.7M litres), and waste generation (0.1 tonnes) for ${companyName || 'our company'}.`,
+      carbon_footprint_narrative: `Write a detailed carbon footprint analysis explaining Scope 1, 2, and 3 emissions, reduction strategies, and progress made by ${companyName || 'our company'}.`,
+      initiatives_narrative: `Write about sustainability initiatives and environmental projects undertaken by ${companyName || 'our company'}, including renewable energy, waste reduction, and sustainable sourcing.`,
+      kpi_tracking_narrative: `Write about key performance indicators and how ${companyName || 'our company'} tracks and measures sustainability progress over time.`,
+      summary: `Write a conclusion for a sustainability report that summarizes achievements and outlines future environmental commitments for ${companyName || 'our company'}.`
+    };
+
+    const prompt = prompts[sectionType as keyof typeof prompts] || prompts.introduction;
+    
+    generateContent({
+      prompt,
+      contentType: 'sustainability_report_section',
+      length: 'medium'
+    });
+  };
+
+  return (
+    <div className={`border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <Sparkles className="w-4 h-4 text-blue-600" />
+          <span className="text-sm font-medium text-blue-900">AI Writing Assistant</span>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleGenerateContent}
+          disabled={isGenerating}
+          className="text-blue-700 border-blue-300 hover:bg-blue-100"
+        >
+          {isGenerating ? (
+            <>
+              <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3 h-3 mr-2" />
+              Generate with AI
+            </>
+          )}
+        </Button>
+      </div>
+      <p className="text-xs text-blue-700">
+        Get AI-powered suggestions tailored to your company's sustainability story.
+      </p>
+    </div>
+  );
+}
+
 // Step 1: Introduction Component
 export function IntroductionStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
+  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
   
   const suggestions = [
     `${company?.name || 'Our company'} is committed to environmental stewardship and sustainable business practices.`,
@@ -48,6 +164,13 @@ export function IntroductionStep({ content, onChange, onSave, isSaving }: StepCo
     "As a drinks industry leader, we recognize our responsibility to minimize our carbon footprint and promote sustainable practices.",
     "Our sustainability journey reflects our dedication to protecting the environment for future generations."
   ];
+
+  // Handle AI-generated content
+  useEffect(() => {
+    if (generatedContent) {
+      onChange(generatedContent);
+    }
+  }, [generatedContent, onChange]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -58,10 +181,18 @@ export function IntroductionStep({ content, onChange, onSave, isSaving }: StepCo
           <p className="text-sm text-slate-600">Set the tone for your sustainability report and introduce your company's environmental commitment.</p>
         </div>
         
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="introduction"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Write your introduction here..."
+          placeholder="Write your introduction here or use AI assistance above..."
           className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
@@ -126,6 +257,14 @@ export function IntroductionStep({ content, onChange, onSave, isSaving }: StepCo
 // Step 2: Company Information Component
 export function CompanyInfoStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
+  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
+
+  // Handle AI-generated content
+  useEffect(() => {
+    if (generatedContent) {
+      onChange(generatedContent);
+    }
+  }, [generatedContent, onChange]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -136,10 +275,18 @@ export function CompanyInfoStep({ content, onChange, onSave, isSaving }: StepCom
           <p className="text-sm text-slate-600">Share your company's mission, vision, and sustainability approach.</p>
         </div>
         
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="company_info_narrative"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Tell your company's sustainability story..."
+          placeholder="Tell your company's sustainability story or use AI assistance above..."
           className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
@@ -214,9 +361,18 @@ export function CompanyInfoStep({ content, onChange, onSave, isSaving }: StepCom
 
 // Step 3: Key Metrics Component
 export function KeyMetricsStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+  const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: footprintData } = useQuery({ queryKey: ['/api/company/footprint'] });
   const { data: automatedData } = useQuery({ queryKey: ['/api/company/footprint/scope3/automated'] });
   const { data: metrics } = useQuery({ queryKey: ["/api/dashboard/metrics"] });
+  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
+
+  // Handle AI-generated content
+  useEffect(() => {
+    if (generatedContent) {
+      onChange(generatedContent);
+    }
+  }, [generatedContent, onChange]);
 
   // Calculate metrics
   const calculateTotalCO2e = () => {
@@ -275,10 +431,18 @@ export function KeyMetricsStep({ content, onChange, onSave, isSaving }: StepComp
           <p className="text-sm text-slate-600">Present your carbon footprint, water usage, and waste data with context and insights.</p>
         </div>
         
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="key_metrics_narrative"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Describe your environmental impact metrics and performance..."
+          placeholder="Describe your environmental impact metrics and performance or use AI assistance above..."
           className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
@@ -346,8 +510,17 @@ export function KeyMetricsStep({ content, onChange, onSave, isSaving }: StepComp
 
 // Step 4: Carbon Footprint Analysis Component
 export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+  const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: footprintData } = useQuery({ queryKey: ['/api/company/footprint'] });
   const { data: automatedData } = useQuery({ queryKey: ['/api/company/footprint/scope3/automated'] });
+  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
+
+  // Handle AI-generated content
+  useEffect(() => {
+    if (generatedContent) {
+      onChange(generatedContent);
+    }
+  }, [generatedContent, onChange]);
 
   // Calculate scope emissions
   const calculateScopeEmissions = (scope: number) => {
@@ -392,10 +565,18 @@ export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: Ste
           <p className="text-sm text-slate-600">Detail your emissions breakdown and explain your Scope 1, 2, and 3 emissions in context.</p>
         </div>
         
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="carbon_footprint_narrative"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Analyze your carbon footprint breakdown and emissions sources..."
+          placeholder="Analyze your carbon footprint breakdown and emissions sources or use AI assistance above..."
           className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
@@ -495,7 +676,16 @@ export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: Ste
 
 // Step 5: Sustainability Initiatives Component
 export function InitiativesStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+  const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
+  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
+
+  // Handle AI-generated content
+  useEffect(() => {
+    if (generatedContent) {
+      onChange(generatedContent);
+    }
+  }, [generatedContent, onChange]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -506,10 +696,18 @@ export function InitiativesStep({ content, onChange, onSave, isSaving }: StepCom
           <p className="text-sm text-slate-600">Showcase your environmental projects and their outcomes.</p>
         </div>
         
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="initiatives_narrative"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Describe your sustainability initiatives and their impact..."
+          placeholder="Describe your sustainability initiatives and their impact or use AI assistance above..."
           className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
@@ -583,7 +781,16 @@ export function InitiativesStep({ content, onChange, onSave, isSaving }: StepCom
 
 // Step 6: KPI Tracking Component
 export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+  const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: kpiData } = useQuery({ queryKey: ['/api/dashboard/kpis'] });
+  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
+
+  // Handle AI-generated content
+  useEffect(() => {
+    if (generatedContent) {
+      onChange(generatedContent);
+    }
+  }, [generatedContent, onChange]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -594,10 +801,18 @@ export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepCom
           <p className="text-sm text-slate-600">Present your progress metrics and show how you measure sustainability progress.</p>
         </div>
         
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="kpi_tracking_narrative"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Describe your KPI tracking approach and progress..."
+          placeholder="Describe your KPI tracking approach and progress or use AI assistance above..."
           className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
@@ -664,7 +879,16 @@ export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepCom
 
 // Step 7: Summary Component
 export function SummaryStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+  const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
+  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
+
+  // Handle AI-generated content
+  useEffect(() => {
+    if (generatedContent) {
+      onChange(generatedContent);
+    }
+  }, [generatedContent, onChange]);
   
   const upcomingGoals = smartGoalsData?.data?.filter((goal: any) => 
     new Date(goal.targetDate) > new Date()
@@ -679,10 +903,18 @@ export function SummaryStep({ content, onChange, onSave, isSaving }: StepCompone
           <p className="text-sm text-slate-600">Summarize achievements and outline future commitments.</p>
         </div>
         
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="summary"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Summarize your sustainability journey and future commitments..."
+          placeholder="Summarize your sustainability journey and future commitments or use AI assistance above..."
           className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
