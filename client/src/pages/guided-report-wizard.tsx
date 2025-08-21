@@ -18,7 +18,8 @@ import {
   Leaf, 
   Target, 
   TrendingUp, 
-  CheckCircle2 
+  CheckCircle2,
+  Download
 } from "lucide-react";
 import {
   IntroductionStep,
@@ -118,8 +119,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
 
   // Initialize step content from existing report data
   useEffect(() => {
-    if (wizardData && typeof wizardData === 'object' && 'success' in wizardData && 'data' in wizardData && wizardData.success && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportContent' in wizardData.data.report) {
-      setStepContent(wizardData.data.report.reportContent);
+    if (wizardData && typeof wizardData === 'object' && 'success' in wizardData && 'data' in wizardData && wizardData.success && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportContent' in wizardData.data.report && wizardData.data.report.reportContent && typeof wizardData.data.report.reportContent === 'object') {
+      setStepContent(wizardData.data.report.reportContent as Record<string, string>);
     }
   }, [wizardData]);
 
@@ -283,10 +284,10 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
               <Separator orientation="vertical" className="h-6" />
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">
-                  {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportTitle' in wizardData.data.report) ? wizardData.data.report.reportTitle : 'Sustainability Report'}
+                  {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportTitle' in wizardData.data.report) ? String(wizardData.data.report.reportTitle) : 'Sustainability Report'}
                 </h1>
                 <p className="text-sm text-slate-600">
-                  {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'company' in wizardData.data && wizardData.data.company && typeof wizardData.data.company === 'object' && 'name' in wizardData.data.company) ? wizardData.data.company.name : 'Company'} - Guided Report Builder
+                  {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'company' in wizardData.data && wizardData.data.company && typeof wizardData.data.company === 'object' && 'name' in wizardData.data.company) ? String(wizardData.data.company.name) : 'Company'} - Guided Report Builder
                 </p>
               </div>
             </div>
@@ -439,7 +440,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                   <>
                     {currentStep === 1 && (
                       <IntroductionStep
-                        value={stepContent['introduction'] || ""}
+                        stepKey="introduction"
+                        content={stepContent['introduction'] || ""}
                         onChange={(content) => handleStepContentChange('introduction', content)}
                         onSave={() => handleSaveStep('introduction')}
                         isSaving={saveStepMutation.isPending}
@@ -448,7 +450,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                     
                     {currentStep === 2 && (
                       <CompanyInfoStep
-                        value={stepContent['company_info_narrative'] || ""}
+                        stepKey="company_info_narrative"
+                        content={stepContent['company_info_narrative'] || ""}
                         onChange={(content) => handleStepContentChange('company_info_narrative', content)}
                         onSave={() => handleSaveStep('company_info_narrative')}
                         isSaving={saveStepMutation.isPending}
@@ -457,7 +460,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                     
                     {currentStep === 3 && (
                       <KeyMetricsStep
-                        value={stepContent['key_metrics_narrative'] || ""}
+                        stepKey="key_metrics_narrative"
+                        content={stepContent['key_metrics_narrative'] || ""}
                         onChange={(content) => handleStepContentChange('key_metrics_narrative', content)}
                         onSave={() => handleSaveStep('key_metrics_narrative')}
                         isSaving={saveStepMutation.isPending}
@@ -466,7 +470,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                     
                     {currentStep === 4 && (
                       <CarbonFootprintStep
-                        value={stepContent['carbon_footprint_narrative'] || ""}
+                        stepKey="carbon_footprint_narrative"
+                        content={stepContent['carbon_footprint_narrative'] || ""}
                         onChange={(content) => handleStepContentChange('carbon_footprint_narrative', content)}
                         onSave={() => handleSaveStep('carbon_footprint_narrative')}
                         isSaving={saveStepMutation.isPending}
@@ -475,7 +480,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                     
                     {currentStep === 5 && (
                       <InitiativesStep
-                        value={stepContent['initiatives_narrative'] || ""}
+                        stepKey="initiatives_narrative"
+                        content={stepContent['initiatives_narrative'] || ""}
                         onChange={(content) => handleStepContentChange('initiatives_narrative', content)}
                         onSave={() => handleSaveStep('initiatives_narrative')}
                         isSaving={saveStepMutation.isPending}
@@ -484,7 +490,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                     
                     {currentStep === 6 && (
                       <KPITrackingStep
-                        value={stepContent['kpi_tracking_narrative'] || ""}
+                        stepKey="kpi_tracking_narrative"
+                        content={stepContent['kpi_tracking_narrative'] || ""}
                         onChange={(content) => handleStepContentChange('kpi_tracking_narrative', content)}
                         onSave={() => handleSaveStep('kpi_tracking_narrative')}
                         isSaving={saveStepMutation.isPending}
@@ -493,14 +500,15 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                     
                     {currentStep === 7 && (
                       <SummaryStep
-                        value={stepContent['summary'] || ""}
+                        stepKey="summary"
+                        content={stepContent['summary'] || ""}
                         onChange={(content) => handleStepContentChange('summary', content)}
                         onSave={() => handleSaveStep('summary')}
                         isSaving={saveStepMutation.isPending}
                       />
                     )}
                   </>
-                )
+                )}
               </div>
             ) : (
               <div className="p-6">
