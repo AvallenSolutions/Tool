@@ -668,7 +668,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
             ) : (
               <div className="p-6">
                 <ReportPreview
-                  reportData={(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data) ? wizardData.data.report : null}
+                  reportData={(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data) ? wizardData.data : null}
                   stepContent={stepContent}
                   onExportPDF={handleExportPDF}
                   isExporting={isExporting}

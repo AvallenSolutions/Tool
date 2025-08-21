@@ -342,9 +342,10 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
             {/* Selected Initiatives */}
             {(() => {
               // Filter SMART Goals based on selected initiatives in report data
-              const selectedInitiatives = reportData?.reportContent?.selectedInitiatives || [];
+              const selectedInitiatives = reportData?.selectedInitiatives || [];
               console.log('Selected initiatives from report:', selectedInitiatives);
               console.log('Available SMART goals:', smartGoalsData?.data);
+              console.log('Report data structure:', reportData);
               
               const selectedGoals = smartGoalsData?.data?.filter((goal: any) => 
                 selectedInitiatives.includes(goal.id)
