@@ -84,149 +84,131 @@ export class ReportExportService {
   }
 
   private async exportPowerPoint(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    console.log('🔧 Starting PowerPoint generation with officegen...');
+    console.log('🔧 Starting PowerPoint generation with file-based approach...');
     
     return new Promise((resolve, reject) => {
       try {
         const pptx = officegen('pptx');
         
         console.log('📝 Setting PowerPoint properties...');
-        // Set presentation properties (only use supported methods)
         pptx.setDocTitle(reportData.title);
 
         console.log('📊 Creating title slide...');
-        // Title slide
+        // Title slide with simpler formatting
         const titleSlide = pptx.makeNewSlide();
         titleSlide.name = 'Title Slide';
         
         titleSlide.addText(reportData.title, {
-          x: 'c', y: 20, cx: '90%', cy: '20%',
+          x: 50, y: 50, cx: 600, cy: 100,
           font_size: 44, bold: true, color: '1e293b',
           align: 'center'
         });
 
-        titleSlide.addText(reportData.companyName || 'Company Name', {
-          x: 'c', y: '40%', cx: '90%', cy: '15%',
+        titleSlide.addText(reportData.companyName || 'Demo Company', {
+          x: 50, y: 200, cx: 600, cy: 60,
           font_size: 24, color: '64748b',
           align: 'center'
         });
 
-        titleSlide.addText(new Date().getFullYear().toString(), {
-          x: 'c', y: '60%', cx: '90%', cy: '10%',
+        titleSlide.addText(`Sustainability Report ${new Date().getFullYear()}`, {
+          x: 50, y: 300, cx: 600, cy: 40,
           font_size: 18, color: '94a3b8',
           align: 'center'
         });
 
-        // Executive Summary slide
-        if (reportData.content.summary) {
-          const summarySlide = pptx.makeNewSlide();
-          summarySlide.name = 'Executive Summary';
-          
-          summarySlide.addText('Executive Summary', {
-            x: '5%', y: '5%', cx: '90%', cy: '15%',
-            font_size: 32, bold: true, color: '1e293b'
-          });
-
-          summarySlide.addText(reportData.content.summary.substring(0, 500) + (reportData.content.summary.length > 500 ? '...' : ''), {
-            x: '5%', y: '20%', cx: '90%', cy: '70%',
-            font_size: 16, color: '475569'
-          });
-        }
-
-        // Key Metrics slide
+        // Metrics slide with simple layout
         if (reportData.metrics) {
+          console.log('📈 Adding metrics slide...');
           const metricsSlide = pptx.makeNewSlide();
           metricsSlide.name = 'Key Metrics';
           
           metricsSlide.addText('Key Environmental Metrics', {
-            x: '5%', y: '5%', cx: '90%', cy: '15%',
+            x: 50, y: 50, cx: 600, cy: 60,
             font_size: 32, bold: true, color: '1e293b'
           });
 
-          // CO2 emissions
-          metricsSlide.addText('🌱 Carbon Footprint', {
-            x: '5%', y: '25%', cx: '40%', cy: '10%',
-            font_size: 18, bold: true, color: '10b981'
-          });
-          metricsSlide.addText(`${reportData.metrics.co2e.toFixed(2)} tonnes CO₂e`, {
-            x: '5%', y: '35%', cx: '40%', cy: '10%',
-            font_size: 24, bold: true, color: '1e293b'
+          metricsSlide.addText(`Carbon Footprint: ${reportData.metrics.co2e.toFixed(2)} tonnes CO₂e`, {
+            x: 50, y: 150, cx: 600, cy: 40,
+            font_size: 18, color: '10b981'
           });
 
-          // Water usage
-          metricsSlide.addText('💧 Water Usage', {
-            x: '55%', y: '25%', cx: '40%', cy: '10%',
-            font_size: 18, bold: true, color: '3b82f6'
-          });
-          metricsSlide.addText(`${reportData.metrics.water.toLocaleString()} litres`, {
-            x: '55%', y: '35%', cx: '40%', cy: '10%',
-            font_size: 24, bold: true, color: '1e293b'
-          });
+          if (reportData.metrics.water > 0) {
+            metricsSlide.addText(`Water Usage: ${reportData.metrics.water.toLocaleString()} litres`, {
+              x: 50, y: 200, cx: 600, cy: 40,
+              font_size: 18, color: '3b82f6'
+            });
+          }
 
-          // Waste generated
-          metricsSlide.addText('♻️ Waste Generated', {
-            x: '5%', y: '55%', cx: '40%', cy: '10%',
-            font_size: 18, bold: true, color: 'f59e0b'
-          });
-          metricsSlide.addText(`${reportData.metrics.waste} tonnes`, {
-            x: '5%', y: '65%', cx: '40%', cy: '10%',
-            font_size: 24, bold: true, color: '1e293b'
-          });
+          if (reportData.metrics.waste > 0) {
+            metricsSlide.addText(`Waste Generated: ${reportData.metrics.waste} tonnes`, {
+              x: 50, y: 250, cx: 600, cy: 40,
+              font_size: 18, color: 'f59e0b'
+            });
+          }
         }
 
-        // Content slides for each section
+        // Add content slides for populated sections
         const sections = [
           { key: 'introduction', title: 'Introduction' },
           { key: 'company_info_narrative', title: 'Company Information' },
           { key: 'carbon_footprint_narrative', title: 'Carbon Footprint Analysis' },
-          { key: 'initiatives_narrative', title: 'Sustainability Initiatives' },
-          { key: 'social_impact', title: 'Social Impact' }
+          { key: 'initiatives_narrative', title: 'Sustainability Initiatives' }
         ];
 
         sections.forEach(section => {
           const content = reportData.content[section.key];
           if (content && content.trim().length > 0) {
+            console.log(`📄 Adding ${section.title} slide...`);
             const slide = pptx.makeNewSlide();
             slide.name = section.title;
             
             slide.addText(section.title, {
-              x: '5%', y: '5%', cx: '90%', cy: '15%',
-              font_size: 32, bold: true, color: '1e293b'
+              x: 50, y: 50, cx: 600, cy: 60,
+              font_size: 28, bold: true, color: '1e293b'
             });
 
-            // Split content into chunks that fit on slide
-            const contentChunks = this.splitTextForSlide(content, 800);
-            contentChunks.forEach((chunk, index) => {
-              slide.addText(chunk, {
-                x: '5%', y: '20%', cx: '90%', cy: '70%',
-                font_size: 14, color: '475569'
-              });
+            // Add content with word wrapping
+            const truncatedContent = content.length > 800 ? content.substring(0, 800) + '...' : content;
+            slide.addText(truncatedContent, {
+              x: 50, y: 130, cx: 600, cy: 300,
+              font_size: 14, color: '475569'
             });
           }
         });
 
-        // Generate the PowerPoint file
-        console.log('🔧 Generating PPTX buffer...');
-        const chunks: Buffer[] = [];
+        // Use temporary file approach to avoid stream issues
+        const tempFile = path.join(process.cwd(), `temp_pptx_${Date.now()}.pptx`);
+        console.log('📁 Creating temporary file:', tempFile);
         
-        pptx.on('data', (chunk: Buffer) => {
-          console.log('📦 Received chunk:', chunk.length, 'bytes');
-          chunks.push(chunk);
+        const out = fs.createWriteStream(tempFile);
+        
+        out.on('error', (error: any) => {
+          console.error('❌ File write error:', error);
+          reject(error);
         });
-        
-        pptx.on('end', () => {
-          const finalBuffer = Buffer.concat(chunks);
-          console.log('✅ PowerPoint generation completed:', finalBuffer.length, 'bytes');
-          resolve(finalBuffer);
+
+        pptx.on('finalize', (written: any) => {
+          console.log('✅ PowerPoint finalized, reading file...');
+          try {
+            const buffer = fs.readFileSync(tempFile);
+            console.log('📦 File read successfully:', buffer.length, 'bytes');
+            
+            // Clean up temp file
+            fs.unlinkSync(tempFile);
+            resolve(buffer);
+          } catch (error) {
+            console.error('❌ File read error:', error);
+            reject(error);
+          }
         });
-        
+
         pptx.on('error', (error: any) => {
           console.error('❌ PowerPoint generation error:', error);
           reject(error);
         });
-        
-        console.log('🚀 Starting PPTX generation...');
-        pptx.generate();
+
+        console.log('🚀 Starting PPTX generation to file...');
+        pptx.generate(out);
 
       } catch (error) {
         console.error('❌ PowerPoint export error:', error);
