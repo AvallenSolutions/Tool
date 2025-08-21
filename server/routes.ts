@@ -181,12 +181,12 @@ export function registerRoutes(app: Express): Server {
       let selectedKPIs = [];
       
       if (report.report.selectedInitiatives && report.report.selectedInitiatives.length > 0) {
-        const { initiatives } = await import('@shared/schema');
+        const { smartGoals } = await import('@shared/schema');
         const { sql } = await import('drizzle-orm');
         selectedInitiatives = await db
           .select()
-          .from(initiatives)
-          .where(sql`${initiatives.id} = ANY(${report.report.selectedInitiatives})`);
+          .from(smartGoals)
+          .where(sql`${smartGoals.id} = ANY(${report.report.selectedInitiatives})`);
       }
       
       if (report.report.selectedKPIs && report.report.selectedKPIs.length > 0) {

@@ -537,13 +537,13 @@ export class ProfessionalPDFService {
          lineGap: 4
        });
     
-    // Use actual selected initiatives or fallback to default
+    // Use actual selected initiatives (SMART goals) or fallback to default
     let initiatives;
     if (selectedInitiatives && selectedInitiatives.length > 0) {
       initiatives = selectedInitiatives.map(initiative => ({
-        title: initiative.title.toUpperCase(),
-        description: initiative.description,
-        target: `Target: ${new Date(initiative.targetDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+        title: initiative.title?.toUpperCase() || 'UNTITLED INITIATIVE',
+        description: initiative.description || 'No description available',
+        target: initiative.targetDate ? `Target: ${new Date(initiative.targetDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` : 'Target: Ongoing',
         status: initiative.status === 'active' ? 'Active' : 
                 initiative.status === 'completed' ? 'Completed' : 'In Progress'
       }));
