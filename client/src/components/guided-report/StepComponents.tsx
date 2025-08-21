@@ -983,8 +983,6 @@ export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepCo
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: sustainabilityData } = useQuery({ queryKey: ['/api/company/sustainability-data'] });
   
-  console.log('🔍 SocialImpactStep data:', { company, sustainabilityData });
-  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       {/* Editor Panel */}
@@ -1029,8 +1027,8 @@ export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepCo
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {company ? (
-              <div className="space-y-4">
+            <div className="space-y-4">
+              {company && (
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium text-slate-900 mb-2">Company Overview</h4>
                   <div className="grid grid-cols-1 gap-2 text-sm">
@@ -1048,6 +1046,7 @@ export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepCo
                     </div>
                   </div>
                 </div>
+              )}
                 
                 {/* Employee Metrics */}
                 {sustainabilityData?.socialData?.employeeMetrics && (
@@ -1139,25 +1138,18 @@ export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepCo
                   </div>
                 )}
                 
-                {/* Show message if no social data */}
-                {(!sustainabilityData?.socialData?.employeeMetrics || Object.keys(sustainabilityData.socialData.employeeMetrics).length === 0) && 
-                 (!sustainabilityData?.socialData?.communityImpact || Object.keys(sustainabilityData.socialData.communityImpact).length === 0) && (
-                  <div className="border rounded-lg p-4">
-                    <div className="text-center py-4 text-slate-500">
-                      <Heart className="w-8 h-8 mx-auto mb-2" />
-                      <p>No social impact data available</p>
-                      <p className="text-sm">Complete the Social tab in Company settings to view metrics</p>
-                    </div>
+              {/* Show message if no social data */}
+              {(!sustainabilityData?.socialData?.employeeMetrics || Object.keys(sustainabilityData.socialData.employeeMetrics).length === 0) && 
+               (!sustainabilityData?.socialData?.communityImpact || Object.keys(sustainabilityData.socialData.communityImpact).length === 0) && (
+                <div className="border rounded-lg p-4">
+                  <div className="text-center py-4 text-slate-500">
+                    <Heart className="w-8 h-8 mx-auto mb-2" />
+                    <p>No social impact data available</p>
+                    <p className="text-sm">Complete the Social tab in Company settings to view metrics</p>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-slate-500">
-                <Building2 className="w-8 h-8 mx-auto mb-2" />
-                <p>No company information available</p>
-                <p className="text-sm">Complete company setup to view details</p>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
