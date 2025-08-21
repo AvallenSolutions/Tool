@@ -75,6 +75,7 @@
     "express-validator": "^7.2.1",
     "framer-motion": "^11.13.1",
     "google-auth-library": "^10.2.1",
+    "googleapis": "^156.0.0",
     "helmet": "^8.1.0",
     "html-to-pptx": "^0.0.6",
     "input-otp": "^1.4.2",
