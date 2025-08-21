@@ -29,6 +29,7 @@ import {
   KPITrackingStep,
   SummaryStep
 } from "@/components/guided-report/StepComponents";
+import { ReportPreview } from "@/components/guided-report/ReportPreview";
 
 // Step configuration
 const WIZARD_STEPS = [
@@ -101,6 +102,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [stepContent, setStepContent] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const reportId = params?.reportId;
 
@@ -159,6 +161,46 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
   const handleSaveStep = (stepKey: string) => {
     const content = stepContent[stepKey] || "";
     saveStepMutation.mutate({ stepKey, content });
+  };
+
+  // Export report as PDF
+  const handleExportPDF = async () => {
+    if (!reportId) return;
+    
+    setIsExporting(true);
+    try {
+      const response = await fetch(`/api/reports/guided/${reportId}/export-pdf`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `sustainability-report-${new Date().getFullYear()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "PDF Generated",
+        description: "Your sustainability report has been downloaded successfully."
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const currentStepData = WIZARD_STEPS.find(step => step.id === currentStep);
@@ -302,80 +344,91 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
             </div>
           </div>
 
-          {/* Center content area - Enhanced step components */}
+          {/* Center content area - Enhanced step components or preview */}
           <div className="flex-1 bg-white overflow-y-auto">
-            <div className="p-6">
-              {/* Render appropriate step component */}
-              {currentStepKey === 'introduction' && (
-                <IntroductionStep
-                  stepKey={currentStepKey}
-                  content={stepContent[currentStepKey] || ""}
-                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                  onSave={() => handleSaveStep(currentStepKey)}
-                  isSaving={saveStepMutation.isPending}
+            {!showPreview ? (
+              <div className="p-6">
+                {/* Render appropriate step component */}
+                {currentStepKey === 'introduction' && (
+                  <IntroductionStep
+                    stepKey={currentStepKey}
+                    content={stepContent[currentStepKey] || ""}
+                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                    onSave={() => handleSaveStep(currentStepKey)}
+                    isSaving={saveStepMutation.isPending}
+                  />
+                )}
+                
+                {currentStepKey === 'company_info_narrative' && (
+                  <CompanyInfoStep
+                    stepKey={currentStepKey}
+                    content={stepContent[currentStepKey] || ""}
+                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                    onSave={() => handleSaveStep(currentStepKey)}
+                    isSaving={saveStepMutation.isPending}
+                  />
+                )}
+                
+                {currentStepKey === 'key_metrics_narrative' && (
+                  <KeyMetricsStep
+                    stepKey={currentStepKey}
+                    content={stepContent[currentStepKey] || ""}
+                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                    onSave={() => handleSaveStep(currentStepKey)}
+                    isSaving={saveStepMutation.isPending}
+                  />
+                )}
+                
+                {currentStepKey === 'carbon_footprint_narrative' && (
+                  <CarbonFootprintStep
+                    stepKey={currentStepKey}
+                    content={stepContent[currentStepKey] || ""}
+                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                    onSave={() => handleSaveStep(currentStepKey)}
+                    isSaving={saveStepMutation.isPending}
+                  />
+                )}
+                
+                {currentStepKey === 'initiatives_narrative' && (
+                  <InitiativesStep
+                    stepKey={currentStepKey}
+                    content={stepContent[currentStepKey] || ""}
+                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                    onSave={() => handleSaveStep(currentStepKey)}
+                    isSaving={saveStepMutation.isPending}
+                  />
+                )}
+                
+                {currentStepKey === 'kpi_tracking_narrative' && (
+                  <KPITrackingStep
+                    stepKey={currentStepKey}
+                    content={stepContent[currentStepKey] || ""}
+                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                    onSave={() => handleSaveStep(currentStepKey)}
+                    isSaving={saveStepMutation.isPending}
+                  />
+                )}
+                
+                {currentStepKey === 'summary' && (
+                  <SummaryStep
+                    stepKey={currentStepKey}
+                    content={stepContent[currentStepKey] || ""}
+                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                    onSave={() => handleSaveStep(currentStepKey)}
+                    isSaving={saveStepMutation.isPending}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="p-6">
+                <ReportPreview
+                  reportData={(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data) ? wizardData.data.report : null}
+                  stepContent={stepContent}
+                  onExportPDF={handleExportPDF}
+                  isExporting={isExporting}
                 />
-              )}
-              
-              {currentStepKey === 'company_info_narrative' && (
-                <CompanyInfoStep
-                  stepKey={currentStepKey}
-                  content={stepContent[currentStepKey] || ""}
-                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                  onSave={() => handleSaveStep(currentStepKey)}
-                  isSaving={saveStepMutation.isPending}
-                />
-              )}
-              
-              {currentStepKey === 'key_metrics_narrative' && (
-                <KeyMetricsStep
-                  stepKey={currentStepKey}
-                  content={stepContent[currentStepKey] || ""}
-                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                  onSave={() => handleSaveStep(currentStepKey)}
-                  isSaving={saveStepMutation.isPending}
-                />
-              )}
-              
-              {currentStepKey === 'carbon_footprint_narrative' && (
-                <CarbonFootprintStep
-                  stepKey={currentStepKey}
-                  content={stepContent[currentStepKey] || ""}
-                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                  onSave={() => handleSaveStep(currentStepKey)}
-                  isSaving={saveStepMutation.isPending}
-                />
-              )}
-              
-              {currentStepKey === 'initiatives_narrative' && (
-                <InitiativesStep
-                  stepKey={currentStepKey}
-                  content={stepContent[currentStepKey] || ""}
-                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                  onSave={() => handleSaveStep(currentStepKey)}
-                  isSaving={saveStepMutation.isPending}
-                />
-              )}
-              
-              {currentStepKey === 'kpi_tracking_narrative' && (
-                <KPITrackingStep
-                  stepKey={currentStepKey}
-                  content={stepContent[currentStepKey] || ""}
-                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                  onSave={() => handleSaveStep(currentStepKey)}
-                  isSaving={saveStepMutation.isPending}
-                />
-              )}
-              
-              {currentStepKey === 'summary' && (
-                <SummaryStep
-                  stepKey={currentStepKey}
-                  content={stepContent[currentStepKey] || ""}
-                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                  onSave={() => handleSaveStep(currentStepKey)}
-                  isSaving={saveStepMutation.isPending}
-                />
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
