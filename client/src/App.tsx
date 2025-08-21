@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import Login from "@/pages/login";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
@@ -133,6 +134,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={SimpleTestComponent} />
+      <Route path="/login" component={Login} />
+      <Route path="/landing" component={Landing} />
       <Route path="/app/greenwash-guardian" component={GreenwashGuardian} />
       <Route path="/app/dashboard" component={Dashboard} />
       <Route path="/app/onboarding" component={Onboarding} />

@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, BarChart3, Users, FileText, Shield, Zap, Droplets, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, BarChart3, Users, FileText, Shield, Zap, Droplets, Trash2, Lock, ArrowRight, Globe, Leaf, Award } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Landing() {
   const handleLogin = () => {
@@ -19,9 +22,11 @@ export default function Landing() {
               </div>
               <span className="text-2xl font-bold text-slate-gray">Avallen Solutions</span>
             </div>
-            <Button onClick={handleLogin} className="bg-avallen-green hover:bg-avallen-green-light text-white">
-              Sign In
-            </Button>
+            <Link href="/login">
+              <Button className="bg-avallen-green hover:bg-avallen-green-light text-white">
+                Sign In
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -29,6 +34,12 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
+          <div className="flex justify-center mb-6">
+            <Badge className="bg-avallen-green/10 text-avallen-green border-avallen-green/20 px-4 py-2 text-sm font-medium">
+              <Award className="w-4 h-4 mr-2" />
+              Trusted by sustainability leaders
+            </Badge>
+          </div>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-gray mb-6">
             Sustainability Made Simple for
             <span className="text-avallen-green"> Drinks Brands</span>
@@ -37,14 +48,31 @@ export default function Landing() {
             A comprehensive platform designed to empower SME drinks brands to measure, manage, 
             and report their environmental impact with confidence.
           </p>
+          {/* Trust Indicators */}
+          <div className="flex justify-center items-center space-x-8 mb-8 text-sm text-gray-500">
+            <div className="flex items-center">
+              <Shield className="w-4 h-4 mr-2 text-avallen-green" />
+              ISO 14040/14044 Compliant
+            </div>
+            <div className="flex items-center">
+              <Leaf className="w-4 h-4 mr-2 text-avallen-green" />
+              OpenLCA Integration
+            </div>
+            <div className="flex items-center">
+              <Globe className="w-4 h-4 mr-2 text-avallen-green" />
+              DEFRA 2024 Factors
+            </div>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={handleLogin}
-              className="bg-avallen-green hover:bg-avallen-green-light text-white px-8 py-3 text-lg"
-            >
-              Get Started Free
-            </Button>
+            <Link href="/login">
+              <Button 
+                size="lg" 
+                className="bg-avallen-green hover:bg-avallen-green-light text-white px-8 py-3 text-lg w-full sm:w-auto"
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
             <Button 
               variant="outline" 
               size="lg"
