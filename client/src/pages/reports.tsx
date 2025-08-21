@@ -159,8 +159,7 @@ export default function Reports() {
     }
   };
 
-  // Separate reports by type with proper null checks
-  const annualReports = reportsData.filter((report: any) => report.reportType === 'annual') || [];
+  // Separate reports by type with proper null checks - Annual reports removed, using Dynamic Report Builder
   const lcaReportsData = reportsData.filter((report: any) => report.reportType === 'lca') || [];
   const productLcaReports = Array.isArray(lcaReports) ? lcaReports : [];
 
@@ -172,21 +171,7 @@ export default function Reports() {
         <main className="flex-1 p-6 overflow-y-auto space-y-8">
           
           {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <Award className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-green-600">Annual Reports</p>
-                    <p className="text-2xl font-bold text-green-900">{annualReports.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
@@ -236,24 +221,7 @@ export default function Reports() {
                 </>
               )}
             </Button>
-            <Button 
-              onClick={() => handleGenerateReport('sustainability')}
-              disabled={isGenerating || generateReportMutation.isPending}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              size="lg"
-            >
-              {isGenerating ? (
-                <>
-                  <Clock className="w-5 h-5 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Award className="w-5 h-5 mr-2" />
-                  Generate Annual Report
-                </>
-              )}
-            </Button>
+
             <Button 
               onClick={() => handleGenerateReport('lca')}
               disabled={isGenerating || generateReportMutation.isPending}
@@ -276,89 +244,7 @@ export default function Reports() {
             </div>
           )}
 
-          {/* Annual Reports Section */}
-          <div>
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Award className="w-5 h-5 text-green-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">Annual Sustainability Reports</h2>
-            </div>
-            
-            {reportsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {annualReports.length > 0 ? (
-                  annualReports.map((report: any) => (
-                    <Card key={report.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-green-300">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-green-50 rounded-full">
-                              {getStatusIcon(report.status)}
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-lg text-gray-900">
-                                Annual Sustainability Report {new Date(report.createdAt).getFullYear()}
-                              </h3>
-                              <p className="text-sm text-gray-500 flex items-center mt-1">
-                                <Calendar className="w-4 h-4 mr-1" />
-                                Created {new Date(report.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          {getStatusBadge(report.status)}
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
-                            <div className="text-xl font-bold text-green-700">
-                              {(parseFloat(report.totalScope1 || 0) + parseFloat(report.totalScope2 || 0) + parseFloat(report.totalScope3 || 0)).toFixed(1)}
-                            </div>
-                            <div className="text-sm text-green-600 font-medium">Total CO₂e (tonnes)</div>
-                          </div>
-                          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-100">
-                            <div className="text-xl font-bold text-blue-700">
-                              {parseFloat(report.totalWaterUsage || 0).toLocaleString()}
-                            </div>
-                            <div className="text-sm text-blue-600 font-medium">Water Usage (L)</div>
-                          </div>
-                          <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-100">
-                            <div className="text-xl font-bold text-orange-700">
-                              {parseFloat(report.totalWasteGenerated || 0).toFixed(1)}
-                            </div>
-                            <div className="text-sm text-orange-600 font-medium">Waste Generated (kg)</div>
-                          </div>
-                        </div>
-                        
-                        <div className="pt-4 border-t border-gray-100">
-                          <EnhancedReportButton 
-                            reportId={report.id} 
-                            reportStatus={report.status} 
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <Card className="border-2 border-dashed border-gray-300">
-                    <CardContent className="py-12 text-center">
-                      <div className="p-4 bg-green-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                        <Award className="w-10 h-10 text-green-600" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Annual Reports Yet</h3>
-                      <p className="text-gray-600 mb-4">
-                        Create your first annual sustainability report to track your environmental impact.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-          </div>
+
 
           {/* LCA Reports Section */}
           <div>
