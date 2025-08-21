@@ -264,7 +264,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
             <FileText className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-slate-900 mb-2">Report Not Found</h2>
             <p className="text-slate-600 mb-4">The requested report could not be loaded.</p>
-            <Button onClick={() => setLocation("/reports")}>
+            <Button onClick={() => setLocation("/app/reports")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Reports
             </Button>
@@ -286,7 +286,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => setLocation("/reports")}
+                onClick={() => setLocation("/app/reports")}
                 className="text-slate-600 hover:text-slate-900"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
