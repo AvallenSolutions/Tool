@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getQueryFn } from '@/lib/queryClient';
-import { useAuthContext } from '@/components/auth/AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'wouter';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -10,7 +10,7 @@ interface OnboardingGuardProps {
 }
 
 export function OnboardingGuard({ children }: OnboardingGuardProps) {
-  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   
   const { data: company, isLoading: companyLoading, error } = useQuery({
