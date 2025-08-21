@@ -70,6 +70,7 @@ export default function Reports() {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log('Guided report creation response:', data);
       toast({
         title: "Guided Report Created",
         description: "Your guided report wizard is ready. Start building your sustainability report.",
