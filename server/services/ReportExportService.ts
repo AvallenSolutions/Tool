@@ -91,10 +91,8 @@ export class ReportExportService {
         const pptx = officegen('pptx');
         
         console.log('📝 Setting PowerPoint properties...');
-        // Set presentation properties
+        // Set presentation properties (only use supported methods)
         pptx.setDocTitle(reportData.title);
-        pptx.setDocSubject('Sustainability Report');
-        pptx.setDocKeywords('sustainability, environmental, report, carbon footprint');
 
         console.log('📊 Creating title slide...');
         // Title slide
@@ -104,19 +102,19 @@ export class ReportExportService {
         titleSlide.addText(reportData.title, {
           x: 'c', y: 20, cx: '90%', cy: '20%',
           font_size: 44, bold: true, color: '1e293b',
-          align: 'center', valign: 'middle'
+          align: 'center'
         });
 
         titleSlide.addText(reportData.companyName || 'Company Name', {
           x: 'c', y: '40%', cx: '90%', cy: '15%',
           font_size: 24, color: '64748b',
-          align: 'center', valign: 'middle'
+          align: 'center'
         });
 
         titleSlide.addText(new Date().getFullYear().toString(), {
           x: 'c', y: '60%', cx: '90%', cy: '10%',
           font_size: 18, color: '94a3b8',
-          align: 'center', valign: 'middle'
+          align: 'center'
         });
 
         // Executive Summary slide
@@ -131,8 +129,7 @@ export class ReportExportService {
 
           summarySlide.addText(reportData.content.summary.substring(0, 500) + (reportData.content.summary.length > 500 ? '...' : ''), {
             x: '5%', y: '20%', cx: '90%', cy: '70%',
-            font_size: 16, color: '475569',
-            valign: 'top'
+            font_size: 16, color: '475569'
           });
         }
 
@@ -202,8 +199,7 @@ export class ReportExportService {
             contentChunks.forEach((chunk, index) => {
               slide.addText(chunk, {
                 x: '5%', y: '20%', cx: '90%', cy: '70%',
-                font_size: 14, color: '475569',
-                valign: 'top'
+                font_size: 14, color: '475569'
               });
             });
           }
