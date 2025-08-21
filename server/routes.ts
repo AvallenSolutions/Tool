@@ -7048,10 +7048,14 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       }
 
       const { reportId } = req.params;
-      const { stepKey, content } = req.body;
+      const { stepKey, content, selectedInitiatives } = req.body;
 
-      if (!stepKey || typeof content !== 'string') {
-        return res.status(400).json({ error: 'Step key and content are required' });
+      if (!stepKey && selectedInitiatives === undefined) {
+        return res.status(400).json({ error: 'Step key or selected initiatives are required' });
+      }
+
+      if (stepKey && typeof content !== 'string') {
+        return res.status(400).json({ error: 'Content must be a string when step key is provided' });
       }
 
       const { customReports } = await import('@shared/schema');
@@ -7066,23 +7070,40 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         return res.status(404).json({ error: 'Report not found' });
       }
 
-      // Update the specific step content
-      const updatedContent = {
-        ...report.reportContent,
-        [stepKey]: content
-      };
+      // Prepare update data
+      const updateData: any = { updatedAt: new Date() };
+      
+      // Update step content if provided
+      if (stepKey) {
+        const updatedContent = {
+          ...report.reportContent,
+          [stepKey]: content
+        };
+        updateData.reportContent = updatedContent;
+      }
+      
+      // Update selected initiatives if provided
+      if (selectedInitiatives !== undefined) {
+        updateData.selectedInitiatives = selectedInitiatives;
+      }
 
       await db
         .update(customReports)
-        .set({ 
-          reportContent: updatedContent,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(customReports.id, reportId));
+
+      let message = 'Data saved successfully';
+      if (stepKey && selectedInitiatives !== undefined) {
+        message = 'Step content and initiative selection saved successfully';
+      } else if (stepKey) {
+        message = 'Step content saved successfully';
+      } else if (selectedInitiatives !== undefined) {
+        message = 'Initiative selection saved successfully';
+      }
 
       res.json({
         success: true,
-        message: 'Step content saved successfully'
+        message
       });
 
     } catch (error) {

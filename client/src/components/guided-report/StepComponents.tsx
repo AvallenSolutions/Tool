@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -689,9 +689,63 @@ export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: Ste
 }
 
 // Step 5: Sustainability Initiatives Component
-export function InitiativesStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }: StepComponentProps & { stepKey: string }) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
+  const { data: initiativesData } = useQuery({ queryKey: ['/api/initiatives'] });
+  const [selectedInitiatives, setSelectedInitiatives] = useState<string[]>([]);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  // Get current report ID from URL
+  const reportId = window.location.pathname.split('/').pop();
+  
+  // Query to get current report data and selected initiatives
+  const { data: reportData } = useQuery({ 
+    queryKey: [`/api/reports/guided/${reportId}/wizard-data`],
+    enabled: !!reportId
+  });
+  
+  // Load selected initiatives from report data
+  useEffect(() => {
+    if (reportData?.selectedInitiatives) {
+      setSelectedInitiatives(reportData.selectedInitiatives);
+    }
+  }, [reportData]);
+  
+  // Save selected initiatives to report
+  const saveSelectedInitiatives = useMutation({
+    mutationFn: async (initiativeIds: string[]) => {
+      const response = await fetch(`/api/reports/guided/${reportId}/wizard-data`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selectedInitiatives: initiativeIds
+        })
+      });
+      if (!response.ok) throw new Error('Failed to save initiative selection');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ description: "Initiative selection saved successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/reports/guided/${reportId}/wizard-data`] });
+    },
+    onError: () => {
+      toast({ 
+        variant: "destructive", 
+        description: "Failed to save initiative selection" 
+      });
+    }
+  });
+  
+  const handleInitiativeToggle = (initiativeId: string) => {
+    const newSelection = selectedInitiatives.includes(initiativeId)
+      ? selectedInitiatives.filter(id => id !== initiativeId)
+      : [...selectedInitiatives, initiativeId];
+    
+    setSelectedInitiatives(newSelection);
+    saveSelectedInitiatives.mutate(newSelection);
+  };
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -699,8 +753,69 @@ export function InitiativesStep({ content, onChange, onSave, isSaving }: StepCom
       <div className="flex flex-col">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Sustainability Initiatives</h3>
-          <p className="text-sm text-slate-600">Showcase your environmental projects and their outcomes.</p>
+          <p className="text-sm text-slate-600">Choose initiatives to feature and describe their impact.</p>
         </div>
+        
+        {/* Initiative Selection */}
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="w-4 h-4" />
+              Select Initiatives to Feature
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {initiativesData?.length > 0 ? (
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {initiativesData.map((initiative: any) => (
+                  <div
+                    key={initiative.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                      selectedInitiatives.includes(initiative.id)
+                        ? 'bg-green-50 border-green-200 shadow-sm'
+                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                    }`}
+                    onClick={() => handleInitiativeToggle(initiative.id)}
+                  >
+                    <div className={`w-4 h-4 rounded border-2 mt-0.5 flex items-center justify-center ${
+                      selectedInitiatives.includes(initiative.id)
+                        ? 'bg-green-500 border-green-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedInitiatives.includes(initiative.id) && (
+                        <CheckCircle2 className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm text-slate-900">{initiative.initiativeName}</h4>
+                      {initiative.description && (
+                        <p className="text-xs text-slate-600 mt-1">{initiative.description}</p>
+                      )}
+                      {initiative.strategicPillar && (
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          {initiative.strategicPillar}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <Target className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 mb-3">No initiatives found</p>
+                <p className="text-xs text-gray-400">Create initiatives in your Company settings to feature them in reports</p>
+              </div>
+            )}
+            {selectedInitiatives.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-green-700 font-medium">
+                  {selectedInitiatives.length} initiative{selectedInitiatives.length === 1 ? '' : 's'} selected for report
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
         
         {/* AI Writing Assistant */}
         <AIWritingAssistant 
@@ -714,7 +829,7 @@ export function InitiativesStep({ content, onChange, onSave, isSaving }: StepCom
           value={content}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Describe your sustainability initiatives and their impact or use AI assistance above..."
-          className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="flex-1 min-h-[200px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
         <div className="flex justify-between items-center mt-4">
@@ -733,51 +848,72 @@ export function InitiativesStep({ content, onChange, onSave, isSaving }: StepCom
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              Current Initiatives
+              Selected Initiatives
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedInitiatives.length > 0 && initiativesData ? (
+              <div className="space-y-4">
+                {initiativesData
+                  .filter((initiative: any) => selectedInitiatives.includes(initiative.id))
+                  .map((initiative: any) => (
+                  <div key={initiative.id} className="border rounded-lg p-4 bg-green-50 border-green-200">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-slate-900">{initiative.initiativeName}</h4>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        {initiative.status || 'active'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-600 mb-3">{initiative.description}</p>
+                    {initiative.strategicPillar && (
+                      <Badge variant="outline" className="text-xs">
+                        {initiative.strategicPillar}
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <Target className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No initiatives selected</p>
+                <p className="text-xs text-gray-400 mt-1">Choose initiatives from the left panel to feature in your report</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              SMART Goals Overview
             </CardTitle>
           </CardHeader>
           <CardContent>
             {smartGoalsData?.data?.length > 0 ? (
-              <div className="space-y-4">
-                {smartGoalsData.data.slice(0, 3).map((goal: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4">
+              <div className="space-y-3">
+                {smartGoalsData.data.slice(0, 2).map((goal: any, index: number) => (
+                  <div key={index} className="border rounded-lg p-3">
                     <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-slate-900">{goal.title}</h4>
-                      <Badge variant={goal.priority === 'high' ? 'destructive' : goal.priority === 'medium' ? 'default' : 'secondary'}>
+                      <h4 className="font-medium text-sm text-slate-900">{goal.title}</h4>
+                      <Badge variant={goal.priority === 'high' ? 'destructive' : goal.priority === 'medium' ? 'default' : 'secondary'} className="text-xs">
                         {goal.priority}
                       </Badge>
                     </div>
-                    <p className="text-sm text-slate-600 mb-3">{goal.description}</p>
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500">Progress: {goal.progress}%</span>
-                      <span className="text-slate-500">
-                        Target: {new Date(goal.targetDate).toLocaleDateString()}
-                      </span>
+                      <span className="text-slate-500">Due: {new Date(goal.targetDate).toLocaleDateString()}</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-slate-500">
-                <Target className="w-8 h-8 mx-auto mb-2" />
-                <p>No initiatives found</p>
-                <p className="text-sm">Set up SMART Goals to track your initiatives</p>
+              <div className="text-center py-4 text-slate-500">
+                <TrendingUp className="w-6 h-6 mx-auto mb-2" />
+                <p className="text-sm">No SMART goals found</p>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Initiative Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              <Badge variant="outline">Carbon Reduction</Badge>
-              <Badge variant="outline">Water Conservation</Badge>
-              <Badge variant="outline">Waste Management</Badge>
-              <Badge variant="outline">Renewable Energy</Badge>
-            </div>
           </CardContent>
         </Card>
       </div>
