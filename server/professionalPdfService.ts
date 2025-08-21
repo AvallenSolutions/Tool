@@ -34,7 +34,9 @@ export class ProfessionalPDFService {
     reportContent: any,
     sustainabilityData?: any,
     companyName: string = 'Demo Company',
-    metrics: any = {}
+    metrics: any = {},
+    selectedInitiatives: any[] = [],
+    selectedKPIs: any[] = []
   ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
@@ -74,7 +76,7 @@ export class ProfessionalPDFService {
           reject(error);
         });
 
-        this.generateReportContent(doc, title, reportContent, sustainabilityData, companyName, metrics);
+        this.generateReportContent(doc, title, reportContent, sustainabilityData, companyName, metrics, selectedInitiatives, selectedKPIs);
 
         doc.end();
       } catch (error) {
@@ -90,7 +92,9 @@ export class ProfessionalPDFService {
     content: any,
     sustainabilityData: any,
     companyName: string,
-    metrics: any
+    metrics: any,
+    selectedInitiatives: any[] = [],
+    selectedKPIs: any[] = []
   ) {
     // Page 1: Cover Page
     this.generateCoverPage(doc, title, companyName);
@@ -117,7 +121,7 @@ export class ProfessionalPDFService {
     
     // Page 7: Sustainability Initiatives
     doc.addPage();
-    this.generateSustainabilityInitiatives(doc, content);
+    this.generateSustainabilityInitiatives(doc, content, selectedInitiatives);
     
     // Page 8: Social Impact
     doc.addPage();
@@ -125,7 +129,7 @@ export class ProfessionalPDFService {
     
     // Page 9: Future Goals & KPIs
     doc.addPage();
-    this.generateFutureGoals(doc, content);
+    this.generateFutureGoals(doc, content, selectedKPIs);
     
     // Page 10: Contact Information
     doc.addPage();
@@ -516,10 +520,10 @@ export class ProfessionalPDFService {
        .text('10%', rightCol, 380);
   }
 
-  private generateSustainabilityInitiatives(doc: PDFKit.PDFDocument, content: any) {
+  private generateSustainabilityInitiatives(doc: PDFKit.PDFDocument, content: any, selectedInitiatives: any[] = []) {
     this.addPageTitle(doc, 'SUSTAINABILITY INITIATIVES');
     
-    // Use actual content from wizard or provide meaningful fallback
+    // Use actual content from wizard
     const initiativesText = content?.initiatives_narrative && content.initiatives_narrative.trim() && content.initiatives_narrative !== 'Tes' ? 
       content.initiatives_narrative : 
       'Our sustainability initiatives represent concrete actions toward environmental stewardship. Each initiative is designed to address specific environmental challenges while supporting business objectives.';
@@ -533,27 +537,39 @@ export class ProfessionalPDFService {
          lineGap: 4
        });
     
-    // Initiative cards with template-style design
-    const initiatives = [
-      {
-        title: 'WATER RECYCLING SYSTEM',
-        description: 'Implementation of advanced water treatment and recycling infrastructure to reduce consumption by 30%.',
-        target: 'Target: June 2025',
-        status: 'In Progress'
-      },
-      {
-        title: 'CARBON EMISSION REDUCTION',
-        description: 'Comprehensive program to reduce carbon emissions through energy efficiency and renewable sources.',
-        target: 'Target: December 2025',
-        status: 'Active'
-      },
-      {
-        title: 'SUSTAINABLE SOURCING',
-        description: 'Partnership with local suppliers to ensure sustainable and ethical sourcing of raw materials.',
-        target: 'Target: Ongoing',
-        status: 'Completed'
-      }
-    ];
+    // Use actual selected initiatives or fallback to default
+    let initiatives;
+    if (selectedInitiatives && selectedInitiatives.length > 0) {
+      initiatives = selectedInitiatives.map(initiative => ({
+        title: initiative.title.toUpperCase(),
+        description: initiative.description,
+        target: `Target: ${new Date(initiative.targetDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+        status: initiative.status === 'active' ? 'Active' : 
+                initiative.status === 'completed' ? 'Completed' : 'In Progress'
+      }));
+    } else {
+      // Fallback initiatives
+      initiatives = [
+        {
+          title: 'WATER RECYCLING SYSTEM',
+          description: 'Implementation of advanced water treatment and recycling infrastructure to reduce consumption by 30%.',
+          target: 'Target: June 2025',
+          status: 'In Progress'
+        },
+        {
+          title: 'CARBON EMISSION REDUCTION',
+          description: 'Comprehensive program to reduce carbon emissions through energy efficiency and renewable sources.',
+          target: 'Target: December 2025',
+          status: 'Active'
+        },
+        {
+          title: 'SUSTAINABLE SOURCING',
+          description: 'Partnership with local suppliers to ensure sustainable and ethical sourcing of raw materials.',
+          target: 'Target: Ongoing',
+          status: 'Completed'
+        }
+      ];
+    }
     
     let yStart = 250;
     initiatives.forEach((initiative, index) => {
@@ -676,7 +692,7 @@ export class ProfessionalPDFService {
     });
   }
 
-  private generateFutureGoals(doc: PDFKit.PDFDocument, content: any) {
+  private generateFutureGoals(doc: PDFKit.PDFDocument, content: any, selectedKPIs: any[] = []) {
     this.addPageTitle(doc, 'FUTURE GOALS & KPIS');
     
     // Use actual content from wizard
@@ -699,14 +715,24 @@ export class ProfessionalPDFService {
     doc.fontSize(18)
        .font(this.fonts.heading)
        .fillColor(this.colors.primary)
-       .text('2025 TARGETS', 40, 240);
+       .text('SELECTED KPIS & TARGETS', 40, 240);
     
-    const targets = [
-      { goal: 'Carbon Neutral Operations', target: '2025', progress: '65%' },
-      { goal: 'Renewable Energy', target: '80%', progress: '45%' },
-      { goal: 'Waste Reduction', target: '25%', progress: '18%' },
-      { goal: 'Water Conservation', target: '30%', progress: '22%' }
-    ];
+    // Use actual selected KPIs or fallback
+    let targets;
+    if (selectedKPIs && selectedKPIs.length > 0) {
+      targets = selectedKPIs.map(kpi => ({
+        goal: kpi.name,
+        target: 'On Track',
+        progress: '65%'
+      }));
+    } else {
+      targets = [
+        { goal: 'Carbon Neutral Operations', target: '2025', progress: '65%' },
+        { goal: 'Renewable Energy', target: '80%', progress: '45%' },
+        { goal: 'Waste Reduction', target: '25%', progress: '18%' },
+        { goal: 'Water Conservation', target: '30%', progress: '22%' }
+      ];
+    }
     
     let yPos = 280;
     targets.forEach(target => {

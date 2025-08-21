@@ -176,7 +176,27 @@ export function registerRoutes(app: Express): Server {
         waste: 0.1
       };
 
-      // Prepare report data for export
+      // Fetch selected initiatives and KPIs for the report
+      let selectedInitiatives = [];
+      let selectedKPIs = [];
+      
+      if (report.report.selectedInitiatives && report.report.selectedInitiatives.length > 0) {
+        const { initiatives } = await import('@shared/schema');
+        const { sql } = await import('drizzle-orm');
+        selectedInitiatives = await db
+          .select()
+          .from(initiatives)
+          .where(sql`${initiatives.id} = ANY(${report.report.selectedInitiatives})`);
+      }
+      
+      if (report.report.selectedKPIs && report.report.selectedKPIs.length > 0) {
+        // KPIs are stored as names, so fetch from hardcoded list or database
+        const kpiNames = report.report.selectedKPIs;
+        // For now, create KPI objects with the selected names
+        selectedKPIs = kpiNames.map(name => ({ name, selected: true }));
+      }
+
+      // Prepare report data for export with actual content
       const reportData = {
         id: report.report.id,
         title: report.report.reportTitle,
@@ -188,7 +208,9 @@ export function registerRoutes(app: Express): Server {
           category: 'sustainability'
         } : undefined,
         metrics,
-        socialData: sustainabilityData
+        socialData: sustainabilityData,
+        selectedInitiatives,
+        selectedKPIs
       };
 
       // Use the enhanced export service

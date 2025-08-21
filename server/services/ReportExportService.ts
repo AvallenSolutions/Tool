@@ -74,7 +74,9 @@ export class ReportExportService {
       reportData.content,
       reportData.socialData,
       options.branding?.companyName || reportData.companyName || 'Demo Company',
-      reportData.metrics
+      reportData.metrics,
+      (reportData as any).selectedInitiatives || [],
+      (reportData as any).selectedKPIs || []
     );
   }
 
@@ -85,7 +87,9 @@ export class ReportExportService {
       reportData.content,
       reportData.socialData,
       options.branding?.companyName || reportData.companyName || 'Demo Company',
-      reportData.metrics
+      reportData.metrics,
+      (reportData as any).selectedInitiatives || [],
+      (reportData as any).selectedKPIs || []
     );
   }
 
