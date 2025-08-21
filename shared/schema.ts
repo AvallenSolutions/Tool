@@ -66,6 +66,8 @@ export const companies = pgTable("companies", {
   primaryMotivation: varchar("primary_motivation", { length: 255 }),
   currentReportingPeriodStart: date("current_reporting_period_start"),
   currentReportingPeriodEnd: date("current_reporting_period_end"),
+  financialYear: varchar("financial_year", { length: 50 }),
+  reportingFrequency: varchar("reporting_frequency", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

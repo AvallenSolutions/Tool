@@ -24,8 +24,8 @@ interface OnboardingData {
   companySize: string;
   country: string;
   primaryMotivations: string[];
-  reportingPeriodStart: string;
-  reportingPeriodEnd: string;
+  financialYear: string;
+  reportingFrequency: string;
 }
 
 interface EnhancedOnboardingWizardProps {
@@ -78,12 +78,25 @@ const motivations = [
   "Market Access"
 ];
 
+const financialYears = [
+  "January - December",
+  "April - March", 
+  "July - June",
+  "October - September"
+];
+
+const reportingFrequencies = [
+  "Quarterly",
+  "Every 6 months", 
+  "Annually"
+];
+
 const steps = [
   { id: 1, title: "Company Details", icon: Building2, description: "Tell us about your company" },
   { id: 2, title: "Industry & Size", icon: Users, description: "Business specifics" },
   { id: 3, title: "Location", icon: Globe, description: "Where you operate" },
   { id: 4, title: "Sustainability Goals", icon: Target, description: "Your motivations" },
-  { id: 5, title: "Reporting Period", icon: CalendarLucide, description: "Set your timeline" }
+  { id: 5, title: "Reporting Setup", icon: CalendarLucide, description: "Financial year & frequency" }
 ];
 
 export default function EnhancedOnboardingWizard({ onComplete, onCancel }: EnhancedOnboardingWizardProps) {
@@ -95,12 +108,9 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
     companySize: '',
     country: '',
     primaryMotivations: [],
-    reportingPeriodStart: '',
-    reportingPeriodEnd: ''
+    financialYear: '',
+    reportingFrequency: ''
   });
-
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -112,8 +122,8 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
         numberOfEmployees: data.companySize,
         country: data.country,
         primaryMotivation: data.primaryMotivations.join(', '),
-        currentReportingPeriodStart: data.reportingPeriodStart,
-        currentReportingPeriodEnd: data.reportingPeriodEnd,
+        financialYear: data.financialYear,
+        reportingFrequency: data.reportingFrequency,
         onboardingComplete: true
       });
     },
@@ -139,13 +149,7 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Update dates from calendar selections
-      const finalData = {
-        ...formData,
-        reportingPeriodStart: startDate ? format(startDate, 'yyyy-MM-dd') : '',
-        reportingPeriodEnd: endDate ? format(endDate, 'yyyy-MM-dd') : ''
-      };
-      createCompanyMutation.mutate(finalData);
+      createCompanyMutation.mutate(formData);
     }
   };
 
@@ -166,7 +170,7 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
       case 4:
         return formData.primaryMotivations.length > 0;
       case 5:
-        return startDate && endDate;
+        return formData.financialYear && formData.reportingFrequency;
       default:
         return false;
     }
@@ -361,69 +365,55 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
               </div>
             )}
 
-            {/* Step 5: Reporting Period */}
+            {/* Step 5: Reporting Setup */}
             {currentStep === 5 && (
               <div className="space-y-4">
                 <div>
-                  <Label>Set Your Reporting Period *</Label>
-                  <p className="text-sm text-gray-600 mb-4">Choose your sustainability reporting timeline</p>
+                  <Label>Configure Your Reporting Schedule *</Label>
+                  <p className="text-sm text-gray-600 mb-4">Set your financial year and reporting frequency</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="startDate">Start Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal mt-1",
-                              !startDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate ? format(startDate, "PPP") : "Pick start date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={startDate}
-                            onSelect={setStartDate}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <Label htmlFor="financial-year">Financial Year</Label>
+                      <Select 
+                        value={formData.financialYear} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, financialYear: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select your financial year" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border shadow-lg">
+                          {financialYears.map((year) => (
+                            <SelectItem key={year} value={year}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label htmlFor="endDate">End Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal mt-1",
-                              !endDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {endDate ? format(endDate, "PPP") : "Pick end date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={endDate}
-                            onSelect={setEndDate}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <Label htmlFor="reporting-frequency">Reporting Frequency</Label>
+                      <Select 
+                        value={formData.reportingFrequency} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, reportingFrequency: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="How often will you report?" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border shadow-lg">
+                          {reportingFrequencies.map((frequency) => (
+                            <SelectItem key={frequency} value={frequency}>
+                              {frequency}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    This period will be used for all sustainability calculations and reports. 
-                    Most companies use a 12-month period aligned with their fiscal year.
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    Most companies align their sustainability reporting with their financial year. 
+                    Choose a frequency that matches your business review cycles and stakeholder expectations.
                   </p>
                 </div>
               </div>

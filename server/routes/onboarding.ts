@@ -80,6 +80,8 @@ export function setupOnboardingRoutes(app: Express) {
         if (req.body.industry) updateData.industry = req.body.industry;
         if (req.body.country) updateData.country = req.body.country;
         if (req.body.numberOfEmployees) updateData.size = req.body.numberOfEmployees; // Map to existing 'size' field
+        if (req.body.financialYear) updateData.financialYear = req.body.financialYear;
+        if (req.body.reportingFrequency) updateData.reportingFrequency = req.body.reportingFrequency;
         if (req.body.onboardingComplete !== undefined) updateData.onboardingComplete = req.body.onboardingComplete;
 
         console.log('Update data being sent:', updateData);
