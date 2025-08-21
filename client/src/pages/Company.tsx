@@ -107,8 +107,6 @@ export default function Company() {
     sustainabilityLoading, 
     company: !!company 
   });
-  
-  console.log('🔍 Current sustainabilityData state:', sustainabilityData.socialData);
 
   // Update sustainability data mutation
   const sustainabilityMutation = useMutation({
@@ -221,6 +219,7 @@ export default function Company() {
           }
         }
       }));
+      console.log('✅ Updated sustainabilityData state:', sustainabilityData.socialData);
     }
   }, [backendSustainabilityData, sustainabilityLoading]);
 
