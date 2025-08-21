@@ -195,18 +195,27 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
   // Mutation to save step content
   const saveStepMutation = useMutation({
     mutationFn: async ({ stepKey, content }: { stepKey: string; content: string }) => {
-      const response = await fetch(`/api/reports/guided/${reportId}/save-step`, {
+      const response = await fetch(`/api/reports/guided/${reportId}/wizard-data`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stepKey, content }),
         credentials: 'include'
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save step content');
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response JSON:', parseError);
+        throw new Error('Invalid server response');
       }
 
-      return response.json();
+      if (!response.ok) {
+        console.error('Server error:', result);
+        throw new Error(result.error || `Server error: ${response.status}`);
+      }
+
+      return result;
     },
     onSuccess: () => {
       toast({

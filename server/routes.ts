@@ -7075,6 +7075,10 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         return res.status(400).json({ error: 'Step key, selected initiatives, or selected KPIs are required' });
       }
 
+      if (stepKey && (content === undefined || content === null)) {
+        return res.status(400).json({ error: 'Content is required when step key is provided' });
+      }
+
       if (stepKey && typeof content !== 'string') {
         return res.status(400).json({ error: 'Content must be a string when step key is provided' });
       }
