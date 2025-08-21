@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, ChevronDown, ChevronRight, Activity, Target, Sparkles } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, ChevronDown, ChevronRight, Activity, Sparkles } from "lucide-react";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
@@ -13,7 +13,7 @@ export default function Sidebar() {
 
   // Auto-expand Reports section when on any reports-related page
   useEffect(() => {
-    if (location.startsWith('/app/reports') || location.startsWith('/app/report-builder') || location.startsWith('/app/initiatives')) {
+    if (location.startsWith('/app/reports') || location.startsWith('/app/report-builder')) {
       setReportsExpanded(true);
     }
   }, [location]);
@@ -36,7 +36,6 @@ export default function Sidebar() {
   const reportsSubItems = [
     { path: "/app/reports", label: "View Reports", icon: FileText },
     { path: "/app/report-builder", label: "Report Builder", icon: Sparkles },
-    { path: "/app/initiatives", label: "Initiatives", icon: Target },
   ];
 
   const adminSubItems = [
@@ -88,7 +87,7 @@ export default function Sidebar() {
             <Button
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
-                location.startsWith('/app/reports') || location.startsWith('/app/report-builder') || location.startsWith('/app/initiatives')
+                location.startsWith('/app/reports') || location.startsWith('/app/report-builder')
                   ? "bg-white text-[#209d50] hover:bg-gray-100"
                   : "text-white hover:bg-green-600"
               }`}
