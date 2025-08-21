@@ -1,8 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import officegen from 'officegen';
 import JSZip from 'jszip';
 import { PDFService } from '../pdfService';
+
+// Dynamic import for officegen to handle potential issues
+const officegen = require('officegen');
 
 export interface ExportOptions {
   optionId: string;
@@ -41,14 +43,20 @@ export class ReportExportService {
   }
 
   async exportReport(reportData: ReportData, format: string, options: ExportOptions): Promise<Buffer> {
+    console.log('📤 ReportExportService - Processing format:', format);
+    
     switch (format) {
       case 'pdf':
+        console.log('📄 Generating PDF report...');
         return this.exportPDF(reportData, options);
       case 'pdf-branded':
+        console.log('🎨 Generating branded PDF report...');
         return this.exportBrandedPDF(reportData, options);
       case 'pptx':
+        console.log('📊 Generating PowerPoint presentation...');
         return this.exportPowerPoint(reportData, options);
       case 'web':
+        console.log('🌐 Generating interactive web report...');
         return this.exportInteractiveWeb(reportData, options);
       default:
         throw new Error(`Unsupported export format: ${format}`);
@@ -69,23 +77,24 @@ export class ReportExportService {
     return this.pdfService.generateFromHTML(htmlContent, {
       title: reportData.title,
       format: 'A4',
-      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
-      displayHeaderFooter: true,
-      headerTemplate: this.generateBrandedHeader(reportData, options.branding),
-      footerTemplate: this.generateBrandedFooter(reportData, options.branding)
+      margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
     });
   }
 
   private async exportPowerPoint(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
+    console.log('🔧 Starting PowerPoint generation with officegen...');
+    
     return new Promise((resolve, reject) => {
       try {
         const pptx = officegen('pptx');
         
+        console.log('📝 Setting PowerPoint properties...');
         // Set presentation properties
         pptx.setDocTitle(reportData.title);
         pptx.setDocSubject('Sustainability Report');
         pptx.setDocKeywords('sustainability, environmental, report, carbon footprint');
 
+        console.log('📊 Creating title slide...');
         // Title slide
         const titleSlide = pptx.makeNewSlide();
         titleSlide.name = 'Title Slide';
@@ -199,14 +208,30 @@ export class ReportExportService {
         });
 
         // Generate the PowerPoint file
+        console.log('🔧 Generating PPTX buffer...');
         const chunks: Buffer[] = [];
-        pptx.on('data', (chunk: Buffer) => chunks.push(chunk));
-        pptx.on('end', () => resolve(Buffer.concat(chunks)));
-        pptx.on('error', reject);
         
+        pptx.on('data', (chunk: Buffer) => {
+          console.log('📦 Received chunk:', chunk.length, 'bytes');
+          chunks.push(chunk);
+        });
+        
+        pptx.on('end', () => {
+          const finalBuffer = Buffer.concat(chunks);
+          console.log('✅ PowerPoint generation completed:', finalBuffer.length, 'bytes');
+          resolve(finalBuffer);
+        });
+        
+        pptx.on('error', (error: any) => {
+          console.error('❌ PowerPoint generation error:', error);
+          reject(error);
+        });
+        
+        console.log('🚀 Starting PPTX generation...');
         pptx.generate();
 
       } catch (error) {
+        console.error('❌ PowerPoint export error:', error);
         reject(error);
       }
     });

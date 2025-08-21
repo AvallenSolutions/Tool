@@ -164,7 +164,9 @@ export function registerRoutes(app: Express): Server {
       const { ReportExportService } = await import('./services/ReportExportService');
       const exportService = new ReportExportService();
       
+      console.log('🔄 Export requested:', { format, options, reportId });
       const exportBuffer = await exportService.exportReport(reportData, format, options);
+      console.log('✅ Export completed:', { format, bufferLength: exportBuffer.length });
 
       // Set response headers based on format
       let contentType: string;
