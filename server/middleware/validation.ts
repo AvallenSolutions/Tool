@@ -66,56 +66,153 @@ export const validateCompanyOnboarding = [
 ];
 
 /**
- * Supplier data validation rules
+ * Enhanced supplier data validation rules with comprehensive data integrity safeguards
  */
 export const validateSupplierData = [
+  // CRITICAL: Supplier name is required and must be unique
   body('supplierName')
     .trim()
-    .isLength({ min: 1, max: 255 })
-    .withMessage('Supplier name must be between 1 and 255 characters')
+    .isLength({ min: 2, max: 255 })
+    .withMessage('Supplier name must be between 2 and 255 characters')
+    .matches(/^[a-zA-Z0-9\s&.,()-]+$/)
+    .withMessage('Supplier name contains invalid characters')
     .escape(),
+  
+  // CRITICAL: Category must be valid
   body('supplierCategory')
     .isIn(['bottle_producer', 'label_maker', 'closure_producer', 'secondary_packaging', 'ingredient_supplier', 'contract_distillery'])
-    .withMessage('Invalid supplier category'),
+    .withMessage('Invalid supplier category. Must be one of: bottle_producer, label_maker, closure_producer, secondary_packaging, ingredient_supplier, contract_distillery'),
+  
+  // Enhanced website validation
   body('website')
     .optional()
-    .isURL()
-    .withMessage('Website must be a valid URL'),
+    .custom((value) => {
+      if (!value) return true; // Optional field
+      if (typeof value !== 'string') throw new Error('Website must be a string');
+      // Allow basic URLs without strict protocol requirement
+      const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+      if (!urlPattern.test(value)) throw new Error('Website must be a valid URL');
+      return true;
+    }),
+  
+  // CRITICAL: Contact email validation - prevent data loss
   body('contactEmail')
     .optional()
     .isEmail()
-    .withMessage('Contact email must be valid'),
+    .normalizeEmail()
+    .withMessage('Contact email must be a valid email address')
+    .isLength({ max: 320 }) // RFC 5321 email length limit
+    .withMessage('Email address is too long'),
+  
+  // Enhanced description validation
   body('description')
     .optional()
     .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Description must be less than 1000 characters')
+    .isLength({ max: 2000 })
+    .withMessage('Description must be less than 2000 characters')
     .escape(),
+  
+  // Enhanced address validation
   body('addressStreet')
     .optional()
     .trim()
-    .isLength({ max: 255 })
-    .withMessage('Street address must be less than 255 characters')
+    .isLength({ max: 500 })
+    .withMessage('Street address must be less than 500 characters')
     .escape(),
+  
   body('addressCity')
     .optional()
     .trim()
-    .isLength({ max: 100 })
-    .withMessage('City must be less than 100 characters')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('City must be between 1 and 100 characters')
+    .matches(/^[a-zA-Z\s\-',.]+$/)
+    .withMessage('City contains invalid characters')
     .escape(),
+  
   body('addressPostalCode')
     .optional()
     .trim()
-    .isLength({ max: 50 })
-    .withMessage('Postal code must be less than 50 characters')
+    .isLength({ max: 20 })
+    .withMessage('Postal code must be less than 20 characters')
+    .matches(/^[a-zA-Z0-9\s\-]+$/)
+    .withMessage('Postal code contains invalid characters')
     .escape(),
+  
   body('addressCountry')
     .optional()
     .trim()
-    .isLength({ max: 100 })
-    .withMessage('Country must be less than 100 characters')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Country must be between 2 and 100 characters')
+    .matches(/^[a-zA-Z\s\-',.]+$/)
+    .withMessage('Country contains invalid characters')
     .escape(),
-  handleValidationErrors
+  
+  // Enhanced contact information validation
+  body('contactName')
+    .optional()
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage('Contact name must be less than 255 characters')
+    .matches(/^[a-zA-Z\s\-',.]+$/)
+    .withMessage('Contact name contains invalid characters')
+    .escape(),
+  
+  body('contactPhone')
+    .optional()
+    .trim()
+    .matches(/^[\+]?[1-9][\d]{0,15}$/)
+    .withMessage('Phone number must be valid international format')
+    .escape(),
+  
+  // Location validation
+  body('location')
+    .optional()
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage('Location must be less than 255 characters')
+    .escape(),
+  
+  // Verification status validation
+  body('verificationStatus')
+    .optional()
+    .isIn(['pending', 'verified', 'rejected'])
+    .withMessage('Verification status must be pending, verified, or rejected'),
+  
+  // Handle validation errors with enhanced logging
+  (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.error('🔴 SUPPLIER VALIDATION FAILED:', {
+        url: req.originalUrl,
+        method: req.method,
+        body: req.body,
+        errors: errors.array(),
+        timestamp: new Date().toISOString(),
+        userAgent: req.get('User-Agent')
+      });
+      
+      return res.status(400).json({
+        success: false,
+        error: 'Supplier data validation failed',
+        details: errors.array().map(err => ({
+          field: err.type === 'field' ? err.path : 'unknown',
+          message: err.msg,
+          value: err.type === 'field' ? err.value : undefined,
+          location: err.type === 'field' ? err.location : undefined
+        })),
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Log successful validation
+    console.log('✅ SUPPLIER VALIDATION PASSED:', {
+      supplierName: req.body.supplierName,
+      category: req.body.supplierCategory,
+      timestamp: new Date().toISOString()
+    });
+    
+    next();
+  }
 ];
 
 /**

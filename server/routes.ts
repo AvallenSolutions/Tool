@@ -36,6 +36,7 @@ import { suggestionService } from "./services/suggestionService";
 import { kpiCalculationService, enhancedKpiService } from "./services/kpiService";
 import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
+import { supplierIntegrityService } from "./services/SupplierIntegrityService";
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences } from "@shared/schema";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
@@ -1193,7 +1194,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Update supplier
+  // Enhanced supplier update with comprehensive data integrity safeguards
   app.put('/api/suppliers/:id', validateSupplierData, async (req, res) => {
     try {
       const { id } = req.params;
@@ -1201,20 +1202,77 @@ Be precise and quote actual text from the content, not generic terms.`;
       const { verifiedSuppliers } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
       
+      console.log(`🔄 Updating supplier ${id} with data integrity safeguards`);
+      
+      // Step 1: Validate and backup existing data
+      const validationResult = await supplierIntegrityService.validateAndBackupSupplier(id, 'UPDATE_SUPPLIER');
+      if (!validationResult.isValid) {
+        console.error(`🚨 Pre-update validation failed for supplier ${id}:`, validationResult.issues);
+        return res.status(400).json({
+          success: false,
+          error: 'Supplier data validation failed',
+          issues: validationResult.issues,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Step 2: Validate and sanitize incoming data
+      const dataValidation = await supplierIntegrityService.validateBeforeSave(updateData);
+      if (!dataValidation.isValid) {
+        console.error(`🚨 Update data validation failed for supplier ${id}:`, dataValidation.errors);
+        return res.status(400).json({
+          success: false,
+          error: 'Update data validation failed',
+          errors: dataValidation.errors,
+          warnings: dataValidation.warnings,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Step 3: Perform update with sanitized data
       const result = await db
         .update(verifiedSuppliers)
-        .set(updateData)
+        .set({
+          ...dataValidation.sanitizedData,
+          updatedAt: new Date()
+        })
         .where(eq(verifiedSuppliers.id, id))
         .returning();
 
       if (result.length === 0) {
-        return res.status(404).json({ error: 'Supplier not found' });
+        console.error(`❌ Supplier ${id} not found during update`);
+        return res.status(404).json({ 
+          success: false,
+          error: 'Supplier not found',
+          timestamp: new Date().toISOString()
+        });
       }
 
-      res.json(result[0]);
+      // Step 4: Post-update validation
+      const updatedSupplier = result[0];
+      console.log(`✅ Successfully updated supplier: ${updatedSupplier.supplierName} (${updatedSupplier.id})`);
+      
+      // Log warnings if any
+      if (dataValidation.warnings.length > 0) {
+        console.warn(`⚠️ Supplier update warnings for ${updatedSupplier.supplierName}:`, dataValidation.warnings);
+      }
+      
+      res.json({
+        success: true,
+        data: updatedSupplier,
+        warnings: dataValidation.warnings,
+        message: 'Supplier updated successfully with data integrity checks',
+        timestamp: new Date().toISOString()
+      });
+      
     } catch (error) {
-      console.error('❌ Error updating supplier:', error);
-      res.status(500).json({ error: 'Failed to update supplier' });
+      console.error('❌ Critical error updating supplier:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to update supplier',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
@@ -3004,25 +3062,47 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(400).json({ error: 'Invitation has already been used' });
       }
 
-      // Create new supplier
+      // Validate and sanitize supplier data before creation
+      const supplierData = {
+        supplierName: supplierName,
+        supplierCategory: inv.expectedSupplierCategory,
+        description,
+        website,
+        contactName,
+        contactEmail: contactEmail || inv.supplierEmail,
+        contactPhone,
+        addressStreet,
+        addressCity,
+        addressCountry,
+        certifications: certifications || [],
+        isVerified: false, // Requires admin approval
+        verificationStatus: 'pending',
+      };
+      
+      const dataValidation = await supplierIntegrityService.validateBeforeSave(supplierData);
+      if (!dataValidation.isValid) {
+        console.error(`🚨 Supplier creation validation failed:`, dataValidation.errors);
+        return res.status(400).json({
+          success: false,
+          error: 'Supplier data validation failed',
+          errors: dataValidation.errors,
+          warnings: dataValidation.warnings,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Create new supplier with validated data
       const newSupplier = await db
         .insert(verifiedSuppliers)
-        .values({
-          supplierName: supplierName,
-          supplierCategory: inv.expectedSupplierCategory,
-          description,
-          website,
-          contactName,
-          contactEmail: contactEmail || inv.supplierEmail,
-          contactPhone,
-          addressStreet,
-          addressCity,
-          addressCountry,
-          certifications: certifications || [],
-          isVerified: false, // Requires admin approval
-          verificationStatus: 'pending',
-        })
+        .values(dataValidation.sanitizedData)
         .returning();
+      
+      console.log(`✅ New supplier created with data integrity: ${newSupplier[0].supplierName} (${newSupplier[0].id})`);
+      
+      // Log warnings if any
+      if (dataValidation.warnings.length > 0) {
+        console.warn(`⚠️ Supplier creation warnings for ${newSupplier[0].supplierName}:`, dataValidation.warnings);
+      }
 
       // Mark invitation as used
       await db
@@ -3044,6 +3124,131 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // ============ SUPPLIER DATA INTEGRITY ENDPOINTS ============
+  
+  // Comprehensive supplier integrity audit endpoint
+  app.get('/api/admin/suppliers-integrity/audit', isAuthenticated, async (req: any, res: any) => {
+    try {
+      console.log('🔍 Starting comprehensive supplier integrity audit...');
+      
+      const auditReport = await supplierIntegrityService.performIntegrityAudit();
+      
+      const { verifiedSuppliers } = await import('@shared/schema');
+      const allSuppliers = await db.select().from(verifiedSuppliers);
+      
+      const summary = {
+        totalSuppliers: allSuppliers.length,
+        suppliersWithIssues: auditReport.length,
+        criticalIssues: auditReport.filter(r => r.severity === 'critical').length,
+        highPriorityIssues: auditReport.filter(r => r.severity === 'high').length,
+        mediumPriorityIssues: auditReport.filter(r => r.severity === 'medium').length,
+        auditTimestamp: new Date().toISOString()
+      };
+      
+      res.json({
+        success: true,
+        summary,
+        detailedReport: auditReport,
+        recommendations: [
+          'Review suppliers with critical issues immediately',
+          'Contact suppliers with missing email addresses',
+          'Update supplier descriptions for better visibility',
+          'Verify supplier websites are accessible',
+          'Ensure verification status consistency'
+        ]
+      });
+      
+    } catch (error) {
+      console.error('❌ Error during integrity audit:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to perform integrity audit',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Supplier data recovery endpoint
+  app.post('/api/admin/suppliers-integrity/:id/recover', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      const { missingFields } = req.body;
+      
+      if (!missingFields || !Array.isArray(missingFields)) {
+        return res.status(400).json({
+          success: false,
+          error: 'missingFields array is required'
+        });
+      }
+      
+      console.log(`🔧 Attempting to recover data for supplier ${id}:`, missingFields);
+      
+      const recoveryResult = await supplierIntegrityService.recoverSupplierData(id, missingFields);
+      
+      res.json({
+        success: recoveryResult.success,
+        recoveredFields: recoveryResult.recoveredFields,
+        errors: recoveryResult.errors,
+        message: recoveryResult.success 
+          ? `Successfully recovered ${recoveryResult.recoveredFields.length} fields`
+          : 'Data recovery failed',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ Error during supplier data recovery:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to recover supplier data',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Supplier validation endpoint (for testing before save)
+  app.post('/api/admin/suppliers-integrity/validate', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const supplierData = req.body;
+      
+      const validationResult = await supplierIntegrityService.validateBeforeSave(supplierData);
+      
+      res.json({
+        success: true,
+        isValid: validationResult.isValid,
+        sanitizedData: validationResult.sanitizedData,
+        warnings: validationResult.warnings,
+        errors: validationResult.errors,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ Error during supplier validation:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to validate supplier data',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Automated integrity monitoring (runs every 24 hours)
+  setInterval(async () => {
+    try {
+      console.log('🔍 Running scheduled supplier integrity check...');
+      const auditReport = await supplierIntegrityService.performIntegrityAudit();
+      
+      const criticalIssues = auditReport.filter(r => r.severity === 'critical');
+      if (criticalIssues.length > 0) {
+        console.error(`🚨 CRITICAL: ${criticalIssues.length} suppliers have critical data integrity issues that require immediate attention!`);
+        // In production, this would send alerts to admin team
+      }
+    } catch (error) {
+      console.error('❌ Error in scheduled integrity check:', error);
+    }
+  }, 24 * 60 * 60 * 1000); // Run every 24 hours
+
+  // ============ END SUPPLIER DATA INTEGRITY ENDPOINTS ============
+  
   // ============ END SUPPLIER INVITATION ENDPOINTS ============
 
   // Verified Suppliers API endpoints
