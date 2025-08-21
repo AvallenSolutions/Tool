@@ -7058,39 +7058,80 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         return res.status(400).json({ error: 'Content must be a string when step key is provided' });
       }
 
-      const { customReports } = await import('@shared/schema');
+      const { customReports, reports } = await import('@shared/schema');
       
-      // Get current report
-      const [report] = await db
-        .select()
-        .from(customReports)
-        .where(eq(customReports.id, reportId));
+      // Check if this is a custom report (UUID) or regular report (integer)
+      let report;
+      let isRegularReport = false;
+      
+      // Try to parse as integer first (regular reports table)
+      if (/^\d+$/.test(reportId)) {
+        const [regularReport] = await db
+          .select()
+          .from(reports)
+          .where(eq(reports.id, parseInt(reportId)));
+        
+        if (regularReport && regularReport.companyId === company.id) {
+          report = regularReport;
+          isRegularReport = true;
+        }
+      } else {
+        // Try as UUID (custom reports table)
+        const [customReport] = await db
+          .select()
+          .from(customReports)
+          .where(eq(customReports.id, reportId));
+          
+        if (customReport && customReport.companyId === company.id) {
+          report = customReport;
+          isRegularReport = false;
+        }
+      }
 
-      if (!report || report.companyId !== company.id) {
+      if (!report) {
         return res.status(404).json({ error: 'Report not found' });
       }
 
       // Prepare update data
       const updateData: any = { updatedAt: new Date() };
       
-      // Update step content if provided
-      if (stepKey) {
-        const updatedContent = {
-          ...report.reportContent,
-          [stepKey]: content
-        };
-        updateData.reportContent = updatedContent;
-      }
-      
-      // Update selected initiatives if provided
-      if (selectedInitiatives !== undefined) {
-        updateData.selectedInitiatives = selectedInitiatives;
-      }
+      if (isRegularReport) {
+        // For regular reports, store in reportData JSONB field
+        const currentData = report.reportData || {};
+        
+        if (stepKey) {
+          currentData[stepKey] = content;
+        }
+        
+        if (selectedInitiatives !== undefined) {
+          currentData.selectedInitiatives = selectedInitiatives;
+        }
+        
+        updateData.reportData = currentData;
+        
+        await db
+          .update(reports)
+          .set(updateData)
+          .where(eq(reports.id, parseInt(reportId)));
+      } else {
+        // For custom reports, use existing structure
+        if (stepKey) {
+          const updatedContent = {
+            ...report.reportContent,
+            [stepKey]: content
+          };
+          updateData.reportContent = updatedContent;
+        }
+        
+        if (selectedInitiatives !== undefined) {
+          updateData.selectedInitiatives = selectedInitiatives;
+        }
 
-      await db
-        .update(customReports)
-        .set(updateData)
-        .where(eq(customReports.id, reportId));
+        await db
+          .update(customReports)
+          .set(updateData)
+          .where(eq(customReports.id, reportId));
+      }
 
       let message = 'Data saved successfully';
       if (stepKey && selectedInitiatives !== undefined) {
@@ -7128,15 +7169,37 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       }
 
       const { reportId } = req.params;
-      const { customReports } = await import('@shared/schema');
+      const { customReports, reports } = await import('@shared/schema');
       
-      // Get report data
-      const [report] = await db
-        .select()
-        .from(customReports)
-        .where(eq(customReports.id, reportId));
+      // Check if this is a custom report (UUID) or regular report (integer)
+      let report;
+      let reportData = null;
+      
+      // Try to parse as integer first (regular reports table)
+      if (/^\d+$/.test(reportId)) {
+        const [regularReport] = await db
+          .select()
+          .from(reports)
+          .where(eq(reports.id, parseInt(reportId)));
+        
+        if (regularReport && regularReport.companyId === company.id) {
+          report = regularReport;
+          reportData = regularReport.reportData || {};
+        }
+      } else {
+        // Try as UUID (custom reports table)
+        const [customReport] = await db
+          .select()
+          .from(customReports)
+          .where(eq(customReports.id, reportId));
+          
+        if (customReport && customReport.companyId === company.id) {
+          report = customReport;
+          reportData = customReport.reportContent || {};
+        }
+      }
 
-      if (!report || report.companyId !== company.id) {
+      if (!report) {
         return res.status(404).json({ error: 'Report not found' });
       }
 
@@ -7144,7 +7207,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         success: true,
         data: {
           report,
-          company
+          company,
+          selectedInitiatives: reportData?.selectedInitiatives || []
         }
       });
 
