@@ -7045,7 +7045,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
   });
 
   // Save step content for guided report
-  app.put('/api/reports/guided/:reportId/save-step', isAuthenticated, async (req, res) => {
+  app.put('/api/reports/guided/:reportId/wizard-data', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub;

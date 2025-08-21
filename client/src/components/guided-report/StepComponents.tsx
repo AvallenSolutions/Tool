@@ -729,11 +729,19 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
         })
       });
       
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response JSON:', parseError);
+        throw new Error('Invalid server response');
+      }
+      
       console.log('Save response:', { status: response.status, result });
       
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to save initiative selection');
+        console.error('Server error:', result);
+        throw new Error(result.error || `Server error: ${response.status}`);
       }
       return result;
     },
