@@ -99,7 +99,7 @@ export default function Company() {
   const { data: backendSustainabilityData, isLoading: sustainabilityLoading } = useQuery({
     queryKey: ["/api/company/sustainability-data"],
     retry: false,
-    enabled: !!company,
+    enabled: true, // Always enable - the backend handles auth
   });
 
   console.log('🔍 Query state:', { 
@@ -202,24 +202,33 @@ export default function Company() {
 
   // Update state when backend data loads
   useEffect(() => {
+    console.log('🔍 useEffect triggered:', { 
+      hasBackendData: !!backendSustainabilityData, 
+      isLoading: sustainabilityLoading,
+      backendData: backendSustainabilityData
+    });
+    
     if (backendSustainabilityData && !sustainabilityLoading) {
       console.log('🔄 Loading sustainability data from backend:', backendSustainabilityData);
       console.log('🔍 Backend socialData:', backendSustainabilityData.socialData);
-      setSustainabilityData(prevData => ({
-        ...prevData,
+      
+      const updatedData = {
+        ...sustainabilityData,
         ...backendSustainabilityData,
         socialData: {
           employeeMetrics: {
-            ...prevData.socialData.employeeMetrics,
+            ...sustainabilityData.socialData.employeeMetrics,
             ...(backendSustainabilityData.socialData?.employeeMetrics || {})
           },
           communityImpact: {
-            ...prevData.socialData.communityImpact,
+            ...sustainabilityData.socialData.communityImpact,
             ...(backendSustainabilityData.socialData?.communityImpact || {})
           }
         }
-      }));
-      console.log('✅ Updated sustainabilityData state:', sustainabilityData.socialData);
+      };
+      
+      console.log('✅ About to update state with:', updatedData.socialData);
+      setSustainabilityData(updatedData);
     }
   }, [backendSustainabilityData, sustainabilityLoading]);
 
