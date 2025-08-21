@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
 interface OnboardingData {
   userName: string;
@@ -169,6 +170,13 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src={avallenLogo} 
+              alt="Avallen Solutions" 
+              className="h-20 w-auto"
+            />
+          </div>
           <div className="flex justify-center mb-4">
             <Badge className="bg-avallen-green/10 text-avallen-green border-avallen-green/20 px-4 py-2">
               Beta Program Setup

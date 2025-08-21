@@ -10,6 +10,7 @@ import { OnboardingGuard } from "@/components/onboarding/OnboardingGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
+import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
 export default function Onboarding() {
   return (
@@ -48,8 +49,12 @@ function OnboardingContent() {
     <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-avallen-green/5 flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full border shadow-xl bg-white">
         <CardHeader className="text-center space-y-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-avallen-green to-avallen-green-light rounded-full flex items-center justify-center mx-auto">
-            <Sparkles className="w-10 h-10 text-white" />
+          <div className="flex justify-center mb-4">
+            <img 
+              src={avallenLogo} 
+              alt="Avallen Solutions" 
+              className="h-16 w-auto"
+            />
           </div>
           <div>
             <CardTitle className="text-3xl font-bold text-slate-gray mb-2">

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, Lock, Globe, ArrowRight, Leaf, Award, BarChart3, Users, FileText } from "lucide-react";
 import { Link } from "wouter";
+import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
 export default function Login() {
   const handleLogin = () => {
@@ -17,10 +18,11 @@ export default function Login() {
           <div className="flex justify-between items-center py-4">
             <Link href="/">
               <div className="flex items-center space-x-3 cursor-pointer">
-                <div className="w-10 h-10 bg-avallen-green rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">A</span>
-                </div>
-                <span className="text-2xl font-bold text-slate-gray">Avallen Solutions</span>
+                <img 
+                  src={avallenLogo} 
+                  alt="Avallen Solutions" 
+                  className="h-10 w-auto"
+                />
               </div>
             </Link>
             <Link href="/">

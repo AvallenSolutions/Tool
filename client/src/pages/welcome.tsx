@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
 export default function Welcome() {
   const [, navigate] = useLocation();
@@ -39,6 +40,13 @@ export default function Welcome() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-avallen-green/5 flex items-center justify-center">
         <div className="text-center">
+          <div className="flex justify-center mb-6">
+            <img 
+              src={avallenLogo} 
+              alt="Avallen Solutions" 
+              className="h-16 w-auto"
+            />
+          </div>
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-avallen-green" />
           <h2 className="text-xl font-semibold text-slate-gray mb-2">Setting up your account...</h2>
           <p className="text-gray-600">This should only take a moment.</p>
