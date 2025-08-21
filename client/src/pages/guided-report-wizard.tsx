@@ -140,11 +140,15 @@ const TEMPLATE_STEP_CONFIG = {
 
 // Function to get filtered steps based on selected template
 const getWizardSteps = (templateId: string | null) => {
-  if (!templateId || !TEMPLATE_STEP_CONFIG[templateId]) {
+  if (!templateId || !(templateId as keyof typeof TEMPLATE_STEP_CONFIG)) {
     return ALL_WIZARD_STEPS;
   }
   
-  const allowedSteps = TEMPLATE_STEP_CONFIG[templateId];
+  const allowedSteps = TEMPLATE_STEP_CONFIG[templateId as keyof typeof TEMPLATE_STEP_CONFIG];
+  if (!allowedSteps) {
+    return ALL_WIZARD_STEPS;
+  }
+  
   return ALL_WIZARD_STEPS.filter(step => allowedSteps.includes(step.key))
     .map((step, index) => ({ ...step, id: index + 1 }));
 };
@@ -225,39 +229,101 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
 
   // Export report as PDF
   const handleExportPDF = async () => {
-    if (!reportId) return;
-    
+    await handleEnhancedExport('pdf', {});
+  };
+
+  const handleEnhancedExport = async (format: string, options: any = {}) => {
+    if (!reportId) {
+      toast({
+        title: "Export Error",
+        description: "No report ID available for export",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsExporting(true);
+    
     try {
-      const response = await fetch(`/api/reports/guided/${reportId}/export-pdf`, {
+      // Prepare export request data
+      const exportData = {
+        format,
+        options: {
+          ...options,
+          branding: {
+            companyName: wizardData?.data?.company?.name || 'Company Name',
+            primaryColor: '#10b981'
+          }
+        }
+      };
+
+      const response = await fetch(`/api/reports/guided/${reportId}/export`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(exportData),
         credentials: 'include'
       });
 
       if (!response.ok) {
-        throw new Error('Failed to export report');
+        const errorData = await response.json().catch(() => ({ message: null }));
+        throw new Error(errorData.message || `Export failed with status ${response.status}`);
       }
 
+      // Create blob and download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `sustainability-report-${new Date().getFullYear()}.pdf`;
+      
+      // Set filename based on format
+      const reportTitle = (wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportTitle' in wizardData.data.report) 
+        ? String(wizardData.data.report.reportTitle) 
+        : 'sustainability_report';
+      const baseFilename = reportTitle.replace(/[^a-zA-Z0-9]/g, '_');
+      let extension = 'pdf';
+      let formatName = 'PDF';
+      
+      switch (format) {
+        case 'pdf':
+        case 'pdf-branded':
+          extension = 'pdf';
+          formatName = format === 'pdf-branded' ? 'Branded PDF' : 'PDF';
+          break;
+        case 'pptx':
+          extension = 'pptx';
+          formatName = 'PowerPoint';
+          break;
+        case 'web':
+          extension = 'zip';
+          formatName = 'Interactive Web Report';
+          break;
+      }
+      
+      a.download = `${baseFilename}_${new Date().getFullYear()}.${extension}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      
+      document.body.removeChild(a);
+
       toast({
-        title: "PDF Generated Successfully! ✅",
-        description: "Your professional sustainability report has been downloaded as a PDF.",
-        duration: 5000
+        title: "Export Successful",
+        description: `Your ${formatName} report has been downloaded successfully.`,
+        duration: 3000
       });
-    } catch (error) {
+
+      // Track export event (optional analytics)
+      console.log(`Report exported: ${format}, Options:`, options);
+
+    } catch (error: any) {
+      console.error('Export error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to generate report. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to export report. Please try again.",
+        variant: "destructive",
+        duration: 5000
       });
     } finally {
       setIsExporting(false);
@@ -292,10 +358,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
     setShowExportOptions(true);
   };
 
-  const handleExport = async (format: string, options?: any) => {
-    if (format === 'pdf') {
-      await handleExportPDF();
-    }
+  const handleExport = async (format: string, options: any = {}) => {
+    await handleEnhancedExport(format, options);
     setShowExportOptions(false);
   };
 
