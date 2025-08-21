@@ -8,7 +8,7 @@ import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf, Wand2 } from "lucide-react";
+import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf } from "lucide-react";
 import { EnhancedReportButton } from "@/components/EnhancedReportButton";
 import { ReportProgressTracker } from "@/components/reports/ReportProgressTracker";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -63,34 +63,9 @@ export default function Reports() {
     },
   });
 
-  // Create guided report mutation
-  const createGuidedReportMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/reports/guided/create", {});
-      return response.json();
-    },
-    onSuccess: (data) => {
-      console.log('Guided report creation response:', data);
-      toast({
-        title: "Guided Report Created",
-        description: "Your guided report wizard is ready. Start building your sustainability report.",
-      });
-      setLocation(`/app/guided-report/${data.data.id}`);
-    },
-    onError: (error: any) => {
-      console.error('Error creating guided report:', error);
-      toast({
-        title: "Creation Failed",
-        description: "Failed to create guided report. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handleGenerateReport = async (reportType: 'sustainability' | 'lca' = 'sustainability') => {
-    setIsGenerating(true);
-    generateReportMutation.mutate(reportType);
-  };
+
+
 
   const handleProgressComplete = () => {
     setGeneratingReportId(null);
@@ -202,35 +177,14 @@ export default function Reports() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-4">
+          <div className="flex justify-center">
             <Button 
-              onClick={() => createGuidedReportMutation.mutate()}
-              disabled={createGuidedReportMutation.isPending}
+              onClick={() => setLocation('/app/reports/create')}
               className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               size="lg"
             >
-              {createGuidedReportMutation.isPending ? (
-                <>
-                  <Clock className="w-5 h-5 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-5 h-5 mr-2" />
-                  Create Guided Report
-                </>
-              )}
-            </Button>
-
-            <Button 
-              onClick={() => handleGenerateReport('lca')}
-              disabled={isGenerating || generateReportMutation.isPending}
-              variant="outline"
-              className="border-2 border-blue-500 text-blue-600 hover:bg-blue-50 shadow-md hover:shadow-lg transition-all duration-200"
-              size="lg"
-            >
-              <BarChart3 className="w-5 h-5 mr-2" />
-              Generate LCA Report
+              <Plus className="w-5 h-5 mr-2" />
+              Create New Report
             </Button>
           </div>
 

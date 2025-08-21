@@ -13,7 +13,7 @@ export default function Sidebar() {
 
   // Auto-expand Reports section when on any reports-related page
   useEffect(() => {
-    if (location.startsWith('/app/reports') || location.startsWith('/app/report-builder')) {
+    if (location.startsWith('/app/reports')) {
       setReportsExpanded(true);
     }
   }, [location]);
@@ -34,8 +34,8 @@ export default function Sidebar() {
   ];
 
   const reportsSubItems = [
+    { path: "/app/reports/create", label: "Create Reports", icon: Sparkles },
     { path: "/app/reports", label: "View Reports", icon: FileText },
-    { path: "/app/report-builder", label: "Report Builder", icon: Sparkles },
   ];
 
   const adminSubItems = [
@@ -87,7 +87,7 @@ export default function Sidebar() {
             <Button
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
-                location.startsWith('/app/reports') || location.startsWith('/app/report-builder')
+                location.startsWith('/app/reports')
                   ? "bg-white text-[#209d50] hover:bg-gray-100"
                   : "text-white hover:bg-green-600"
               }`}
