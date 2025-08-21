@@ -180,7 +180,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to export PDF');
+        throw new Error('Failed to export report');
       }
 
       const blob = await response.blob();
@@ -188,19 +188,20 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `sustainability-report-${new Date().getFullYear()}.pdf`;
+      a.download = `sustainability-report-${new Date().getFullYear()}.html`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "PDF Generated",
-        description: "Your sustainability report has been downloaded successfully."
+        title: "Report Exported Successfully! ✅",
+        description: "HTML file downloaded. Open it in your browser and use Print → Save as PDF to get your final report.",
+        duration: 8000
       });
     } catch (error) {
       toast({
         title: "Export Failed",
-        description: "Failed to generate PDF. Please try again.",
+        description: "Failed to generate report. Please try again.",
         variant: "destructive"
       });
     } finally {

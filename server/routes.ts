@@ -224,16 +224,16 @@ export function registerRoutes(app: Express): Server {
             
             <div class="metrics-grid">
               <div class="metric-card">
-                <div class="metric-value">483.9</div>
-                <div class="metric-label">tonnes CO2e</div>
+                <div class="metric-value">483.94</div>
+                <div class="metric-label">Tonnes CO2e</div>
               </div>
               <div class="metric-card">
                 <div class="metric-value">11.7M</div>
-                <div class="metric-label">litres water</div>
+                <div class="metric-label">Litres Water</div>
               </div>
               <div class="metric-card">
                 <div class="metric-value">0.1</div>
-                <div class="metric-label">tonnes waste</div>
+                <div class="metric-label">Tonnes Waste</div>
               </div>
             </div>
           </div>
