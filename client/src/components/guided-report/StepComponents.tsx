@@ -710,7 +710,9 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
   
   // Load selected initiatives from report data
   useEffect(() => {
-    if (reportData?.selectedInitiatives) {
+    if (reportData?.data?.selectedInitiatives) {
+      setSelectedInitiatives(reportData.data.selectedInitiatives);
+    } else if (reportData?.selectedInitiatives) {
       setSelectedInitiatives(reportData.selectedInitiatives);
     }
   }, [reportData]);
@@ -740,10 +742,11 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
     }
   });
   
-  const handleInitiativeToggle = (initiativeId: string) => {
-    const newSelection = selectedInitiatives.includes(initiativeId)
-      ? selectedInitiatives.filter(id => id !== initiativeId)
-      : [...selectedInitiatives, initiativeId];
+  const handleInitiativeToggle = (initiativeId: string | number) => {
+    const idString = String(initiativeId);
+    const newSelection = selectedInitiatives.includes(idString)
+      ? selectedInitiatives.filter(id => id !== idString)
+      : [...selectedInitiatives, idString];
     
     setSelectedInitiatives(newSelection);
     saveSelectedInitiatives.mutate(newSelection);
@@ -800,18 +803,18 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
                   <div
                     key={initiative.id}
                     className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                      selectedInitiatives.includes(initiative.id)
+                      selectedInitiatives.includes(String(initiative.id))
                         ? 'bg-green-50 border-green-200 shadow-sm'
                         : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
                     }`}
                     onClick={() => handleInitiativeToggle(initiative.id)}
                   >
                     <div className={`w-4 h-4 rounded border-2 mt-0.5 flex items-center justify-center ${
-                      selectedInitiatives.includes(initiative.id)
+                      selectedInitiatives.includes(String(initiative.id))
                         ? 'bg-green-500 border-green-500'
                         : 'border-gray-300'
                     }`}>
-                      {selectedInitiatives.includes(initiative.id) && (
+                      {selectedInitiatives.includes(String(initiative.id)) && (
                         <CheckCircle2 className="w-3 h-3 text-white" />
                       )}
                     </div>
