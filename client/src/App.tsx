@@ -49,6 +49,7 @@ import { KPIsPage } from "@/pages/kpis";
 // Company story now integrated into Company page
 import InitiativesPage from "@/pages/initiatives";
 import ReportBuilderPage from "@/pages/report-builder";
+import GuidedReportWizard from "@/pages/guided-report-wizard";
 
 function SimpleTestComponent() {
   return (
@@ -173,6 +174,7 @@ function Router() {
       <Route path="/app/story" component={() => { window.location.replace('/app/company'); return null; }} />
       <Route path="/app/initiatives" component={InitiativesPage} />
       <Route path="/app/report-builder" component={ReportBuilderPage} />
+      <Route path="/app/guided-report/:reportId" component={GuidedReportWizard} />
       <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
       <Route path="/supplier-onboarding" component={SupplierOnboarding} />

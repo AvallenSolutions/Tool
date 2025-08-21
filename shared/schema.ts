@@ -1253,6 +1253,8 @@ export const customReports = pgTable("custom_reports", {
   companyId: integer("company_id").references(() => companies.id).notNull(),
   reportTitle: varchar("report_title", { length: 255 }).notNull(),
   reportLayout: jsonb("report_layout").notNull(),
+  reportContent: jsonb("report_content").default('{}'), // For guided wizard narrative content
+  reportType: varchar("report_type", { length: 50 }).default('dynamic'), // 'dynamic' or 'guided'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

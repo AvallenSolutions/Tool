@@ -6687,6 +6687,161 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
+  // ============ GUIDED REPORT WIZARD API ENDPOINTS ============
+
+  // Create new guided report
+  app.post('/api/reports/guided/create', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reportTitle = `Sustainability Report - ${new Date().toLocaleDateString()}` } = req.body;
+
+      const { customReports } = await import('@shared/schema');
+      
+      // Initialize with empty report content structure
+      const defaultContent = {
+        introduction: "",
+        company_info_narrative: "",
+        key_metrics_narrative: "",
+        carbon_footprint_narrative: "",
+        initiatives_narrative: "",
+        kpi_tracking_narrative: "",
+        summary: ""
+      };
+
+      const [newReport] = await db
+        .insert(customReports)
+        .values({
+          companyId: company.id,
+          reportTitle,
+          reportLayout: {}, // Empty for guided reports
+          reportContent: defaultContent,
+          reportType: 'guided'
+        })
+        .returning();
+
+      res.json({
+        success: true,
+        data: newReport
+      });
+
+    } catch (error) {
+      console.error('Error creating guided report:', error);
+      res.status(500).json({ error: 'Failed to create guided report' });
+    }
+  });
+
+  // Save step content for guided report
+  app.put('/api/reports/guided/:reportId/save-step', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reportId } = req.params;
+      const { stepKey, content } = req.body;
+
+      if (!stepKey || typeof content !== 'string') {
+        return res.status(400).json({ error: 'Step key and content are required' });
+      }
+
+      const { customReports } = await import('@shared/schema');
+      
+      // Get current report
+      const [report] = await db
+        .select()
+        .from(customReports)
+        .where(eq(customReports.id, reportId));
+
+      if (!report || report.companyId !== company.id) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      // Update the specific step content
+      const updatedContent = {
+        ...report.reportContent,
+        [stepKey]: content
+      };
+
+      await db
+        .update(customReports)
+        .set({ 
+          reportContent: updatedContent,
+          updatedAt: new Date()
+        })
+        .where(eq(customReports.id, reportId));
+
+      res.json({
+        success: true,
+        message: 'Step content saved successfully'
+      });
+
+    } catch (error) {
+      console.error('Error saving step content:', error);
+      res.status(500).json({ error: 'Failed to save step content' });
+    }
+  });
+
+  // Get wizard data for guided report
+  app.get('/api/reports/guided/:reportId/wizard-data', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { reportId } = req.params;
+      const { customReports } = await import('@shared/schema');
+      
+      // Get report data
+      const [report] = await db
+        .select()
+        .from(customReports)
+        .where(eq(customReports.id, reportId));
+
+      if (!report || report.companyId !== company.id) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          report,
+          company
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching wizard data:', error);
+      res.status(500).json({ error: 'Failed to fetch wizard data' });
+    }
+  });
+
   const server = createServer(app);
   
   // Initialize WebSocket service
