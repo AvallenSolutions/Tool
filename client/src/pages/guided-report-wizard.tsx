@@ -179,7 +179,16 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
   // Initialize step content from existing report data
   useEffect(() => {
     if (wizardData && typeof wizardData === 'object' && 'success' in wizardData && 'data' in wizardData && wizardData.success && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportContent' in wizardData.data.report && wizardData.data.report.reportContent && typeof wizardData.data.report.reportContent === 'object') {
-      setStepContent(wizardData.data.report.reportContent as Record<string, string>);
+      const reportContent = wizardData.data.report.reportContent as Record<string, string>;
+      // Only update stepContent if it's empty or significantly different to prevent form resets
+      setStepContent(prev => {
+        const hasExistingContent = Object.values(prev).some(content => content && content.trim().length > 0);
+        if (!hasExistingContent) {
+          return reportContent;
+        }
+        // Keep existing content to prevent form resets during initiative saves
+        return prev;
+      });
     }
   }, [wizardData]);
 

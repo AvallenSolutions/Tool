@@ -747,7 +747,8 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
     },
     onSuccess: () => {
       toast({ description: "Initiative selection saved successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/reports/guided/${reportId}/wizard-data`] });
+      // Only invalidate specific queries that need the updated initiatives data
+      queryClient.invalidateQueries({ queryKey: [`/api/reports/guided/${reportId}/wizard-data`], exact: true });
     },
     onError: () => {
       toast({ 
@@ -786,7 +787,16 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
         
         <textarea
           value={content}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            // Auto-save after 2 seconds of no typing
+            clearTimeout((window as any).autoSaveTimer);
+            (window as any).autoSaveTimer = setTimeout(() => {
+              if (e.target.value.trim() !== content.trim()) {
+                onSave();
+              }
+            }, 2000);
+          }}
           placeholder="Describe your sustainability initiatives and their impact or use AI assistance above..."
           className="flex-1 min-h-[200px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
