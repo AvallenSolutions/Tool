@@ -344,10 +344,10 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
               // Filter SMART Goals based on selected initiatives in report data
               const selectedInitiatives = reportData?.selectedInitiatives || [];
               console.log('Selected initiatives from report:', selectedInitiatives);
-              console.log('Available SMART goals:', smartGoalsData?.data);
+              console.log('Available SMART goals:', smartGoalsData?.goals);
               console.log('Report data structure:', reportData);
               
-              const selectedGoals = smartGoalsData?.data?.filter((goal: any) => 
+              const selectedGoals = smartGoalsData?.goals?.filter((goal: any) => 
                 selectedInitiatives.includes(goal.id)
               ) || [];
               
@@ -371,8 +371,8 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
                         <p className="text-sm text-slate-600 mb-3">{goal.description}</p>
                         <div className="flex items-center justify-between">
                           <div className="text-sm">
-                            <span className="text-slate-500">Progress: </span>
-                            <span className="font-medium">{goal.progress}%</span>
+                            <span className="text-slate-500">Status: </span>
+                            <span className="font-medium capitalize">{goal.status}</span>
                           </div>
                           <div className="text-sm text-slate-500">
                             Target: {new Date(goal.targetDate).toLocaleDateString()}
