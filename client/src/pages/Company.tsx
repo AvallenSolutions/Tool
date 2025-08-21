@@ -124,6 +124,28 @@ export default function Company() {
     },
   });
 
+  // Social data save mutation
+  const socialDataMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", "/api/company/sustainability-data", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/company/sustainability-data"] });
+      toast({
+        title: 'Social Data Saved',
+        description: 'Your company social impact information has been successfully updated.',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Save Failed',
+        description: 'There was an error saving your social data.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Initialize sustainability data with proper types
   const [sustainabilityData, setSustainabilityData] = useState({
     certifications: [] as string[],
@@ -155,6 +177,20 @@ export default function Company() {
       carbonNeutralTarget: '',
       sustainabilityGoals: '',
       circularEconomyInitiatives: '',
+    },
+    socialData: {
+      employeeMetrics: {
+        turnoverRate: undefined as number | undefined,
+        genderDiversityLeadership: undefined as number | undefined,
+        trainingHoursPerEmployee: undefined as number | undefined,
+        satisfactionScore: undefined as number | undefined,
+      },
+      communityImpact: {
+        localSuppliersPercentage: undefined as number | undefined,
+        communityInvestment: undefined as number | undefined,
+        localJobsCreated: undefined as number | undefined,
+        volunteerHours: undefined as number | undefined,
+      },
     },
   });
 
@@ -216,6 +252,15 @@ export default function Company() {
     setIsSaving(true);
     try {
       await sustainabilityMutation.mutateAsync(sustainabilityData);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveSocialData = async () => {
+    setIsSaving(true);
+    try {
+      await socialDataMutation.mutateAsync(sustainabilityData);
     } finally {
       setIsSaving(false);
     }
@@ -1158,6 +1203,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Employee Turnover Rate (%)</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.employeeMetrics.turnoverRate ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              employeeMetrics: {
+                                ...prev.socialData.employeeMetrics,
+                                turnoverRate: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 8.5"
                           className="border-gray-200"
                         />
@@ -1167,6 +1223,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Gender Diversity in Leadership (%)</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.employeeMetrics.genderDiversityLeadership ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              employeeMetrics: {
+                                ...prev.socialData.employeeMetrics,
+                                genderDiversityLeadership: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 45"
                           className="border-gray-200"
                         />
@@ -1176,6 +1243,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Training Hours per Employee</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.employeeMetrics.trainingHoursPerEmployee ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              employeeMetrics: {
+                                ...prev.socialData.employeeMetrics,
+                                trainingHoursPerEmployee: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 40"
                           className="border-gray-200"
                         />
@@ -1185,6 +1263,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Employee Satisfaction Score</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.employeeMetrics.satisfactionScore ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              employeeMetrics: {
+                                ...prev.socialData.employeeMetrics,
+                                satisfactionScore: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 4.2"
                           max="5"
                           step="0.1"
@@ -1203,6 +1292,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Local Suppliers (%)</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.communityImpact.localSuppliersPercentage ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              communityImpact: {
+                                ...prev.socialData.communityImpact,
+                                localSuppliersPercentage: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 65"
                           className="border-gray-200"
                         />
@@ -1212,6 +1312,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Community Investment (£)</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.communityImpact.communityInvestment ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              communityImpact: {
+                                ...prev.socialData.communityImpact,
+                                communityInvestment: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 25000"
                           className="border-gray-200"
                         />
@@ -1221,6 +1332,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Local Jobs Created</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.communityImpact.localJobsCreated ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              communityImpact: {
+                                ...prev.socialData.communityImpact,
+                                localJobsCreated: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 12"
                           className="border-gray-200"
                         />
@@ -1230,6 +1352,17 @@ export default function Company() {
                         <Label className="text-sm font-semibold text-gray-700">Volunteer Hours</Label>
                         <Input
                           type="number"
+                          value={sustainabilityData.socialData.communityImpact.volunteerHours ?? ''}
+                          onChange={(e) => setSustainabilityData(prev => ({
+                            ...prev,
+                            socialData: {
+                              ...prev.socialData,
+                              communityImpact: {
+                                ...prev.socialData.communityImpact,
+                                volunteerHours: e.target.value ? Number(e.target.value) : undefined
+                              }
+                            }
+                          }))}
                           placeholder="e.g., 320"
                           className="border-gray-200"
                         />
@@ -1240,9 +1373,22 @@ export default function Company() {
 
                   {/* Save Button */}
                   <div className="flex justify-end">
-                    <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Social Data
+                    <Button 
+                      onClick={handleSaveSocialData}
+                      disabled={socialDataMutation.isPending}
+                      className="bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50"
+                    >
+                      {socialDataMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Save Social Data
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardContent>

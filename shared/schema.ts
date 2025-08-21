@@ -648,6 +648,35 @@ export const companySustainabilityData = pgTable("company_sustainability_data", 
     sustainabilityGoals: '',
     circularEconomyInitiatives: '',
   }),
+
+  // Social Data
+  socialData: jsonb("social_data").$type<{
+    employeeMetrics: {
+      turnoverRate?: number;
+      genderDiversityLeadership?: number;
+      trainingHoursPerEmployee?: number;
+      satisfactionScore?: number;
+    };
+    communityImpact: {
+      localSuppliersPercentage?: number;
+      communityInvestment?: number;
+      localJobsCreated?: number;
+      volunteerHours?: number;
+    };
+  }>().default({
+    employeeMetrics: {
+      turnoverRate: undefined,
+      genderDiversityLeadership: undefined,
+      trainingHoursPerEmployee: undefined,
+      satisfactionScore: undefined,
+    },
+    communityImpact: {
+      localSuppliersPercentage: undefined,
+      communityInvestment: undefined,
+      localJobsCreated: undefined,
+      volunteerHours: undefined,
+    },
+  }),
   
   // Progress tracking
   completionPercentage: integer("completion_percentage").default(0),
