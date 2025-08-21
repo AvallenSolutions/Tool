@@ -2,17 +2,18 @@ import PDFDocument from 'pdfkit';
 
 export class ProfessionalPDFService {
   private readonly colors = {
-    primary: '#2D3748',        // Dark blue-gray (like template)
-    accent: '#F6E05E',         // Yellow accent (from template)
+    primary: '#000000',        // Black (from template)
+    accent: '#FFD700',         // Yellow accent (from template)
     text: {
-      primary: '#1A202C',      // Dark text
-      secondary: '#4A5568',    // Medium gray
-      light: '#718096'         // Light gray
+      primary: '#000000',      // Black text (template style)
+      secondary: '#333333',    // Dark gray
+      light: '#666666'         // Medium gray
     },
     background: {
       white: '#FFFFFF',
-      light: '#F7FAFC',
-      accent: '#FFF9E6'        // Light yellow background
+      light: '#F8F8F8',
+      accent: '#FFF9C4',       // Light yellow background (template style)
+      yellow: '#FFD700'        // Full yellow for accents
     },
     green: '#10B981'           // Sustainability green
   };
@@ -135,60 +136,79 @@ export class ProfessionalPDFService {
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
     
-    // Company name at top in large text
-    doc.fontSize(48)
+    // Yellow background band at top (template style)
+    doc.rect(0, 0, pageWidth, 120)
+       .fill(this.colors.background.yellow);
+    
+    // Company name at top in large text (template style)
+    doc.fontSize(72)
        .font(this.fonts.heading)
        .fillColor(this.colors.primary)
-       .text(companyName.toUpperCase(), 40, 80, {
+       .text(companyName.toUpperCase(), 40, 30, {
+         width: pageWidth - 80,
+         align: 'center'
+       });
+    
+    // Main title sections (template style)
+    doc.fontSize(80)
+       .font(this.fonts.heading)
+       .fillColor(this.colors.primary)
+       .text('ANNUAL', 40, 180, {
          width: pageWidth - 80,
          align: 'left'
        });
     
-    // Main title
-    doc.fontSize(64)
-       .font(this.fonts.heading)
-       .fillColor(this.colors.primary)
-       .text('SUSTAINABILITY', 40, 180, {
-         width: pageWidth - 80,
-         align: 'left'
-       });
-    
-    doc.text('REPORT', 40, 250, {
+    doc.text('REPORT', 40, 260, {
       width: pageWidth - 80,
       align: 'left'
     });
     
-    // Year
+    // Year in large text (template style)
     const currentYear = new Date().getFullYear();
-    doc.fontSize(32)
+    doc.fontSize(80)
        .font(this.fonts.heading)
        .fillColor(this.colors.primary)
-       .text(currentYear.toString(), 40, 320, {
+       .text(currentYear.toString(), 40, 340, {
          width: pageWidth - 80,
          align: 'left'
        });
     
-    // Date section
+    // Date section (template style)
     const currentDate = new Date();
     const monthName = currentDate.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
     
-    doc.fontSize(14)
+    doc.fontSize(24)
        .font(this.fonts.body)
        .fillColor(this.colors.text.secondary)
-       .text(`${monthName}`, 40, 380);
+       .text(`${monthName}`, 400, 450);
     
-    doc.text(`${currentYear}`, 40, 400);
+    doc.text(`${currentYear}`, 400, 480);
     
-    // Prepared by section
-    doc.text('Prepared by', 40, 440);
-    doc.fontSize(12)
+    // Prepared by section (template style)
+    doc.fontSize(16)
+       .font(this.fonts.body)
+       .fillColor(this.colors.text.secondary)
+       .text('Prepared by', 400, 540);
+    
+    doc.fontSize(18)
        .font(this.fonts.heading)
        .fillColor(this.colors.text.primary)
-       .text('SUSTAINABILITY PLATFORM', 40, 460);
+       .text('SUSTAINABILITY PLATFORM', 400, 565);
     
-    // Accent rectangle (inspired by template design)
-    doc.rect(40, pageHeight - 120, 200, 40)
-       .fill(this.colors.accent);
+    // Prepared for section (template style)
+    doc.fontSize(16)
+       .font(this.fonts.body)
+       .fillColor(this.colors.text.secondary)
+       .text('Prepared for', 400, 610);
+    
+    doc.fontSize(18)
+       .font(this.fonts.heading)
+       .fillColor(this.colors.text.primary)
+       .text('STAKEHOLDERS', 400, 635);
+    
+    // Large yellow accent rectangle at bottom (template style)
+    doc.rect(0, pageHeight - 150, pageWidth, 150)
+       .fill(this.colors.background.yellow);
   }
 
   private generateTableOfContents(doc: PDFKit.PDFDocument) {
@@ -229,12 +249,15 @@ export class ProfessionalPDFService {
   }
 
   private generateExecutiveSummary(doc: PDFKit.PDFDocument, content: any, metrics: any) {
-    // Page title
+    // Page title with template styling
     this.addPageTitle(doc, 'EXECUTIVE SUMMARY');
     
-    // Main content
-    const summaryText = content?.summary || content?.introduction || 
-      `This comprehensive sustainability report presents ${metrics?.companyName || 'our company'}'s environmental performance, key achievements, and future commitments to sustainable business practices. Our dedication to environmental stewardship drives continuous improvement across all operational areas.`;
+    // Use actual wizard content
+    const summaryText = content?.summary && content.summary.trim() && content.summary !== 'Tes' ? 
+      content.summary : 
+      content?.introduction && content.introduction.trim() && content.introduction !== 'Tes' ? 
+      content.introduction :
+      `This comprehensive sustainability report presents our company's environmental performance, key achievements, and future commitments to sustainable business practices. Our dedication to environmental stewardship drives continuous improvement across all operational areas.`;
     
     doc.fontSize(12)
        .font(this.fonts.body)
@@ -245,23 +268,27 @@ export class ProfessionalPDFService {
          lineGap: 6
        });
     
-    // Key metrics boxes (inspired by template layout)
+    // Key metrics boxes with template-style design
     const yStart = 280;
     
-    // CO2e metric
-    this.addMetricBox(doc, 40, yStart, `${Math.round(metrics?.co2e || 500)}`, 'tonnes CO₂e', 'Total carbon emissions');
+    // Yellow accent background for metrics section
+    doc.rect(30, yStart - 20, doc.page.width - 60, 140)
+       .fill(this.colors.background.accent);
     
-    // Water metric  
-    this.addMetricBox(doc, 200, yStart, `${Math.round((metrics?.water || 11700000) / 1000000)}M`, 'litres water', 'Water consumption');
+    // CO2e metric with template styling
+    this.addTemplateMetricBox(doc, 50, yStart, `${Math.round(metrics?.co2e || 500)}`, 'tonnes CO₂e', 'Total carbon emissions');
     
-    // Waste metric
-    this.addMetricBox(doc, 360, yStart, `${metrics?.waste || 0.1}`, 'tonnes waste', 'Waste generated');
+    // Water metric with template styling
+    this.addTemplateMetricBox(doc, 200, yStart, `${Math.round((metrics?.water || 11700000) / 1000000)}M`, 'litres water', 'Water consumption');
     
-    // Achievement highlights
-    doc.fontSize(14)
-       .font(this.fonts.subheading)
+    // Waste metric with template styling
+    this.addTemplateMetricBox(doc, 350, yStart, `${metrics?.waste || 0.1}`, 'tonnes waste', 'Waste generated');
+    
+    // Achievement highlights with template styling
+    doc.fontSize(16)
+       .font(this.fonts.heading)
        .fillColor(this.colors.primary)
-       .text('KEY ACHIEVEMENTS', 40, 450);
+       .text('KEY ACHIEVEMENTS', 40, 470);
     
     const achievements = [
       '12% reduction in carbon emissions',
@@ -270,13 +297,17 @@ export class ProfessionalPDFService {
       'Enhanced employee wellbeing programs'
     ];
     
-    let yPos = 480;
+    let yPos = 500;
     achievements.forEach(achievement => {
+      // Yellow bullet point (template style)
+      doc.circle(50, yPos + 6, 3)
+         .fill(this.colors.background.yellow);
+      
       doc.fontSize(11)
          .font(this.fonts.body)
          .fillColor(this.colors.text.primary)
-         .text(`• ${achievement}`, 40, yPos);
-      yPos += 20;
+         .text(achievement, 65, yPos);
+      yPos += 22;
     });
   }
 
@@ -488,7 +519,9 @@ export class ProfessionalPDFService {
   private generateSustainabilityInitiatives(doc: PDFKit.PDFDocument, content: any) {
     this.addPageTitle(doc, 'SUSTAINABILITY INITIATIVES');
     
-    const initiativesText = content?.initiatives_narrative || 
+    // Use actual content from wizard or provide meaningful fallback
+    const initiativesText = content?.initiatives_narrative && content.initiatives_narrative.trim() && content.initiatives_narrative !== 'Tes' ? 
+      content.initiatives_narrative : 
       'Our sustainability initiatives represent concrete actions toward environmental stewardship. Each initiative is designed to address specific environmental challenges while supporting business objectives.';
     
     doc.fontSize(12)
@@ -500,7 +533,7 @@ export class ProfessionalPDFService {
          lineGap: 4
        });
     
-    // Initiative cards
+    // Initiative cards with template-style design
     const initiatives = [
       {
         title: 'WATER RECYCLING SYSTEM',
@@ -526,36 +559,40 @@ export class ProfessionalPDFService {
     initiatives.forEach((initiative, index) => {
       const cardY = yStart + (index * 120);
       
-      // Initiative card
-      doc.rect(40, cardY, doc.page.width - 80, 100)
-         .fillAndStroke(this.colors.background.light, this.colors.text.light);
+      // Yellow highlight bar (template style)
+      doc.rect(40, cardY, 8, 100)
+         .fill(this.colors.background.yellow);
       
-      doc.fontSize(14)
-         .font(this.fonts.subheading)
+      // Initiative card with template styling
+      doc.rect(48, cardY, doc.page.width - 88, 100)
+         .fillAndStroke(this.colors.background.white, this.colors.text.light);
+      
+      doc.fontSize(16)
+         .font(this.fonts.heading)
          .fillColor(this.colors.primary)
-         .text(initiative.title, 60, cardY + 20);
+         .text(initiative.title, 68, cardY + 15);
       
-      doc.fontSize(10)
+      doc.fontSize(11)
          .font(this.fonts.body)
          .fillColor(this.colors.text.primary)
-         .text(initiative.description, 60, cardY + 45, {
-           width: doc.page.width - 140,
+         .text(initiative.description, 68, cardY + 40, {
+           width: doc.page.width - 160,
            lineGap: 2
          });
       
-      doc.fontSize(9)
+      doc.fontSize(10)
          .font(this.fonts.body)
          .fillColor(this.colors.text.secondary)
-         .text(initiative.target, 60, cardY + 75);
+         .text(initiative.target, 68, cardY + 70);
       
-      // Status indicator
+      // Status indicator with template colors
       const statusColor = initiative.status === 'Completed' ? this.colors.green : 
-                         initiative.status === 'In Progress' ? this.colors.accent : this.colors.primary;
+                         initiative.status === 'In Progress' ? this.colors.background.yellow : this.colors.primary;
       
-      doc.fontSize(9)
-         .font(this.fonts.subheading)
+      doc.fontSize(10)
+         .font(this.fonts.heading)
          .fillColor(statusColor)
-         .text(initiative.status, doc.page.width - 140, cardY + 75);
+         .text(initiative.status, doc.page.width - 160, cardY + 70);
     });
   }
 
@@ -642,7 +679,11 @@ export class ProfessionalPDFService {
   private generateFutureGoals(doc: PDFKit.PDFDocument, content: any) {
     this.addPageTitle(doc, 'FUTURE GOALS & KPIS');
     
-    const goalsText = content?.kpi_tracking_narrative || content?.summary || 
+    // Use actual content from wizard
+    const goalsText = content?.kpi_tracking_narrative && content.kpi_tracking_narrative.trim() && content.kpi_tracking_narrative !== 'Tes' ? 
+      content.kpi_tracking_narrative : 
+      content?.summary && content.summary.trim() && content.summary !== 'Tes' ? 
+      content.summary :
       'Our future goals represent ambitious yet achievable targets for continued environmental improvement. These commitments guide our strategic planning and operational decisions.';
     
     doc.fontSize(12)
@@ -654,9 +695,9 @@ export class ProfessionalPDFService {
          lineGap: 4
        });
     
-    // Future targets
-    doc.fontSize(16)
-       .font(this.fonts.subheading)
+    // Future targets with template styling
+    doc.fontSize(18)
+       .font(this.fonts.heading)
        .fillColor(this.colors.primary)
        .text('2025 TARGETS', 40, 240);
     
@@ -669,31 +710,35 @@ export class ProfessionalPDFService {
     
     let yPos = 280;
     targets.forEach(target => {
-      doc.fontSize(12)
+      // Yellow accent line (template style)
+      doc.rect(40, yPos - 5, 4, 25)
+         .fill(this.colors.background.yellow);
+      
+      doc.fontSize(13)
          .font(this.fonts.body)
          .fillColor(this.colors.text.primary)
-         .text(target.goal, 40, yPos);
+         .text(target.goal, 55, yPos);
       
-      doc.fontSize(12)
-         .font(this.fonts.subheading)
+      doc.fontSize(13)
+         .font(this.fonts.heading)
          .fillColor(this.colors.green)
          .text(`Target: ${target.target}`, 250, yPos);
       
-      doc.fontSize(12)
-         .font(this.fonts.subheading)
-         .fillColor(this.colors.accent)
+      doc.fontSize(13)
+         .font(this.fonts.heading)
+         .fillColor(this.colors.background.yellow)
          .text(`Progress: ${target.progress}`, 400, yPos);
       
-      yPos += 30;
+      yPos += 35;
     });
     
-    // Innovation section
-    doc.fontSize(16)
-       .font(this.fonts.subheading)
+    // Innovation section with template styling
+    doc.fontSize(18)
+       .font(this.fonts.heading)
        .fillColor(this.colors.primary)
        .text('INNOVATION INITIATIVES', 40, 450);
     
-    doc.fontSize(11)
+    doc.fontSize(12)
        .font(this.fonts.body)
        .fillColor(this.colors.text.primary)
        .text('Investment in sustainable technologies and processes continues to drive our environmental performance improvements. Our innovation pipeline includes advanced water treatment, renewable energy integration, and circular economy initiatives.', 40, 480, {
@@ -736,16 +781,20 @@ export class ProfessionalPDFService {
 
   // Helper methods
   private addPageTitle(doc: PDFKit.PDFDocument, title: string) {
+    // Yellow background bar for titles (template style)
+    doc.rect(0, 60, doc.page.width, 50)
+       .fill(this.colors.background.yellow);
+    
     doc.fontSize(32)
        .font(this.fonts.heading)
        .fillColor(this.colors.primary)
-       .text(title, 40, 80);
+       .text(title, 40, 75);
   }
 
   private addMetricBox(doc: PDFKit.PDFDocument, x: number, y: number, value: string, unit: string, description: string) {
-    // Background box
+    // Background box with template styling
     doc.rect(x, y, 140, 80)
-       .fillAndStroke(this.colors.background.light, this.colors.text.light);
+       .fillAndStroke(this.colors.background.white, this.colors.text.light);
     
     // Value
     doc.fontSize(24)
@@ -764,6 +813,26 @@ export class ProfessionalPDFService {
        .font(this.fonts.body)
        .fillColor(this.colors.text.light)
        .text(description, x + 10, y + 60);
+  }
+
+  private addTemplateMetricBox(doc: PDFKit.PDFDocument, x: number, y: number, value: string, unit: string, description: string) {
+    // Large value (template style)
+    doc.fontSize(36)
+       .font(this.fonts.heading)
+       .fillColor(this.colors.primary)
+       .text(value, x, y);
+    
+    // Unit below value
+    doc.fontSize(12)
+       .font(this.fonts.body)
+       .fillColor(this.colors.text.secondary)
+       .text(unit, x, y + 40);
+    
+    // Description below unit
+    doc.fontSize(10)
+       .font(this.fonts.body)
+       .fillColor(this.colors.text.light)
+       .text(description, x, y + 60);
   }
 }
 
