@@ -1945,6 +1945,20 @@ Be precise and quote actual text from the content, not generic terms.`;
           sustainabilityGoals: '',
           circularEconomyInitiatives: ''
         },
+        socialData: {
+          employeeMetrics: {
+            turnoverRate: null,
+            genderDiversityLeadership: null,
+            trainingHoursPerEmployee: null,
+            satisfactionScore: null
+          },
+          communityImpact: {
+            localSuppliersPercentage: null,
+            communityInvestment: null,
+            localJobsCreated: null,
+            volunteerHours: null
+          }
+        },
         completionPercentage: 0
       });
     } catch (error) {
@@ -1954,7 +1968,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Update company sustainability data
-  app.put('/api/company/sustainability-data', isAuthenticated, validateCompanyOnboarding, async (req, res) => {
+  app.put('/api/company/sustainability-data', isAuthenticated, async (req, res) => {
     try {
       console.log('PUT /api/company/sustainability-data - Start');
       console.log('Request body:', JSON.stringify(req.body, null, 2));
