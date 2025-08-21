@@ -102,6 +102,14 @@ export default function Company() {
     enabled: !!company,
   });
 
+  console.log('🔍 Query state:', { 
+    backendSustainabilityData, 
+    sustainabilityLoading, 
+    company: !!company 
+  });
+  
+  console.log('🔍 Current sustainabilityData state:', sustainabilityData.socialData);
+
   // Update sustainability data mutation
   const sustainabilityMutation = useMutation({
     mutationFn: async (data: any) => {
