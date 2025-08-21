@@ -720,6 +720,7 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
   // Save selected initiatives to report
   const saveSelectedInitiatives = useMutation({
     mutationFn: async (initiativeIds: string[]) => {
+      console.log('Saving initiatives:', { reportId, initiativeIds });
       const response = await fetch(`/api/reports/guided/${reportId}/wizard-data`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -727,8 +728,14 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
           selectedInitiatives: initiativeIds
         })
       });
-      if (!response.ok) throw new Error('Failed to save initiative selection');
-      return response.json();
+      
+      const result = await response.json();
+      console.log('Save response:', { status: response.status, result });
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save initiative selection');
+      }
+      return result;
     },
     onSuccess: () => {
       toast({ description: "Initiative selection saved successfully" });

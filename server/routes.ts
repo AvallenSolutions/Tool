@@ -7062,6 +7062,14 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       const { reportId } = req.params;
       const { stepKey, content, selectedInitiatives } = req.body;
 
+      console.log('PUT /api/reports/guided/:reportId/wizard-data - Request data:', {
+        reportId,
+        stepKey,
+        contentLength: content?.length,
+        selectedInitiatives,
+        bodyKeys: Object.keys(req.body)
+      });
+
       if (!stepKey && selectedInitiatives === undefined) {
         return res.status(400).json({ error: 'Step key or selected initiatives are required' });
       }
