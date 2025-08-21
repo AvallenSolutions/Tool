@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { BarChart3, Loader2 } from "lucide-react";
 
 export default function EmissionsChart() {
   // Fetch actual footprint data from carbon calculator
@@ -18,15 +19,18 @@ export default function EmissionsChart() {
 
   if (isLoading) {
     return (
-      <Card className="border-light-gray">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-slate-gray">
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-green-600" />
             Emissions Breakdown
           </CardTitle>
+          <CardDescription>Company greenhouse gas emissions by scope</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center">
-            <div className="animate-spin w-8 h-8 border-4 border-avallen-green border-t-transparent rounded-full" />
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading emissions data...
           </div>
         </CardContent>
       </Card>
@@ -122,51 +126,63 @@ export default function EmissionsChart() {
   };
 
   const CustomLegend = ({ payload }: any) => {
-    if (!payload || payload.length === 0) {
-      return (
-        <div className="text-center text-gray-500 mt-4">
-          No emissions data available
-        </div>
-      );
-    }
-    
     return (
-      <div className="mt-4 space-y-2">
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-sm text-slate-gray">{entry.value}</span>
-            </div>
-            <span className="text-sm font-medium text-slate-gray">
-              {entry.payload?.percentage?.toFixed(1) || 0}%
-            </span>
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
+        {payload && payload.map((entry: any, index: number) => (
+          <div key={index} className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-full" 
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-sm text-gray-700">{entry.value}</span>
           </div>
         ))}
       </div>
     );
   };
 
+  // No data state
+  if (total === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-green-600" />
+            Emissions Breakdown
+          </CardTitle>
+          <CardDescription>Company greenhouse gas emissions by scope</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="text-center text-gray-500">
+            <p className="mb-2">No emissions data available</p>
+            <p className="text-sm">Add your company's emissions data in the Carbon Footprint Calculator</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-light-gray">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-slate-gray">
+        <CardTitle className="flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-green-600" />
           Emissions Breakdown
         </CardTitle>
+        <CardDescription>
+          Total: {total.toFixed(1)} tonnes CO2e across all scopes
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-64">
+        <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={100}
+                innerRadius={40}
+                outerRadius={120}
                 paddingAngle={2}
                 dataKey="value"
               >
@@ -175,18 +191,35 @@ export default function EmissionsChart() {
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
+              <Legend content={<CustomLegend />} />
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="relative">
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-32 text-center">
-            <div className="text-2xl font-bold text-slate-gray">
-              {total.toFixed(1)}
+        
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-4 border-t">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {scope1.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-500">tonnes CO2e</div>
+            <div className="text-sm text-gray-600">tonnes Scope 1</div>
+            <div className="text-xs text-gray-500">Direct emissions</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-slate-600">
+              {scope2.toFixed(1)}
+            </div>
+            <div className="text-sm text-gray-600">tonnes Scope 2</div>
+            <div className="text-xs text-gray-500">Energy indirect</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {scope3.toFixed(1)}
+            </div>
+            <div className="text-sm text-gray-600">tonnes Scope 3</div>
+            <div className="text-xs text-gray-500">Supply chain</div>
           </div>
         </div>
-        <CustomLegend payload={data?.length ? data : []} />
       </CardContent>
     </Card>
   );
