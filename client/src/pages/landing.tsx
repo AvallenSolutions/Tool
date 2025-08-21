@@ -46,7 +46,7 @@ export default function Landing() {
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Join our paid beta program to stress test our comprehensive sustainability platform 
-            with real-world data and help shape the future of drinks industry reporting.
+            featuring company & product impact measurement, anti-greenwashing tools, and professional reporting.
           </p>
           {/* Beta Program Indicators */}
           <div className="flex justify-center items-center space-x-8 mb-8 text-sm text-gray-500">
@@ -92,7 +92,7 @@ export default function Landing() {
               Help Us Perfect Our Sustainability Platform
             </h2>
             <p className="text-xl text-gray-600">
-              Beta test our comprehensive tools and provide valuable feedback for real-world scenarios
+              Beta test our comprehensive toolkit including company & product impact measurement and anti-greenwashing compliance
             </p>
           </div>
 
@@ -256,17 +256,17 @@ export default function Landing() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-avallen-green">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Sustainability Reporting?
+            Ready to Beta Test Our Sustainability Platform?
           </h2>
           <p className="text-xl text-green-100 mb-8">
-            Join the brands already using Avallen Solutions to measure, manage, and report their environmental impact.
+            Join our select group of beta testers helping to perfect company & product impact measurement and anti-greenwashing tools.
           </p>
           <Button 
             size="lg" 
             onClick={handleLogin}
             className="bg-white text-avallen-green hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
           >
-            Start Your Free Trial
+            Join Beta Program
           </Button>
         </div>
       </section>

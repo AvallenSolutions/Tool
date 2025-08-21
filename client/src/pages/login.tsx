@@ -100,11 +100,11 @@ export default function Login() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        Professional LCA calculations and PDF reporting
+                        Company & product-level LCA calculations and PDF reporting
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        Supplier collaboration and data collection tools
+                        Anti-greenwashing compliance tools and supplier collaboration
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
@@ -142,8 +142,8 @@ export default function Login() {
                   <span className="text-avallen-green block">Our Platform</span>
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed">
-                  Help us perfect our sustainability platform by testing it with 
-                  real-world data and providing valuable feedback.
+                  Help us perfect our comprehensive sustainability platform featuring 
+                  company & product impact measurement, anti-greenwashing tools, and more.
                 </p>
               </div>
 
@@ -154,21 +154,21 @@ export default function Login() {
                     <BarChart3 className="w-5 h-5 text-avallen-green" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-gray">Real-Time Metrics</h3>
+                    <h3 className="font-semibold text-slate-gray">Company & Product Impact</h3>
                     <p className="text-sm text-gray-600">
-                      Track CO2e, water usage, and waste across your entire value chain
+                      Measure environmental impact at both company-wide and individual product levels
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4 p-4 bg-white/60 rounded-lg border border-light-gray">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="w-5 h-5 text-blue-600" />
+                    <Shield className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-gray">Supplier Network</h3>
+                    <h3 className="font-semibold text-slate-gray">Anti-Greenwashing Tools</h3>
                     <p className="text-sm text-gray-600">
-                      Collaborate seamlessly with your suppliers for accurate Scope 3 data
+                      Ensure marketing compliance and avoid greenwashing with built-in validation
                     </p>
                   </div>
                 </div>
@@ -180,7 +180,7 @@ export default function Login() {
                   <div>
                     <h3 className="font-semibold text-slate-gray">Professional Reports</h3>
                     <p className="text-sm text-gray-600">
-                      Generate stakeholder-ready PDF reports with authentic data
+                      Generate stakeholder-ready PDF reports with authentic company and product data
                     </p>
                   </div>
                 </div>
