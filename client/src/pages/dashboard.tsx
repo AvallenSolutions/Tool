@@ -176,12 +176,9 @@ export default function Dashboard() {
           </div>
 
           {/* Standard Dashboard Sections */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 gap-6 mb-8">
             <div id="emissions-chart">
               <EmissionsChart />
-            </div>
-            <div id="reports-section">
-              <ReportStatus />
             </div>
           </div>
 
@@ -189,6 +186,13 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 gap-6 mb-8">
             <div id="water-footprint-section">
               <WaterFootprintBreakdownChart />
+            </div>
+          </div>
+
+          {/* Reports Section - Moved Below Water Footprint */}
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div id="reports-section">
+              <ReportStatus />
             </div>
           </div>
 
