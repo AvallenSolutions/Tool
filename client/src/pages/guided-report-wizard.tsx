@@ -36,8 +36,8 @@ import { ReportPreview } from "@/components/guided-report/ReportPreview";
 import { TemplateSelector, type ReportTemplate } from "@/components/guided-report/TemplateSelector";
 import { ExportOptions } from "@/components/guided-report/ExportOptions";
 
-// Step configuration
-const WIZARD_STEPS = [
+// Step configuration - Full list of all possible steps
+const ALL_WIZARD_STEPS = [
   {
     id: 1,
     key: "introduction",
@@ -103,6 +103,51 @@ const WIZARD_STEPS = [
     description: "Summarize achievements and outline future commitments"
   }
 ];
+
+// Template-specific step configurations
+const TEMPLATE_STEP_CONFIG = {
+  'comprehensive-sustainability': [
+    "introduction",
+    "company_info_narrative", 
+    "key_metrics_narrative",
+    "carbon_footprint_narrative",
+    "initiatives_narrative",
+    "kpi_tracking_narrative",
+    "social_impact",
+    "summary"
+  ],
+  'carbon-focused': [
+    "introduction",
+    "carbon_footprint_narrative", 
+    "initiatives_narrative",
+    "key_metrics_narrative",
+    "summary"
+  ],
+  'compliance-basic': [
+    "company_info_narrative",
+    "key_metrics_narrative", 
+    "summary"
+  ],
+  'stakeholder-engagement': [
+    "introduction",
+    "company_info_narrative",
+    "key_metrics_narrative",
+    "social_impact",
+    "initiatives_narrative",
+    "summary"
+  ]
+};
+
+// Function to get filtered steps based on selected template
+const getWizardSteps = (templateId: string | null) => {
+  if (!templateId || !TEMPLATE_STEP_CONFIG[templateId]) {
+    return ALL_WIZARD_STEPS;
+  }
+  
+  const allowedSteps = TEMPLATE_STEP_CONFIG[templateId];
+  return ALL_WIZARD_STEPS.filter(step => allowedSteps.includes(step.key))
+    .map((step, index) => ({ ...step, id: index + 1 }));
+};
 
 interface GuidedReportWizardProps {}
 
@@ -219,6 +264,9 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
     }
   };
 
+  // Get dynamic steps based on selected template
+  const WIZARD_STEPS = getWizardSteps(selectedTemplate?.id || null);
+  
   const isTemplateStep = currentStep === 0;
   const isExportStep = showExportOptions;
   const currentStepData = isTemplateStep ? null : WIZARD_STEPS.find(step => step.id === currentStep);
@@ -228,8 +276,16 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
 
   const handleTemplateSelect = (template: ReportTemplate) => {
     setSelectedTemplate(template);
-    // Auto-advance to first content step
+    // Reset current step when changing template
+    setCurrentStep(0);
+    // Auto-advance to first content step after template selection
     setTimeout(() => setCurrentStep(1), 500);
+    
+    toast({
+      title: "Template Selected",
+      description: `${template.name} selected with ${getWizardSteps(template.id).length} steps.`,
+      duration: 3000
+    });
   };
 
   const handleShowExportOptions = () => {
@@ -294,11 +350,21 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
               </Button>
               <Separator orientation="vertical" className="h-6" />
               <div>
-                <h1 className="text-xl font-semibold text-slate-900">
+                <h1 className="text-xl font-semibold text-slate-900 flex items-center gap-3">
                   {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportTitle' in wizardData.data.report) ? String(wizardData.data.report.reportTitle) : 'Sustainability Report'}
+                  {selectedTemplate && (
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedTemplate.name}
+                    </Badge>
+                  )}
                 </h1>
                 <p className="text-sm text-slate-600">
                   {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'company' in wizardData.data && wizardData.data.company && typeof wizardData.data.company === 'object' && 'name' in wizardData.data.company) ? String(wizardData.data.company.name) : 'Company'} - Guided Report Builder
+                  {selectedTemplate && (
+                    <span className="ml-2 text-slate-400">
+                      • {WIZARD_STEPS.length} steps
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
