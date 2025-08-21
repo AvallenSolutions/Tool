@@ -3,6 +3,7 @@ import path from 'path';
 import JSZip from 'jszip';
 import { PDFService } from '../pdfService';
 import { ModernPDFService } from '../modernPdfService';
+import { ProfessionalPDFService } from '../professionalPdfService';
 import { google } from 'googleapis';
 
 export interface ExportOptions {
@@ -37,10 +38,12 @@ export interface ReportData {
 export class ReportExportService {
   private pdfService: PDFService;
   private modernPdfService: ModernPDFService;
+  private professionalPdfService: ProfessionalPDFService;
 
   constructor() {
     this.pdfService = new PDFService();
     this.modernPdfService = new ModernPDFService();
+    this.professionalPdfService = new ProfessionalPDFService();
   }
 
   async exportReport(reportData: ReportData, format: string, options: ExportOptions): Promise<Buffer> {
@@ -65,22 +68,24 @@ export class ReportExportService {
   }
 
   private async exportPDF(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    // Use the modern PDF service for better design and layout
-    return this.modernPdfService.generateModernReport(
+    // Use the professional PDF service based on the template design
+    return this.professionalPdfService.generateProfessionalReport(
       reportData.title,
       reportData.content,
       reportData.socialData,
-      options.branding?.companyName || reportData.companyName || 'Demo Company'
+      options.branding?.companyName || reportData.companyName || 'Demo Company',
+      reportData.metrics
     );
   }
 
   private async exportBrandedPDF(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    // Use the modern PDF service with branding options
-    return this.modernPdfService.generateModernReport(
+    // Use the professional PDF service with branding options
+    return this.professionalPdfService.generateProfessionalReport(
       reportData.title,
       reportData.content,
       reportData.socialData,
-      options.branding?.companyName || reportData.companyName || 'Demo Company'
+      options.branding?.companyName || reportData.companyName || 'Demo Company',
+      reportData.metrics
     );
   }
 
