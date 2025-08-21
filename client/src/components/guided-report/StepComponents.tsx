@@ -41,49 +41,7 @@ interface StepComponentProps {
   isSaving: boolean;
 }
 
-// AI Writing Assistant Hook
-function useAIAssistant() {
-  const { toast } = useToast();
-
-  const generateContentMutation = useMutation({
-    mutationFn: async ({ prompt, contentType, length = 'medium' }: { 
-      prompt: string; 
-      contentType: string; 
-      length?: 'short' | 'medium' | 'long';
-    }) => {
-      const response = await fetch('/api/ai/generate-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          contentType,
-          tone: 'professional',
-          length
-        }),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate content');
-      }
-
-      return response.json();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "AI Generation Failed",
-        description: error.message || "Failed to generate content. Please try again.",
-        variant: "destructive"
-      });
-    }
-  });
-
-  return {
-    generateContent: generateContentMutation.mutate,
-    isGenerating: generateContentMutation.isPending,
-    generatedContent: generateContentMutation.data?.suggestions?.[0] || null
-  };
-}
+// Removed unused hook - functionality moved to component
 
 // AI Writing Assistant Component
 function AIWritingAssistant({ 
@@ -97,25 +55,76 @@ function AIWritingAssistant({
   onContentGenerated: (content: string) => void;
   className?: string;
 }) {
-  const { generateContent, isGenerating } = useAIAssistant();
+  const [selectedTone, setSelectedTone] = useState('professional');
+  const [selectedLength, setSelectedLength] = useState('medium');
+  const { toast } = useToast();
+
+  const generateContentMutation = useMutation({
+    mutationFn: async ({ prompt, tone, length }: { 
+      prompt: string; 
+      tone: string;
+      length: string;
+    }) => {
+      console.log('Generating content with:', { prompt: prompt.substring(0, 100), tone, length });
+      
+      const response = await fetch('/api/ai/generate-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          contentType: 'sustainability_report_section',
+          tone,
+          length
+        }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Failed to generate content: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Generated content response:', data);
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.suggestions && data.suggestions[0]) {
+        onContentGenerated(data.suggestions[0]);
+        toast({
+          title: "Content Generated",
+          description: "AI-generated content has been added to your text area.",
+        });
+      }
+    },
+    onError: (error: any) => {
+      console.error('Generation error:', error);
+      toast({
+        title: "AI Generation Failed",
+        description: error.message || "Failed to generate content. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
   
   const handleGenerateContent = () => {
     const prompts = {
-      introduction: `Write a professional introduction for a sustainability report for ${companyName || 'our company'}, highlighting environmental commitment and the purpose of the report.`,
-      company_info_narrative: `Write a compelling company story for ${companyName || 'our company'} that focuses on sustainability mission, vision, and approach to environmental responsibility.`,
-      key_metrics_narrative: `Write an analysis of key environmental metrics including carbon footprint (483.94 tonnes CO2e), water usage (11.7M litres), and waste generation (0.1 tonnes) for ${companyName || 'our company'}.`,
-      carbon_footprint_narrative: `Write a detailed carbon footprint analysis explaining Scope 1, 2, and 3 emissions, reduction strategies, and progress made by ${companyName || 'our company'}.`,
-      initiatives_narrative: `Write about sustainability initiatives and environmental projects undertaken by ${companyName || 'our company'}, including renewable energy, waste reduction, and sustainable sourcing.`,
-      kpi_tracking_narrative: `Write about key performance indicators and how ${companyName || 'our company'} tracks and measures sustainability progress over time.`,
-      summary: `Write a conclusion for a sustainability report that summarizes achievements and outlines future environmental commitments for ${companyName || 'our company'}.`
+      introduction: `Write a ${selectedTone} introduction for a sustainability report for ${companyName || 'our company'}, highlighting environmental commitment and the purpose of the report.`,
+      company_info_narrative: `Write a compelling company story for ${companyName || 'our company'} that focuses on sustainability mission, vision, and approach to environmental responsibility. Use a ${selectedTone} tone.`,
+      key_metrics_narrative: `Write an analysis of key environmental metrics including carbon footprint (483.94 tonnes CO2e), water usage (11.7M litres), and waste generation (0.1 tonnes) for ${companyName || 'our company'}. Use a ${selectedTone} tone.`,
+      carbon_footprint_narrative: `Write a detailed carbon footprint analysis explaining Scope 1, 2, and 3 emissions, reduction strategies, and progress made by ${companyName || 'our company'}. Use a ${selectedTone} tone.`,
+      initiatives_narrative: `Write about sustainability initiatives and environmental projects undertaken by ${companyName || 'our company'}, including renewable energy, waste reduction, and sustainable sourcing. Use a ${selectedTone} tone.`,
+      kpi_tracking_narrative: `Write about key performance indicators and how ${companyName || 'our company'} tracks and measures sustainability progress over time. Use a ${selectedTone} tone.`,
+      summary: `Write a conclusion for a sustainability report that summarizes achievements and outlines future environmental commitments for ${companyName || 'our company'}. Use a ${selectedTone} tone.`
     };
 
     const prompt = prompts[sectionType as keyof typeof prompts] || prompts.introduction;
     
-    generateContent({
+    generateContentMutation.mutate({
       prompt,
-      contentType: 'sustainability_report_section',
-      length: 'medium'
+      tone: selectedTone,
+      length: selectedLength
     });
   };
 
@@ -130,10 +139,10 @@ function AIWritingAssistant({
           variant="outline" 
           size="sm"
           onClick={handleGenerateContent}
-          disabled={isGenerating}
+          disabled={generateContentMutation.isPending}
           className="text-blue-700 border-blue-300 hover:bg-blue-100"
         >
-          {isGenerating ? (
+          {generateContentMutation.isPending ? (
             <>
               <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
               Generating...
@@ -146,8 +155,39 @@ function AIWritingAssistant({
           )}
         </Button>
       </div>
+      
+      {/* Writing Style Options */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-blue-800">Tone</label>
+          <select 
+            value={selectedTone}
+            onChange={(e) => setSelectedTone(e.target.value)}
+            className="w-full text-xs border border-blue-200 rounded px-2 py-1 bg-white"
+          >
+            <option value="professional">Professional</option>
+            <option value="formal">Formal</option>
+            <option value="casual">Casual</option>
+            <option value="technical">Technical</option>
+            <option value="engaging">Engaging</option>
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-blue-800">Length</label>
+          <select
+            value={selectedLength}
+            onChange={(e) => setSelectedLength(e.target.value)}
+            className="w-full text-xs border border-blue-200 rounded px-2 py-1 bg-white"
+          >
+            <option value="short">Short</option>
+            <option value="medium">Medium</option>
+            <option value="long">Long</option>
+          </select>
+        </div>
+      </div>
+      
       <p className="text-xs text-blue-700">
-        Get AI-powered suggestions tailored to your company's sustainability story.
+        Customize the tone and length, then generate AI-powered content tailored to your company.
       </p>
     </div>
   );
@@ -156,7 +196,6 @@ function AIWritingAssistant({
 // Step 1: Introduction Component
 export function IntroductionStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
-  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
   
   const suggestions = [
     `${company?.name || 'Our company'} is committed to environmental stewardship and sustainable business practices.`,
@@ -164,13 +203,6 @@ export function IntroductionStep({ content, onChange, onSave, isSaving }: StepCo
     "As a drinks industry leader, we recognize our responsibility to minimize our carbon footprint and promote sustainable practices.",
     "Our sustainability journey reflects our dedication to protecting the environment for future generations."
   ];
-
-  // Handle AI-generated content
-  useEffect(() => {
-    if (generatedContent) {
-      onChange(generatedContent);
-    }
-  }, [generatedContent, onChange]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -257,14 +289,6 @@ export function IntroductionStep({ content, onChange, onSave, isSaving }: StepCo
 // Step 2: Company Information Component
 export function CompanyInfoStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
-  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
-
-  // Handle AI-generated content
-  useEffect(() => {
-    if (generatedContent) {
-      onChange(generatedContent);
-    }
-  }, [generatedContent, onChange]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -365,14 +389,6 @@ export function KeyMetricsStep({ content, onChange, onSave, isSaving }: StepComp
   const { data: footprintData } = useQuery({ queryKey: ['/api/company/footprint'] });
   const { data: automatedData } = useQuery({ queryKey: ['/api/company/footprint/scope3/automated'] });
   const { data: metrics } = useQuery({ queryKey: ["/api/dashboard/metrics"] });
-  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
-
-  // Handle AI-generated content
-  useEffect(() => {
-    if (generatedContent) {
-      onChange(generatedContent);
-    }
-  }, [generatedContent, onChange]);
 
   // Calculate metrics
   const calculateTotalCO2e = () => {
@@ -513,14 +529,6 @@ export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: Ste
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: footprintData } = useQuery({ queryKey: ['/api/company/footprint'] });
   const { data: automatedData } = useQuery({ queryKey: ['/api/company/footprint/scope3/automated'] });
-  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
-
-  // Handle AI-generated content
-  useEffect(() => {
-    if (generatedContent) {
-      onChange(generatedContent);
-    }
-  }, [generatedContent, onChange]);
 
   // Calculate scope emissions
   const calculateScopeEmissions = (scope: number) => {
@@ -678,14 +686,6 @@ export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: Ste
 export function InitiativesStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
-  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
-
-  // Handle AI-generated content
-  useEffect(() => {
-    if (generatedContent) {
-      onChange(generatedContent);
-    }
-  }, [generatedContent, onChange]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -783,14 +783,6 @@ export function InitiativesStep({ content, onChange, onSave, isSaving }: StepCom
 export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: kpiData } = useQuery({ queryKey: ['/api/dashboard/kpis'] });
-  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
-
-  // Handle AI-generated content
-  useEffect(() => {
-    if (generatedContent) {
-      onChange(generatedContent);
-    }
-  }, [generatedContent, onChange]);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -881,14 +873,6 @@ export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepCom
 export function SummaryStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
-  const { generateContent, isGenerating, generatedContent } = useAIAssistant();
-
-  // Handle AI-generated content
-  useEffect(() => {
-    if (generatedContent) {
-      onChange(generatedContent);
-    }
-  }, [generatedContent, onChange]);
   
   const upcomingGoals = smartGoalsData?.data?.filter((goal: any) => 
     new Date(goal.targetDate) > new Date()
