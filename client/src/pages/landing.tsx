@@ -37,22 +37,22 @@ export default function Landing() {
           <div className="flex justify-center mb-6">
             <Badge className="bg-avallen-green/10 text-avallen-green border-avallen-green/20 px-4 py-2 text-sm font-medium">
               <Award className="w-4 h-4 mr-2" />
-              Trusted by sustainability leaders
+              Now in Paid Beta Program
             </Badge>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-slate-gray mb-6">
-            Sustainability Made Simple for
+            Beta Test Our Sustainability Platform for
             <span className="text-avallen-green"> Drinks Brands</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            A comprehensive platform designed to empower SME drinks brands to measure, manage, 
-            and report their environmental impact with confidence.
+            Join our paid beta program to stress test our comprehensive sustainability platform 
+            with real-world data and help shape the future of drinks industry reporting.
           </p>
-          {/* Trust Indicators */}
+          {/* Beta Program Indicators */}
           <div className="flex justify-center items-center space-x-8 mb-8 text-sm text-gray-500">
             <div className="flex items-center">
               <Shield className="w-4 h-4 mr-2 text-avallen-green" />
-              ISO 14040/14044 Compliant
+              DEFRA 2024 Factors
             </div>
             <div className="flex items-center">
               <Leaf className="w-4 h-4 mr-2 text-avallen-green" />
@@ -60,7 +60,7 @@ export default function Landing() {
             </div>
             <div className="flex items-center">
               <Globe className="w-4 h-4 mr-2 text-avallen-green" />
-              DEFRA 2024 Factors
+              Beta Testing Program
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -69,7 +69,7 @@ export default function Landing() {
                 size="lg" 
                 className="bg-avallen-green hover:bg-avallen-green-light text-white px-8 py-3 text-lg w-full sm:w-auto"
               >
-                Get Started Free
+                Join Beta Program
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
@@ -89,10 +89,10 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-gray mb-4">
-              Everything You Need for Sustainability Reporting
+              Help Us Perfect Our Sustainability Platform
             </h2>
             <p className="text-xl text-gray-600">
-              Transform complex LCA data into clear, actionable insights
+              Beta test our comprehensive tools and provide valuable feedback for real-world scenarios
             </p>
           </div>
 

@@ -43,14 +43,14 @@ export default function Login() {
                   <div className="flex justify-center">
                     <Badge className="bg-avallen-green/10 text-avallen-green border-avallen-green/20 px-4 py-2">
                       <Award className="w-4 h-4 mr-2" />
-                      Welcome Back
+                      Paid Beta Program
                     </Badge>
                   </div>
                   <CardTitle className="text-3xl font-bold text-slate-gray">
-                    Sign In to Your Account
+                    Join Our Beta Program
                   </CardTitle>
                   <CardDescription className="text-lg">
-                    Access your sustainability dashboard and continue your environmental journey
+                    Be among the first to stress test our sustainability platform with real-world data
                   </CardDescription>
                 </CardHeader>
                 
@@ -100,7 +100,7 @@ export default function Login() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        ISO-compliant LCA calculations and PDF reporting
+                        Professional LCA calculations and PDF reporting
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
@@ -108,7 +108,7 @@ export default function Login() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        Expert validation and sustainability support
+                        Expert validation and beta program support
                       </div>
                     </div>
                   </div>
@@ -117,16 +117,16 @@ export default function Login() {
                   <div className="border-t pt-4">
                     <div className="flex justify-center items-center space-x-6 text-xs text-gray-500">
                       <div className="flex items-center">
-                        <Leaf className="w-3 h-3 mr-1 text-avallen-green" />
-                        ISO 14040/14044
-                      </div>
-                      <div className="flex items-center">
                         <Shield className="w-3 h-3 mr-1 text-avallen-green" />
-                        DEFRA 2024
+                        DEFRA 2024 Factors
                       </div>
                       <div className="flex items-center">
                         <Globe className="w-3 h-3 mr-1 text-avallen-green" />
-                        OpenLCA
+                        OpenLCA Integration
+                      </div>
+                      <div className="flex items-center">
+                        <Leaf className="w-3 h-3 mr-1 text-avallen-green" />
+                        Beta Testing
                       </div>
                     </div>
                   </div>
@@ -138,12 +138,12 @@ export default function Login() {
             <div className="order-1 lg:order-2 space-y-6">
               <div className="text-center lg:text-left">
                 <h1 className="text-4xl lg:text-5xl font-bold text-slate-gray mb-4">
-                  Sustainability
-                  <span className="text-avallen-green block">Made Simple</span>
+                  Beta Testing
+                  <span className="text-avallen-green block">Our Platform</span>
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed">
-                  Join leading drinks brands in creating transparent, 
-                  data-driven sustainability reports that stakeholders trust.
+                  Help us perfect our sustainability platform by testing it with 
+                  real-world data and providing valuable feedback.
                 </p>
               </div>
 
@@ -186,27 +186,24 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Social proof */}
+              {/* Beta program info */}
               <div className="bg-avallen-green/5 rounded-lg p-6 border border-avallen-green/20">
                 <div className="flex items-center space-x-2 mb-3">
                   <div className="flex -space-x-2">
                     <div className="w-8 h-8 bg-avallen-green rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">A</span>
+                      <span className="text-white text-xs font-bold">β</span>
                     </div>
                     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">S</span>
-                    </div>
-                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">F</span>
+                      <span className="text-white text-xs font-bold">1.0</span>
                     </div>
                   </div>
                   <div className="text-sm text-gray-600">
-                    <span className="font-semibold text-slate-gray">Trusted by sustainability leaders</span>
+                    <span className="font-semibold text-slate-gray">Early Access Beta Program</span>
                   </div>
                 </div>
                 <p className="text-sm text-gray-600 italic">
-                  "Avallen Solutions transformed our sustainability reporting from weeks of work 
-                  to minutes of automated insights."
+                  Join our select group of beta testers helping to shape the future of 
+                  sustainability reporting for drinks brands.
                 </p>
               </div>
             </div>
