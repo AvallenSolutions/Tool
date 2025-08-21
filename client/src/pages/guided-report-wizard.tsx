@@ -20,6 +20,15 @@ import {
   TrendingUp, 
   CheckCircle2 
 } from "lucide-react";
+import {
+  IntroductionStep,
+  CompanyInfoStep,
+  KeyMetricsStep,
+  CarbonFootprintStep,
+  InitiativesStep,
+  KPITrackingStep,
+  SummaryStep
+} from "@/components/guided-report/StepComponents";
 
 // Step configuration
 const WIZARD_STEPS = [
@@ -293,67 +302,80 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
             </div>
           </div>
 
-          {/* Center content area - Two-panel layout */}
-          <div className={`flex-1 flex ${showPreview ? "border-r border-slate-200" : ""}`}>
-            
-            {/* Editor panel */}
-            <div className={`${showPreview ? "w-1/2" : "w-full"} flex flex-col bg-white`}>
-              <div className="p-6 border-b border-slate-200">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                      {currentStepData?.title}
-                    </h2>
-                    <p className="text-slate-600">
-                      {currentStepData?.subtitle}
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => handleSaveStep(currentStepKey)}
-                    disabled={saveStepMutation.isPending}
-                    size="sm"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {saveStepMutation.isPending ? "Saving..." : "Save"}
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Textarea for content editing */}
-              <div className="flex-1 p-6">
-                <textarea
-                  value={stepContent[currentStepKey] || ""}
-                  onChange={(e) => handleStepContentChange(currentStepKey, e.target.value)}
-                  placeholder={`Write your ${currentStepData?.title.toLowerCase()} content here...`}
-                  className="w-full h-full resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          {/* Center content area - Enhanced step components */}
+          <div className="flex-1 bg-white overflow-y-auto">
+            <div className="p-6">
+              {/* Render appropriate step component */}
+              {currentStepKey === 'introduction' && (
+                <IntroductionStep
+                  stepKey={currentStepKey}
+                  content={stepContent[currentStepKey] || ""}
+                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                  onSave={() => handleSaveStep(currentStepKey)}
+                  isSaving={saveStepMutation.isPending}
                 />
-              </div>
+              )}
+              
+              {currentStepKey === 'company_info_narrative' && (
+                <CompanyInfoStep
+                  stepKey={currentStepKey}
+                  content={stepContent[currentStepKey] || ""}
+                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                  onSave={() => handleSaveStep(currentStepKey)}
+                  isSaving={saveStepMutation.isPending}
+                />
+              )}
+              
+              {currentStepKey === 'key_metrics_narrative' && (
+                <KeyMetricsStep
+                  stepKey={currentStepKey}
+                  content={stepContent[currentStepKey] || ""}
+                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                  onSave={() => handleSaveStep(currentStepKey)}
+                  isSaving={saveStepMutation.isPending}
+                />
+              )}
+              
+              {currentStepKey === 'carbon_footprint_narrative' && (
+                <CarbonFootprintStep
+                  stepKey={currentStepKey}
+                  content={stepContent[currentStepKey] || ""}
+                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                  onSave={() => handleSaveStep(currentStepKey)}
+                  isSaving={saveStepMutation.isPending}
+                />
+              )}
+              
+              {currentStepKey === 'initiatives_narrative' && (
+                <InitiativesStep
+                  stepKey={currentStepKey}
+                  content={stepContent[currentStepKey] || ""}
+                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                  onSave={() => handleSaveStep(currentStepKey)}
+                  isSaving={saveStepMutation.isPending}
+                />
+              )}
+              
+              {currentStepKey === 'kpi_tracking_narrative' && (
+                <KPITrackingStep
+                  stepKey={currentStepKey}
+                  content={stepContent[currentStepKey] || ""}
+                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                  onSave={() => handleSaveStep(currentStepKey)}
+                  isSaving={saveStepMutation.isPending}
+                />
+              )}
+              
+              {currentStepKey === 'summary' && (
+                <SummaryStep
+                  stepKey={currentStepKey}
+                  content={stepContent[currentStepKey] || ""}
+                  onChange={(content) => handleStepContentChange(currentStepKey, content)}
+                  onSave={() => handleSaveStep(currentStepKey)}
+                  isSaving={saveStepMutation.isPending}
+                />
+              )}
             </div>
-
-            {/* Preview panel */}
-            {showPreview && (
-              <div className="w-1/2 bg-slate-50 overflow-y-auto">
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Preview</h3>
-                  <div className="bg-white rounded-lg p-6 shadow-sm">
-                    <h4 className="text-lg font-semibold text-slate-900 mb-3">
-                      {currentStepData?.title}
-                    </h4>
-                    <div className="prose prose-slate max-w-none">
-                      {stepContent[currentStepKey] ? (
-                        <p className="whitespace-pre-wrap text-slate-700">
-                          {stepContent[currentStepKey]}
-                        </p>
-                      ) : (
-                        <p className="text-slate-400 italic">
-                          Start writing to see your content preview...
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
