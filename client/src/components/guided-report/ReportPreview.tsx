@@ -339,15 +339,27 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
               </p>
             </div>
 
-            {/* Active Initiatives */}
-            {smartGoalsData?.data?.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Active Initiatives</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4">
-                    {smartGoalsData.data.slice(0, 3).map((goal: any, index: number) => (
+            {/* Selected Initiatives */}
+            {(() => {
+              // Filter SMART Goals based on selected initiatives in report data
+              const selectedInitiatives = reportData?.reportContent?.selectedInitiatives || [];
+              console.log('Selected initiatives from report:', selectedInitiatives);
+              console.log('Available SMART goals:', smartGoalsData?.data);
+              
+              const selectedGoals = smartGoalsData?.data?.filter((goal: any) => 
+                selectedInitiatives.includes(goal.id)
+              ) || [];
+              
+              console.log('Filtered selected goals for preview:', selectedGoals);
+              
+              return selectedGoals.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Selected Sustainability Initiatives</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4">
+                      {selectedGoals.map((goal: any, index: number) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex items-start justify-between mb-2">
                           <h4 className="font-semibold text-slate-900">{goal.title}</h4>
@@ -370,7 +382,8 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
                   </div>
                 </CardContent>
               </Card>
-            )}
+              ) : null;
+            })()}
           </section>
         )}
 
