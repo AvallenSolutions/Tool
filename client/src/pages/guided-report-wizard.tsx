@@ -274,14 +274,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
       // Create blob and download
       const blob = await response.blob();
       
-      // Special handling for Google Slides template (PPTX format now returns text file)
-      if (format === 'pptx') {
-        toast({
-          title: "Google Slides Template Ready!",
-          description: "Step-by-step instructions downloaded for creating your editable presentation.",
-          duration: 5000
-        });
-      }
+
       
       // Standard file download handling
       const url = window.URL.createObjectURL(blob);
@@ -304,8 +297,8 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
           formatName = format === 'pdf-branded' ? 'Branded PDF' : 'PDF';
           break;
         case 'pptx':
-          extension = 'txt';
-          formatName = 'Google Slides Template';
+          extension = 'pptx';
+          formatName = 'PowerPoint';
           break;
         case 'web':
           extension = 'zip';

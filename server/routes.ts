@@ -180,8 +180,8 @@ export function registerRoutes(app: Express): Server {
           fileExtension = 'pdf';
           break;
         case 'pptx':
-          contentType = 'text/plain';
-          fileExtension = 'txt';
+          contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+          fileExtension = 'pptx';
           break;
         case 'web':
           contentType = 'application/zip';
@@ -192,12 +192,7 @@ export function registerRoutes(app: Express): Server {
           fileExtension = 'bin';
       }
 
-      // Special handling for Google Slides template filename
-      if (format === 'pptx') {
-        filename = `Google_Slides_Template_${report.report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
-      } else {
-        filename = `${report.report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.${fileExtension}`;
-      }
+      filename = `${report.report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.${fileExtension}`;
       
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

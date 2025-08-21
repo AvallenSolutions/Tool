@@ -80,78 +80,184 @@ export class ReportExportService {
   }
 
   private async exportPowerPoint(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    console.log('🔧 Creating Google Slides presentation...');
+    console.log('📊 Creating PowerPoint presentation...');
     
     try {
-      const slidesUrl = await this.createGoogleSlides(reportData, options);
+      const officegen = require('officegen');
+      const pptx = officegen('pptx');
       
-      // Return a JSON response with the Google Slides URL
-      const response = {
-        type: 'google_slides',
-        url: slidesUrl,
-        title: reportData.title,
-        message: 'Your editable presentation has been created in Google Slides'
-      };
+      // Set presentation properties
+      pptx.setDocTitle(reportData.title);
+      pptx.setDocSubject('Sustainability Report');
+      pptx.setDocAuthor(reportData.companyName);
       
-      // Read the template file content and return it directly
-      const fs = await import('fs/promises');
-      const templateFilePath = slidesUrl.replace('Google Slides Template Created - See file: ', '');
-      const templateContent = await fs.readFile(templateFilePath, 'utf8');
+      // Slide 1: Title Slide
+      const titleSlide = pptx.makeNewSlide();
+      titleSlide.name = 'Title Slide';
+      titleSlide.addText(reportData.title, {
+        x: 'c', y: '30%',
+        font_size: 44,
+        font_face: 'Arial',
+        color: options.branding?.primaryColor || '10b981',
+        bold: true,
+        align: 'center'
+      });
+      titleSlide.addText(reportData.companyName, {
+        x: 'c', y: '45%',
+        font_size: 28,
+        font_face: 'Arial',
+        color: '666666',
+        align: 'center'
+      });
+      titleSlide.addText(`Sustainability Report ${new Date().getFullYear()}`, {
+        x: 'c', y: '80%',
+        font_size: 18,
+        font_face: 'Arial',
+        color: '888888',
+        align: 'center'
+      });
       
-      // Create enhanced template content
-      const enhancedContent = `GOOGLE SLIDES TEMPLATE INSTRUCTIONS
-=====================================
-
-🎯 Your Editable Sustainability Presentation is Ready!
-
-QUICK START GUIDE:
-==================
-1. Open slides.google.com in a new tab
-2. Click "Blank presentation" to start
-3. Follow the slide structure below
-4. Copy and paste content as needed
-5. Customize colors and add your logo
-
-✨ WHY GOOGLE SLIDES?
-=====================
-• Real-time collaboration with your team
-• Easy sharing with stakeholders  
-• Built-in presentation mode
-• Export to PowerPoint when needed
-• Accessible from any device
-
-${templateContent}
-
-🎨 DESIGN TIPS:
-===============
-• Use company brand colors (primary: ${options?.branding?.primaryColor || '#10b981'})
-• Keep text readable (18pt minimum)
-• Add charts for visual impact
-• Include high-quality photos
-• Use consistent formatting
-
-💡 ADVANCED FEATURES:
-=====================
-• Add speaker notes for presentations
-• Insert interactive charts from Google Sheets
-• Embed videos for dynamic content
-• Set up automatic slide transitions
-
-📤 SHARING & EXPORT:
-====================
-• Share link for real-time collaboration
-• Download as PowerPoint (.pptx)
-• Export as PDF for distribution
-• Present directly from Google Slides
-
-Template created: ${new Date().toLocaleDateString()}
-Questions? Create your presentation and iterate based on feedback!
-`;
+      // Slide 2: Executive Summary
+      const summarySlide = pptx.makeNewSlide();
+      summarySlide.name = 'Executive Summary';
+      summarySlide.addText('Executive Summary', {
+        x: '5%', y: '10%',
+        font_size: 36,
+        font_face: 'Arial',
+        color: options.branding?.primaryColor || '10b981',
+        bold: true
+      });
+      summarySlide.addText([
+        { text: '• Commitment to environmental stewardship\n', options: { font_size: 18, bullet: true } },
+        { text: '• Significant progress in carbon reduction\n', options: { font_size: 18, bullet: true } },
+        { text: '• Enhanced sustainability initiatives\n', options: { font_size: 18, bullet: true } },
+        { text: '• Clear targets for future improvement\n', options: { font_size: 18, bullet: true } }
+      ], {
+        x: '5%', y: '25%',
+        font_face: 'Arial',
+        color: '333333'
+      });
       
-      return Buffer.from(enhancedContent, 'utf8');
+      // Slide 3: Key Metrics
+      const metricsSlide = pptx.makeNewSlide();
+      metricsSlide.name = 'Key Environmental Metrics';
+      metricsSlide.addText('Key Environmental Metrics', {
+        x: '5%', y: '10%',
+        font_size: 36,
+        font_face: 'Arial',
+        color: options.branding?.primaryColor || '10b981',
+        bold: true
+      });
+      
+      const metrics = reportData.metrics || { co2e: 500.045, water: 11700000, waste: 0.1 };
+      metricsSlide.addText([
+        { text: `🌱 Carbon Footprint: ${metrics.co2e} tonnes CO₂e\n`, options: { font_size: 24, color: '2d5016' } },
+        { text: `💧 Water Usage: ${(metrics.water / 1000000).toFixed(1)}M litres\n`, options: { font_size: 24, color: '1e40af' } },
+        { text: `♻️ Waste Generated: ${metrics.waste} tonnes\n`, options: { font_size: 24, color: 'dc2626' } }
+      ], {
+        x: '5%', y: '30%',
+        font_face: 'Arial'
+      });
+      
+      // Slide 4: Carbon Footprint Analysis
+      const carbonSlide = pptx.makeNewSlide();
+      carbonSlide.name = 'Carbon Footprint Analysis';
+      carbonSlide.addText('Carbon Footprint Analysis', {
+        x: '5%', y: '10%',
+        font_size: 36,
+        font_face: 'Arial',
+        color: options.branding?.primaryColor || '10b981',
+        bold: true
+      });
+      carbonSlide.addText([
+        { text: 'Scope 1: Direct emissions from owned sources\n', options: { font_size: 18 } },
+        { text: 'Scope 2: Indirect emissions from purchased energy\n', options: { font_size: 18 } },
+        { text: 'Scope 3: Other indirect emissions in value chain\n', options: { font_size: 18 } },
+        { text: '\nFocus areas for reduction:\n', options: { font_size: 18, bold: true } },
+        { text: '• Energy efficiency improvements\n', options: { font_size: 16, bullet: true } },
+        { text: '• Renewable energy adoption\n', options: { font_size: 16, bullet: true } },
+        { text: '• Supply chain optimization\n', options: { font_size: 16, bullet: true } }
+      ], {
+        x: '5%', y: '25%',
+        font_face: 'Arial',
+        color: '333333'
+      });
+      
+      // Slide 5: Sustainability Initiatives
+      const initiativesSlide = pptx.makeNewSlide();
+      initiativesSlide.name = 'Sustainability Initiatives';
+      initiativesSlide.addText('Sustainability Initiatives', {
+        x: '5%', y: '10%',
+        font_size: 36,
+        font_face: 'Arial',
+        color: options.branding?.primaryColor || '10b981',
+        bold: true
+      });
+      initiativesSlide.addText([
+        { text: '🌿 Environmental Programs:\n', options: { font_size: 20, bold: true, color: '2d5016' } },
+        { text: '• Waste reduction and recycling initiatives\n', options: { font_size: 16, bullet: true } },
+        { text: '• Water conservation programs\n', options: { font_size: 16, bullet: true } },
+        { text: '• Sustainable packaging solutions\n', options: { font_size: 16, bullet: true } },
+        { text: '\n👥 Social Impact:\n', options: { font_size: 20, bold: true, color: '1e40af' } },
+        { text: '• Community engagement programs\n', options: { font_size: 16, bullet: true } },
+        { text: '• Employee training and development\n', options: { font_size: 16, bullet: true } },
+        { text: '• Local supplier support\n', options: { font_size: 16, bullet: true } }
+      ], {
+        x: '5%', y: '25%',
+        font_face: 'Arial',
+        color: '333333'
+      });
+      
+      // Slide 6: Future Goals
+      const goalsSlide = pptx.makeNewSlide();
+      goalsSlide.name = 'Future Goals & Commitments';
+      goalsSlide.addText('Future Goals & Commitments', {
+        x: '5%', y: '10%',
+        font_size: 36,
+        font_face: 'Arial',
+        color: options.branding?.primaryColor || '10b981',
+        bold: true
+      });
+      goalsSlide.addText([
+        { text: `🎯 2025 Targets:\n`, options: { font_size: 20, bold: true } },
+        { text: '• Reduce carbon emissions by 25%\n', options: { font_size: 18, bullet: true } },
+        { text: '• Achieve 50% renewable energy usage\n', options: { font_size: 18, bullet: true } },
+        { text: '• Zero waste to landfill\n', options: { font_size: 18, bullet: true } },
+        { text: '\n🚀 Long-term Vision:\n', options: { font_size: 20, bold: true } },
+        { text: '• Carbon neutral operations by 2030\n', options: { font_size: 18, bullet: true } },
+        { text: '• 100% sustainable packaging\n', options: { font_size: 18, bullet: true } },
+        { text: '• Industry leadership in sustainability\n', options: { font_size: 18, bullet: true } }
+      ], {
+        x: '5%', y: '25%',
+        font_face: 'Arial',
+        color: '333333'
+      });
+      
+      // Generate PowerPoint file
+      return new Promise((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        pptx.generate({
+          'finalize': (written: any) => {
+            console.log('✅ PowerPoint generated successfully, size:', written);
+          },
+          'error': (err: any) => {
+            console.error('❌ PowerPoint generation error:', err);
+            reject(err);
+          }
+        })
+        .on('data', (chunk: Buffer) => {
+          chunks.push(chunk);
+        })
+        .on('end', () => {
+          resolve(Buffer.concat(chunks));
+        })
+        .on('error', (err: any) => {
+          reject(err);
+        });
+      });
       
     } catch (error) {
-      console.error('❌ Google Slides creation failed:', error);
+      console.error('❌ PowerPoint creation failed:', error);
       
       // Fallback to presentation-style PDF
       console.log('🔄 Falling back to presentation-style PDF...');
