@@ -161,7 +161,7 @@ export default function Reports() {
   // Separate reports by type with proper null checks
   const annualReports = reportsData.filter((report: any) => report.reportType === 'annual') || [];
   const lcaReportsData = reportsData.filter((report: any) => report.reportType === 'lca') || [];
-  const productLcaReports = lcaReports || [];
+  const productLcaReports = Array.isArray(lcaReports) ? lcaReports : [];
 
   return (
     <div className="flex h-screen bg-lightest-gray">

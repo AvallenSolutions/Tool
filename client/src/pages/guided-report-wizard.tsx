@@ -103,7 +103,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
 
   // Initialize step content from existing report data
   useEffect(() => {
-    if (wizardData?.success && wizardData?.data?.report?.reportContent) {
+    if (wizardData && typeof wizardData === 'object' && 'success' in wizardData && 'data' in wizardData && wizardData.success && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportContent' in wizardData.data.report) {
       setStepContent(wizardData.data.report.reportContent);
     }
   }, [wizardData]);
@@ -169,7 +169,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
     );
   }
 
-  if (!wizardData?.success || !wizardData?.data?.report) {
+  if (!wizardData || typeof wizardData !== 'object' || !('success' in wizardData) || !wizardData.success || !('data' in wizardData) || !wizardData.data || typeof wizardData.data !== 'object' || !('report' in wizardData.data) || !wizardData.data.report) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-slate-50">
         <Card className="w-full max-w-md">
@@ -208,10 +208,10 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
               <Separator orientation="vertical" className="h-6" />
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">
-                  {wizardData?.data?.report?.reportTitle || 'Sustainability Report'}
+                  {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'report' in wizardData.data && wizardData.data.report && typeof wizardData.data.report === 'object' && 'reportTitle' in wizardData.data.report) ? wizardData.data.report.reportTitle : 'Sustainability Report'}
                 </h1>
                 <p className="text-sm text-slate-600">
-                  {wizardData?.data?.company?.name || 'Company'} - Guided Report Builder
+                  {(wizardData && typeof wizardData === 'object' && 'data' in wizardData && wizardData.data && typeof wizardData.data === 'object' && 'company' in wizardData.data && wizardData.data.company && typeof wizardData.data.company === 'object' && 'name' in wizardData.data.company) ? wizardData.data.company.name : 'Company'} - Guided Report Builder
                 </p>
               </div>
             </div>

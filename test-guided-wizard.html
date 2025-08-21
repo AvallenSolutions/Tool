@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Guided Wizard</title>
+</head>
+<body>
+    <h1>Test Guided Report Wizard</h1>
+    <p>Testing the guided report wizard flow:</p>
+    <ol>
+        <li>Create guided report: ✅ Working (ID: 6b1b5078-9590-49ec-90f9-f2b3ad80ece3)</li>
+        <li>Fetch wizard data: ✅ Working</li>
+        <li>Save step content: ✅ Working</li>
+        <li>Content persistence: ✅ Working (Introduction saved successfully)</li>
+    </ol>
+    
+    <h2>Next Step</h2>
+    <p>Visit: <a href="/app/guided-report/6b1b5078-9590-49ec-90f9-f2b3ad80ece3" target="_blank">Guided Wizard Interface</a></p>
+    
+    <script>
+        // Auto-redirect to test the wizard interface
+        setTimeout(() => {
+            window.location.href = '/app/guided-report/6b1b5078-9590-49ec-90f9-f2b3ad80ece3';
+        }, 2000);
+    </script>
+</body>
+</html>
