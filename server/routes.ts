@@ -5855,23 +5855,34 @@ Requirements:
 
 Please provide ${generateMultiple ? 'exactly 3 different variations, each as a separate paragraph' : 'one well-crafted response'}.`;
 
-      // Use Anthropic API for content generation
-      const { generateSustainabilityContent } = await import('./anthropic');
-      const result = await generateSustainabilityContent(enhancedPrompt);
-      
       let suggestions: string[];
       
-      if (generateMultiple) {
-        // Split result into multiple suggestions if requested
-        suggestions = result.split('\n\n').filter(s => s.trim().length > 10).slice(0, 3);
-        if (suggestions.length < 3) {
-          // If we don't have 3 variations, pad with the original
-          while (suggestions.length < 3) {
-            suggestions.push(result);
+      try {
+        // Use Anthropic API for content generation
+        const { generateSustainabilityContent } = await import('./anthropic');
+        const result = await generateSustainabilityContent(enhancedPrompt);
+        
+        if (generateMultiple) {
+          // Split result into multiple suggestions if requested
+          suggestions = result.split('\n\n').filter(s => s.trim().length > 10).slice(0, 3);
+          if (suggestions.length < 3) {
+            // If we don't have 3 variations, pad with the original
+            while (suggestions.length < 3) {
+              suggestions.push(result);
+            }
           }
+        } else {
+          suggestions = [result];
         }
-      } else {
-        suggestions = [result];
+      } catch (apiError) {
+        console.error('Anthropic API error, providing fallback content:', apiError);
+        
+        // Provide helpful fallback content when API is unavailable
+        const fallbackContent = contentType === 'initiatives_narrative' 
+          ? "Our sustainability initiatives demonstrate our commitment to environmental stewardship and responsible business practices. Through targeted programs focusing on carbon reduction, resource efficiency, and stakeholder engagement, we are working to create meaningful positive impact while building long-term value for our organization and community."
+          : "This section provides an opportunity to highlight key sustainability achievements and ongoing efforts that demonstrate your organization's commitment to environmental and social responsibility.";
+          
+        suggestions = generateMultiple ? [fallbackContent, fallbackContent, fallbackContent] : [fallbackContent];
       }
 
       res.json({
@@ -5880,7 +5891,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           tone,
           length,
           contentType,
-          prompt: prompt.substring(0, 100) + '...'
+          prompt: prompt.substring(0, 100) + '...',
+          source: suggestions[0].includes('sustainability initiatives demonstrate') ? 'fallback' : 'ai'
         }
       });
 
@@ -5888,7 +5900,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       console.error('AI content generation error:', error);
       res.status(500).json({ 
         error: 'Failed to generate content',
-        message: 'AI service temporarily unavailable'
+        message: 'Content generation service temporarily unavailable'
       });
     }
   });

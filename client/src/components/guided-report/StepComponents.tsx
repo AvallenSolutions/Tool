@@ -751,24 +751,51 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-      {/* Editor Panel */}
+      {/* Content Editor Panel */}
       <div className="flex flex-col">
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">SMART Goals Selection</h3>
-          <p className="text-sm text-slate-600">Choose SMART goals from your dashboard to feature as sustainability initiatives in your report.</p>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">Sustainability Initiatives</h3>
+          <p className="text-sm text-slate-600">Describe your sustainability initiatives and their impact on your report.</p>
         </div>
         
-        {/* Initiative Selection */}
-        <Card className="mb-4">
+        {/* AI Writing Assistant */}
+        <AIWritingAssistant 
+          sectionType="initiatives_narrative"
+          companyName={company?.name}
+          onContentGenerated={onChange}
+          className="mb-4"
+        />
+        
+        <textarea
+          value={content}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Describe your sustainability initiatives and their impact or use AI assistance above..."
+          className="flex-1 min-h-[200px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+        
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-slate-500">
+            {content.length} characters
+          </div>
+          <Button onClick={onSave} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Progress"}
+          </Button>
+        </div>
+      </div>
+
+      {/* SMART Goals Selection Panel */}
+      <div className="flex flex-col">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="w-4 h-4" />
               Select SMART Goals to Feature
             </CardTitle>
+            <CardDescription>Choose SMART goals from your dashboard to feature as initiatives in your report.</CardDescription>
           </CardHeader>
           <CardContent>
             {initiativesData?.length > 0 ? (
-              <div className="space-y-3 max-h-48 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {initiativesData.map((initiative: any) => (
                   <div
                     key={initiative.id}
@@ -804,6 +831,11 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
                             {initiative.category}
                           </Badge>
                         )}
+                        {initiative.targetDate && (
+                          <Badge variant="outline" className="text-xs">
+                            Due: {new Date(initiative.targetDate).toLocaleDateString()}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -821,126 +853,6 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
                 <p className="text-sm text-green-700 font-medium">
                   {selectedInitiatives.length} SMART goal{selectedInitiatives.length === 1 ? '' : 's'} selected for report
                 </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* AI Writing Assistant */}
-        <AIWritingAssistant 
-          sectionType="initiatives_narrative"
-          companyName={company?.name}
-          onContentGenerated={onChange}
-          className="mb-4"
-        />
-        
-        <textarea
-          value={content}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Describe your sustainability initiatives and their impact or use AI assistance above..."
-          className="flex-1 min-h-[200px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        />
-        
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-sm text-slate-500">
-            {content.length} characters
-          </div>
-          <Button onClick={onSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Progress"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Data Panel */}
-      <div className="flex flex-col space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5" />
-              Selected SMART Goals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedInitiatives.length > 0 && initiativesData ? (
-              <div className="space-y-4">
-                {initiativesData
-                  .filter((initiative: any) => selectedInitiatives.includes(initiative.id))
-                  .map((initiative: any) => (
-                  <div key={initiative.id} className="border rounded-lg p-4 bg-green-50 border-green-200">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-slate-900">{initiative.title}</h4>
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">
-                        {initiative.status || 'active'}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-slate-600 mb-3">{initiative.description}</p>
-                    <div className="flex gap-2">
-                      {initiative.priority && (
-                        <Badge variant="outline" className="text-xs">
-                          {initiative.priority} priority
-                        </Badge>
-                      )}
-                      {initiative.category && (
-                        <Badge variant="outline" className="text-xs">
-                          {initiative.category}
-                        </Badge>
-                      )}
-                      {initiative.targetDate && (
-                        <Badge variant="outline" className="text-xs">
-                          Due: {new Date(initiative.targetDate).toLocaleDateString()}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <Target className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No SMART goals selected</p>
-                <p className="text-xs text-gray-400 mt-1">Choose SMART goals from the left panel to feature in your report</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              All SMART Goals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {initiativesData?.length > 0 ? (
-              <div className="space-y-3">
-                {initiativesData.slice(0, 3).map((goal: any, index: number) => (
-                  <div key={goal.id || index} className="border rounded-lg p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-sm text-slate-900">{goal.title}</h4>
-                      <Badge variant={goal.priority === 'high' ? 'destructive' : goal.priority === 'medium' ? 'default' : 'secondary'} className="text-xs">
-                        {goal.priority}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Status: {goal.status || 'active'}</span>
-                      {goal.targetDate && (
-                        <span className="text-slate-500">Due: {new Date(goal.targetDate).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {initiativesData.length > 3 && (
-                  <p className="text-xs text-slate-500 text-center pt-2">
-                    +{initiativesData.length - 3} more goals available
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-4 text-slate-500">
-                <TrendingUp className="w-6 h-6 mx-auto mb-2" />
-                <p className="text-sm">No SMART goals found</p>
-                <p className="text-xs text-gray-400 mt-1">Create SMART goals in your dashboard to use them as initiatives</p>
               </div>
             )}
           </CardContent>
