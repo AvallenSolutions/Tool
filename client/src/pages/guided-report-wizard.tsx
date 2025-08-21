@@ -30,6 +30,8 @@ import {
   SummaryStep
 } from "@/components/guided-report/StepComponents";
 import { ReportPreview } from "@/components/guided-report/ReportPreview";
+import { TemplateSelector, type ReportTemplate } from "@/components/guided-report/TemplateSelector";
+import { ExportOptions } from "@/components/guided-report/ExportOptions";
 
 // Step configuration
 const WIZARD_STEPS = [
@@ -99,10 +101,12 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0); // Start with template selection
   const [stepContent, setStepContent] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
 
   const reportId = params?.reportId;
 
@@ -203,9 +207,29 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
     }
   };
 
-  const currentStepData = WIZARD_STEPS.find(step => step.id === currentStep);
+  const isTemplateStep = currentStep === 0;
+  const isExportStep = showExportOptions;
+  const currentStepData = isTemplateStep ? null : WIZARD_STEPS.find(step => step.id === currentStep);
   const currentStepKey = currentStepData?.key || "";
-  const progress = (currentStep / WIZARD_STEPS.length) * 100;
+  const totalSteps = WIZARD_STEPS.length + 1; // +1 for template selection
+  const progress = ((currentStep === 0 ? 0 : currentStep + 1) / totalSteps) * 100;
+
+  const handleTemplateSelect = (template: ReportTemplate) => {
+    setSelectedTemplate(template);
+    // Auto-advance to first content step
+    setTimeout(() => setCurrentStep(1), 500);
+  };
+
+  const handleShowExportOptions = () => {
+    setShowExportOptions(true);
+  };
+
+  const handleExport = async (format: string, options?: any) => {
+    if (format === 'pdf') {
+      await handleExportPDF();
+    }
+    setShowExportOptions(false);
+  };
 
   if (isLoading) {
     return (
@@ -269,7 +293,11 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
             
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2 text-sm text-slate-600">
-                <span>Step {currentStep} of {WIZARD_STEPS.length}</span>
+                <span>
+                  {isTemplateStep ? 'Template Selection' : 
+                   isExportStep ? 'Export Options' :
+                   `Step ${currentStep} of ${WIZARD_STEPS.length}`}
+                </span>
                 <Progress value={progress} className="w-24 h-2" />
               </div>
               <Button
@@ -293,6 +321,47 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
             <div className="p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Report Sections</h2>
               <div className="space-y-3">
+                
+                {/* Template Selection Step */}
+                <div
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    isTemplateStep 
+                      ? "border-green-500 bg-green-50 shadow-sm" 
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                  onClick={() => setCurrentStep(0)}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className={`p-2 rounded-lg ${
+                      isTemplateStep ? "bg-green-100" : "bg-slate-100"
+                    }`}>
+                      <FileText className={`w-5 h-5 ${
+                        isTemplateStep ? "text-green-600" : "text-slate-600"
+                      }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <h3 className={`font-medium text-sm ${
+                          isTemplateStep ? "text-green-900" : "text-slate-900"
+                        }`}>
+                          Template Selection
+                        </h3>
+                        {selectedTemplate && (
+                          <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Choose your report template
+                      </p>
+                      {selectedTemplate && (
+                        <Badge variant="secondary" className="mt-2 text-xs">
+                          {selectedTemplate.name}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {WIZARD_STEPS.map((step) => {
                   const IconComponent = step.icon;
                   const isActive = step.id === currentStep;
@@ -348,76 +417,90 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
           <div className="flex-1 bg-white overflow-y-auto">
             {!showPreview ? (
               <div className="p-6">
-                {/* Render appropriate step component */}
-                {currentStepKey === 'introduction' && (
-                  <IntroductionStep
-                    stepKey={currentStepKey}
-                    content={stepContent[currentStepKey] || ""}
-                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                    onSave={() => handleSaveStep(currentStepKey)}
-                    isSaving={saveStepMutation.isPending}
+                {/* Template Selection Step */}
+                {isTemplateStep && (
+                  <TemplateSelector 
+                    onSelectTemplate={handleTemplateSelect}
+                    selectedTemplate={selectedTemplate || undefined}
                   />
                 )}
-                
-                {currentStepKey === 'company_info_narrative' && (
-                  <CompanyInfoStep
-                    stepKey={currentStepKey}
-                    content={stepContent[currentStepKey] || ""}
-                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                    onSave={() => handleSaveStep(currentStepKey)}
-                    isSaving={saveStepMutation.isPending}
+
+                {/* Export Options */}
+                {isExportStep && (
+                  <ExportOptions 
+                    onExport={handleExport}
+                    isExporting={isExporting}
+                    currentFormat="pdf"
                   />
                 )}
-                
-                {currentStepKey === 'key_metrics_narrative' && (
-                  <KeyMetricsStep
-                    stepKey={currentStepKey}
-                    content={stepContent[currentStepKey] || ""}
-                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                    onSave={() => handleSaveStep(currentStepKey)}
-                    isSaving={saveStepMutation.isPending}
-                  />
-                )}
-                
-                {currentStepKey === 'carbon_footprint_narrative' && (
-                  <CarbonFootprintStep
-                    stepKey={currentStepKey}
-                    content={stepContent[currentStepKey] || ""}
-                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                    onSave={() => handleSaveStep(currentStepKey)}
-                    isSaving={saveStepMutation.isPending}
-                  />
-                )}
-                
-                {currentStepKey === 'initiatives_narrative' && (
-                  <InitiativesStep
-                    stepKey={currentStepKey}
-                    content={stepContent[currentStepKey] || ""}
-                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                    onSave={() => handleSaveStep(currentStepKey)}
-                    isSaving={saveStepMutation.isPending}
-                  />
-                )}
-                
-                {currentStepKey === 'kpi_tracking_narrative' && (
-                  <KPITrackingStep
-                    stepKey={currentStepKey}
-                    content={stepContent[currentStepKey] || ""}
-                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                    onSave={() => handleSaveStep(currentStepKey)}
-                    isSaving={saveStepMutation.isPending}
-                  />
-                )}
-                
-                {currentStepKey === 'summary' && (
-                  <SummaryStep
-                    stepKey={currentStepKey}
-                    content={stepContent[currentStepKey] || ""}
-                    onChange={(content) => handleStepContentChange(currentStepKey, content)}
-                    onSave={() => handleSaveStep(currentStepKey)}
-                    isSaving={saveStepMutation.isPending}
-                  />
-                )}
+
+                {/* Regular Step Components */}
+                {!isTemplateStep && !isExportStep && (
+                  <>
+                    {currentStep === 1 && (
+                      <IntroductionStep
+                        value={stepContent['introduction'] || ""}
+                        onChange={(content) => handleStepContentChange('introduction', content)}
+                        onSave={() => handleSaveStep('introduction')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                    
+                    {currentStep === 2 && (
+                      <CompanyInfoStep
+                        value={stepContent['company_info_narrative'] || ""}
+                        onChange={(content) => handleStepContentChange('company_info_narrative', content)}
+                        onSave={() => handleSaveStep('company_info_narrative')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                    
+                    {currentStep === 3 && (
+                      <KeyMetricsStep
+                        value={stepContent['key_metrics_narrative'] || ""}
+                        onChange={(content) => handleStepContentChange('key_metrics_narrative', content)}
+                        onSave={() => handleSaveStep('key_metrics_narrative')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                    
+                    {currentStep === 4 && (
+                      <CarbonFootprintStep
+                        value={stepContent['carbon_footprint_narrative'] || ""}
+                        onChange={(content) => handleStepContentChange('carbon_footprint_narrative', content)}
+                        onSave={() => handleSaveStep('carbon_footprint_narrative')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                    
+                    {currentStep === 5 && (
+                      <InitiativesStep
+                        value={stepContent['initiatives_narrative'] || ""}
+                        onChange={(content) => handleStepContentChange('initiatives_narrative', content)}
+                        onSave={() => handleSaveStep('initiatives_narrative')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                    
+                    {currentStep === 6 && (
+                      <KPITrackingStep
+                        value={stepContent['kpi_tracking_narrative'] || ""}
+                        onChange={(content) => handleStepContentChange('kpi_tracking_narrative', content)}
+                        onSave={() => handleSaveStep('kpi_tracking_narrative')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                    
+                    {currentStep === 7 && (
+                      <SummaryStep
+                        value={stepContent['summary'] || ""}
+                        onChange={(content) => handleStepContentChange('summary', content)}
+                        onSave={() => handleSaveStep('summary')}
+                        isSaving={saveStepMutation.isPending}
+                      />
+                    )}
+                  </>
+                )
               </div>
             ) : (
               <div className="p-6">
@@ -435,28 +518,76 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
         {/* Bottom navigation */}
         <div className="bg-white border-t border-slate-200 p-4">
           <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-              disabled={currentStep === 1}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Previous
-            </Button>
+            {!isExportStep ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                  disabled={currentStep === 0}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
 
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-slate-600">
-                {WIZARD_STEPS.filter(step => stepContent[step.key]?.trim().length > 0).length} of {WIZARD_STEPS.length} sections completed
-              </span>
-            </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-slate-600">
+                    {WIZARD_STEPS.filter(step => stepContent[step.key]?.trim().length > 0).length} of {WIZARD_STEPS.length} sections completed
+                  </span>
+                  {selectedTemplate && (
+                    <Badge variant="outline" className="text-xs">
+                      {selectedTemplate.name}
+                    </Badge>
+                  )}
+                </div>
 
-            <Button
-              onClick={() => setCurrentStep(Math.min(WIZARD_STEPS.length, currentStep + 1))}
-              disabled={currentStep === WIZARD_STEPS.length}
-            >
-              Next
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+                <div className="flex space-x-2">
+                  {currentStep === WIZARD_STEPS.length && (
+                    <Button
+                      onClick={handleShowExportOptions}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Report
+                    </Button>
+                  )}
+                  {currentStep < WIZARD_STEPS.length && (
+                    <Button
+                      onClick={() => setCurrentStep(Math.min(WIZARD_STEPS.length, currentStep + 1))}
+                      disabled={isTemplateStep && !selectedTemplate}
+                    >
+                      {isTemplateStep && !selectedTemplate ? 'Select Template First' : 'Next'}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowExportOptions(false)}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Report
+                </Button>
+                
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-slate-600">Ready to Export</span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleExportPDF}
+                    disabled={isExporting}
+                    size="sm"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Quick PDF Export
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
