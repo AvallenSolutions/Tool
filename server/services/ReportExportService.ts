@@ -93,7 +93,62 @@ export class ReportExportService {
         message: 'Your editable presentation has been created in Google Slides'
       };
       
-      return Buffer.from(JSON.stringify(response, null, 2));
+      // Read the template file content and return it directly
+      const fs = await import('fs/promises');
+      const templateFilePath = slidesUrl.replace('Google Slides Template Created - See file: ', '');
+      const templateContent = await fs.readFile(templateFilePath, 'utf8');
+      
+      // Create enhanced template content
+      const enhancedContent = `GOOGLE SLIDES TEMPLATE INSTRUCTIONS
+=====================================
+
+🎯 Your Editable Sustainability Presentation is Ready!
+
+QUICK START GUIDE:
+==================
+1. Open slides.google.com in a new tab
+2. Click "Blank presentation" to start
+3. Follow the slide structure below
+4. Copy and paste content as needed
+5. Customize colors and add your logo
+
+✨ WHY GOOGLE SLIDES?
+=====================
+• Real-time collaboration with your team
+• Easy sharing with stakeholders  
+• Built-in presentation mode
+• Export to PowerPoint when needed
+• Accessible from any device
+
+${templateContent}
+
+🎨 DESIGN TIPS:
+===============
+• Use company brand colors (primary: ${options?.branding?.primaryColor || '#10b981'})
+• Keep text readable (18pt minimum)
+• Add charts for visual impact
+• Include high-quality photos
+• Use consistent formatting
+
+💡 ADVANCED FEATURES:
+=====================
+• Add speaker notes for presentations
+• Insert interactive charts from Google Sheets
+• Embed videos for dynamic content
+• Set up automatic slide transitions
+
+📤 SHARING & EXPORT:
+====================
+• Share link for real-time collaboration
+• Download as PowerPoint (.pptx)
+• Export as PDF for distribution
+• Present directly from Google Slides
+
+Template created: ${new Date().toLocaleDateString()}
+Questions? Create your presentation and iterate based on feedback!
+`;
+      
+      return Buffer.from(enhancedContent, 'utf8');
       
     } catch (error) {
       console.error('❌ Google Slides creation failed:', error);

@@ -274,118 +274,13 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
       // Create blob and download
       const blob = await response.blob();
       
-      // Check if this is a Google Slides template response (PPTX format returns JSON)
-      if (format === 'pptx' && blob.type === 'application/json') {
-        const text = await blob.text();
-        try {
-          const templateResponse = JSON.parse(text);
-          
-          if (templateResponse.type === 'google_slides') {
-            // Show Google Slides template instructions
-            toast({
-              title: "🎯 Google Slides Template Ready!",
-              description: "Step-by-step instructions downloaded for creating your editable presentation.",
-              duration: 5000
-            });
-            
-            // Create and download comprehensive template instructions
-            const instructionsContent = `
-GOOGLE SLIDES TEMPLATE INSTRUCTIONS
-=====================================
-
-🎯 Your Editable Sustainability Presentation is Ready!
-
-QUICK START GUIDE:
-==================
-1. Open slides.google.com in a new tab
-2. Click "Blank presentation" to start
-3. Follow the slide structure below
-4. Copy and paste content as needed
-5. Customize colors and add your logo
-
-✨ WHY GOOGLE SLIDES?
-=====================
-• Real-time collaboration with your team
-• Easy sharing with stakeholders  
-• Built-in presentation mode
-• Export to PowerPoint when needed
-• Accessible from any device
-
-📋 SLIDE STRUCTURE:
-===================
-
-SLIDE 1: Title Slide
-- Title: "${templateResponse.title || 'Sustainability Report'}"
-- Subtitle: "Demo Company"
-- Footer: "Sustainability Report ${new Date().getFullYear()}"
-
-SLIDE 2: Executive Summary
-- Key sustainability commitments
-- Major achievements
-- Goals and targets
-
-SLIDE 3: Environmental Metrics  
-- Carbon Footprint: 500.0 tonnes CO₂e
-- Water Usage: 11.7M litres
-- Waste Management initiatives
-
-SLIDE 4: Carbon Footprint Analysis
-- Scope 1, 2, and 3 emissions breakdown
-- Year-over-year comparisons
-- Reduction strategies
-
-SLIDE 5: Sustainability Initiatives
-- Current projects and programs
-- Community impact
-- Future commitments
-
-SLIDE 6: Next Steps & Goals
-- 2025 targets
-- Long-term vision
-- Call to action
-
-🎨 DESIGN TIPS:
-===============
-• Use company brand colors (primary: #10b981)
-• Keep text readable (18pt minimum)
-• Add charts for visual impact
-• Include high-quality photos
-• Use consistent formatting
-
-💡 ADVANCED FEATURES:
-=====================
-• Add speaker notes for presentations
-• Insert interactive charts from Google Sheets
-• Embed videos for dynamic content
-• Set up automatic slide transitions
-
-📤 SHARING & EXPORT:
-====================
-• Share link for real-time collaboration
-• Download as PowerPoint (.pptx)
-• Export as PDF for distribution
-• Present directly from Google Slides
-
-Template created: ${new Date().toLocaleDateString()}
-Questions? Create your presentation and iterate based on feedback!
-            `;
-            
-            // Download instructions file
-            const instructionsBlob = new Blob([instructionsContent], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(instructionsBlob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'Google_Slides_Template_Instructions.txt';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            return;
-          }
-        } catch (e) {
-          console.log('Not a template response, proceeding with normal download');
-        }
+      // Special handling for Google Slides template (PPTX format now returns text file)
+      if (format === 'pptx') {
+        toast({
+          title: "Google Slides Template Ready!",
+          description: "Step-by-step instructions downloaded for creating your editable presentation.",
+          duration: 5000
+        });
       }
       
       // Standard file download handling
@@ -409,8 +304,8 @@ Questions? Create your presentation and iterate based on feedback!
           formatName = format === 'pdf-branded' ? 'Branded PDF' : 'PDF';
           break;
         case 'pptx':
-          extension = 'pptx';
-          formatName = 'PowerPoint';
+          extension = 'txt';
+          formatName = 'Google Slides Template';
           break;
         case 'web':
           extension = 'zip';
