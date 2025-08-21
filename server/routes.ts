@@ -7060,18 +7060,19 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       }
 
       const { reportId } = req.params;
-      const { stepKey, content, selectedInitiatives } = req.body;
+      const { stepKey, content, selectedInitiatives, selectedKPIs } = req.body;
 
       console.log('PUT /api/reports/guided/:reportId/wizard-data - Request data:', {
         reportId,
         stepKey,
         contentLength: content?.length,
         selectedInitiatives,
+        selectedKPIs,
         bodyKeys: Object.keys(req.body)
       });
 
-      if (!stepKey && selectedInitiatives === undefined) {
-        return res.status(400).json({ error: 'Step key or selected initiatives are required' });
+      if (!stepKey && selectedInitiatives === undefined && selectedKPIs === undefined) {
+        return res.status(400).json({ error: 'Step key, selected initiatives, or selected KPIs are required' });
       }
 
       if (stepKey && typeof content !== 'string') {
@@ -7127,6 +7128,10 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           currentData.selectedInitiatives = selectedInitiatives;
         }
         
+        if (selectedKPIs !== undefined) {
+          currentData.selectedKPIs = selectedKPIs;
+        }
+        
         updateData.reportData = currentData;
         
         await db
@@ -7146,6 +7151,10 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         if (selectedInitiatives !== undefined) {
           updateData.selectedInitiatives = selectedInitiatives;
         }
+        
+        if (selectedKPIs !== undefined) {
+          updateData.selectedKPIs = selectedKPIs;
+        }
 
         await db
           .update(customReports)
@@ -7154,12 +7163,20 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       }
 
       let message = 'Data saved successfully';
-      if (stepKey && selectedInitiatives !== undefined) {
+      if (stepKey && selectedInitiatives !== undefined && selectedKPIs !== undefined) {
+        message = 'Step content, initiative selection, and KPI selection saved successfully';
+      } else if (stepKey && selectedInitiatives !== undefined) {
         message = 'Step content and initiative selection saved successfully';
+      } else if (stepKey && selectedKPIs !== undefined) {
+        message = 'Step content and KPI selection saved successfully';
       } else if (stepKey) {
         message = 'Step content saved successfully';
+      } else if (selectedInitiatives !== undefined && selectedKPIs !== undefined) {
+        message = 'Initiative and KPI selection saved successfully';
       } else if (selectedInitiatives !== undefined) {
         message = 'Initiative selection saved successfully';
+      } else if (selectedKPIs !== undefined) {
+        message = 'KPI selection saved successfully';
       }
 
       res.json({

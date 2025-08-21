@@ -898,10 +898,85 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
 export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: kpiData } = useQuery({ queryKey: ['/api/dashboard/kpis'] });
+  const [selectedKPIs, setSelectedKPIs] = useState<string[]>([]);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  // Get current report ID from URL
+  const reportId = window.location.pathname.split('/').pop();
+  
+  // Query to get current report data and selected KPIs
+  const { data: reportData } = useQuery({ 
+    queryKey: [`/api/reports/guided/${reportId}/wizard-data`],
+    enabled: !!reportId
+  });
+  
+  // Load selected KPIs from report data
+  useEffect(() => {
+    if (reportData?.data?.report?.selectedKPIs) {
+      setSelectedKPIs(reportData.data.report.selectedKPIs);
+    } else if (reportData?.data?.selectedKPIs) {
+      setSelectedKPIs(reportData.data.selectedKPIs);
+    }
+  }, [reportData]);
+  
+  // Save selected KPIs to report
+  const saveSelectedKPIs = useMutation({
+    mutationFn: async (kpiIds: string[]) => {
+      console.log('Saving KPIs:', { reportId, kpiIds });
+      const response = await fetch(`/api/reports/guided/${reportId}/wizard-data`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selectedKPIs: kpiIds
+        })
+      });
+      
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response JSON:', parseError);
+        throw new Error('Invalid server response');
+      }
+      
+      console.log('Save response:', { status: response.status, result });
+      
+      if (!response.ok) {
+        console.error('Server error:', result);
+        throw new Error(result.error || `Server error: ${response.status}`);
+      }
+      return result;
+    },
+    onSuccess: () => {
+      toast({ 
+        title: "Selection Saved",
+        description: "KPI selection saved successfully",
+        duration: 2000
+      });
+      // Only invalidate specific queries that need the updated KPIs data
+      queryClient.invalidateQueries({ queryKey: [`/api/reports/guided/${reportId}/wizard-data`], exact: true });
+    },
+    onError: () => {
+      toast({ 
+        variant: "destructive", 
+        description: "Failed to save KPI selection" 
+      });
+    }
+  });
+  
+  const handleKPIToggle = (kpiName: string) => {
+    const newSelection = selectedKPIs.includes(kpiName)
+      ? selectedKPIs.filter(name => name !== kpiName)
+      : [...selectedKPIs, kpiName];
+    
+    setSelectedKPIs(newSelection);
+    saveSelectedKPIs.mutate(newSelection);
+  };
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-      {/* Editor Panel */}
+      {/* Content Editor Panel */}
       <div className="flex flex-col">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-slate-900 mb-2">KPI Tracking</h3>
@@ -918,9 +993,18 @@ export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepCom
         
         <textarea
           value={content}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            // Auto-save after 2 seconds of no typing
+            clearTimeout((window as any).autoSaveTimerKPI);
+            (window as any).autoSaveTimerKPI = setTimeout(() => {
+              if (e.target.value.trim() !== content.trim()) {
+                onSave();
+              }
+            }, 2000);
+          }}
           placeholder="Describe your KPI tracking approach and progress or use AI assistance above..."
-          className="flex-1 min-h-[300px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="flex-1 min-h-[200px] resize-none border border-slate-200 rounded-lg p-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
         />
         
         <div className="flex justify-between items-center mt-4">
@@ -933,48 +1017,78 @@ export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepCom
         </div>
       </div>
 
-      {/* Data Panel */}
-      <div className="flex flex-col space-y-4">
+      {/* KPI Selection Panel */}
+      <div className="flex flex-col">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Key Performance Indicators
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingUp className="w-4 h-4" />
+              Select KPIs to Feature
             </CardTitle>
+            <CardDescription>Choose KPIs from your dashboard to feature in your report.</CardDescription>
           </CardHeader>
           <CardContent>
             {kpiData?.kpis?.length > 0 ? (
-              <div className="space-y-4">
-                {kpiData.kpis.slice(0, 4).map((kpi: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-slate-900">{kpi.name}</h4>
-                      <Badge variant={kpi.status === 'on-track' ? 'default' : kpi.status === 'at-risk' ? 'secondary' : 'destructive'}>
-                        {kpi.status}
-                      </Badge>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {kpiData.kpis.map((kpi: any, index: number) => (
+                  <div
+                    key={kpi.name || index}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                      selectedKPIs.includes(kpi.name)
+                        ? 'bg-green-50 border-green-200 shadow-sm'
+                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                    }`}
+                    onClick={() => handleKPIToggle(kpi.name)}
+                  >
+                    <div className={`w-4 h-4 rounded border-2 mt-0.5 flex items-center justify-center ${
+                      selectedKPIs.includes(kpi.name)
+                        ? 'bg-green-500 border-green-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedKPIs.includes(kpi.name) && (
+                        <CheckCircle2 className="w-3 h-3 text-white" />
+                      )}
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-slate-500">Current</p>
-                        <p className="font-medium">{kpi.current} {kpi.unit}</p>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm text-slate-900">{kpi.name}</h4>
+                      <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
+                        <div>
+                          <p className="text-slate-500">Current</p>
+                          <p className="font-medium">{kpi.current} {kpi.unit}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Target</p>
+                          <p className="font-medium">{kpi.target} {kpi.unit}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Progress</p>
+                          <p className="font-medium">{kpi.progress}%</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-slate-500">Target</p>
-                        <p className="font-medium">{kpi.target} {kpi.unit}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500">Progress</p>
-                        <p className="font-medium">{kpi.progress}%</p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant={kpi.status === 'on-track' ? 'default' : kpi.status === 'at-risk' ? 'secondary' : 'destructive'} className="text-xs">
+                          {kpi.status}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {kpi.category || 'General'}
+                        </Badge>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-slate-500">
-                <TrendingUp className="w-8 h-8 mx-auto mb-2" />
-                <p>No KPIs configured</p>
-                <p className="text-sm">Set up KPIs to track your performance</p>
+              <div className="text-center py-6">
+                <TrendingUp className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 mb-3">No KPIs found</p>
+                <p className="text-xs text-gray-400">Create KPIs in your dashboard to feature them in reports</p>
+              </div>
+            )}
+            {selectedKPIs.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-green-700 font-medium">
+                  {selectedKPIs.length} KPI{selectedKPIs.length === 1 ? '' : 's'} selected for report
+                </p>
               </div>
             )}
           </CardContent>

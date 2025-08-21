@@ -403,42 +403,55 @@ export function ReportPreview({ reportData, stepContent, onExportPDF, isExportin
               </p>
             </div>
 
-            {/* KPI Dashboard */}
-            {kpiData?.kpis?.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Key Performance Indicators</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4">
-                    {kpiData.kpis.slice(0, 4).map((kpi: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-slate-900">{kpi.name}</h4>
-                          <Badge variant={kpi.status === 'on-track' ? 'default' : 'secondary'}>
-                            {kpi.status}
-                          </Badge>
+            {/* Selected KPIs */}
+            {(() => {
+              // Filter KPIs based on selected KPIs in report data
+              const selectedKPINames = reportData?.report?.selectedKPIs || reportData?.selectedKPIs || [];
+              console.log('Selected KPIs from report:', selectedKPINames);
+              console.log('Available KPIs:', kpiData?.kpis);
+              
+              const selectedKPIs = kpiData?.kpis?.filter((kpi: any) => 
+                selectedKPINames.includes(kpi.name)
+              ) || [];
+              
+              console.log('Filtered selected KPIs for preview:', selectedKPIs);
+              
+              return selectedKPIs.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Selected Key Performance Indicators</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4">
+                      {selectedKPIs.map((kpi: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-slate-900">{kpi.name}</h4>
+                            <Badge variant={kpi.status === 'on-track' ? 'default' : kpi.status === 'at-risk' ? 'secondary' : 'destructive'}>
+                              {kpi.status}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="text-slate-500">Current</p>
+                              <p className="font-medium text-lg">{kpi.current} {kpi.unit}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500">Target</p>
+                              <p className="font-medium text-lg">{kpi.target} {kpi.unit}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500">Progress</p>
+                              <p className="font-medium text-lg">{kpi.progress}%</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-slate-500">Current</p>
-                            <p className="font-medium text-lg">{kpi.current} {kpi.unit}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Target</p>
-                            <p className="font-medium text-lg">{kpi.target} {kpi.unit}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Progress</p>
-                            <p className="font-medium text-lg">{kpi.progress}%</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
           </section>
         )}
 

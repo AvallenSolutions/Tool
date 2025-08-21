@@ -1284,6 +1284,7 @@ export const customReports = pgTable("custom_reports", {
   reportLayout: jsonb("report_layout").notNull(),
   reportContent: jsonb("report_content").default('{}'), // For guided wizard narrative content
   selectedInitiatives: jsonb("selected_initiatives").default('[]').$type<string[]>(), // Array of initiative IDs to include in report
+  selectedKPIs: jsonb("selected_kpis").default('[]').$type<string[]>(), // Array of KPI names to include in report
   reportType: varchar("report_type", { length: 50 }).default('dynamic'), // 'dynamic' or 'guided'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
