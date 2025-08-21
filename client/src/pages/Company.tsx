@@ -197,9 +197,21 @@ export default function Company() {
   // Update state when backend data loads
   useEffect(() => {
     if (backendSustainabilityData && !sustainabilityLoading) {
+      console.log('🔄 Loading sustainability data from backend:', backendSustainabilityData);
+      console.log('🔍 Backend socialData:', backendSustainabilityData.socialData);
       setSustainabilityData(prevData => ({
         ...prevData,
         ...backendSustainabilityData,
+        socialData: {
+          employeeMetrics: {
+            ...prevData.socialData.employeeMetrics,
+            ...(backendSustainabilityData.socialData?.employeeMetrics || {})
+          },
+          communityImpact: {
+            ...prevData.socialData.communityImpact,
+            ...(backendSustainabilityData.socialData?.communityImpact || {})
+          }
+        }
       }));
     }
   }, [backendSustainabilityData, sustainabilityLoading]);
