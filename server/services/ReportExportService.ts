@@ -83,8 +83,8 @@ export class ReportExportService {
     console.log('📊 Creating PowerPoint presentation...');
     
     try {
-      const officegen = require('officegen');
-      const pptx = officegen('pptx');
+      const officegen = await import('officegen');
+      const pptx = officegen.default('pptx');
       
       // Set presentation properties
       pptx.setDocTitle(reportData.title);
@@ -127,13 +127,9 @@ export class ReportExportService {
         color: options.branding?.primaryColor || '10b981',
         bold: true
       });
-      summarySlide.addText([
-        { text: '• Commitment to environmental stewardship\n', options: { font_size: 18, bullet: true } },
-        { text: '• Significant progress in carbon reduction\n', options: { font_size: 18, bullet: true } },
-        { text: '• Enhanced sustainability initiatives\n', options: { font_size: 18, bullet: true } },
-        { text: '• Clear targets for future improvement\n', options: { font_size: 18, bullet: true } }
-      ], {
+      summarySlide.addText('• Commitment to environmental stewardship\n• Significant progress in carbon reduction\n• Enhanced sustainability initiatives\n• Clear targets for future improvement', {
         x: '5%', y: '25%',
+        font_size: 18,
         font_face: 'Arial',
         color: '333333'
       });
@@ -150,13 +146,11 @@ export class ReportExportService {
       });
       
       const metrics = reportData.metrics || { co2e: 500.045, water: 11700000, waste: 0.1 };
-      metricsSlide.addText([
-        { text: `🌱 Carbon Footprint: ${metrics.co2e} tonnes CO₂e\n`, options: { font_size: 24, color: '2d5016' } },
-        { text: `💧 Water Usage: ${(metrics.water / 1000000).toFixed(1)}M litres\n`, options: { font_size: 24, color: '1e40af' } },
-        { text: `♻️ Waste Generated: ${metrics.waste} tonnes\n`, options: { font_size: 24, color: 'dc2626' } }
-      ], {
+      metricsSlide.addText(`Carbon Footprint: ${metrics.co2e} tonnes CO₂e\nWater Usage: ${(metrics.water / 1000000).toFixed(1)}M litres\nWaste Generated: ${metrics.waste} tonnes`, {
         x: '5%', y: '30%',
-        font_face: 'Arial'
+        font_size: 20,
+        font_face: 'Arial',
+        color: '2d5016'
       });
       
       // Slide 4: Carbon Footprint Analysis
@@ -169,16 +163,9 @@ export class ReportExportService {
         color: options.branding?.primaryColor || '10b981',
         bold: true
       });
-      carbonSlide.addText([
-        { text: 'Scope 1: Direct emissions from owned sources\n', options: { font_size: 18 } },
-        { text: 'Scope 2: Indirect emissions from purchased energy\n', options: { font_size: 18 } },
-        { text: 'Scope 3: Other indirect emissions in value chain\n', options: { font_size: 18 } },
-        { text: '\nFocus areas for reduction:\n', options: { font_size: 18, bold: true } },
-        { text: '• Energy efficiency improvements\n', options: { font_size: 16, bullet: true } },
-        { text: '• Renewable energy adoption\n', options: { font_size: 16, bullet: true } },
-        { text: '• Supply chain optimization\n', options: { font_size: 16, bullet: true } }
-      ], {
+      carbonSlide.addText('Scope 1: Direct emissions from owned sources\nScope 2: Indirect emissions from purchased energy\nScope 3: Other indirect emissions in value chain\n\nFocus areas for reduction:\n• Energy efficiency improvements\n• Renewable energy adoption\n• Supply chain optimization', {
         x: '5%', y: '25%',
+        font_size: 16,
         font_face: 'Arial',
         color: '333333'
       });
@@ -193,17 +180,9 @@ export class ReportExportService {
         color: options.branding?.primaryColor || '10b981',
         bold: true
       });
-      initiativesSlide.addText([
-        { text: '🌿 Environmental Programs:\n', options: { font_size: 20, bold: true, color: '2d5016' } },
-        { text: '• Waste reduction and recycling initiatives\n', options: { font_size: 16, bullet: true } },
-        { text: '• Water conservation programs\n', options: { font_size: 16, bullet: true } },
-        { text: '• Sustainable packaging solutions\n', options: { font_size: 16, bullet: true } },
-        { text: '\n👥 Social Impact:\n', options: { font_size: 20, bold: true, color: '1e40af' } },
-        { text: '• Community engagement programs\n', options: { font_size: 16, bullet: true } },
-        { text: '• Employee training and development\n', options: { font_size: 16, bullet: true } },
-        { text: '• Local supplier support\n', options: { font_size: 16, bullet: true } }
-      ], {
+      initiativesSlide.addText('Environmental Programs:\n• Waste reduction and recycling initiatives\n• Water conservation programs\n• Sustainable packaging solutions\n\nSocial Impact:\n• Community engagement programs\n• Employee training and development\n• Local supplier support', {
         x: '5%', y: '25%',
+        font_size: 16,
         font_face: 'Arial',
         color: '333333'
       });
@@ -218,17 +197,9 @@ export class ReportExportService {
         color: options.branding?.primaryColor || '10b981',
         bold: true
       });
-      goalsSlide.addText([
-        { text: `🎯 2025 Targets:\n`, options: { font_size: 20, bold: true } },
-        { text: '• Reduce carbon emissions by 25%\n', options: { font_size: 18, bullet: true } },
-        { text: '• Achieve 50% renewable energy usage\n', options: { font_size: 18, bullet: true } },
-        { text: '• Zero waste to landfill\n', options: { font_size: 18, bullet: true } },
-        { text: '\n🚀 Long-term Vision:\n', options: { font_size: 20, bold: true } },
-        { text: '• Carbon neutral operations by 2030\n', options: { font_size: 18, bullet: true } },
-        { text: '• 100% sustainable packaging\n', options: { font_size: 18, bullet: true } },
-        { text: '• Industry leadership in sustainability\n', options: { font_size: 18, bullet: true } }
-      ], {
+      goalsSlide.addText('2025 Targets:\n• Reduce carbon emissions by 25%\n• Achieve 50% renewable energy usage\n• Zero waste to landfill\n\nLong-term Vision:\n• Carbon neutral operations by 2030\n• 100% sustainable packaging\n• Industry leadership in sustainability', {
         x: '5%', y: '25%',
+        font_size: 16,
         font_face: 'Arial',
         color: '333333'
       });
