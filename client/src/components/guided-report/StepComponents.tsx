@@ -21,7 +21,8 @@ import {
   Users,
   Heart,
   Globe,
-  GraduationCap
+  GraduationCap,
+  Clock
 } from "lucide-react";
 import {
   BarChart,
@@ -980,6 +981,7 @@ export function SummaryStep({ content, onChange, onSave, isSaving }: StepCompone
 // Step 8: Social Impact Component
 export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
+  const { data: sustainabilityData } = useQuery({ queryKey: ['/api/company/sustainability-data'] });
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -1045,27 +1047,107 @@ export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepCo
                   </div>
                 </div>
                 
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-slate-900 mb-2">Social Commitments</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Fair trade practices</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Heart className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Employee wellbeing programs</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Community development</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <GraduationCap className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Education support</span>
+                {/* Employee Metrics */}
+                {sustainabilityData?.socialData?.employeeMetrics && (
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium text-slate-900 mb-3">Employee Metrics</h4>
+                    <div className="space-y-3">
+                      {sustainabilityData.socialData.employeeMetrics.turnoverRate && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Users className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm">Turnover Rate</span>
+                          </div>
+                          <span className="text-sm font-semibold">{sustainabilityData.socialData.employeeMetrics.turnoverRate}%</span>
+                        </div>
+                      )}
+                      {sustainabilityData.socialData.employeeMetrics.genderDiversityLeadership && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Users className="w-4 h-4 text-purple-500" />
+                            <span className="text-sm">Gender Diversity in Leadership</span>
+                          </div>
+                          <span className="text-sm font-semibold">{sustainabilityData.socialData.employeeMetrics.genderDiversityLeadership}%</span>
+                        </div>
+                      )}
+                      {sustainabilityData.socialData.employeeMetrics.trainingHoursPerEmployee && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <GraduationCap className="w-4 h-4 text-green-500" />
+                            <span className="text-sm">Training Hours per Employee</span>
+                          </div>
+                          <span className="text-sm font-semibold">{sustainabilityData.socialData.employeeMetrics.trainingHoursPerEmployee} hrs</span>
+                        </div>
+                      )}
+                      {sustainabilityData.socialData.employeeMetrics.satisfactionScore && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Heart className="w-4 h-4 text-red-500" />
+                            <span className="text-sm">Employee Satisfaction Score</span>
+                          </div>
+                          <span className="text-sm font-semibold">{sustainabilityData.socialData.employeeMetrics.satisfactionScore}/5</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
+                )}
+                
+                {/* Community Impact */}
+                {sustainabilityData?.socialData?.communityImpact && (
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium text-slate-900 mb-3">Community Impact</h4>
+                    <div className="space-y-3">
+                      {sustainabilityData.socialData.communityImpact.localSuppliersPercentage && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Globe className="w-4 h-4 text-green-500" />
+                            <span className="text-sm">Local Suppliers</span>
+                          </div>
+                          <span className="text-sm font-semibold">{sustainabilityData.socialData.communityImpact.localSuppliersPercentage}%</span>
+                        </div>
+                      )}
+                      {sustainabilityData.socialData.communityImpact.communityInvestment && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Heart className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm">Community Investment</span>
+                          </div>
+                          <span className="text-sm font-semibold">£{sustainabilityData.socialData.communityImpact.communityInvestment.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {sustainabilityData.socialData.communityImpact.localJobsCreated && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Users className="w-4 h-4 text-purple-500" />
+                            <span className="text-sm">Local Jobs Created</span>
+                          </div>
+                          <span className="text-sm font-semibold">{sustainabilityData.socialData.communityImpact.localJobsCreated}</span>
+                        </div>
+                      )}
+                      {sustainabilityData.socialData.communityImpact.volunteerHours && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Clock className="w-4 h-4 text-orange-500" />
+                            <span className="text-sm">Volunteer Hours</span>
+                          </div>
+                          <span className="text-sm font-semibold">{sustainabilityData.socialData.communityImpact.volunteerHours} hrs</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show message if no social data */}
+                {(!sustainabilityData?.socialData?.employeeMetrics || Object.keys(sustainabilityData.socialData.employeeMetrics).length === 0) && 
+                 (!sustainabilityData?.socialData?.communityImpact || Object.keys(sustainabilityData.socialData.communityImpact).length === 0) && (
+                  <div className="border rounded-lg p-4">
+                    <div className="text-center py-4 text-slate-500">
+                      <Heart className="w-8 h-8 mx-auto mb-2" />
+                      <p>No social impact data available</p>
+                      <p className="text-sm">Complete the Social tab in Company settings to view metrics</p>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-6 text-slate-500">
