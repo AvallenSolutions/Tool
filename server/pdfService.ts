@@ -415,10 +415,54 @@ export class PDFService {
         }
       });
 
-      return pdf;
+      return Buffer.from(pdf);
     } catch (error) {
       console.error('Error generating PDF:', error);
       throw new Error('Failed to generate PDF report');
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
+    }
+  }
+
+  // Method to generate PDF from HTML string (for guided reports)
+  async generateFromHTML(htmlContent: string, options: { title?: string; format?: string; margin?: any } = {}): Promise<Buffer> {
+    let browser;
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu'
+        ]
+      });
+
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, {
+        waitUntil: 'networkidle0'
+      });
+
+      const pdf = await page.pdf({
+        format: (options.format as any) || 'A4',
+        printBackground: true,
+        margin: options.margin || {
+          top: '1cm',
+          right: '1cm', 
+          bottom: '1cm',
+          left: '1cm'
+        }
+      });
+
+      return Buffer.from(pdf);
+    } catch (error) {
+      console.error('Error generating PDF from HTML:', error);
+      throw new Error('Failed to generate PDF from HTML');
     } finally {
       if (browser) {
         await browser.close();

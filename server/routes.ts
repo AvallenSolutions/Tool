@@ -107,11 +107,12 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      // Fetch the report
+      // Fetch the guided report from customReports table
+      const { customReports } = await import('@shared/schema');
       const [report] = await db
         .select()
-        .from(reports)
-        .where(eq(reports.id, reportId));
+        .from(customReports)
+        .where(eq(customReports.id, reportId));
 
       if (!report) {
         return res.status(404).json({
