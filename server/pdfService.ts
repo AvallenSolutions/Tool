@@ -1,4 +1,7 @@
 import puppeteer from 'puppeteer';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const htmlPdf = require('html-pdf-node');
 
 export interface LCAReportData {
   product: {
@@ -431,47 +434,80 @@ export class PDFService {
 
   // Method to generate PDF from HTML string (for guided reports)
   async generateFromHTML(htmlContent: string, options: { title?: string; format?: string; margin?: any } = {}): Promise<Buffer> {
-    let browser;
     try {
-      browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--disable-gpu',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor'
-        ],
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
-      });
-
-      const page = await browser.newPage();
-      await page.setContent(htmlContent, {
-        waitUntil: 'networkidle0'
-      });
-
-      const pdf = await page.pdf({
-        format: (options.format as any) || 'A4',
+      console.log('Starting PDF generation with html-pdf-node...');
+      
+      // First try html-pdf-node as it's more reliable in server environments
+      const pdfOptions = {
+        format: options.format || 'A4',
+        width: '210mm',
+        height: '297mm', 
         printBackground: true,
-        margin: options.margin || {
-          top: '1cm',
-          right: '1cm', 
-          bottom: '1cm',
-          left: '1cm'
+        margin: {
+          top: options.margin?.top || '20mm',
+          right: options.margin?.right || '20mm', 
+          bottom: options.margin?.bottom || '20mm',
+          left: options.margin?.left || '20mm'
         }
-      });
+      };
 
-      return Buffer.from(pdf);
-    } catch (error) {
-      console.error('Error generating PDF from HTML:', error);
-      throw new Error('Failed to generate PDF from HTML');
-    } finally {
-      if (browser) {
-        await browser.close();
+      const file = { content: htmlContent };
+      const pdfBuffer = await htmlPdf.generatePdf(file, pdfOptions);
+      
+      console.log('PDF generated successfully with html-pdf-node');
+      return Buffer.from(pdfBuffer);
+      
+    } catch (htmlPdfError) {
+      console.log('html-pdf-node failed, trying puppeteer fallback:', htmlPdfError);
+      
+      // Fallback to puppeteer with more aggressive options
+      let browser;
+      try {
+        browser = await puppeteer.launch({
+          headless: 'new',
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding'
+          ],
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+        });
+
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, {
+          waitUntil: 'networkidle0',
+          timeout: 10000
+        });
+
+        const pdf = await page.pdf({
+          format: (options.format as any) || 'A4',
+          printBackground: true,
+          margin: options.margin || {
+            top: '1cm',
+            right: '1cm', 
+            bottom: '1cm',
+            left: '1cm'
+          }
+        });
+
+        console.log('PDF generated successfully with puppeteer fallback');
+        return Buffer.from(pdf);
+      } catch (puppeteerError) {
+        console.error('Both PDF generation methods failed:', { htmlPdfError, puppeteerError });
+        throw new Error('Failed to generate PDF - both html-pdf-node and puppeteer failed');
+      } finally {
+        if (browser) {
+          await browser.close();
+        }
       }
     }
   }
