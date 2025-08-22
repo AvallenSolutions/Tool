@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, ChevronDown, ChevronRight, Activity, Sparkles } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles } from "lucide-react";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
@@ -41,6 +41,8 @@ export default function Sidebar() {
   const adminSubItems = [
     { path: "/app/admin", label: "Overview", icon: BarChart3 },
     { path: "/app/admin/users", label: "User Management", icon: UserPlus },
+    { path: "/app/admin/feedback", label: "Beta Feedback", icon: MessageCircle },
+    { path: "/app/admin/lca-jobs", label: "LCA Monitoring", icon: Activity },
     { path: "/app/admin/analytics", label: "Performance Analytics", icon: Activity },
     { path: "/app/admin/messaging", label: "Messaging", icon: MessageSquare },
   ];
