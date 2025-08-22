@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { users, companies, reports, verifiedSuppliers, supplierProducts, conversations, messages } from '@shared/schema';
+import { users, companies, reports, verifiedSuppliers, supplierProducts, conversations, messages, lcaJobs, feedbackSubmissions } from '@shared/schema';
 import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
 import { eq, count, gte, desc, and, lt, ilike, or, sql } from 'drizzle-orm';
 
@@ -8,6 +8,140 @@ const router = Router();
 
 // Apply admin authentication to all routes
 router.use(requireAdminRole);
+
+/**
+ * GET /api/admin/lca-jobs
+ * Returns latest LCA calculation jobs for monitoring
+ */
+router.get('/lca-jobs', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin LCA jobs monitoring endpoint called');
+    
+    // Fetch latest 100 LCA jobs ordered by start time
+    const jobs = await db
+      .select({
+        id: lcaJobs.id,
+        reportId: lcaJobs.reportId,
+        status: lcaJobs.status,
+        startedAt: lcaJobs.startedAt,
+        completedAt: lcaJobs.completedAt,
+        durationSeconds: lcaJobs.durationSeconds,
+        errorMessage: lcaJobs.errorMessage
+      })
+      .from(lcaJobs)
+      .orderBy(desc(lcaJobs.startedAt))
+      .limit(100);
+
+    // Calculate status summary
+    const statusSummary = jobs.reduce((acc, job) => {
+      acc[job.status] = (acc[job.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    res.json({
+      success: true,
+      data: {
+        jobs,
+        summary: {
+          totalJobs: jobs.length,
+          statusBreakdown: statusSummary,
+          lastUpdated: new Date().toISOString()
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching LCA jobs:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch LCA jobs' 
+    });
+  }
+});
+
+/**
+ * GET /api/admin/feedback
+ * Returns all feedback submissions for admin review
+ */
+router.get('/feedback', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin feedback endpoint called');
+    
+    // Fetch all feedback submissions with company information
+    const feedback = await db
+      .select({
+        id: feedbackSubmissions.id,
+        companyId: feedbackSubmissions.companyId,
+        feedbackType: feedbackSubmissions.feedbackType,
+        message: feedbackSubmissions.message,
+        pageUrl: feedbackSubmissions.pageUrl,
+        submittedAt: feedbackSubmissions.submittedAt,
+        status: feedbackSubmissions.status,
+        company: {
+          id: companies.id,
+          name: companies.name
+        }
+      })
+      .from(feedbackSubmissions)
+      .leftJoin(companies, eq(feedbackSubmissions.companyId, companies.id))
+      .orderBy(desc(feedbackSubmissions.submittedAt));
+
+    res.json({
+      success: true,
+      data: feedback
+    });
+
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch feedback submissions' 
+    });
+  }
+});
+
+/**
+ * PATCH /api/admin/feedback/:id/status
+ * Update feedback submission status
+ */
+router.patch('/feedback/:id/status', async (req: AdminRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['new', 'in_progress', 'resolved'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid status. Must be new, in_progress, or resolved'
+      });
+    }
+
+    const [updatedFeedback] = await db
+      .update(feedbackSubmissions)
+      .set({ status })
+      .where(eq(feedbackSubmissions.id, parseInt(id)))
+      .returning();
+
+    if (!updatedFeedback) {
+      return res.status(404).json({
+        success: false,
+        error: 'Feedback submission not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: updatedFeedback
+    });
+
+  } catch (error) {
+    console.error('Error updating feedback status:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update feedback status' 
+    });
+  }
+});
 
 /**
  * GET /api/admin/analytics

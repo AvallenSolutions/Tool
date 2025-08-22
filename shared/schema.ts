@@ -1846,3 +1846,60 @@ export const insertDocumentReviewSchema = createInsertSchema(documentReviews).om
   createdAt: true,
   updatedAt: true,
 });
+
+// Beta Testing: Feedback Submissions table
+export const feedbackSubmissions = pgTable("feedback_submissions", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  feedbackType: varchar("feedback_type", { length: 50 }).notNull(), // 'Bug Report' or 'Feature Suggestion'
+  message: text("message").notNull(),
+  pageUrl: varchar("page_url", { length: 255 }),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  status: varchar("status", { length: 50 }).default("new").notNull(), // 'new', 'in_progress', 'resolved'
+});
+
+// Beta Testing: LCA Calculation Jobs table
+export const lcaJobs = pgTable("lca_jobs", {
+  id: serial("id").primaryKey(),
+  reportId: integer("report_id").references(() => reports.id).notNull(),
+  status: varchar("status", { length: 50 }).notNull(), // 'queued', 'running', 'success', 'failed'
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  durationSeconds: integer("duration_seconds"),
+  errorMessage: text("error_message"),
+});
+
+// Relations for feedback submissions
+export const feedbackSubmissionsRelations = relations(feedbackSubmissions, ({ one }) => ({
+  company: one(companies, {
+    fields: [feedbackSubmissions.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Relations for LCA jobs
+export const lcaJobsRelations = relations(lcaJobs, ({ one }) => ({
+  report: one(reports, {
+    fields: [lcaJobs.reportId],
+    references: [reports.id],
+  }),
+}));
+
+// Type exports for Feedback Submissions
+export type FeedbackSubmission = typeof feedbackSubmissions.$inferSelect;
+export type InsertFeedbackSubmission = typeof feedbackSubmissions.$inferInsert;
+export const insertFeedbackSubmissionSchema = createInsertSchema(feedbackSubmissions).omit({
+  id: true,
+  submittedAt: true,
+});
+
+// Type exports for LCA Jobs
+export type LcaJob = typeof lcaJobs.$inferSelect;
+export type InsertLcaJob = typeof lcaJobs.$inferInsert;
+export const insertLcaJobSchema = createInsertSchema(lcaJobs).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+  durationSeconds: true,
+  errorMessage: true,
+});

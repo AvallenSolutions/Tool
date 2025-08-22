@@ -5,6 +5,12 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { lcaService } from "./lca";
 import path from "path";
+import { initializeSentry } from "./config/sentry";
+import { initializeMixpanel } from "./config/mixpanel";
+
+// Initialize monitoring services first
+initializeSentry();
+initializeMixpanel();
 
 const app = express();
 

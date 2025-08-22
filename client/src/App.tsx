@@ -35,6 +35,7 @@ import LCAApprovals from "@/pages/admin/LCAApprovals";
 import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
 import SupplierInvitations from "@/pages/admin/SupplierInvitations";
+import FeedbackDashboard from "@/pages/admin/FeedbackDashboard";
 import SupplierNetwork from "@/pages/SupplierNetwork";
 import SupplierDetail from "@/pages/SupplierDetail";
 import ProductDetail from "@/pages/ProductDetail";
@@ -53,6 +54,7 @@ import { KPIsPage } from "@/pages/kpis";
 // Initiatives functionality now integrated into Report Builder and SMART Goals
 import ReportsCreate from "@/pages/reports-create";
 import GuidedReportWizard from "@/pages/guided-report-wizard";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 function SimpleTestComponent() {
   return (
@@ -173,6 +175,7 @@ function Router() {
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
       <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />
       <Route path="/app/admin/invitations" component={SupplierInvitations} />
+      <Route path="/app/admin/feedback" component={FeedbackDashboard} />
       <Route path="/app/admin/users/:companyId" component={UserDetail} />
       <Route path="/app/admin/users" component={UserManagement} />
       <Route path="/app/admin/analytics" component={PerformanceAnalytics} />
@@ -197,6 +200,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <FeedbackWidget />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

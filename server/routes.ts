@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -39,6 +39,8 @@ import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { supplierIntegrityService } from "./services/SupplierIntegrityService";
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences } from "@shared/schema";
+import { trackEvent, trackUser } from "./config/mixpanel";
+import { Sentry } from "./config/sentry";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-06-30.basil",
@@ -3495,6 +3497,85 @@ Be precise and quote actual text from the content, not generic terms.`;
   // ============ END SUPPLIER DATA INTEGRITY ENDPOINTS ============
   
   // ============ END SUPPLIER INVITATION ENDPOINTS ============
+
+  // ============ BETA TESTING: FEEDBACK SUBMISSIONS ============
+  
+  // Submit feedback endpoint
+  app.post('/api/feedback', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ 
+          success: false,
+          error: 'User not authenticated' 
+        });
+      }
+
+      // Get user's company
+      const userCompany = await dbStorage.getCompanyByOwner(userId);
+      if (!userCompany) {
+        return res.status(404).json({ 
+          success: false,
+          error: 'Company not found for user' 
+        });
+      }
+
+      // Validate request body
+      const validatedData = insertFeedbackSubmissionSchema.parse({
+        companyId: userCompany.id,
+        feedbackType: req.body.feedbackType,
+        message: req.body.message,
+        pageUrl: req.body.pageUrl,
+        status: 'new'
+      });
+
+      // Insert feedback submission
+      const [feedback] = await db
+        .insert(feedbackSubmissions)
+        .values(validatedData)
+        .returning();
+
+      console.log(`📝 New ${feedback.feedbackType} submitted by company ${userCompany.name} (ID: ${userCompany.id})`);
+
+      // Track feedback submission event
+      trackEvent('Feedback Submitted', {
+        feedbackType: feedback.feedbackType,
+        companyId: userCompany.id,
+        companyName: userCompany.name,
+        pageUrl: feedback.pageUrl,
+        betaTesting: true
+      }, userId);
+
+      res.json({
+        success: true,
+        message: 'Feedback submitted successfully',
+        feedbackId: feedback.id
+      });
+
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      
+      // Track error in Sentry
+      Sentry.captureException(error, {
+        tags: {
+          operation: 'feedback_submission',
+          user_id: userId
+        },
+        extra: {
+          feedbackData: req.body
+        }
+      });
+
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to submit feedback' 
+      });
+    }
+  });
+
+  // ============ END BETA TESTING: FEEDBACK SUBMISSIONS ============
 
   // Verified Suppliers API endpoints
   app.get('/api/verified-suppliers', async (req, res) => {
