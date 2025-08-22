@@ -80,7 +80,7 @@ export function FeedbackWidget() {
         <Button
           variant="outline"
           size="sm"
-          className="fixed bottom-4 right-4 z-50 bg-white dark:bg-black shadow-lg hover:shadow-xl transition-all duration-200"
+          className="fixed bottom-4 right-4 z-50 bg-white dark:bg-black shadow-lg hover:shadow-xl transition-all duration-200 pointer-events-auto"
           data-testid="feedback-trigger"
         >
           <MessageCircle className="w-4 h-4 mr-2" />

@@ -32,15 +32,31 @@ export default function FeedbackDashboard() {
 
   const { data: feedbackData, isLoading } = useQuery({
     queryKey: ['/api/admin/feedback'],
-    queryFn: () => apiRequest('/api/admin/feedback'),
+    queryFn: async () => {
+      const response = await fetch('/api/admin/feedback', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedback');
+      }
+      return response.json();
+    },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      return apiRequest(`/api/admin/feedback/${id}/status`, {
+      const response = await fetch(`/api/admin/feedback/${id}/status`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify({ status }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/feedback'] });
@@ -58,7 +74,7 @@ export default function FeedbackDashboard() {
     },
   });
 
-  const submissions: FeedbackSubmission[] = feedbackData?.data || [];
+  const submissions: FeedbackSubmission[] = feedbackData || [];
 
   // Filter submissions
   const filteredSubmissions = submissions.filter((submission) => {
