@@ -60,28 +60,53 @@ export default function Sidebar() {
       {/* Navigation */}
       <div className="flex-1 p-4">
         <ul className="space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.path;
-            
-            return (
-              <li key={item.path}>
-                <Button
-                  variant="ghost"
-                  className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-white text-[#209d50] hover:bg-gray-100"
-                      : "text-white hover:bg-green-600"
-                  }`}
-                  onClick={() => navigate(item.path)}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  <span className="font-body font-medium">{item.label}</span>
-                </Button>
-              </li>
-            );
-          })}
-          
+          {/* Dashboard */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/dashboard"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/dashboard")}
+            >
+              <BarChart3 className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Dashboard</span>
+            </Button>
+          </li>
+
+          {/* Company */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/company"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/company")}
+            >
+              <Building2 className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Company</span>
+            </Button>
+          </li>
+
+          {/* Products */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/products"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/products")}
+            >
+              <Package className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Products</span>
+            </Button>
+          </li>
           {/* Reports Section with Sub-items */}
           <li>
             <Button
@@ -129,6 +154,86 @@ export default function Sidebar() {
                 })}
               </ul>
             )}
+          </li>
+
+          {/* GreenwashGuardian */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/greenwash-guardian"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/greenwash-guardian")}
+            >
+              <Shield className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">GreenwashGuardian</span>
+            </Button>
+          </li>
+
+          {/* Supplier Network */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/supplier-network"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/supplier-network")}
+            >
+              <Users className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Supplier Network</span>
+            </Button>
+          </li>
+
+          {/* Collaboration Hub */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/collaboration"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/collaboration")}
+            >
+              <MessageSquare className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Collaboration Hub</span>
+            </Button>
+          </li>
+
+          {/* Settings */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/settings"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/settings")}
+            >
+              <Settings className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Settings</span>
+            </Button>
+          </li>
+
+          {/* Test Runner */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/test"
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => navigate("/app/test")}
+            >
+              <TestTube className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Test Runner</span>
+            </Button>
           </li>
           
           {/* Admin Section */}
