@@ -3639,11 +3639,70 @@ Be precise and quote actual text from the content, not generic terms.`;
       const { products } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
       const { db } = await import('./db');
+      const { OpenLCAService } = await import('./services/OpenLCAService');
+      const { WaterFootprintService } = await import('./services/WaterFootprintService');
       const companyId = (req.session as any)?.user?.companyId || 1; // Fallback for development
       
       const results = await db.select().from(products).where(eq(products.companyId, companyId));
-      console.log('Products fetched:', results.length, 'for company', companyId);
-      res.json(results);
+      
+      // Enrich products with calculated environmental footprints
+      const enrichedProducts = await Promise.all(results.map(async (product) => {
+        try {
+          // Get carbon footprint from database (already calculated and stored)
+          const carbonFootprint = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : null;
+          
+          // Calculate water footprint for product ingredients
+          let waterFootprint = null;
+          if (product.ingredients && Array.isArray(product.ingredients)) {
+            let totalWater = 0;
+            for (const ingredient of product.ingredients) {
+              const ingredientData = ingredient as any;
+              if (ingredientData.name && ingredientData.amount) {
+                try {
+                  const impactData = await OpenLCAService.calculateIngredientImpact(
+                    ingredientData.name,
+                    Number(ingredientData.amount) || 0,
+                    ingredientData.unit || 'kg'
+                  );
+                  if (impactData && impactData.waterFootprint > 0) {
+                    totalWater += impactData.waterFootprint;
+                  }
+                } catch (error) {
+                  console.warn(`Water footprint calculation failed for ${ingredientData.name}:`, error);
+                }
+              }
+            }
+            waterFootprint = totalWater > 0 ? totalWater : null;
+          }
+          
+          // Calculate waste footprint (basic estimate from packaging)
+          let wasteFootprint = null;
+          if (product.bottleWeight) {
+            const bottleWeightKg = parseFloat(product.bottleWeight.toString()) / 1000;
+            const recycledContent = parseFloat(product.bottleRecycledContent?.toString() || '0') / 100;
+            // Estimate waste generation: bottle weight minus recycled portion
+            wasteFootprint = bottleWeightKg * (1 - recycledContent);
+          }
+          
+          return {
+            ...product,
+            carbonFootprint,
+            waterFootprint,
+            wasteFootprint
+          };
+        } catch (error) {
+          console.warn(`Error enriching product ${product.name}:`, error);
+          return {
+            ...product,
+            carbonFootprint: product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : null,
+            waterFootprint: null,
+            wasteFootprint: null
+          };
+        }
+      }));
+      
+      console.log('Products fetched:', enrichedProducts.length, 'for company', companyId);
+      res.json(enrichedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       res.status(500).json({ error: 'Failed to fetch products' });
