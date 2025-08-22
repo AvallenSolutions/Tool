@@ -200,13 +200,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     console.log('Development mode: Creating mock user for testing');
     
     try {
-      // Use existing user that has products
+      // Use Tim's admin account
       try {
         await storage.upsertUser({
-          id: '44886248',
-          email: 'dev44886248@example.com', // Unique email for this user
-          firstName: 'Dev',
-          lastName: 'User',
+          id: 'admin-tim',
+          email: 'tim@avallen.solutions',
+          firstName: 'Tim',
+          lastName: 'Admin',
           role: 'admin'
         });
       } catch (error) {
@@ -214,19 +214,32 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
         console.log('User already exists, continuing...');
       }
       
-      // Get existing company with products
-      let company = await storage.getCompanyByOwner('44886248');
-      if (!company) {
-        console.log('WARNING: No company found for user 44886248 - this should not happen');
-      } else {
-        console.log('Using existing company with products:', company.name, 'ID:', company.id);
+      // Get existing company with products (use company 1 which has data)
+      try {
+        let company = await storage.getCompanyByOwner('admin-tim');
+        if (!company) {
+          // If no company exists for admin-tim, get demo company
+          const demoCompany = await storage.getCompanyById(1);
+          if (demoCompany) {
+            console.log('Using existing demo company with products:', demoCompany.name, 'ID:', demoCompany.id);
+          }
+        } else {
+          console.log('Using admin company with products:', company.name, 'ID:', company.id);
+        }
+      } catch (error) {
+        console.log('Error getting company:', error);
       }
     } catch (error: unknown) {
       console.error('Error creating mock user/company:', error);
     }
     
     (req as any).user = {
-      claims: { sub: '44886248' },
+      claims: { 
+        sub: 'admin-tim',
+        email: 'tim@avallen.solutions',
+        first_name: 'Tim',
+        last_name: 'Admin'
+      },
       expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
       access_token: 'dev-token',
       refresh_token: 'dev-refresh'

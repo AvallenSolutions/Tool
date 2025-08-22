@@ -20,10 +20,10 @@ export function useAuth() {
 
   // Development fallback when user query fails
   const developmentUser = {
-    id: "44886248",
-    email: "dev44886248@example.com",
-    firstName: "Dev",
-    lastName: "User",
+    id: "admin-tim",
+    email: "tim@avallen.solutions",
+    firstName: "Tim",
+    lastName: "Admin",
     profileImageUrl: "",
     role: "admin" as const
   };
