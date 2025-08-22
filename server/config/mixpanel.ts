@@ -29,10 +29,22 @@ export function trackEvent(eventName: string, properties: Record<string, any> = 
     platform: 'sustainability-platform'
   };
 
-  if (userId) {
-    mixpanel.track(eventName, eventData, { distinct_id: userId });
-  } else {
-    mixpanel.track(eventName, eventData);
+  try {
+    if (userId) {
+      mixpanel.track(eventName, eventData, { distinct_id: userId }, (error) => {
+        if (error) {
+          console.warn('Mixpanel tracking error:', error);
+        }
+      });
+    } else {
+      mixpanel.track(eventName, eventData, (error) => {
+        if (error) {
+          console.warn('Mixpanel tracking error:', error);
+        }
+      });
+    }
+  } catch (error) {
+    console.warn('Mixpanel tracking failed:', error);
   }
 }
 
@@ -41,11 +53,19 @@ export function trackUser(userId: string, properties: Record<string, any> = {}) 
     return;
   }
 
-  mixpanel.people.set(userId, {
-    ...properties,
-    $last_seen: new Date().toISOString(),
-    platform: 'sustainability-platform'
-  });
+  try {
+    mixpanel.people.set(userId, {
+      ...properties,
+      $last_seen: new Date().toISOString(),
+      platform: 'sustainability-platform'
+    }, (error) => {
+      if (error) {
+        console.warn('Mixpanel user tracking error:', error);
+      }
+    });
+  } catch (error) {
+    console.warn('Mixpanel user tracking failed:', error);
+  }
 }
 
 export { mixpanel };
