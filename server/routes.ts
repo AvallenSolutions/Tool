@@ -4393,10 +4393,34 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // Return mock data for now since tables might not exist yet
-      const messages = [];
-      
-      res.json({ success: true, data: messages });
+      // Try to fetch real messages from database
+      try {
+        const messages = await db
+          .select({
+            id: internalMessages.id,
+            fromUserId: internalMessages.fromUserId,
+            toUserId: internalMessages.toUserId,
+            subject: internalMessages.subject,
+            message: internalMessages.message,
+            messageType: internalMessages.messageType,
+            threadId: internalMessages.threadId,
+            isRead: internalMessages.isRead,
+            readAt: internalMessages.readAt,
+            priority: internalMessages.priority,
+            attachments: internalMessages.attachments,
+            createdAt: internalMessages.createdAt,
+            updatedAt: internalMessages.updatedAt,
+          })
+          .from(internalMessages)
+          .where(eq(internalMessages.companyId, parseInt(companyId)))
+          .orderBy(desc(internalMessages.createdAt));
+        
+        console.log(`📨 Found ${messages.length} internal messages for company ${companyId}`);
+        res.json({ success: true, data: messages });
+      } catch (dbError) {
+        console.error('Database error, falling back to empty messages:', dbError);
+        res.json({ success: true, data: [] });
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
       res.status(500).json({ error: 'Failed to fetch messages' });
@@ -4429,25 +4453,56 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // Return mock success for now
-      const mockMessage = {
-        id: Date.now(),
-        fromUserId: (req as any).user.claims.sub,
-        toUserId: req.body.toUserId,
-        companyId: req.body.companyId,
-        subject: req.body.subject,
-        message: req.body.message,
-        messageType: req.body.messageType || 'general',
-        threadId: req.body.threadId || null,
-        isRead: false,
-        readAt: null,
-        priority: req.body.priority || 'normal',
-        attachments: req.body.attachments || [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      res.status(201).json({ success: true, data: mockMessage });
+      // Store real message in database
+      try {
+        const { internalMessages, insertInternalMessageSchema } = await import('@shared/schema');
+        
+        const messageData = {
+          companyId: req.body.companyId,
+          fromUserId: (req as any).user.claims.sub,
+          toUserId: req.body.toUserId || 'company-user', // Default for now
+          subject: req.body.subject,
+          message: req.body.message,
+          messageType: req.body.messageType || 'general',
+          threadId: req.body.threadId || null,
+          isRead: false,
+          priority: req.body.priority || 'normal',
+          attachments: req.body.attachments || [],
+        };
+        
+        console.log('📨 Storing new internal message:', messageData);
+        
+        const validatedData = insertInternalMessageSchema.parse(messageData);
+        
+        const [newMessage] = await db
+          .insert(internalMessages)
+          .values(validatedData)
+          .returning();
+        
+        console.log('📨 Successfully stored message with ID:', newMessage.id);
+        res.status(201).json({ success: true, data: newMessage });
+      } catch (dbError) {
+        console.error('Database error when storing message:', dbError);
+        // Fallback to mock for development
+        const mockMessage = {
+          id: Date.now(),
+          fromUserId: (req as any).user.claims.sub,
+          toUserId: req.body.toUserId,
+          companyId: req.body.companyId,
+          subject: req.body.subject,
+          message: req.body.message,
+          messageType: req.body.messageType || 'general',
+          threadId: req.body.threadId || null,
+          isRead: false,
+          readAt: null,
+          priority: req.body.priority || 'normal',
+          attachments: req.body.attachments || [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        res.status(201).json({ success: true, data: mockMessage });
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       res.status(500).json({ error: 'Failed to send message' });

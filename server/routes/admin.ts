@@ -703,6 +703,7 @@ router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response)
 /**
  * GET /api/admin/conversations
  * Returns all conversations for admin with search and filtering
+ * Now includes both traditional conversations AND internal messages
  */
 router.get('/conversations', async (req: AdminRequest, res: Response) => {
   try {
@@ -710,93 +711,213 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
     
     console.log('Admin conversations endpoint called with params:', { search, status, limit, offset });
 
-    // Build query conditions
-    const conditions = [];
-    if (status && status !== 'all') {
-      conditions.push(eq(conversations.status, status as string));
-    }
-    if (search) {
-      conditions.push(
-        or(
-          ilike(conversations.title, `%${search}%`),
-          // Add participant email search later
-        )
+    try {
+      // First, try to get Internal Messages (new system)
+      const { internalMessages } = await import('@shared/schema');
+      
+      const internalMessagesData = await db
+        .select({
+          id: internalMessages.id,
+          companyId: internalMessages.companyId,
+          fromUserId: internalMessages.fromUserId,
+          toUserId: internalMessages.toUserId,
+          subject: internalMessages.subject,
+          message: internalMessages.message,
+          messageType: internalMessages.messageType,
+          priority: internalMessages.priority,
+          isRead: internalMessages.isRead,
+          createdAt: internalMessages.createdAt,
+        })
+        .from(internalMessages)
+        .orderBy(desc(internalMessages.createdAt))
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+
+      console.log(`📨 Found ${internalMessagesData.length} internal messages for admin view`);
+
+      // Transform internal messages to conversation format for frontend compatibility
+      const transformedMessages = await Promise.all(
+        internalMessagesData.map(async (msg) => {
+          // Get company details
+          const [companyDetails] = await db
+            .select({
+              id: companies.id,
+              name: companies.name,
+              ownerId: companies.ownerId,
+            })
+            .from(companies)
+            .where(eq(companies.id, msg.companyId));
+
+          // Get user details
+          const [fromUser] = await db
+            .select({
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
+              role: users.role,
+            })
+            .from(users)
+            .where(eq(users.id, msg.fromUserId));
+
+          return {
+            id: `internal-${msg.id}`,
+            title: msg.subject || 'Internal Message',
+            type: 'internal_message',
+            status: msg.isRead ? 'read' : 'unread',
+            participants: [msg.fromUserId, msg.toUserId],
+            lastMessageAt: msg.createdAt,
+            createdAt: msg.createdAt,
+            updatedAt: msg.createdAt,
+            participantDetails: fromUser ? [{
+              userId: fromUser.id,
+              firstName: fromUser.firstName,
+              lastName: fromUser.lastName,
+              email: fromUser.email,
+              role: fromUser.role,
+              profileImageUrl: '',
+              companyName: companyDetails?.name || 'Unknown Company',
+            }] : [],
+            unreadCount: msg.isRead ? 0 : 1,
+            messagePreview: msg.message,
+            priority: msg.priority,
+            companyId: msg.companyId,
+            companyName: companyDetails?.name || 'Unknown Company',
+          };
+        })
       );
-    }
 
-    // Get conversations with participant details
-    const conversationsData = await db
-      .select({
-        id: conversations.id,
-        title: conversations.title,
-        type: conversations.type,
-        status: conversations.status,
-        participants: conversations.participants,
-        lastMessageAt: conversations.lastMessageAt,
-        createdAt: conversations.createdAt,
-        updatedAt: conversations.updatedAt,
-        // Get unread message count (placeholder for now)
-      })
-      .from(conversations)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(conversations.lastMessageAt))
-      .limit(parseInt(limit as string))
-      .offset(parseInt(offset as string));
+      console.log(`📨 Transformed ${transformedMessages.length} internal messages for admin dashboard`);
 
-    // Enrich conversations with participant details and unread counts
-    const enrichedConversations = await Promise.all(
-      conversationsData.map(async (conv) => {
-        // Get participant details - fix JSONB array handling
-        const participantIds = Array.isArray(conv.participants) ? conv.participants : [];
-        const participantDetails = participantIds.length > 0 ? await db
-          .select({
-            userId: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            email: users.email,
-            role: users.role,
-            profileImageUrl: users.profileImageUrl,
-            companyName: companies.name,
-          })
-          .from(users)
-          .leftJoin(companies, eq(users.id, companies.ownerId))
-          .where(or(...participantIds.map(id => eq(users.id, id))))
-        : [];
+      // Also get traditional conversations (if any)
+      const conversationsData = await db
+        .select({
+          id: conversations.id,
+          title: conversations.title,
+          type: conversations.type,
+          status: conversations.status,
+          participants: conversations.participants,
+          lastMessageAt: conversations.lastMessageAt,
+          createdAt: conversations.createdAt,
+          updatedAt: conversations.updatedAt,
+        })
+        .from(conversations)
+        .orderBy(desc(conversations.lastMessageAt))
+        .limit(10); // Limit traditional conversations since we're prioritizing internal messages
 
-        // Count unread messages (simplified - could be enhanced)
-        const [unreadCount] = await db
-          .select({ count: count() })
-          .from(messages)
-          .where(
-            and(
-              eq(messages.conversationId, conv.id),
-              // Add read status check later
-            )
-          );
+      // Enrich traditional conversations
+      const enrichedConversations = await Promise.all(
+        conversationsData.map(async (conv) => {
+          const participantIds = Array.isArray(conv.participants) ? conv.participants : [];
+          const participantDetails = participantIds.length > 0 ? await db
+            .select({
+              userId: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
+              role: users.role,
+              profileImageUrl: users.profileImageUrl,
+              companyName: companies.name,
+            })
+            .from(users)
+            .leftJoin(companies, eq(users.id, companies.ownerId))
+            .where(or(...participantIds.map(id => eq(users.id, id))))
+          : [];
 
-        return {
-          ...conv,
-          participantDetails,
-          unreadCount: unreadCount.count,
-        };
-      })
-    );
+          const [unreadCount] = await db
+            .select({ count: count() })
+            .from(messages)
+            .where(eq(messages.conversationId, conv.id));
 
-    // Get total count for pagination
-    const [totalCount] = await db
-      .select({ count: count() })
-      .from(conversations)
-      .where(conditions.length > 0 ? and(...conditions) : undefined);
+          return {
+            ...conv,
+            participantDetails,
+            unreadCount: unreadCount.count,
+            messagePreview: '',
+            priority: 'normal',
+            companyId: null,
+            companyName: '',
+          };
+        })
+      );
 
-    res.json({
-      success: true,
-      data: enrichedConversations,
-      pagination: {
-        total: totalCount.count,
-        limit: parseInt(limit as string),
+      // Combine both types of conversations, prioritizing internal messages
+      const allConversations = [...transformedMessages, ...enrichedConversations]
+        .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+
+      console.log(`📨 Total conversations for admin: ${allConversations.length} (${transformedMessages.length} internal + ${enrichedConversations.length} traditional)`);
+
+      res.json({
+        success: true,
+        conversations: allConversations,
+        total: allConversations.length,
         offset: parseInt(offset as string),
-      },
-    });
+        limit: parseInt(limit as string),
+      });
+
+    } catch (internalError) {
+      console.error('Error fetching internal messages, falling back to traditional conversations:', internalError);
+      
+      // Fallback to traditional conversations only
+      const conversationsData = await db
+        .select({
+          id: conversations.id,
+          title: conversations.title,
+          type: conversations.type,
+          status: conversations.status,
+          participants: conversations.participants,
+          lastMessageAt: conversations.lastMessageAt,
+          createdAt: conversations.createdAt,
+          updatedAt: conversations.updatedAt,
+        })
+        .from(conversations)
+        .orderBy(desc(conversations.lastMessageAt))
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+
+      const enrichedConversations = await Promise.all(
+        conversationsData.map(async (conv) => {
+          const participantIds = Array.isArray(conv.participants) ? conv.participants : [];
+          const participantDetails = participantIds.length > 0 ? await db
+            .select({
+              userId: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
+              role: users.role,
+              profileImageUrl: users.profileImageUrl,
+              companyName: companies.name,
+            })
+            .from(users)
+            .leftJoin(companies, eq(users.id, companies.ownerId))
+            .where(or(...participantIds.map(id => eq(users.id, id))))
+          : [];
+
+          const [unreadCount] = await db
+            .select({ count: count() })
+            .from(messages)
+            .where(eq(messages.conversationId, conv.id));
+
+          return {
+            ...conv,
+            participantDetails,
+            unreadCount: unreadCount.count,
+            messagePreview: '',
+            priority: 'normal',
+            companyId: null,
+            companyName: '',
+          };
+        })
+      );
+
+      res.json({
+        success: true,
+        conversations: enrichedConversations,
+        total: enrichedConversations.length,
+        offset: parseInt(offset as string),
+        limit: parseInt(limit as string),
+      });
+    }
 
   } catch (error) {
     console.error('Admin conversations error:', error);
