@@ -7795,6 +7795,74 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
+  // GET /api/lca/ingredients/search - Search all OpenLCA database ingredients
+  app.get('/api/lca/ingredients/search', async (req, res) => {
+    try {
+      const { q } = req.query;
+      
+      // Get all ingredients from process mappings
+      let query = db
+        .select({
+          materialName: lcaProcessMappings.materialName,
+          unit: lcaProcessMappings.unit,
+          subcategory: lcaProcessMappings.subcategory
+        })
+        .from(lcaProcessMappings);
+      
+      const allIngredients = await query;
+      
+      // Deduplicate by materialName
+      const uniqueIngredients = allIngredients.reduce((acc, ing) => {
+        const existing = acc.find(item => item.materialName === ing.materialName);
+        if (!existing) {
+          acc.push({
+            materialName: ing.materialName,
+            unit: ing.unit || 'kg',
+            subcategory: ing.subcategory
+          });
+        }
+        return acc;
+      }, [] as Array<{materialName: string; unit: string; subcategory: string}>);
+      
+      // Filter by search query if provided
+      let filteredIngredients = uniqueIngredients;
+      if (q && typeof q === 'string' && q.trim().length > 0) {
+        const searchQuery = q.trim().toLowerCase();
+        filteredIngredients = uniqueIngredients.filter(ing => 
+          ing.materialName.toLowerCase().includes(searchQuery) ||
+          ing.subcategory.toLowerCase().includes(searchQuery)
+        );
+      }
+      
+      // Sort by relevance (exact matches first, then partial matches)
+      if (q && typeof q === 'string') {
+        const searchQuery = q.trim().toLowerCase();
+        filteredIngredients.sort((a, b) => {
+          const aExact = a.materialName.toLowerCase() === searchQuery ? 1 : 0;
+          const bExact = b.materialName.toLowerCase() === searchQuery ? 1 : 0;
+          if (aExact !== bExact) return bExact - aExact; // Exact matches first
+          
+          const aStarts = a.materialName.toLowerCase().startsWith(searchQuery) ? 1 : 0;
+          const bStarts = b.materialName.toLowerCase().startsWith(searchQuery) ? 1 : 0;
+          if (aStarts !== bStarts) return bStarts - aStarts; // Starts with matches second
+          
+          return a.materialName.localeCompare(b.materialName); // Alphabetical for the rest
+        });
+      } else {
+        // No search query - sort alphabetically
+        filteredIngredients.sort((a, b) => a.materialName.localeCompare(b.materialName));
+      }
+      
+      // Limit results to prevent overwhelming UI (max 50 results)
+      const limitedResults = filteredIngredients.slice(0, 50);
+      
+      res.json(limitedResults);
+    } catch (error) {
+      console.error('Error searching LCA ingredients:', error);
+      res.status(500).json({ error: 'Failed to search ingredients' });
+    }
+  });
+
   // GET /api/lca/categories - Get available ingredient categories
   app.get('/api/lca/categories', async (req, res) => {
     try {
