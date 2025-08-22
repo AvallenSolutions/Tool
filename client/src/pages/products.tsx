@@ -256,21 +256,21 @@ export default function ProductsPage() {
                                   <div className="text-center bg-green-50 rounded-lg p-3 border border-green-200">
                                     <span className="block text-xs font-medium text-green-700 mb-1">CO₂ Footprint</span>
                                     <span className="block text-lg font-bold text-green-800">
-                                      {product.carbonFootprint && typeof product.carbonFootprint === 'number' ? `${product.carbonFootprint.toFixed(2)} kg` : 'TBD'}
+                                      {product.carbonFootprint && (typeof product.carbonFootprint === 'number' || typeof product.carbonFootprint === 'string') ? `${Number(product.carbonFootprint).toFixed(2)} kg` : 'TBD'}
                                     </span>
                                     <span className="text-xs text-green-600">per unit</span>
                                   </div>
                                   <div className="text-center bg-blue-50 rounded-lg p-3 border border-blue-200">
                                     <span className="block text-xs font-medium text-blue-700 mb-1">Water Usage</span>
                                     <span className="block text-lg font-bold text-blue-800">
-                                      {product.waterFootprint && typeof product.waterFootprint === 'number' ? `${product.waterFootprint.toFixed(1)} L` : 'TBD'}
+                                      {product.waterFootprint && (typeof product.waterFootprint === 'number' || typeof product.waterFootprint === 'string') ? `${Number(product.waterFootprint).toFixed(1)} L` : 'TBD'}
                                     </span>
                                     <span className="text-xs text-blue-600">per unit</span>
                                   </div>
                                   <div className="text-center bg-orange-50 rounded-lg p-3 border border-orange-200">
                                     <span className="block text-xs font-medium text-orange-700 mb-1">Waste Generated</span>
                                     <span className="block text-lg font-bold text-orange-800">
-                                      {product.wasteFootprint && typeof product.wasteFootprint === 'number' ? `${product.wasteFootprint.toFixed(2)} kg` : 'TBD'}
+                                      {product.wasteFootprint && (typeof product.wasteFootprint === 'number' || typeof product.wasteFootprint === 'string') ? `${Number(product.wasteFootprint).toFixed(2)} kg` : 'TBD'}
                                     </span>
                                     <span className="text-xs text-orange-600">per unit</span>
                                   </div>
@@ -380,19 +380,19 @@ export default function ProductsPage() {
                                     <div className="text-center bg-green-50 rounded p-2 border border-green-200">
                                       <span className="block font-medium text-green-700">CO₂</span>
                                       <span className="block text-sm font-bold text-green-800">
-                                        {product.carbonFootprint && typeof product.carbonFootprint === 'number' ? `${product.carbonFootprint.toFixed(1)}kg` : 'TBD'}
+                                        {product.carbonFootprint && (typeof product.carbonFootprint === 'number' || typeof product.carbonFootprint === 'string') ? `${Number(product.carbonFootprint).toFixed(1)}kg` : 'TBD'}
                                       </span>
                                     </div>
                                     <div className="text-center bg-blue-50 rounded p-2 border border-blue-200">
                                       <span className="block font-medium text-blue-700">Water</span>
                                       <span className="block text-sm font-bold text-blue-800">
-                                        {product.waterFootprint && typeof product.waterFootprint === 'number' ? `${product.waterFootprint.toFixed(0)}L` : 'TBD'}
+                                        {product.waterFootprint && (typeof product.waterFootprint === 'number' || typeof product.waterFootprint === 'string') ? `${Number(product.waterFootprint).toFixed(0)}L` : 'TBD'}
                                       </span>
                                     </div>
                                     <div className="text-center bg-orange-50 rounded p-2 border border-orange-200">
                                       <span className="block font-medium text-orange-700">Waste</span>
                                       <span className="block text-sm font-bold text-orange-800">
-                                        {product.wasteFootprint && typeof product.wasteFootprint === 'number' ? `${product.wasteFootprint.toFixed(1)}kg` : 'TBD'}
+                                        {product.wasteFootprint && (typeof product.wasteFootprint === 'number' || typeof product.wasteFootprint === 'string') ? `${Number(product.wasteFootprint).toFixed(1)}kg` : 'TBD'}
                                       </span>
                                     </div>
                                   </div>
