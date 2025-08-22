@@ -23,13 +23,23 @@ export function FeedbackWidget() {
 
   const submitFeedbackMutation = useMutation({
     mutationFn: async (data: FeedbackSubmission) => {
-      return apiRequest('/api/feedback', {
+      const response = await fetch('/api/feedback', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           ...data,
           pageUrl: window.location.pathname
         }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to submit feedback');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
