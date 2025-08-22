@@ -1232,62 +1232,80 @@ router.patch('/conversations/:conversationId/archive', async (req: AdminRequest,
 
     console.log(`Admin archiving conversation: ${conversationId}`);
 
-    // Check if it's an internal message (numeric ID) or traditional conversation
     const numericId = parseInt(conversationId);
     
     if (!isNaN(numericId)) {
-      // It's an internal message - update to archived status
+      // First, check if it's an internal message
       const { internalMessages } = await import('@shared/schema');
       
-      console.log(`📥 Attempting to archive internal message with ID: ${numericId}`);
+      console.log(`🔍 Checking if ID ${numericId} is an internal message...`);
       
-      const [updatedMessage] = await db
-        .update(internalMessages)
-        .set({ 
-          isRead: true,
-          readAt: new Date()
-        })
+      const [internalMessage] = await db
+        .select()
+        .from(internalMessages)
         .where(eq(internalMessages.id, numericId))
-        .returning();
+        .limit(1);
+      
+      if (internalMessage) {
+        // It's an internal message - archive it
+        console.log(`📥 Archiving internal message with ID: ${numericId}`);
         
-      console.log(`📥 Archive result:`, updatedMessage);
+        const [updatedMessage] = await db
+          .update(internalMessages)
+          .set({ 
+            isRead: true,
+            readAt: new Date()
+          })
+          .where(eq(internalMessages.id, numericId))
+          .returning();
 
-      if (!updatedMessage) {
-        console.log(`❌ No internal message found to archive with ID: ${numericId}`);
-        return res.status(404).json({
-          success: false,
-          error: 'Internal message not found',
+        console.log(`✅ Internal message archived successfully: ${updatedMessage.id}`);
+        res.json({
+          success: true,
+          message: 'Internal message archived successfully',
+          data: updatedMessage,
+        });
+      } else {
+        // It's a traditional conversation - check if it exists first
+        console.log(`🔍 Checking if ID ${numericId} is a traditional conversation...`);
+        
+        const [conversationExists] = await db
+          .select()
+          .from(conversations)
+          .where(eq(conversations.id, numericId))
+          .limit(1);
+        
+        if (!conversationExists) {
+          console.log(`❌ No conversation found with ID: ${numericId}`);
+          return res.status(404).json({
+            success: false,
+            error: 'Conversation not found',
+          });
+        }
+        
+        // Archive traditional conversation
+        console.log(`📥 Archiving traditional conversation with ID: ${numericId}`);
+        
+        const [updatedConversation] = await db
+          .update(conversations)
+          .set({ 
+            status: 'archived',
+            updatedAt: new Date()
+          })
+          .where(eq(conversations.id, numericId))
+          .returning();
+
+        console.log(`✅ Traditional conversation archived successfully: ${updatedConversation.id}`);
+        res.json({
+          success: true,
+          message: 'Conversation archived successfully',
+          data: updatedConversation,
         });
       }
-
-      console.log(`✅ Internal message archived successfully: ${updatedMessage.id}`);
-      res.json({
-        success: true,
-        message: 'Internal message archived successfully',
-        data: updatedMessage,
-      });
     } else {
-      // It's a traditional conversation
-      const [updatedConversation] = await db
-        .update(conversations)
-        .set({ 
-          status: 'archived',
-          updatedAt: new Date()
-        })
-        .where(eq(conversations.id, parseInt(conversationId)))
-        .returning();
-
-      if (!updatedConversation) {
-        return res.status(404).json({
-          success: false,
-          error: 'Conversation not found',
-        });
-      }
-
-      res.json({
-        success: true,
-        message: 'Conversation archived successfully',
-        data: updatedConversation,
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID',
       });
     }
 
@@ -1312,58 +1330,76 @@ router.delete('/conversations/:conversationId', async (req: AdminRequest, res: R
 
     console.log(`Admin deleting conversation: ${conversationId}`);
 
-    // Check if it's an internal message (numeric ID) or traditional conversation
     const numericId = parseInt(conversationId);
     
     if (!isNaN(numericId)) {
-      // It's an internal message - delete it
+      // First, check if it's an internal message
       const { internalMessages } = await import('@shared/schema');
       
-      console.log(`🗑️ Attempting to delete internal message with ID: ${numericId}`);
+      console.log(`🔍 Checking if ID ${numericId} is an internal message...`);
       
-      const [deletedMessage] = await db
-        .delete(internalMessages)
+      const [internalMessage] = await db
+        .select()
+        .from(internalMessages)
         .where(eq(internalMessages.id, numericId))
-        .returning();
+        .limit(1);
       
-      console.log(`🗑️ Delete result:`, deletedMessage);
+      if (internalMessage) {
+        // It's an internal message - delete it
+        console.log(`🗑️ Deleting internal message with ID: ${numericId}`);
+        
+        const [deletedMessage] = await db
+          .delete(internalMessages)
+          .where(eq(internalMessages.id, numericId))
+          .returning();
 
-      if (!deletedMessage) {
-        console.log(`❌ No internal message found with ID: ${numericId}`);
-        return res.status(404).json({
-          success: false,
-          error: 'Internal message not found',
+        console.log(`✅ Internal message deleted successfully: ${deletedMessage.id}`);
+        res.json({
+          success: true,
+          message: 'Internal message deleted successfully',
+          data: deletedMessage,
+        });
+      } else {
+        // It's a traditional conversation - check if it exists first
+        console.log(`🔍 Checking if ID ${numericId} is a traditional conversation...`);
+        
+        const [conversationExists] = await db
+          .select()
+          .from(conversations)
+          .where(eq(conversations.id, numericId))
+          .limit(1);
+        
+        if (!conversationExists) {
+          console.log(`❌ No conversation found with ID: ${numericId}`);
+          return res.status(404).json({
+            success: false,
+            error: 'Conversation not found',
+          });
+        }
+        
+        // Delete messages first, then conversation
+        console.log(`🗑️ Deleting traditional conversation with ID: ${numericId}`);
+        
+        await db
+          .delete(messages)
+          .where(eq(messages.conversationId, numericId));
+
+        const [deletedConversation] = await db
+          .delete(conversations)
+          .where(eq(conversations.id, numericId))
+          .returning();
+
+        console.log(`✅ Traditional conversation deleted successfully: ${deletedConversation.id}`);
+        res.json({
+          success: true,
+          message: 'Conversation and all messages deleted successfully',
+          data: deletedConversation,
         });
       }
-
-      console.log(`✅ Internal message deleted successfully: ${deletedMessage.id}`);
-      res.json({
-        success: true,
-        message: 'Internal message deleted successfully',
-        data: deletedMessage,
-      });
     } else {
-      // It's a traditional conversation - delete messages first, then conversation
-      await db
-        .delete(messages)
-        .where(eq(messages.conversationId, parseInt(conversationId)));
-
-      const [deletedConversation] = await db
-        .delete(conversations)
-        .where(eq(conversations.id, parseInt(conversationId)))
-        .returning();
-
-      if (!deletedConversation) {
-        return res.status(404).json({
-          success: false,
-          error: 'Conversation not found',
-        });
-      }
-
-      res.json({
-        success: true,
-        message: 'Conversation and all messages deleted successfully',
-        data: deletedConversation,
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID',
       });
     }
 
