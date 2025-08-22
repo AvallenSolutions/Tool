@@ -235,21 +235,33 @@ export default function Company() {
     }
   }, [backendSustainabilityData, sustainabilityLoading]);
 
-  // Auto-save functionality - save changes after 2 seconds of inactivity
+  // Track if data has been manually modified by user
+  const [hasUserChanges, setHasUserChanges] = useState(false);
+  
+  // Auto-save functionality - only save when user has made actual changes
   useEffect(() => {
-    if (!backendSustainabilityData || sustainabilityLoading) return;
+    if (!backendSustainabilityData || sustainabilityLoading || !hasUserChanges) return;
     
     const timeoutId = setTimeout(() => {
-      // Only auto-save if data has actually changed
-      const hasChanges = JSON.stringify(sustainabilityData) !== JSON.stringify(backendSustainabilityData);
+      // Normalize data for comparison by removing extra fields
+      const normalizeData = (data: any) => {
+        const { id, companyId, lastUpdated, createdAt, updatedAt, showToast, ...cleanData } = data;
+        return cleanData;
+      };
+      
+      const currentNormalized = normalizeData(sustainabilityData);
+      const backendNormalized = normalizeData(backendSustainabilityData);
+      
+      const hasChanges = JSON.stringify(currentNormalized) !== JSON.stringify(backendNormalized);
+      
       if (hasChanges && !sustainabilityMutation.isPending) {
-        // Add showToast: false to prevent toast on auto-save
         sustainabilityMutation.mutate({ ...sustainabilityData, showToast: false });
+        setHasUserChanges(false); // Reset after saving
       }
     }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [sustainabilityData, backendSustainabilityData, sustainabilityLoading, sustainabilityMutation]);
+  }, [sustainabilityData, backendSustainabilityData, sustainabilityLoading, hasUserChanges, sustainabilityMutation]);
 
   // Use backend completion percentage if available, otherwise calculate locally
   const completionPercentage = (backendSustainabilityData as any)?.completionPercentage ?? (() => {
@@ -758,13 +770,16 @@ export default function Company() {
                         </div>
                         <Select 
                           value={sustainabilityData.facilitiesData.energySource} 
-                          onValueChange={(value) => setSustainabilityData(prev => ({
-                            ...prev,
-                            facilitiesData: {
-                              ...prev.facilitiesData,
-                              energySource: value
-                            }
-                          }))}
+                          onValueChange={(value) => {
+                            setHasUserChanges(true);
+                            setSustainabilityData(prev => ({
+                              ...prev,
+                              facilitiesData: {
+                                ...prev.facilitiesData,
+                                energySource: value
+                              }
+                            }));
+                          }}
                         >
                           <SelectTrigger className="focus:ring-2 focus:ring-orange-500">
                             <SelectValue placeholder="Select primary energy source" />
@@ -856,13 +871,16 @@ export default function Company() {
                         <Input
                           id="waterTreatment"
                           value={sustainabilityData.facilitiesData.waterTreatment}
-                          onChange={(e) => setSustainabilityData(prev => ({
-                            ...prev,
-                            facilitiesData: {
-                              ...prev.facilitiesData,
-                              waterTreatment: e.target.value
-                            }
-                          }))}
+                          onChange={(e) => {
+                            setHasUserChanges(true);
+                            setSustainabilityData(prev => ({
+                              ...prev,
+                              facilitiesData: {
+                                ...prev.facilitiesData,
+                                waterTreatment: e.target.value
+                              }
+                            }));
+                          }}
                           placeholder="e.g., On-site treatment, Municipal system"
                           className="focus:ring-2 focus:ring-blue-500"
                         />
@@ -922,6 +940,7 @@ export default function Company() {
                               id={`transport-${method}`}
                               checked={sustainabilityData.facilitiesData.transportationMethods.includes(method)}
                               onCheckedChange={(checked) => {
+                                setHasUserChanges(true);
                                 if (checked) {
                                   setSustainabilityData(prev => ({
                                     ...prev,
@@ -1030,13 +1049,16 @@ export default function Company() {
                     <Checkbox
                       id="hasAnnualReport"
                       checked={sustainabilityData.sustainabilityReporting.hasAnnualReport}
-                      onCheckedChange={(checked) => setSustainabilityData(prev => ({
-                        ...prev,
-                        sustainabilityReporting: {
-                          ...prev.sustainabilityReporting,
-                          hasAnnualReport: checked as boolean
-                        }
-                      }))}
+                      onCheckedChange={(checked) => {
+                        setHasUserChanges(true);
+                        setSustainabilityData(prev => ({
+                          ...prev,
+                          sustainabilityReporting: {
+                            ...prev.sustainabilityReporting,
+                            hasAnnualReport: checked as boolean
+                          }
+                        }));
+                      }}
                     />
                     <Label htmlFor="hasAnnualReport">We publish an annual sustainability report</Label>
                   </div>
@@ -1045,13 +1067,16 @@ export default function Company() {
                     <Checkbox
                       id="thirdPartyVerification"
                       checked={sustainabilityData.sustainabilityReporting.thirdPartyVerification}
-                      onCheckedChange={(checked) => setSustainabilityData(prev => ({
-                        ...prev,
-                        sustainabilityReporting: {
-                          ...prev.sustainabilityReporting,
-                          thirdPartyVerification: checked as boolean
-                        }
-                      }))}
+                      onCheckedChange={(checked) => {
+                        setHasUserChanges(true);
+                        setSustainabilityData(prev => ({
+                          ...prev,
+                          sustainabilityReporting: {
+                            ...prev.sustainabilityReporting,
+                            thirdPartyVerification: checked as boolean
+                          }
+                        }));
+                      }}
                     />
                     <Label htmlFor="thirdPartyVerification">Our sustainability data is third-party verified</Label>
                   </div>
@@ -1065,6 +1090,7 @@ export default function Company() {
                             id={`standard-${standard}`}
                             checked={sustainabilityData.sustainabilityReporting.reportingStandards.includes(standard)}
                             onCheckedChange={(checked) => {
+                              setHasUserChanges(true);
                               if (checked) {
                                 setSustainabilityData(prev => ({
                                   ...prev,
@@ -1163,13 +1189,16 @@ export default function Company() {
                     <Input
                       id="carbonNeutralTarget"
                       value={sustainabilityData.goals.carbonNeutralTarget}
-                      onChange={(e) => setSustainabilityData(prev => ({
-                        ...prev,
-                        goals: {
-                          ...prev.goals,
-                          carbonNeutralTarget: e.target.value
-                        }
-                      }))}
+                      onChange={(e) => {
+                        setHasUserChanges(true);
+                        setSustainabilityData(prev => ({
+                          ...prev,
+                          goals: {
+                            ...prev.goals,
+                            carbonNeutralTarget: e.target.value
+                          }
+                        }));
+                      }}
                       placeholder="e.g., 2030, 2050, or describe your target"
                     />
                   </div>
@@ -1236,16 +1265,19 @@ export default function Company() {
                         <Input
                           type="number"
                           value={sustainabilityData.socialData.employeeMetrics.turnoverRate ?? ''}
-                          onChange={(e) => setSustainabilityData(prev => ({
-                            ...prev,
-                            socialData: {
-                              ...prev.socialData,
-                              employeeMetrics: {
-                                ...prev.socialData.employeeMetrics,
-                                turnoverRate: e.target.value ? Number(e.target.value) : undefined
+                          onChange={(e) => {
+                            setHasUserChanges(true);
+                            setSustainabilityData(prev => ({
+                              ...prev,
+                              socialData: {
+                                ...prev.socialData,
+                                employeeMetrics: {
+                                  ...prev.socialData.employeeMetrics,
+                                  turnoverRate: e.target.value ? Number(e.target.value) : undefined
+                                }
                               }
-                            }
-                          }))}
+                            }));
+                          }}
                           placeholder="e.g., 8.5"
                           className="border-gray-200"
                         />
