@@ -1247,23 +1247,37 @@ router.patch('/conversations/:conversationId/archive', async (req: AdminRequest,
         .limit(1);
       
       if (internalMessage) {
-        // It's an internal message - archive it
+        // It's an internal message - move to archive table
         console.log(`📥 Archiving internal message with ID: ${numericId}`);
         
-        const [updatedMessage] = await db
-          .update(internalMessages)
-          .set({ 
-            isRead: true,
-            readAt: new Date()
+        const { archivedConversations } = await import('@shared/schema');
+        
+        // Create archived record
+        const [archivedRecord] = await db
+          .insert(archivedConversations)
+          .values({
+            originalId: numericId,
+            originalType: 'internal_message',
+            title: internalMessage.subject || 'Internal Message',
+            data: internalMessage,
+            participants: [internalMessage.fromUserId, internalMessage.toUserId],
+            archivedBy: adminUserId,
+            archiveReason: 'manual',
+            originalCreatedAt: internalMessage.createdAt,
+            originalUpdatedAt: internalMessage.updatedAt,
           })
-          .where(eq(internalMessages.id, numericId))
           .returning();
 
-        console.log(`✅ Internal message archived successfully: ${updatedMessage.id}`);
+        // Remove from active internal messages
+        await db
+          .delete(internalMessages)
+          .where(eq(internalMessages.id, numericId));
+
+        console.log(`✅ Internal message archived successfully: ${archivedRecord.id}`);
         res.json({
           success: true,
           message: 'Internal message archived successfully',
-          data: updatedMessage,
+          data: archivedRecord,
         });
       } else {
         // It's a traditional conversation - check if it exists first
@@ -1286,20 +1300,47 @@ router.patch('/conversations/:conversationId/archive', async (req: AdminRequest,
         // Archive traditional conversation
         console.log(`📥 Archiving traditional conversation with ID: ${numericId}`);
         
-        const [updatedConversation] = await db
-          .update(conversations)
-          .set({ 
-            status: 'archived',
-            updatedAt: new Date()
+        const { archivedConversations } = await import('@shared/schema');
+        
+        // Get all messages for this conversation
+        const conversationMessages = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.conversationId, numericId));
+        
+        // Create archived record with all conversation data
+        const [archivedRecord] = await db
+          .insert(archivedConversations)
+          .values({
+            originalId: numericId,
+            originalType: 'conversation',
+            title: conversationExists.title,
+            data: {
+              conversation: conversationExists,
+              messages: conversationMessages,
+            },
+            participants: conversationExists.participants,
+            archivedBy: adminUserId,
+            archiveReason: 'manual',
+            originalCreatedAt: conversationExists.createdAt,
+            originalUpdatedAt: conversationExists.updatedAt,
           })
-          .where(eq(conversations.id, numericId))
           .returning();
 
-        console.log(`✅ Traditional conversation archived successfully: ${updatedConversation.id}`);
+        // Remove messages first, then conversation
+        await db
+          .delete(messages)
+          .where(eq(messages.conversationId, numericId));
+        
+        await db
+          .delete(conversations)
+          .where(eq(conversations.id, numericId));
+
+        console.log(`✅ Traditional conversation archived successfully: ${archivedRecord.id}`);
         res.json({
           success: true,
           message: 'Conversation archived successfully',
-          data: updatedConversation,
+          data: archivedRecord,
         });
       }
     } else {
@@ -1345,19 +1386,42 @@ router.delete('/conversations/:conversationId', async (req: AdminRequest, res: R
         .limit(1);
       
       if (internalMessage) {
-        // It's an internal message - delete it
-        console.log(`🗑️ Deleting internal message with ID: ${numericId}`);
+        // It's an internal message - move to deleted folder
+        console.log(`🗑️ Moving internal message to deleted folder with ID: ${numericId}`);
         
-        const [deletedMessage] = await db
-          .delete(internalMessages)
-          .where(eq(internalMessages.id, numericId))
+        const { deletedConversations } = await import('@shared/schema');
+        
+        // Calculate permanent delete date (14 days from now)
+        const permanentDeleteAt = new Date();
+        permanentDeleteAt.setDate(permanentDeleteAt.getDate() + 14);
+        
+        // Create deleted record
+        const [deletedRecord] = await db
+          .insert(deletedConversations)
+          .values({
+            originalId: numericId,
+            originalType: 'internal_message',
+            title: internalMessage.subject || 'Internal Message',
+            data: internalMessage,
+            participants: [internalMessage.fromUserId, internalMessage.toUserId],
+            deletedBy: adminUserId,
+            deleteReason: 'manual',
+            permanentDeleteAt,
+            originalCreatedAt: internalMessage.createdAt,
+            originalUpdatedAt: internalMessage.updatedAt,
+          })
           .returning();
 
-        console.log(`✅ Internal message deleted successfully: ${deletedMessage.id}`);
+        // Remove from active internal messages
+        await db
+          .delete(internalMessages)
+          .where(eq(internalMessages.id, numericId));
+
+        console.log(`✅ Internal message moved to deleted folder: ${deletedRecord.id} (permanent delete: ${permanentDeleteAt.toISOString()})`);
         res.json({
           success: true,
-          message: 'Internal message deleted successfully',
-          data: deletedMessage,
+          message: 'Internal message moved to deleted folder (will be permanently deleted in 14 days)',
+          data: deletedRecord,
         });
       } else {
         // It's a traditional conversation - check if it exists first
@@ -1377,23 +1441,55 @@ router.delete('/conversations/:conversationId', async (req: AdminRequest, res: R
           });
         }
         
-        // Delete messages first, then conversation
-        console.log(`🗑️ Deleting traditional conversation with ID: ${numericId}`);
+        // Move traditional conversation to deleted folder
+        console.log(`🗑️ Moving traditional conversation to deleted folder with ID: ${numericId}`);
         
+        const { deletedConversations } = await import('@shared/schema');
+        
+        // Get all messages for this conversation
+        const conversationMessages = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.conversationId, numericId));
+        
+        // Calculate permanent delete date (14 days from now)
+        const permanentDeleteAt = new Date();
+        permanentDeleteAt.setDate(permanentDeleteAt.getDate() + 14);
+        
+        // Create deleted record with all conversation data
+        const [deletedRecord] = await db
+          .insert(deletedConversations)
+          .values({
+            originalId: numericId,
+            originalType: 'conversation',
+            title: conversationExists.title,
+            data: {
+              conversation: conversationExists,
+              messages: conversationMessages,
+            },
+            participants: conversationExists.participants,
+            deletedBy: adminUserId,
+            deleteReason: 'manual',
+            permanentDeleteAt,
+            originalCreatedAt: conversationExists.createdAt,
+            originalUpdatedAt: conversationExists.updatedAt,
+          })
+          .returning();
+
+        // Remove messages first, then conversation
         await db
           .delete(messages)
           .where(eq(messages.conversationId, numericId));
-
-        const [deletedConversation] = await db
+        
+        await db
           .delete(conversations)
-          .where(eq(conversations.id, numericId))
-          .returning();
+          .where(eq(conversations.id, numericId));
 
-        console.log(`✅ Traditional conversation deleted successfully: ${deletedConversation.id}`);
+        console.log(`✅ Traditional conversation moved to deleted folder: ${deletedRecord.id} (permanent delete: ${permanentDeleteAt.toISOString()})`);
         res.json({
           success: true,
-          message: 'Conversation and all messages deleted successfully',
-          data: deletedConversation,
+          message: 'Conversation moved to deleted folder (will be permanently deleted in 14 days)',
+          data: deletedRecord,
         });
       }
     } else {
@@ -1408,6 +1504,300 @@ router.delete('/conversations/:conversationId', async (req: AdminRequest, res: R
     res.status(500).json({
       success: false,
       error: 'Failed to delete conversation',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/conversations/archived
+ * Get archived conversations folder
+ */
+router.get('/conversations/archived', async (req: AdminRequest, res: Response) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    
+    console.log('Admin viewing archived conversations');
+    
+    const { archivedConversations } = await import('@shared/schema');
+    
+    const archivedItems = await db
+      .select()
+      .from(archivedConversations)
+      .orderBy(desc(archivedConversations.archivedAt))
+      .limit(parseInt(limit as string))
+      .offset(parseInt(offset as string));
+
+    // Transform archived items back to conversation format for frontend
+    const transformedItems = archivedItems.map((item) => ({
+      id: `archived-${item.id}`,
+      title: item.title,
+      type: 'archived',
+      status: 'archived',
+      participants: item.participants,
+      lastMessageAt: item.originalUpdatedAt.toISOString(),
+      createdAt: item.originalCreatedAt.toISOString(),
+      updatedAt: item.originalUpdatedAt.toISOString(),
+      archivedAt: item.archivedAt.toISOString(),
+      archivedBy: item.archivedBy,
+      originalType: item.originalType,
+      originalId: item.originalId,
+      participantDetails: [], // Can be enriched if needed
+      unreadCount: 0,
+      messagePreview: item.originalType === 'internal_message' ? 
+        (typeof item.data === 'object' && item.data && 'message' in item.data ? item.data.message : '') : 
+        'Archived conversation',
+      priority: 'normal',
+      companyId: null,
+      companyName: '',
+    }));
+
+    res.json({
+      success: true,
+      data: transformedItems,
+      pagination: {
+        total: transformedItems.length,
+        offset: parseInt(offset as string),
+        limit: parseInt(limit as string),
+      },
+    });
+
+  } catch (error) {
+    console.error('Get archived conversations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch archived conversations',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/conversations/deleted
+ * Get deleted conversations folder (14-day retention)
+ */
+router.get('/conversations/deleted', async (req: AdminRequest, res: Response) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    
+    console.log('Admin viewing deleted conversations');
+    
+    const { deletedConversations } = await import('@shared/schema');
+    
+    const deletedItems = await db
+      .select()
+      .from(deletedConversations)
+      .orderBy(desc(deletedConversations.deletedAt))
+      .limit(parseInt(limit as string))
+      .offset(parseInt(offset as string));
+
+    // Transform deleted items back to conversation format for frontend
+    const transformedItems = deletedItems.map((item) => {
+      const daysUntilPermanentDelete = Math.ceil(
+        (item.permanentDeleteAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      return {
+        id: `deleted-${item.id}`,
+        title: item.title,
+        type: 'deleted',
+        status: 'deleted',
+        participants: item.participants,
+        lastMessageAt: item.originalUpdatedAt.toISOString(),
+        createdAt: item.originalCreatedAt.toISOString(),
+        updatedAt: item.originalUpdatedAt.toISOString(),
+        deletedAt: item.deletedAt.toISOString(),
+        deletedBy: item.deletedBy,
+        permanentDeleteAt: item.permanentDeleteAt.toISOString(),
+        daysUntilPermanentDelete,
+        originalType: item.originalType,
+        originalId: item.originalId,
+        participantDetails: [], // Can be enriched if needed
+        unreadCount: 0,
+        messagePreview: item.originalType === 'internal_message' ? 
+          (typeof item.data === 'object' && item.data && 'message' in item.data ? item.data.message : '') : 
+          'Deleted conversation',
+        priority: 'normal',
+        companyId: null,
+        companyName: '',
+      };
+    });
+
+    res.json({
+      success: true,
+      data: transformedItems,
+      pagination: {
+        total: transformedItems.length,
+        offset: parseInt(offset as string),
+        limit: parseInt(limit as string),
+      },
+    });
+
+  } catch (error) {
+    console.error('Get deleted conversations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch deleted conversations',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/conversations/deleted/:deletedId/restore
+ * Restore a deleted conversation back to active
+ */
+router.post('/conversations/deleted/:deletedId/restore', async (req: AdminRequest, res: Response) => {
+  try {
+    const { deletedId } = req.params;
+    const adminUserId = req.adminUser?.id || '44886248';
+    
+    console.log(`Admin restoring deleted conversation: ${deletedId}`);
+    
+    const { deletedConversations, internalMessages, conversations, messages } = await import('@shared/schema');
+    
+    // Get the deleted conversation
+    const [deletedItem] = await db
+      .select()
+      .from(deletedConversations)
+      .where(eq(deletedConversations.id, parseInt(deletedId)))
+      .limit(1);
+
+    if (!deletedItem) {
+      return res.status(404).json({
+        success: false,
+        error: 'Deleted conversation not found',
+      });
+    }
+
+    if (deletedItem.originalType === 'internal_message') {
+      // Restore internal message
+      const messageData = deletedItem.data as any;
+      await db
+        .insert(internalMessages)
+        .values({
+          fromUserId: messageData.fromUserId,
+          toUserId: messageData.toUserId,
+          companyId: messageData.companyId,
+          subject: messageData.subject,
+          message: messageData.message,
+          messageType: messageData.messageType,
+          priority: messageData.priority,
+          attachments: messageData.attachments || [],
+        });
+    } else {
+      // Restore traditional conversation
+      const conversationData = deletedItem.data as any;
+      
+      // Restore conversation
+      const [restoredConversation] = await db
+        .insert(conversations)
+        .values({
+          title: conversationData.conversation.title,
+          type: conversationData.conversation.type,
+          participants: conversationData.conversation.participants,
+          status: 'active',
+        })
+        .returning();
+
+      // Restore messages
+      if (conversationData.messages && conversationData.messages.length > 0) {
+        await db
+          .insert(messages)
+          .values(
+            conversationData.messages.map((msg: any) => ({
+              conversationId: restoredConversation.id,
+              senderId: msg.senderId,
+              senderRole: msg.senderRole,
+              messageType: msg.messageType,
+              content: msg.content,
+              attachments: msg.attachments || [],
+              metadata: msg.metadata || {},
+            }))
+          );
+      }
+    }
+
+    // Remove from deleted folder
+    await db
+      .delete(deletedConversations)
+      .where(eq(deletedConversations.id, parseInt(deletedId)));
+
+    console.log(`✅ Conversation restored successfully from deleted folder: ${deletedId}`);
+    res.json({
+      success: true,
+      message: 'Conversation restored successfully',
+    });
+
+  } catch (error) {
+    console.error('Restore conversation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to restore conversation',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/conversations/cleanup-expired
+ * Manual cleanup of expired deleted conversations (testing endpoint)
+ */
+router.post('/conversations/cleanup-expired', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin manually triggering expired conversation cleanup');
+    
+    const { cleanupExpiredDeletedConversations } = await import('../jobs/cleanup-deleted-conversations');
+    const result = await cleanupExpiredDeletedConversations();
+    
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.deleted} expired conversations`,
+      data: result,
+    });
+
+  } catch (error) {
+    console.error('Manual cleanup error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cleanup expired conversations',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/conversations/stats
+ * Get statistics about conversation folders
+ */
+router.get('/conversations/stats', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin requesting conversation stats');
+    
+    const { archivedConversations, deletedConversations } = await import('@shared/schema');
+    const { getDeletedConversationsStats } = await import('../jobs/cleanup-deleted-conversations');
+    
+    const [archivedCount] = await db
+      .select({ count: sql`COUNT(*)`.mapWith(Number) })
+      .from(archivedConversations);
+    
+    const deletedStats = await getDeletedConversationsStats();
+    
+    res.json({
+      success: true,
+      data: {
+        archived: archivedCount.count,
+        deleted: deletedStats.total,
+        expiredDeleted: deletedStats.expiredCount,
+        averageDaysUntilPermanentDelete: Math.round(deletedStats.avgDaysLeft || 0),
+      },
+    });
+
+  } catch (error) {
+    console.error('Get conversation stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get conversation statistics',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }

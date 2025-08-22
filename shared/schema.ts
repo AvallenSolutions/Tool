@@ -719,6 +719,55 @@ export const internalMessages = pgTable("internal_messages", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Archived Conversations - stores archived internal messages and traditional conversations
+export const archivedConversations = pgTable("archived_conversations", {
+  id: serial("id").primaryKey(),
+  originalId: integer("original_id").notNull(), // Original conversation/internal message ID
+  originalType: varchar("original_type", { length: 20 }).notNull(), // 'internal_message' or 'conversation'
+  
+  // Preserved conversation data
+  title: varchar("title", { length: 255 }).notNull(),
+  data: jsonb("data").notNull(), // Full conversation/message data as JSON
+  participants: jsonb("participants").$type<string[]>().notNull(),
+  
+  // Archive metadata
+  archivedBy: varchar("archived_by").notNull().references(() => users.id),
+  archiveReason: varchar("archive_reason", { length: 100 }).default("manual"), // manual, auto_cleanup, etc.
+  
+  // Original timestamps
+  originalCreatedAt: timestamp("original_created_at").notNull(),
+  originalUpdatedAt: timestamp("original_updated_at").notNull(),
+  
+  // Archive timestamps
+  archivedAt: timestamp("archived_at").defaultNow(),
+});
+
+// Deleted Conversations - stores deleted conversations for 14-day retention
+export const deletedConversations = pgTable("deleted_conversations", {
+  id: serial("id").primaryKey(),
+  originalId: integer("original_id").notNull(),
+  originalType: varchar("original_type", { length: 20 }).notNull(), // 'internal_message' or 'conversation'
+  
+  // Preserved conversation data
+  title: varchar("title", { length: 255 }).notNull(),
+  data: jsonb("data").notNull(), // Full conversation/message data as JSON
+  participants: jsonb("participants").$type<string[]>().notNull(),
+  
+  // Deletion metadata
+  deletedBy: varchar("deleted_by").notNull().references(() => users.id),
+  deleteReason: varchar("delete_reason", { length: 100 }).default("manual"), // manual, user_request, etc.
+  
+  // Cleanup scheduling
+  permanentDeleteAt: timestamp("permanent_delete_at").notNull(), // 14 days from deletion
+  
+  // Original timestamps
+  originalCreatedAt: timestamp("original_created_at").notNull(),
+  originalUpdatedAt: timestamp("original_updated_at").notNull(),
+  
+  // Deletion timestamps
+  deletedAt: timestamp("deleted_at").defaultNow(),
+});
+
 // Document Review System table
 export const documentReviews = pgTable("document_reviews", {
   id: serial("id").primaryKey(),

@@ -22,7 +22,12 @@ import {
   MessageCircle,
   Archive,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  Inbox,
+  Folder,
+  FolderOpen,
+  RotateCcw,
+  Calendar
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -109,20 +114,28 @@ export default function AdminMessaging() {
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [conversationTitle, setConversationTitle] = useState('');
+  const [currentFolder, setCurrentFolder] = useState<'active' | 'archived' | 'deleted'>('active');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  // Fetch conversations
+  // Fetch conversations based on current folder
   const { data: conversationsResponse, isLoading: loadingConversations } = useQuery<ConversationsResponse>({
-    queryKey: ['/api/admin/conversations', searchTerm],
+    queryKey: ['/api/admin/conversations', currentFolder, searchTerm],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       
-      const response = await fetch(`/api/admin/conversations?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch conversations');
+      let endpoint = '/api/admin/conversations';
+      if (currentFolder === 'archived') {
+        endpoint = '/api/admin/conversations/archived';
+      } else if (currentFolder === 'deleted') {
+        endpoint = '/api/admin/conversations/deleted';
+      }
+      
+      const response = await fetch(`${endpoint}?${params}`);
+      if (!response.ok) throw new Error(`Failed to fetch ${currentFolder} conversations`);
       const data = await response.json();
-      console.log('🔍 Frontend received conversations data:', data);
+      console.log(`🔍 Frontend received ${currentFolder} conversations data:`, data);
       return data;
     },
     refetchInterval: 5000, // Refresh every 5 seconds
@@ -313,6 +326,38 @@ export default function AdminMessaging() {
     },
   });
 
+  // Restore conversation mutation for deleted folder
+  const restoreConversationMutation = useMutation({
+    mutationFn: async (deletedId: string) => {
+      const actualId = deletedId.replace('deleted-', '');
+      const response = await fetch(`/api/admin/conversations/deleted/${actualId}/restore`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to restore conversation');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/conversations', currentFolder] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/conversations', 'active'] });
+      setSelectedConversation(null);
+      toast({
+        title: "Success",
+        description: "Conversation restored successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to restore conversation. Please try again.",
+      });
+    },
+  });
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -406,13 +451,49 @@ export default function AdminMessaging() {
               <Users className="h-5 w-5" />
               Conversations
             </CardTitle>
+            
+            {/* Folder Navigation */}
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
+              <Button
+                variant={currentFolder === 'active' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCurrentFolder('active')}
+                className="flex-1 h-8"
+                data-testid="folder-active"
+              >
+                <Inbox className="w-3 h-3 mr-1" />
+                Active
+              </Button>
+              <Button
+                variant={currentFolder === 'archived' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCurrentFolder('archived')}
+                className="flex-1 h-8"
+                data-testid="folder-archived"
+              >
+                <Archive className="w-3 h-3 mr-1" />
+                Archive
+              </Button>
+              <Button
+                variant={currentFolder === 'deleted' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCurrentFolder('deleted')}
+                className="flex-1 h-8"
+                data-testid="folder-deleted"
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                Deleted
+              </Button>
+            </div>
+            
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search conversations..."
+                placeholder={`Search ${currentFolder} conversations...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
+                data-testid="input-search-conversations"
               />
             </div>
           </CardHeader>
@@ -475,31 +556,66 @@ export default function AdminMessaging() {
                             )}
                           </div>
                         </div>
+                        
+                        {/* Show additional folder-specific information */}
+                        {(currentFolder === 'archived' || currentFolder === 'deleted') && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                            <Calendar className="h-3 w-3" />
+                            {currentFolder === 'archived' && (conversation as any).archivedAt && 
+                              `Archived: ${new Date((conversation as any).archivedAt).toLocaleDateString()}`
+                            }
+                            {currentFolder === 'deleted' && (conversation as any).daysUntilPermanentDelete !== undefined && 
+                              `Deleted (${(conversation as any).daysUntilPermanentDelete} days left)`
+                            }
+                          </div>
+                        )}
+                        
                         <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleArchiveConversation(conversation.id);
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-gray-200"
-                            disabled={archiveConversationMutation.isPending}
-                          >
-                            <Archive className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteConversation(conversation.id, conversation.title);
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
-                            disabled={deleteConversationMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {currentFolder === 'active' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleArchiveConversation(conversation.id);
+                                }}
+                                className="h-8 w-8 p-0 hover:bg-gray-200"
+                                disabled={archiveConversationMutation.isPending}
+                                data-testid={`button-archive-${conversation.id}`}
+                              >
+                                <Archive className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteConversation(conversation.id, conversation.title);
+                                }}
+                                className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                                disabled={deleteConversationMutation.isPending}
+                                data-testid={`button-delete-${conversation.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          {currentFolder === 'deleted' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                restoreConversationMutation.mutate(conversation.id.toString());
+                              }}
+                              className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
+                              disabled={restoreConversationMutation.isPending}
+                              data-testid={`button-restore-${conversation.id}`}
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -531,26 +647,45 @@ export default function AdminMessaging() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleArchiveConversation(selectedConversation.id)}
-                      disabled={archiveConversationMutation.isPending}
-                      className="flex items-center gap-2"
-                    >
-                      <Archive className="h-4 w-4" />
-                      Archive
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteConversation(selectedConversation.id, selectedConversation.title)}
-                      disabled={deleteConversationMutation.isPending}
-                      className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </Button>
+                    {currentFolder === 'active' && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleArchiveConversation(selectedConversation.id)}
+                          disabled={archiveConversationMutation.isPending}
+                          className="flex items-center gap-2"
+                          data-testid="button-archive-selected"
+                        >
+                          <Archive className="h-4 w-4" />
+                          Archive
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteConversation(selectedConversation.id, selectedConversation.title)}
+                          disabled={deleteConversationMutation.isPending}
+                          className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                          data-testid="button-delete-selected"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                    {currentFolder === 'deleted' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => restoreConversationMutation.mutate(selectedConversation.id.toString())}
+                        disabled={restoreConversationMutation.isPending}
+                        className="flex items-center gap-2 hover:bg-green-50 hover:text-green-600 hover:border-green-200"
+                        data-testid="button-restore-selected"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Restore
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -613,29 +748,47 @@ export default function AdminMessaging() {
                   )}
                 </ScrollArea>
                 <Separator />
-                <div className="p-4">
-                  <div className="flex gap-2">
-                    <Textarea
-                      placeholder="Type your message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1"
-                      rows={2}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                    />
-                    <Button 
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
+                
+                {/* Message input - only for active conversations */}
+                {currentFolder === 'active' ? (
+                  <div className="p-4">
+                    <div className="flex gap-2">
+                      <Textarea
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="flex-1"
+                        rows={2}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        data-testid="textarea-message"
+                      />
+                      <Button 
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                        data-testid="button-send-message"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 bg-muted/30 border-t">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Archive className="h-4 w-4" />
+                      <span className="text-sm">
+                        {currentFolder === 'archived' 
+                          ? 'This conversation is archived. Messages cannot be sent.' 
+                          : 'This conversation is deleted. Messages cannot be sent.'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </>
           ) : (
