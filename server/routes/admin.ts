@@ -729,6 +729,7 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
           createdAt: internalMessages.createdAt,
         })
         .from(internalMessages)
+        .where(eq(internalMessages.isRead, false)) // Only show unread/active messages
         .orderBy(desc(internalMessages.createdAt))
         .limit(parseInt(limit as string))
         .offset(parseInt(offset as string));
