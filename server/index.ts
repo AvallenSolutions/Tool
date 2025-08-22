@@ -8,15 +8,20 @@ import path from "path";
 
 const app = express();
 
-// Security middleware
+// Security middleware with environment-aware CSP
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const allowedOrigins = isDevelopment 
+  ? ["http://localhost:5000", "http://localhost:5173"]
+  : ["'self'", "https:", process.env.FRONTEND_URL].filter(Boolean);
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "http://localhost:5000", "http://localhost:5173"],
-      connectSrc: ["'self'", "https:", "http://localhost:5000", "http://localhost:5173"],
+      imgSrc: ["'self'", "data:", "https:", ...allowedOrigins],
+      connectSrc: ["'self'", "https:", ...allowedOrigins],
     },
   },
 }));
@@ -32,9 +37,14 @@ const apiLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-// Add CORS headers to allow frontend (port 5173) to call backend (port 5000)
+// Environment-aware CORS configuration
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const allowedOrigin = isDevelopment 
+    ? 'http://localhost:5173' 
+    : process.env.FRONTEND_URL || req.get('origin') || '*';
+    
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   

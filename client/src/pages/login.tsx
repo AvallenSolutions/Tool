@@ -144,6 +144,23 @@ export default function Login() {
                     </div>
                   </Button>
 
+                  {/* Account Help Section */}
+                  <div className="text-center space-y-2">
+                    <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
+                      <span>Having trouble signing in?</span>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div className="text-xs text-gray-600">
+                        <p className="font-medium text-gray-700 mb-2">Account Access Help:</p>
+                        <div className="space-y-1 text-left">
+                          <p>• Password reset is managed by Replit - visit <a href="https://replit.com/reset" target="_blank" rel="noopener noreferrer" className="text-avallen-green hover:underline font-medium">replit.com/reset</a></p>
+                          <p>• Need a Replit account? <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer" className="text-avallen-green hover:underline font-medium">Sign up free</a></p>
+                          <p>• For beta access support: <a href="mailto:tim@avallen.solutions" className="text-avallen-green hover:underline font-medium">tim@avallen.solutions</a></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Features List */}
                   <div className="border-t pt-6">
                     <p className="text-sm font-medium text-slate-gray mb-4 text-center">
