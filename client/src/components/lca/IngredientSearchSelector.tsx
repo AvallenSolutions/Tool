@@ -17,6 +17,7 @@ interface Ingredient {
   materialName: string;
   unit: string;
   subcategory: string;
+  co2ePerUnit?: number | null;
 }
 
 export function IngredientSearchSelector({ form, index }: IngredientSearchSelectorProps) {
@@ -114,13 +115,18 @@ export function IngredientSearchSelector({ form, index }: IngredientSearchSelect
 
               {/* Selected Ingredient Info */}
               {selectedIngredient && (
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className="bg-avallen-green/10 text-avallen-green border-avallen-green/20">
                     {selectedIngredient.subcategory}
                   </Badge>
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                     {selectedIngredient.unit}
                   </Badge>
+                  {selectedIngredient.co2ePerUnit !== null && selectedIngredient.co2ePerUnit !== undefined && (
+                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                      {selectedIngredient.co2ePerUnit.toFixed(3)} kg CO₂e/{selectedIngredient.unit}
+                    </Badge>
+                  )}
                 </div>
               )}
 
@@ -154,13 +160,18 @@ export function IngredientSearchSelector({ form, index }: IngredientSearchSelect
                         <div className="font-medium text-gray-900">
                           {ingredient.materialName}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
                             {ingredient.subcategory}
                           </Badge>
                           <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
                             {ingredient.unit}
                           </Badge>
+                          {ingredient.co2ePerUnit !== null && ingredient.co2ePerUnit !== undefined && (
+                            <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600">
+                              {ingredient.co2ePerUnit.toFixed(3)} kg CO₂e/{ingredient.unit}
+                            </Badge>
+                          )}
                         </div>
                       </button>
                     ))}

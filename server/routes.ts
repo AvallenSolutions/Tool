@@ -7795,7 +7795,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // GET /api/lca/ingredients/search - Search all OpenLCA database ingredients
+  // GET /api/lca/ingredients/search - Search all OpenLCA database ingredients with CO2 data
   app.get('/api/lca/ingredients/search', async (req, res) => {
     try {
       const { q } = req.query;
@@ -7828,35 +7828,77 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       let filteredIngredients = uniqueIngredients;
       if (q && typeof q === 'string' && q.trim().length > 0) {
         const searchQuery = q.trim().toLowerCase();
-        filteredIngredients = uniqueIngredients.filter(ing => 
-          ing.materialName.toLowerCase().includes(searchQuery) ||
-          ing.subcategory.toLowerCase().includes(searchQuery)
-        );
+        filteredIngredients = uniqueIngredients.filter(ing => {
+          // Handle null values safely
+          const materialName = ing.materialName?.toLowerCase() || '';
+          const subcategory = ing.subcategory?.toLowerCase() || '';
+          return materialName.includes(searchQuery) || subcategory.includes(searchQuery);
+        });
       }
       
       // Sort by relevance (exact matches first, then partial matches)
       if (q && typeof q === 'string') {
         const searchQuery = q.trim().toLowerCase();
         filteredIngredients.sort((a, b) => {
-          const aExact = a.materialName.toLowerCase() === searchQuery ? 1 : 0;
-          const bExact = b.materialName.toLowerCase() === searchQuery ? 1 : 0;
+          const aName = a.materialName?.toLowerCase() || '';
+          const bName = b.materialName?.toLowerCase() || '';
+          
+          const aExact = aName === searchQuery ? 1 : 0;
+          const bExact = bName === searchQuery ? 1 : 0;
           if (aExact !== bExact) return bExact - aExact; // Exact matches first
           
-          const aStarts = a.materialName.toLowerCase().startsWith(searchQuery) ? 1 : 0;
-          const bStarts = b.materialName.toLowerCase().startsWith(searchQuery) ? 1 : 0;
+          const aStarts = aName.startsWith(searchQuery) ? 1 : 0;
+          const bStarts = bName.startsWith(searchQuery) ? 1 : 0;
           if (aStarts !== bStarts) return bStarts - aStarts; // Starts with matches second
           
-          return a.materialName.localeCompare(b.materialName); // Alphabetical for the rest
+          return (a.materialName || '').localeCompare(b.materialName || ''); // Alphabetical for the rest
         });
       } else {
         // No search query - sort alphabetically
-        filteredIngredients.sort((a, b) => a.materialName.localeCompare(b.materialName));
+        filteredIngredients.sort((a, b) => (a.materialName || '').localeCompare(b.materialName || ''));
       }
       
       // Limit results to prevent overwhelming UI (max 50 results)
-      const limitedResults = filteredIngredients.slice(0, 50);
+      let limitedResults = filteredIngredients.slice(0, 50);
       
-      res.json(limitedResults);
+      // Enhance results with CO2 emissions data using OpenLCA
+      try {
+        const { OpenLCAService } = await import('./services/OpenLCAService');
+        const enhancedResults = await Promise.all(
+          limitedResults.map(async (ingredient) => {
+            try {
+              // Get CO2 footprint for 1 unit of this ingredient
+              const co2Footprint = await OpenLCAService.calculateCarbonFootprint(
+                ingredient.materialName, 
+                1, 
+                ingredient.unit
+              );
+              
+              return {
+                ...ingredient,
+                co2ePerUnit: co2Footprint, // kg CO2e per unit
+              };
+            } catch (error) {
+              // If CO2 calculation fails, return ingredient without CO2 data
+              return {
+                ...ingredient,
+                co2ePerUnit: null,
+              };
+            }
+          })
+        );
+        
+        res.json(enhancedResults);
+      } catch (openLcaError) {
+        console.warn('OpenLCA service not available, returning results without CO2 data:', openLcaError);
+        // Return results without CO2 data
+        const resultsWithoutCO2 = limitedResults.map(ingredient => ({
+          ...ingredient,
+          co2ePerUnit: null,
+        }));
+        res.json(resultsWithoutCO2);
+      }
+      
     } catch (error) {
       console.error('Error searching LCA ingredients:', error);
       res.status(500).json({ error: 'Failed to search ingredients' });
