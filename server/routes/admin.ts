@@ -912,10 +912,12 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
 
       res.json({
         success: true,
-        conversations: enrichedConversations,
-        total: enrichedConversations.length,
-        offset: parseInt(offset as string),
-        limit: parseInt(limit as string),
+        data: enrichedConversations,
+        pagination: {
+          total: enrichedConversations.length,
+          offset: parseInt(offset as string),
+          limit: parseInt(limit as string),
+        },
       });
     }
 
