@@ -148,11 +148,11 @@ export default function Reports() {
   const guidedReportsData = Array.isArray(guidedReports) ? guidedReports : [];
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="Reports" subtitle="Manage your sustainability and LCA reports" />
-        <main className="flex-1 p-6 overflow-y-auto space-y-8">
+        <main className="flex-1 p-6 space-y-8">
           
           {/* Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

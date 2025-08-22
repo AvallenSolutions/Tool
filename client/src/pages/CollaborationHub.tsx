@@ -4,9 +4,9 @@ import CollaborationDashboard from '@/components/collaboration/CollaborationDash
 
 export default function CollaborationHub() {
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header 
           title="Collaboration Hub" 
           subtitle="Real-time communication and task management with suppliers"

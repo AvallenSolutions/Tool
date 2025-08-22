@@ -227,11 +227,11 @@ export default function InitiativesPage() {
 
   if (goalsLoading) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="SMART Goals Reporting" subtitle="Loading goals..." />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <div className="animate-pulse space-y-6">
               <div className="h-8 bg-gray-200 rounded w-1/3"></div>
               <div className="grid gap-4">
@@ -247,11 +247,11 @@ export default function InitiativesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="SMART Goals Reporting" subtitle="Select goals and create compelling narratives for your sustainability reports" />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6">
           <div className="container mx-auto max-w-7xl">
             
             {/* Summary Statistics */}
