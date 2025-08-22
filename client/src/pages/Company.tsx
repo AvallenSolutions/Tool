@@ -108,18 +108,21 @@ export default function Company() {
     company: !!company 
   });
 
-  // Update sustainability data mutation
+  // Update sustainability data mutation  
   const sustainabilityMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest("PUT", "/api/company/sustainability-data", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/company/sustainability-data"] });
-      toast({
-        title: 'Environmental Data Saved',
-        description: 'Your company environmental information has been successfully updated.',
-      });
+      // Only show toast for manual saves, not auto-saves
+      if ((variables as any)?.showToast !== false) {
+        toast({
+          title: 'Environmental Data Saved',
+          description: 'Your company environmental information has been successfully updated.',
+        });
+      }
     },
     onError: () => {
       toast({
@@ -240,7 +243,8 @@ export default function Company() {
       // Only auto-save if data has actually changed
       const hasChanges = JSON.stringify(sustainabilityData) !== JSON.stringify(backendSustainabilityData);
       if (hasChanges && !sustainabilityMutation.isPending) {
-        sustainabilityMutation.mutate(sustainabilityData);
+        // Add showToast: false to prevent toast on auto-save
+        sustainabilityMutation.mutate({ ...sustainabilityData, showToast: false });
       }
     }, 2000);
 
