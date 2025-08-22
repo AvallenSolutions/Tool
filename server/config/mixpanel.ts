@@ -31,17 +31,9 @@ export function trackEvent(eventName: string, properties: Record<string, any> = 
 
   try {
     if (userId) {
-      mixpanel.track(eventName, eventData, { distinct_id: userId }, (error) => {
-        if (error) {
-          console.warn('Mixpanel tracking error:', error);
-        }
-      });
+      mixpanel.track(eventName, eventData, { distinct_id: userId });
     } else {
-      mixpanel.track(eventName, eventData, (error) => {
-        if (error) {
-          console.warn('Mixpanel tracking error:', error);
-        }
-      });
+      mixpanel.track(eventName, eventData);
     }
   } catch (error) {
     console.warn('Mixpanel tracking failed:', error);
@@ -58,10 +50,6 @@ export function trackUser(userId: string, properties: Record<string, any> = {}) 
       ...properties,
       $last_seen: new Date().toISOString(),
       platform: 'sustainability-platform'
-    }, (error) => {
-      if (error) {
-        console.warn('Mixpanel user tracking error:', error);
-      }
     });
   } catch (error) {
     console.warn('Mixpanel user tracking failed:', error);
