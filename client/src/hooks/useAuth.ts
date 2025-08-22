@@ -13,7 +13,7 @@ interface User {
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ['/api/auth/user'],
-    queryFn: getQueryFn,
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -28,9 +28,18 @@ export function useAuth() {
     role: "admin" as const
   };
 
-  const finalUser = user || (process.env.NODE_ENV === 'development' ? developmentUser : null);
+  // Always use development user in development mode for admin access
+  const finalUser = import.meta.env.MODE === 'development' ? developmentUser : user;
   const isAuthenticated = !!finalUser;
   const isAdmin = finalUser?.role === 'admin';
+  
+  console.log('🔐 Auth Debug:', { 
+    mode: import.meta.env.MODE, 
+    hasUser: !!user, 
+    finalUser: finalUser?.email, 
+    isAdmin, 
+    error: error?.message 
+  });
 
   return {
     user: finalUser,
