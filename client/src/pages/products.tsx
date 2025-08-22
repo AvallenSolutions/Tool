@@ -122,14 +122,14 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header 
           title="Products" 
           subtitle="Manage your product catalog and track environmental footprints" 
         />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6">
           {/* Header Section */}
           <div className="mb-6 p-4 bg-gradient-to-r from-avallen-green/10 to-avallen-green/5 border border-avallen-green/20 rounded-lg">
             <div className="flex items-center justify-between">

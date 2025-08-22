@@ -135,9 +135,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="Dashboard" subtitle={getReportingPeriod()} />
         
         {/* Development helper - remove in production */}
@@ -151,7 +151,7 @@ export default function Dashboard() {
             </button>
           </div>
         )}
-        <main className="flex-1 p-6 overflow-y-auto" id="dashboard-main">
+        <main className="flex-1 p-6" id="dashboard-main">
           <div id="metrics-cards">
             <MetricsCards />
           </div>
