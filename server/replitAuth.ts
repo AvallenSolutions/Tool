@@ -203,7 +203,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       // Use Tim's admin account
       try {
         await storage.upsertUser({
-          id: 'admin-tim',
+          id: '44886248',
           email: 'tim@avallen.solutions',
           firstName: 'Tim',
           lastName: 'Admin',
@@ -216,9 +216,9 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       
       // Get existing company with products (use company 1 which has data)
       try {
-        let company = await storage.getCompanyByOwner('admin-tim');
+        let company = await storage.getCompanyByOwner('44886248');
         if (!company) {
-          // If no company exists for admin-tim, get demo company
+          // If no company exists for user, get demo company
           const demoCompany = await storage.getCompanyById(1);
           if (demoCompany) {
             console.log('Using existing demo company with products:', demoCompany.name, 'ID:', demoCompany.id);
@@ -236,7 +236,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Always set the user in development mode
     (req as any).user = {
       claims: { 
-        sub: 'admin-tim',
+        sub: '44886248',
         email: 'tim@avallen.solutions',
         first_name: 'Tim',
         last_name: 'Admin'

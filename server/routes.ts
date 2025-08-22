@@ -471,7 +471,7 @@ export function registerRoutes(app: Express): Server {
       // Development mode: always return admin user
       if (process.env.NODE_ENV === 'development') {
         const devUserInfo = {
-          id: 'admin-tim',
+          id: '44886248',
           email: 'tim@avallen.solutions',
           firstName: 'Tim',
           lastName: 'Admin',
