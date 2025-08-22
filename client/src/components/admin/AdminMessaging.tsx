@@ -234,7 +234,13 @@ export default function AdminMessaging() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
       });
-      if (!response.ok) throw new Error('Failed to archive conversation');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 404) {
+          throw new Error('Conversation no longer exists');
+        }
+        throw new Error(errorData.error || 'Failed to archive conversation');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -245,12 +251,22 @@ export default function AdminMessaging() {
         description: "Conversation archived successfully.",
       });
     },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to archive conversation. Please try again.",
-      });
+    onError: (error: Error) => {
+      // If conversation no longer exists, just refresh the list
+      if (error.message === 'Conversation no longer exists') {
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/conversations'] });
+        setSelectedConversation(null);
+        toast({
+          title: "Already Archived",
+          description: "This conversation has already been archived or removed.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to archive conversation. Please try again.",
+        });
+      }
     },
   });
 
@@ -261,7 +277,13 @@ export default function AdminMessaging() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
-      if (!response.ok) throw new Error('Failed to delete conversation');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 404) {
+          throw new Error('Conversation no longer exists');
+        }
+        throw new Error(errorData.error || 'Failed to delete conversation');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -272,12 +294,22 @@ export default function AdminMessaging() {
         description: "Conversation deleted successfully.",
       });
     },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete conversation. Please try again.",
-      });
+    onError: (error: Error) => {
+      // If conversation no longer exists, just refresh the list
+      if (error.message === 'Conversation no longer exists') {
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/conversations'] });
+        setSelectedConversation(null);
+        toast({
+          title: "Already Deleted",
+          description: "This conversation has already been deleted.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to delete conversation. Please try again.",
+        });
+      }
     },
   });
 
