@@ -196,7 +196,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   });
 
   // Development mode bypass for testing
-  if (process.env.NODE_ENV === 'development' && !req.isAuthenticated()) {
+  if (process.env.NODE_ENV === 'development') {
     console.log('Development mode: Creating mock user for testing');
     
     try {
@@ -233,6 +233,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       console.error('Error creating mock user/company:', error);
     }
     
+    // Always set the user in development mode
     (req as any).user = {
       claims: { 
         sub: 'admin-tim',
@@ -244,6 +245,11 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       access_token: 'dev-token',
       refresh_token: 'dev-refresh'
     };
+    
+    // Mark as authenticated in development
+    (req as any).session = (req as any).session || {};
+    (req as any).session.passport = { user: req.user };
+    
     return next();
   }
 

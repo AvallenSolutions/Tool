@@ -468,6 +468,20 @@ export function registerRoutes(app: Express): Server {
   // Auth user endpoint - must come BEFORE greenwash guardian routes
   app.get('/api/auth/user', async (req, res) => {
     try {
+      // Development mode: always return admin user
+      if (process.env.NODE_ENV === 'development') {
+        const devUserInfo = {
+          id: 'admin-tim',
+          email: 'tim@avallen.solutions',
+          firstName: 'Tim',
+          lastName: 'Admin',
+          profileImageUrl: '',
+          role: 'admin',
+        };
+        console.log('Development mode: returning admin user info:', devUserInfo);
+        return res.json(devUserInfo);
+      }
+
       if (!req.isAuthenticated() || !req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
