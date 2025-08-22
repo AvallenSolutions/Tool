@@ -1220,4 +1220,148 @@ router.get('/users-for-messaging', async (req: AdminRequest, res: Response) => {
   }
 });
 
+/**
+ * PATCH /api/admin/conversations/:conversationId/archive
+ * Archive a conversation (internal message or traditional conversation)
+ */
+router.patch('/conversations/:conversationId/archive', async (req: AdminRequest, res: Response) => {
+  try {
+    const { conversationId } = req.params;
+    const adminUserId = req.adminUser?.id || '44886248';
+
+    console.log(`Admin archiving conversation: ${conversationId}`);
+
+    // Check if it's an internal message (numeric ID) or traditional conversation
+    const numericId = parseInt(conversationId);
+    
+    if (!isNaN(numericId)) {
+      // It's an internal message - update to archived status
+      const { internalMessages } = await import('@shared/schema');
+      
+      const [updatedMessage] = await db
+        .update(internalMessages)
+        .set({ 
+          isRead: true,
+          readAt: new Date()
+        })
+        .where(eq(internalMessages.id, numericId))
+        .returning();
+
+      if (!updatedMessage) {
+        return res.status(404).json({
+          success: false,
+          error: 'Internal message not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Internal message archived successfully',
+        data: updatedMessage,
+      });
+    } else {
+      // It's a traditional conversation
+      const [updatedConversation] = await db
+        .update(conversations)
+        .set({ 
+          status: 'archived',
+          updatedAt: new Date()
+        })
+        .where(eq(conversations.id, parseInt(conversationId)))
+        .returning();
+
+      if (!updatedConversation) {
+        return res.status(404).json({
+          success: false,
+          error: 'Conversation not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Conversation archived successfully',
+        data: updatedConversation,
+      });
+    }
+
+  } catch (error) {
+    console.error('Archive conversation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to archive conversation',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/conversations/:conversationId
+ * Delete a conversation (internal message or traditional conversation)
+ */
+router.delete('/conversations/:conversationId', async (req: AdminRequest, res: Response) => {
+  try {
+    const { conversationId } = req.params;
+    const adminUserId = req.adminUser?.id || '44886248';
+
+    console.log(`Admin deleting conversation: ${conversationId}`);
+
+    // Check if it's an internal message (numeric ID) or traditional conversation
+    const numericId = parseInt(conversationId);
+    
+    if (!isNaN(numericId)) {
+      // It's an internal message - delete it
+      const { internalMessages } = await import('@shared/schema');
+      
+      const [deletedMessage] = await db
+        .delete(internalMessages)
+        .where(eq(internalMessages.id, numericId))
+        .returning();
+
+      if (!deletedMessage) {
+        return res.status(404).json({
+          success: false,
+          error: 'Internal message not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Internal message deleted successfully',
+        data: deletedMessage,
+      });
+    } else {
+      // It's a traditional conversation - delete messages first, then conversation
+      await db
+        .delete(messages)
+        .where(eq(messages.conversationId, parseInt(conversationId)));
+
+      const [deletedConversation] = await db
+        .delete(conversations)
+        .where(eq(conversations.id, parseInt(conversationId)))
+        .returning();
+
+      if (!deletedConversation) {
+        return res.status(404).json({
+          success: false,
+          error: 'Conversation not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Conversation and all messages deleted successfully',
+        data: deletedConversation,
+      });
+    }
+
+  } catch (error) {
+    console.error('Delete conversation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete conversation',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 export { router as adminRouter };

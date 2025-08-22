@@ -19,7 +19,10 @@ import {
   AlertCircle,
   User,
   Building2,
-  MessageCircle
+  MessageCircle,
+  Archive,
+  Trash2,
+  MoreHorizontal
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -224,6 +227,60 @@ export default function AdminMessaging() {
     },
   });
 
+  // Archive conversation mutation
+  const archiveConversationMutation = useMutation({
+    mutationFn: async (conversationId: number) => {
+      const response = await fetch(`/api/admin/conversations/${conversationId}/archive`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to archive conversation');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/conversations'] });
+      setSelectedConversation(null);
+      toast({
+        title: "Success",
+        description: "Conversation archived successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to archive conversation. Please try again.",
+      });
+    },
+  });
+
+  // Delete conversation mutation
+  const deleteConversationMutation = useMutation({
+    mutationFn: async (conversationId: number) => {
+      const response = await fetch(`/api/admin/conversations/${conversationId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to delete conversation');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/conversations'] });
+      setSelectedConversation(null);
+      toast({
+        title: "Success",
+        description: "Conversation deleted successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete conversation. Please try again.",
+      });
+    },
+  });
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -257,6 +314,16 @@ export default function AdminMessaging() {
       participants: selectedUsers,
       initialMessage: newMessage.trim() || undefined,
     });
+  };
+
+  const handleArchiveConversation = (conversationId: number) => {
+    archiveConversationMutation.mutate(conversationId);
+  };
+
+  const handleDeleteConversation = (conversationId: number, title: string) => {
+    if (confirm(`Are you sure you want to delete the conversation "${title}"? This action cannot be undone.`)) {
+      deleteConversationMutation.mutate(conversationId);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -376,6 +443,32 @@ export default function AdminMessaging() {
                             )}
                           </div>
                         </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleArchiveConversation(conversation.id);
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-gray-200"
+                            disabled={archiveConversationMutation.isPending}
+                          >
+                            <Archive className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteConversation(conversation.id, conversation.title);
+                            }}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                            disabled={deleteConversationMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -404,6 +497,28 @@ export default function AdminMessaging() {
                         {selectedConversation.participantDetails.length} participants
                       </span>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleArchiveConversation(selectedConversation.id)}
+                      disabled={archiveConversationMutation.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <Archive className="h-4 w-4" />
+                      Archive
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteConversation(selectedConversation.id, selectedConversation.title)}
+                      disabled={deleteConversationMutation.isPending}
+                      className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
