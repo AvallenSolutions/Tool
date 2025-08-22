@@ -619,18 +619,19 @@ export class OpenLCAService {
   /**
    * Calculate scaling factor for unit conversion
    */
-  private static calculateScalingFactor(inputAmount: number, inputUnit: string, processUnit: string): number {
-    // Normalize both units to kg for comparison
-    const inputKg = this.convertToKg(inputAmount, inputUnit);
-    const processKg = this.convertToKg(1, processUnit);
+  private static calculateScalingFactor(inputAmount: number, inputUnit: string, processUnit: string, materialName?: string): number {
+    // Normalize both units to kg for comparison with material-specific densities
+    const inputKg = this.convertToKg(inputAmount, inputUnit, materialName);
+    const processKg = this.convertToKg(1, processUnit, materialName);
     
     return inputKg / processKg;
   }
   
   /**
    * Convert various units to kg for standardization
+   * Uses material-specific densities for accurate liquid conversions
    */
-  private static convertToKg(amount: number, unit: string): number {
+  private static convertToKg(amount: number, unit: string, materialName?: string): number {
     const unitLower = unit.toLowerCase();
     switch (unitLower) {
       case 'kg':
@@ -644,13 +645,36 @@ export class OpenLCAService {
       case 'l':
       case 'liter':
       case 'litre':
-        return amount; // Assume 1L ≈ 1kg for most liquid ingredients
+        return amount * this.getLiquidDensity(materialName);
       case 'ml':
-        return amount / 1000;
+        return (amount / 1000) * this.getLiquidDensity(materialName);
       default:
         console.warn(`Unknown unit: ${unit}, assuming kg`);
         return amount;
     }
+  }
+
+  /**
+   * Get density for liquid ingredients (kg/L)
+   * Based on actual ingredient densities for accurate conversions
+   */
+  private static getLiquidDensity(materialName?: string): number {
+    if (!materialName) return 1.0; // Default water density
+
+    const materialLower = materialName.toLowerCase();
+    
+    // Specific densities for common liquid ingredients
+    if (materialLower.includes('molasses')) return 1.4; // Molasses is dense
+    if (materialLower.includes('honey')) return 1.45; // Honey is very dense
+    if (materialLower.includes('corn syrup') || materialLower.includes('glucose')) return 1.35;
+    if (materialLower.includes('oil') || materialLower.includes('fat')) return 0.9; // Oils are lighter than water
+    if (materialLower.includes('alcohol') || materialLower.includes('ethanol')) return 0.79; // Alcohol is lighter
+    if (materialLower.includes('vinegar')) return 1.01; // Slightly denser than water
+    if (materialLower.includes('milk')) return 1.03; // Milk is slightly dense
+    if (materialLower.includes('cream')) return 0.96; // Cream is lighter than milk
+    if (materialLower.includes('extract')) return 0.9; // Most extracts are alcohol-based
+    
+    return 1.0; // Default water density for unknown liquids
   }
   
   /**
