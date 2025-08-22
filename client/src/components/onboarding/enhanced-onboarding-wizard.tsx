@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
 interface OnboardingData {
-  userName: string;
+  firstName: string;
   companyName: string;
   industry: string;
   companySize: string;
@@ -102,7 +102,7 @@ const steps = [
 export default function EnhancedOnboardingWizard({ onComplete, onCancel }: EnhancedOnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<OnboardingData>({
-    userName: '',
+    firstName: '',
     companyName: '',
     industry: '',
     companySize: '',
@@ -118,6 +118,8 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
   const createCompanyMutation = useMutation({
     mutationFn: async (data: OnboardingData) => {
       return apiRequest('PATCH', '/api/companies/update-onboarding', {
+        firstName: data.firstName,
+        companyName: data.companyName,
         industry: data.industry,
         numberOfEmployees: data.companySize,
         country: data.country,
@@ -162,7 +164,7 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.companyName.trim().length > 0;
+        return formData.firstName.trim().length > 0 && formData.companyName.trim().length > 0;
       case 2:
         return formData.industry && formData.companySize;
       case 3:
@@ -268,6 +270,16 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
             {currentStep === 1 && (
               <div className="space-y-4">
                 <div>
+                  <Label htmlFor="firstName">Your First Name *</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="Enter your first name"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="companyName">Company Name *</Label>
                   <Input
                     id="companyName"
@@ -279,7 +291,7 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
                 </div>
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    This will be used across all your sustainability reports and communications.
+                    We'll use your name to personalize your experience and your company name across all sustainability reports.
                   </p>
                 </div>
               </div>

@@ -7,6 +7,8 @@ export function setupOnboardingRoutes(app: Express) {
   // PATCH /api/companies/update-onboarding - Update company with onboarding data
   app.patch('/api/companies/update-onboarding', 
     [
+      body('firstName').optional().isString(),
+      body('companyName').optional().isString(),
       body('primaryMotivation').optional().isString(),
       body('productCategory').optional().isString(),
       body('numberOfEmployees').optional().isString(),
@@ -75,9 +77,15 @@ export function setupOnboardingRoutes(app: Express) {
           console.log('Created new company:', company);
         }
 
+        // Update user with first name if provided
+        if (req.body.firstName) {
+          await storage.updateUser(userId, { firstName: req.body.firstName });
+        }
+
         // Update company with onboarding data
         const updateData: any = {};
         
+        if (req.body.companyName) updateData.name = req.body.companyName;
         if (req.body.primaryMotivation) updateData.primaryMotivation = req.body.primaryMotivation;
         if (req.body.industry) updateData.industry = req.body.industry;
         if (req.body.country) updateData.country = req.body.country;
