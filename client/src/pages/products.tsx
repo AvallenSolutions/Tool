@@ -129,7 +129,7 @@ export default function ProductsPage() {
           title="Products" 
           subtitle="Manage your product catalog and track environmental footprints" 
         />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6 pb-20 overflow-y-auto">
           {/* Header Section */}
           <div className="mb-6 p-4 bg-gradient-to-r from-avallen-green/10 to-avallen-green/5 border border-avallen-green/20 rounded-lg">
             <div className="flex items-center justify-between">

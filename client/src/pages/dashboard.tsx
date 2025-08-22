@@ -151,7 +151,7 @@ export default function Dashboard() {
             </button>
           </div>
         )}
-        <main className="flex-1 p-6 overflow-y-auto" id="dashboard-main">
+        <main className="flex-1 p-6 pb-20 overflow-y-auto" id="dashboard-main">
           <div id="metrics-cards">
             <MetricsCards />
           </div>
@@ -196,7 +196,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 mb-8">
+          <div className="grid grid-cols-1 gap-6 mb-16">
             <div id="products-section">
               <ProductsSection />
             </div>
