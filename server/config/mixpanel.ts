@@ -8,13 +8,18 @@ export function initializeMixpanel() {
     return null;
   }
 
-  mixpanel = Mixpanel.init(process.env.MIXPANEL_PROJECT_TOKEN, {
-    debug: process.env.NODE_ENV === 'development',
-    host: 'api-eu.mixpanel.com' // EU endpoint for data privacy
-  });
-
-  console.log('✅ Mixpanel analytics initialized');
-  return mixpanel;
+  try {
+    mixpanel = Mixpanel.init(process.env.MIXPANEL_PROJECT_TOKEN, {
+      debug: process.env.NODE_ENV === 'development',
+      host: 'api-eu.mixpanel.com' // EU endpoint for data privacy
+    });
+    console.log('✅ Mixpanel analytics initialized');
+    return mixpanel;
+  } catch (error) {
+    console.warn('⚠️ Mixpanel initialization failed, disabling analytics:', error);
+    mixpanel = null;
+    return null;
+  }
 }
 
 export function trackEvent(eventName: string, properties: Record<string, any> = {}, userId?: string) {
@@ -22,7 +27,7 @@ export function trackEvent(eventName: string, properties: Record<string, any> = 
     return;
   }
 
-  const eventData = {
+  const eventData: Record<string, any> = {
     ...properties,
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
@@ -31,10 +36,9 @@ export function trackEvent(eventName: string, properties: Record<string, any> = 
 
   try {
     if (userId) {
-      mixpanel.track(eventName, eventData, { distinct_id: userId });
-    } else {
-      mixpanel.track(eventName, eventData);
+      eventData.distinct_id = userId;
     }
+    mixpanel.track(eventName, eventData);
   } catch (error) {
     console.warn('Mixpanel tracking failed:', error);
   }
