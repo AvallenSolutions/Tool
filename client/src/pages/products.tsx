@@ -214,12 +214,12 @@ export default function ProductsPage() {
                       <CardContent className="p-0">
                         <div className="flex">
                           {/* Product Image */}
-                          <div className="w-32 h-32 bg-gradient-to-br from-avallen-green/10 to-avallen-green/5 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                          <div className="w-40 h-40 bg-gradient-to-br from-avallen-green/10 to-avallen-green/5 flex items-center justify-center flex-shrink-0 relative overflow-hidden rounded-l-lg m-4 ml-6">
                             {product.productImages && product.productImages.length > 0 && (
                               <img 
                                 src={`/simple-image/objects/uploads/${product.productImages[0].split('/').pop()}`}
                                 alt={product.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain rounded-lg shadow-sm"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
@@ -229,7 +229,7 @@ export default function ProductsPage() {
                               />
                             )}
                             <div className={`fallback-icon flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
-                              <Package className="w-8 h-8 text-avallen-green mb-1" />
+                              <Package className="w-12 h-12 text-avallen-green mb-2" />
                               <span className="text-xs text-avallen-green font-medium">No Image</span>
                             </div>
                           </div>
@@ -322,12 +322,12 @@ export default function ProductsPage() {
                         <CardContent className="p-0">
                           <div className="flex">
                             {/* Product Thumbnail */}
-                            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                            <div className="w-28 h-28 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0 relative overflow-hidden rounded-l-lg m-3 ml-4">
                               {product.productImages && product.productImages.length > 0 && (
                                 <img 
                                   src={`/simple-image/objects/uploads/${product.productImages[0].split('/').pop()}`}
                                   alt={product.name}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-contain rounded-lg shadow-sm"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = 'none';
@@ -338,9 +338,9 @@ export default function ProductsPage() {
                               )}
                               <div className={`fallback-icon flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
                                 {product.productionModel === 'in-house' ? (
-                                  <Factory className="w-6 h-6 text-gray-400 mb-1" />
+                                  <Factory className="w-8 h-8 text-gray-400 mb-1" />
                                 ) : (
-                                  <ExternalLink className="w-6 h-6 text-gray-400 mb-1" />
+                                  <ExternalLink className="w-8 h-8 text-gray-400 mb-1" />
                                 )}
                                 <span className="text-xs text-gray-400">No Image</span>
                               </div>
