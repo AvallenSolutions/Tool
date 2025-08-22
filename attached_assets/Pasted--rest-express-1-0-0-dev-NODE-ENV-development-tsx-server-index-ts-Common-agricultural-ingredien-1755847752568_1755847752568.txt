@@ -1,0 +1,48 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✓ Common agricultural ingredients initialized
+Onboarding PATCH route hit: /api/companies/update-onboarding
+Auth status: { isAuthenticated: false, hasUser: false, userObject: 'no user' }
+Session details: {
+  sessionID: 'jJ5NXwZo4NxGoTNWsHMRdx4x1iExa7Eo',
+  session: [ 'cookie' ],
+  isAuthenticated: false,
+  hasPassport: false
+}
+Using fallback pattern - companyId: 1 userId: user-1
+Using userId: user-1
+Error updating company onboarding: error: column "financial_year" does not exist
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.getCompanyByOwner (/home/runner/workspace/server/storage.ts:204:23)
+    at async <anonymous> (/home/runner/workspace/server/routes/onboarding.ts:65:23) {
+  length: 115,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '198',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3722',
+  routine: 'errorMissingColumn'
+}
+Error details: {
+  message: 'column "financial_year" does not exist',
+  stack: 'error: column "financial_year" does not exist\n' +
+    '    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)\n' +
+    '    at async DatabaseStorage.getCompanyByOwner (/home/runner/workspace/server/storage.ts:204:23)\n' +
+    '    at async <anonymous> (/home/runner/workspace/server/routes/onboarding.ts:65:23)',
+  userId: 'user-1',
+  requestBody: {
