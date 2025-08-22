@@ -277,19 +277,9 @@ export default function ProductsPage() {
                                 </div>
                               </div>
                               
-                              {/* Actions & Metrics */}
-                              <div className="flex flex-col items-end justify-between ml-6">
-                                {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
-                                  <div className="text-center bg-white/70 rounded-lg p-3 border border-green-200">
-                                    <p className="text-xs font-medium text-green-700 mb-1">CO₂ Footprint</p>
-                                    <p className="text-lg font-bold text-green-800">
-                                      {product.carbonFootprint.toFixed(2)} kg
-                                    </p>
-                                    <p className="text-xs text-green-600">per unit</p>
-                                  </div>
-                                )}
-                                
-                                <div className="flex items-center space-x-2 mt-4">
+                              {/* Actions */}
+                              <div className="flex flex-col items-end justify-end ml-6">
+                                <div className="flex items-center space-x-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
@@ -398,17 +388,8 @@ export default function ProductsPage() {
                                   </div>
                                 </div>
                                 
-                                {/* Actions & Metrics */}
-                                <div className="flex flex-col items-end justify-between ml-3 h-full">
-                                  {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
-                                    <div className="text-center bg-green-50 rounded px-2 py-1 border border-green-200 mb-2">
-                                      <p className="text-xs font-medium text-green-700">CO₂</p>
-                                      <p className="text-sm font-bold text-green-800">
-                                        {product.carbonFootprint.toFixed(1)}kg
-                                      </p>
-                                    </div>
-                                  )}
-                                  
+                                {/* Actions */}
+                                <div className="flex flex-col items-end justify-end ml-3 h-full">
                                   <div className="flex items-center space-x-1">
                                     <Button
                                       variant="outline"
