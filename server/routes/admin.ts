@@ -848,10 +848,12 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
 
       res.json({
         success: true,
-        conversations: allConversations,
-        total: allConversations.length,
-        offset: parseInt(offset as string),
-        limit: parseInt(limit as string),
+        data: allConversations,
+        pagination: {
+          total: allConversations.length,
+          offset: parseInt(offset as string),
+          limit: parseInt(limit as string),
+        },
       });
 
     } catch (internalError) {

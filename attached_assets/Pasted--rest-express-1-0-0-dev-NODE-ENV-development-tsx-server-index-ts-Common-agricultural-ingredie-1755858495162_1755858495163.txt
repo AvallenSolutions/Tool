@@ -1,0 +1,179 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✓ Common agricultural ingredients initialized
+Development mode: returning admin user info: {
+  id: '44886248',
+  email: 'tim@avallen.solutions',
+  firstName: 'Tim',
+  lastName: 'Admin',
+  profileImageUrl: '',
+  role: 'admin'
+}
+Development mode: returning admin user info: {
+  id: '44886248',
+  email: 'tim@avallen.solutions',
+  firstName: 'Tim',
+  lastName: 'Admin',
+  profileImageUrl: '',
+  role: 'admin'
+}
+Development mode: returning admin user info: {
+  id: '44886248',
+  email: 'tim@avallen.solutions',
+  firstName: 'Tim',
+  lastName: 'Admin',
+  profileImageUrl: '',
+  role: 'admin'
+}
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/suggestions/next-steps {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/dashboard/metrics {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+Products fetched: 3 for company 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+🔍 Getting suggestions for company 1
+🏢 Using company ID 1 for automated calculations
+🔍 Calculating purchased goods for company 1
+🔍 Calculating purchased goods for company 1
+📦 Found 3 products for emissions calculation
+🧮 Processing product: Koko (ID: 15)
+🧮 Calculating OpenLCA-based emissions for Koko
+📋 Found 2 ingredients
+📦 Found 3 products for emissions calculation
+🧮 Processing product: Koko (ID: 15)
+🧮 Calculating OpenLCA-based emissions for Koko
+📋 Found 2 ingredients
+🌱 OpenLCA Molasses, cane: 1.8 l = 1.602 kg CO2e
+isAuthenticated middleware check for: /api/dashboard/kpis {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/smart-goals {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🌱 OpenLCA Molasses, cane: 1.8 l = 1.602 kg CO2e
+⚠️ Fallback Coconut extract: 3 ml = 1.5 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+⚠️ Fallback Coconut extract: 3 ml = 1.5 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+💾 Stored carbon footprint for Koko: 3.360 kg CO2e
+📊 Koko per-unit emissions: 3.360 kg CO2e per unit
+🏭 Koko annual production: 0 units
+🌍 Koko total annual emissions: 0.0 tonnes CO2e
+🧮 Processing product: Dark Spiced ecoSPIRITS (ID: 14)
+🧮 Calculating OpenLCA-based emissions for Dark Spiced ecoSPIRITS
+📋 Found 1 ingredients
+📊 Dark Spiced ecoSPIRITS per-unit emissions: 0.000 kg CO2e per unit
+🏭 Dark Spiced ecoSPIRITS annual production: 0 units
+🌍 Dark Spiced ecoSPIRITS total annual emissions: 0.0 tonnes CO2e
+🧮 Processing product: Rum Blanc (ID: 12)
+🧮 Calculating OpenLCA-based emissions for Rum Blanc
+📋 Found 1 ingredients
+📋 Generated 1 suggestions: [ 'Enhance Your Sustainability Reporting' ]
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+💾 Stored carbon footprint for Koko: 3.360 kg CO2e
+📊 Koko per-unit emissions: 3.360 kg CO2e per unit
+🏭 Koko annual production: 0 units
+🌍 Koko total annual emissions: 0.0 tonnes CO2e
+🧮 Processing product: Dark Spiced ecoSPIRITS (ID: 14)
+🧮 Calculating OpenLCA-based emissions for Dark Spiced ecoSPIRITS
+📋 Found 1 ingredients
+📊 Dark Spiced ecoSPIRITS per-unit emissions: 0.000 kg CO2e per unit
+🏭 Dark Spiced ecoSPIRITS annual production: 0 units
+🌍 Dark Spiced ecoSPIRITS total annual emissions: 0.0 tonnes CO2e
+🧮 Processing product: Rum Blanc (ID: 12)
+🧮 Calculating OpenLCA-based emissions for Rum Blanc
+📋 Found 1 ingredients
+isAuthenticated middleware check for: /api/company/water-footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🌱 OpenLCA Molasses, cane: 1.5 kg = 1.335 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+🌱 OpenLCA Molasses, cane: 1.5 kg = 1.335 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+💾 Stored carbon footprint for Rum Blanc: 1.593 kg CO2e
+📊 Rum Blanc per-unit emissions: 1.593 kg CO2e per unit
+🏭 Rum Blanc annual production: 300,000 units
+🌍 Rum Blanc total annual emissions: 477.9 tonnes CO2e
+💾 Stored carbon footprint for Rum Blanc: 1.593 kg CO2e
+📊 Rum Blanc per-unit emissions: 1.593 kg CO2e per unit
+🏭 Rum Blanc annual production: 300,000 units
+🌍 Rum Blanc total annual emissions: 477.9 tonnes CO2e
+Using admin company with products: Demo Company ID: 1
+📈 Production dashboard metrics (FootprintWizard method):
+   CO2e: 500.04 tonnes (500044.8 kg)
+   Water: 0 litres
+   Waste: 0.0 tonnes
+isAuthenticated middleware check for: /api/reports {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🌱 OpenLCA water footprint for Molasses, cane: 46.800000000000004L
+🌱 OpenLCA carbon footprint for Molasses, cane: 1.602 kg CO2e
+Using admin company with products: Demo Company ID: 1
+🌱 OpenLCA water footprint for Molasses, cane: 39L
+🌱 OpenLCA carbon footprint for Molasses, cane: 1.335 kg CO2e
+Admin conversations endpoint called with params: { search: undefined, status: undefined, limit: '1', offset: 0 }
+📨 Found 1 internal messages for admin view
+📨 Transformed 1 internal messages for admin dashboard
+📨 Total conversations for admin: 6 (1 internal + 5 traditional)
+Admin conversations endpoint called with params: { search: undefined, status: undefined, limit: 50, offset: 0 }
+📨 Found 2 internal messages for admin view
+📨 Transformed 2 internal messages for admin dashboard
+📨 Total conversations for admin: 7 (2 internal + 5 traditional)
+Admin conversations endpoint called with params: { search: undefined, status: undefined, limit: 50, offset: 0 }
+📨 Found 2 internal messages for admin view
+📨 Transformed 2 internal messages for admin dashboard
+📨 Total conversations for admin: 7 (2 internal + 5 traditional)
+Admin conversations endpoint called with params: { search: undefined, status: undefined, limit: 50, offset: 0 }
+📨 Found 2 internal messages for admin view
+📨 Transformed 2 internal messages for admin dashboard
+📨 Total conversations for admin: 7 (2 internal + 5 traditional)
+Admin conversations endpoint called with params: { search: undefined, status: undefined, limit: 50, offset: 0 }
+📨 Found 2 internal messages for admin view
+📨 Transformed 2 internal messages for admin dashboard
+📨 Total conversations for admin: 7 (2 internal + 5 traditional)
