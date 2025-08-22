@@ -101,17 +101,8 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-  // Rate limiting for CAPTCHA verification
-  const captchaLimiter = require('express-rate-limit')({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // limit each IP to 10 requests per windowMs
-    message: { success: false, message: "Too many CAPTCHA verification attempts, please try again later." },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
-  // CAPTCHA verification endpoint
-  app.post("/api/verify-captcha", captchaLimiter, async (req, res) => {
+  // CAPTCHA verification endpoint (rate limiting will be added later)
+  app.post("/api/verify-captcha", async (req, res) => {
     try {
       const { captchaToken } = req.body;
       
