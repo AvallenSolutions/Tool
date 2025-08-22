@@ -75,12 +75,27 @@ export function FeedbackWidget() {
   };
 
   return (
+    <div style={{ 
+      position: 'fixed', 
+      bottom: 0, 
+      right: 0, 
+      pointerEvents: 'none',
+      zIndex: 9999 
+    }}>
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
-          className="fixed bottom-4 right-4 z-50 bg-white dark:bg-black shadow-lg hover:shadow-xl transition-all duration-200 pointer-events-auto"
+          size="sm" 
+          className="fixed bottom-4 right-4 z-[9999] bg-white dark:bg-black shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-300 dark:border-gray-600"
+          style={{
+            position: 'fixed',
+            bottom: '16px',
+            right: '16px',
+            zIndex: 9999,
+            pointerEvents: 'auto',
+            isolation: 'isolate'
+          }}
           data-testid="feedback-trigger"
         >
           <MessageCircle className="w-4 h-4 mr-2" />
@@ -154,5 +169,6 @@ export function FeedbackWidget() {
         </div>
       </DialogContent>
     </Dialog>
+    </div>
   );
 }

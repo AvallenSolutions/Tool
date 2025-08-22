@@ -323,7 +323,7 @@ export default function Company() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title="Company" subtitle="Manage your environmental impact and sustainability data" />
-        <main className="flex-1 p-6 pb-20 overflow-y-auto">
+        <main className="flex-1 p-6 overflow-y-auto">
           {/* Enhanced Progress Overview */}
           <Card className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-l-4 border-l-avallen-green">
             <CardContent className="pt-6">
