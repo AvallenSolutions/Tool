@@ -5,6 +5,7 @@ This platform provides comprehensive sustainability solutions for SME drinks bra
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Admin email preference: tim@avallen.solutions for development authentication.
 
 ## System Architecture
 
@@ -31,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 - **Monorepo Structure**: Shared types between frontend and backend for type safety.
 
 ### System Design Choices
-- **Authentication**: Replit Auth integration with CAPTCHA security, PostgreSQL session storage, automatic user creation/update on login, comprehensive login page redesign, rate limiting protection, and robust onboarding system.
+- **Authentication**: Replit Auth integration with CAPTCHA security, PostgreSQL session storage, automatic user creation/update on login, comprehensive login page redesign, rate limiting protection, robust onboarding system, and development mode admin authentication (tim@avallen.solutions) with consistent user ID management across frontend and backend.
 - **Database Layer**: Drizzle ORM for type-safe queries, comprehensive schema for users, companies, products, suppliers, and reports.
 - **Data Management**: TanStack Query for server state and caching, optimistic updates, intelligent query invalidation, centralized error handling.
 - **Company Onboarding**: Streamlined 5-step wizard for company setup, including country selection and reporting period configuration.
