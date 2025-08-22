@@ -2907,6 +2907,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       if (!userId) {
         // Development mode: Use FootprintWizard's calculation method
+        console.log('🔍 DEBUG: Development mode triggered - !userId path');
         console.log('Development mode: Creating mock user for testing');
         const mockCompany = await dbStorage.getCompanyByOwner('mock-user-123');
         if (mockCompany) {
@@ -2946,11 +2947,22 @@ Be precise and quote actual text from the content, not generic terms.`;
           console.log(`   Calculated total: ${calculatedCO2eKg.toFixed(2)} kg CO2e`);
           console.log(`   Target total: ${targetCO2eKg} kg CO2e`);
           
-          // Use exact values from Water Footprint Breakdown Total (as user requested)
-          const totalWaterUsage = 11700000; // 11.7M litres from Water Footprint Breakdown Total
-          const totalWasteGenerated = 100; // 0.1 tonnes in kg from dashboard
+          // Calculate actual values from product data
+          let totalWaterUsage = 0;
+          let totalWasteGenerated = 0;
+
+          // Calculate water usage from actual product footprints
+          for (const product of companyProducts) {
+            const waterFootprint = parseFloat(product.waterFootprint || '0');
+            const annualProduction = parseFloat(product.annualProductionVolume || '0');
+            totalWaterUsage += waterFootprint * annualProduction;
+          }
           
-          console.log(`📈 Dashboard metrics (copied from existing calculations):`);
+          // Use proper KPI service for waste calculation
+          totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(mockCompany.id);
+          console.log(`🗑️ KPI Service calculated waste: ${totalWasteGenerated} kg (${totalWasteGenerated/1000} tonnes)`);
+          
+          console.log(`📈 Dashboard metrics (calculated from product data):`);
           console.log(`   CO2e: ${(targetCO2eKg/1000).toFixed(2)} tonnes (${targetCO2eKg} kg)`);
           console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres`);
           console.log(`   Waste: ${(totalWasteGenerated/1000).toFixed(1)} tonnes`);
@@ -2958,13 +2970,13 @@ Be precise and quote actual text from the content, not generic terms.`;
           return res.json({
             totalCO2e: targetCO2eKg / 1000, // Return as tonnes
             waterUsage: totalWaterUsage, // 11.7M litres
-            wasteGenerated: totalWasteGenerated / 1000 // 0.1 tonnes
+            wasteGenerated: totalWasteGenerated / 1000 // Return calculated waste in tonnes
           });
         }
         
-        // Copy exact values from Water Footprint Breakdown Total (as user requested)
-        const totalWaterUsage = 11700000; // 11.7M litres from Water Footprint Breakdown Total
-        const totalWasteGenerated = 100; // 0.1 tonnes in kg from dashboard
+        // Calculate actual values using KPI service
+        const totalWaterUsage = 11700000; // Keep this as fallback for now
+        const totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(1); // Use company ID 1 for development
         
         console.log(`📈 Fallback dashboard metrics (copied from existing calculations):`);
         console.log(`   CO2e: 483.94 tonnes`);
@@ -3026,16 +3038,37 @@ Be precise and quote actual text from the content, not generic terms.`;
         const annualProduction = parseFloat(product.annualProductionVolume || '0');
         totalWaterUsage += waterFootprint * annualProduction;
         
-        const wastePerUnit = parseFloat(product.organicWasteKg || '0') + 
-                           parseFloat(product.packagingWasteKg || '0') +
-                           parseFloat(product.hazardousWasteKg || '0');
-        totalWasteGenerated += (wastePerUnit * annualProduction) / 1000;
+        // Calculate waste from actual packaging data (same logic as KPI service)
+        if (product.bottleWeight) {
+          const bottleWeightKg = parseFloat(product.bottleWeight.toString()) / 1000; // Convert grams to kg
+          const recycledContent = parseFloat(product.bottleRecycledContent?.toString() || '0') / 100;
+          
+          // Primary packaging waste (bottle)
+          let wastePerUnit = bottleWeightKg * (1 - recycledContent);
+          
+          // Add label waste if available
+          if (product.labelWeight) {
+            const labelWeightKg = parseFloat(product.labelWeight.toString()) / 1000; // Convert grams to kg
+            wastePerUnit += labelWeightKg;
+          }
+          
+          // Add closure waste estimate (average screw cap ~3g)
+          if (product.closureType && product.closureType !== 'none') {
+            wastePerUnit += 0.003; // 3g closure in kg
+          }
+          
+          totalWasteGenerated += (wastePerUnit * annualProduction) / 1000; // Convert to tonnes
+          console.log(`🔍 Product ${product.name}: wastePerUnit=${wastePerUnit}kg, annual=${annualProduction}, total waste=${wastePerUnit * annualProduction}kg`);
+        }
       }
+      
+      console.log(`🗑️ Total calculated waste: ${totalWasteGenerated*1000}kg (${totalWasteGenerated} tonnes)`);
 
       console.log(`📈 Production dashboard metrics (FootprintWizard method):`);
       console.log(`   CO2e: ${(totalCO2eKg/1000).toFixed(2)} tonnes (${totalCO2eKg.toFixed(1)} kg)`);
       console.log(`   Water: ${totalWaterUsage.toFixed(0)} litres`);
       console.log(`   Waste: ${(totalWasteGenerated).toFixed(1)} tonnes`);
+      console.log(`🔍 DEBUG: Production path executed!`);
       
       res.json({
         totalCO2e: totalCO2eKg / 1000, // Use FootprintWizard calculation in tonnes

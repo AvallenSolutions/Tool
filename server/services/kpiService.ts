@@ -389,13 +389,77 @@ export class KPICalculationService {
   }
 
   async calculateRecycledWaste(companyId: number): Promise<number> {
-    // Placeholder - would connect to actual waste data
-    return 750; // kg per month (example)
+    try {
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, companyId));
+
+      let totalRecycledWasteKg = 0;
+
+      for (const product of companyProducts) {
+        const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
+        
+        // Calculate recycled portion from packaging
+        if (product.bottleWeight && product.bottleRecycledContent) {
+          const bottleWeightKg = parseFloat(product.bottleWeight.toString()) / 1000; // Convert grams to kg
+          const recycledContent = parseFloat(product.bottleRecycledContent?.toString() || '0') / 100;
+          
+          // Recycled portion of bottles
+          const recycledWastePerUnit = bottleWeightKg * recycledContent;
+          totalRecycledWasteKg += recycledWastePerUnit * annualProduction;
+        }
+      }
+
+      console.log(`♻️  Calculated total company recycled waste: ${totalRecycledWasteKg.toFixed(1)} kg annually`);
+      return totalRecycledWasteKg; // Return annual recycled waste in kg
+    } catch (error) {
+      console.error('Error calculating recycled waste:', error);
+      return 0;
+    }
   }
 
   async calculateTotalWasteGenerated(companyId: number): Promise<number> {
-    // Placeholder - would connect to actual waste data  
-    return 1000; // kg per month (example)
+    try {
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, companyId));
+
+      let totalWasteKg = 0;
+
+      for (const product of companyProducts) {
+        const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
+        
+        // Calculate waste from packaging (same logic as products page)
+        if (product.bottleWeight) {
+          const bottleWeightKg = parseFloat(product.bottleWeight.toString()) / 1000; // Convert grams to kg
+          const recycledContent = parseFloat(product.bottleRecycledContent?.toString() || '0') / 100;
+          
+          // Primary packaging waste (bottle)
+          let wastePerUnit = bottleWeightKg * (1 - recycledContent);
+          
+          // Add label waste if available
+          if (product.labelWeight) {
+            const labelWeightKg = parseFloat(product.labelWeight.toString()) / 1000; // Convert grams to kg
+            wastePerUnit += labelWeightKg;
+          }
+          
+          // Add closure waste estimate (average screw cap ~3g)
+          if (product.closureType && product.closureType !== 'none') {
+            wastePerUnit += 0.003; // 3g closure in kg
+          }
+          
+          totalWasteKg += wastePerUnit * annualProduction;
+        }
+      }
+
+      console.log(`📊 Calculated total company waste: ${totalWasteKg.toFixed(1)} kg annually`);
+      return totalWasteKg; // Return annual waste in kg
+    } catch (error) {
+      console.error('Error calculating total waste generated:', error);
+      return 0;
+    }
   }
 
   async calculateRecyclablePackagingWeight(companyId: number): Promise<number> {
