@@ -2718,24 +2718,26 @@ Be precise and quote actual text from the content, not generic terms.`;
             if (ingredient.name && ingredient.amount > 0) {
               try {
                 const { OpenLCAService } = await import('./services/OpenLCAService');
-                const impactData = await OpenLCAService.calculateIngredientImpact(
+                
+                // Use improved carbon footprint calculation method
+                const carbonFootprint = await OpenLCAService.calculateCarbonFootprint(
                   ingredient.name,
                   ingredient.amount,
                   ingredient.unit || 'kg'
                 );
                 
-                if (impactData?.carbonFootprint > 0) {
-                  ingredientEmissions += impactData.carbonFootprint;
-                  console.log(`🌱 OpenLCA ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${impactData.carbonFootprint.toFixed(3)} kg CO2e`);
+                if (carbonFootprint > 0) {
+                  ingredientEmissions += carbonFootprint;
+                  console.log(`🌱 OpenLCA ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${carbonFootprint.toFixed(3)} kg CO2e`);
                 } else {
-                  // Fallback only if OpenLCA fails
-                  const fallbackEmissions = (ingredient.amount || 0) * 0.5;
+                  // This should rarely happen now with improved category-based fallbacks
+                  const fallbackEmissions = (ingredient.amount || 0) * 0.8; // More realistic fallback
                   ingredientEmissions += fallbackEmissions;
                   console.log(`⚠️ Fallback ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${fallbackEmissions} kg CO2e`);
                 }
               } catch (error) {
                 console.error(`Error calculating OpenLCA impact for ${ingredient.name}:`, error);
-                const fallbackEmissions = (ingredient.amount || 0) * 0.5;
+                const fallbackEmissions = (ingredient.amount || 0) * 0.8; // More realistic fallback  
                 ingredientEmissions += fallbackEmissions;
                 console.log(`⚠️ Fallback ${ingredient.name}: ${ingredient.amount} ${ingredient.unit} = ${fallbackEmissions} kg CO2e`);
               }
@@ -7876,32 +7878,75 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
               
               return {
                 ...ingredient,
-                co2ePerUnit: co2Footprint, // kg CO2e per unit
+                co2ePerUnit: co2Footprint > 0 ? co2Footprint : null, // Only return if positive
               };
             } catch (error) {
-              // If CO2 calculation fails, return ingredient without CO2 data
-              return {
-                ...ingredient,
-                co2ePerUnit: null,
-              };
+              console.error(`Error calculating CO2 for ${ingredient.materialName}:`, error);
+              // Try to get category-based estimation as fallback
+              try {
+                const { OpenLCAService: FallbackService } = await import('./services/OpenLCAService');
+                const fallbackCO2 = await FallbackService.calculateCarbonFootprint(
+                  ingredient.materialName, 
+                  1, 
+                  ingredient.unit
+                );
+                return {
+                  ...ingredient,
+                  co2ePerUnit: fallbackCO2 > 0 ? fallbackCO2 : null,
+                };
+              } catch (fallbackError) {
+                return {
+                  ...ingredient,
+                  co2ePerUnit: null,
+                };
+              }
             }
           })
         );
         
         res.json(enhancedResults);
       } catch (openLcaError) {
-        console.warn('OpenLCA service not available, returning results without CO2 data:', openLcaError);
-        // Return results without CO2 data
-        const resultsWithoutCO2 = limitedResults.map(ingredient => ({
-          ...ingredient,
-          co2ePerUnit: null,
-        }));
-        res.json(resultsWithoutCO2);
+        console.error('OpenLCA service not available:', openLcaError);
+        res.status(500).json({ error: 'OpenLCA service unavailable' });
       }
       
     } catch (error) {
       console.error('Error searching LCA ingredients:', error);
       res.status(500).json({ error: 'Failed to search ingredients' });
+    }
+  });
+
+  // GET /api/lca/test-calculation/:ingredient - Test OpenLCA calculation for a specific ingredient
+  app.get('/api/lca/test-calculation/:ingredient', async (req, res) => {
+    try {
+      const { ingredient } = req.params;
+      const { amount = 1, unit = 'kg' } = req.query;
+
+      const { OpenLCAService } = await import('./services/OpenLCAService');
+      
+      const co2Footprint = await OpenLCAService.calculateCarbonFootprint(
+        ingredient, 
+        parseFloat(amount as string), 
+        unit as string
+      );
+      
+      const detailedImpact = await OpenLCAService.calculateIngredientImpact(
+        ingredient,
+        parseFloat(amount as string),
+        unit as string
+      );
+
+      res.json({
+        ingredient,
+        amount: parseFloat(amount as string),
+        unit,
+        co2Footprint,
+        detailedImpact,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error testing LCA calculation:', error);
+      res.status(500).json({ error: 'Failed to calculate LCA impact', details: error.message });
     }
   });
 
