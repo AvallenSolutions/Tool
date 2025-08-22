@@ -1238,6 +1238,8 @@ router.patch('/conversations/:conversationId/archive', async (req: AdminRequest,
       // It's an internal message - update to archived status
       const { internalMessages } = await import('@shared/schema');
       
+      console.log(`📥 Attempting to archive internal message with ID: ${numericId}`);
+      
       const [updatedMessage] = await db
         .update(internalMessages)
         .set({ 
@@ -1246,14 +1248,18 @@ router.patch('/conversations/:conversationId/archive', async (req: AdminRequest,
         })
         .where(eq(internalMessages.id, numericId))
         .returning();
+        
+      console.log(`📥 Archive result:`, updatedMessage);
 
       if (!updatedMessage) {
+        console.log(`❌ No internal message found to archive with ID: ${numericId}`);
         return res.status(404).json({
           success: false,
           error: 'Internal message not found',
         });
       }
 
+      console.log(`✅ Internal message archived successfully: ${updatedMessage.id}`);
       res.json({
         success: true,
         message: 'Internal message archived successfully',
@@ -1312,18 +1318,24 @@ router.delete('/conversations/:conversationId', async (req: AdminRequest, res: R
       // It's an internal message - delete it
       const { internalMessages } = await import('@shared/schema');
       
+      console.log(`🗑️ Attempting to delete internal message with ID: ${numericId}`);
+      
       const [deletedMessage] = await db
         .delete(internalMessages)
         .where(eq(internalMessages.id, numericId))
         .returning();
+      
+      console.log(`🗑️ Delete result:`, deletedMessage);
 
       if (!deletedMessage) {
+        console.log(`❌ No internal message found with ID: ${numericId}`);
         return res.status(404).json({
           success: false,
           error: 'Internal message not found',
         });
       }
 
+      console.log(`✅ Internal message deleted successfully: ${deletedMessage.id}`);
       res.json({
         success: true,
         message: 'Internal message deleted successfully',
