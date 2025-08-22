@@ -3,11 +3,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, Lock, Globe, ArrowRight, Leaf, Award, BarChart3, Users, FileText } from "lucide-react";
 import { Link } from "wouter";
+import { useState, useRef } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
 export default function Login() {
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token);
+  };
+
+  const handleLogin = async () => {
+    if (!captchaToken) {
+      alert("Please complete the CAPTCHA verification.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Verify CAPTCHA on the server before redirecting to login
+      const response = await fetch('/api/verify-captcha', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ captchaToken }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Store verification in session and redirect to login
+        window.location.href = "/api/login";
+      } else {
+        alert("CAPTCHA verification failed. Please try again.");
+        recaptchaRef.current?.reset();
+        setCaptchaToken(null);
+      }
+    } catch (error) {
+      console.error('CAPTCHA verification error:', error);
+      alert("Verification failed. Please try again.");
+      recaptchaRef.current?.reset();
+      setCaptchaToken(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -67,26 +110,37 @@ export default function Login() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Lock className="w-4 h-4 text-avallen-green mr-2" />
-                        Your data is encrypted and protected
+                        CAPTCHA verification and rate limiting protection
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Globe className="w-4 h-4 text-avallen-green mr-2" />
-                        Access from anywhere, anytime
+                        Your data is encrypted and protected
                       </div>
                     </div>
+                  </div>
+
+                  {/* CAPTCHA Verification */}
+                  <div className="flex justify-center">
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                      onChange={handleCaptchaChange}
+                      theme="light"
+                    />
                   </div>
 
                   {/* Login Button */}
                   <Button 
                     onClick={handleLogin}
-                    className="w-full bg-avallen-green hover:bg-avallen-green-light text-white py-6 text-lg font-semibold"
+                    disabled={!captchaToken || isLoading}
+                    className="w-full bg-avallen-green hover:bg-avallen-green-light text-white py-6 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-center">
                       <div className="w-6 h-6 bg-white rounded mr-3 flex items-center justify-center">
                         <span className="text-avallen-green font-bold text-sm">R</span>
                       </div>
-                      Sign in with Replit
-                      <ArrowRight className="ml-3 w-5 h-5" />
+                      {isLoading ? "Verifying..." : "Sign in with Replit"}
+                      {!isLoading && <ArrowRight className="ml-3 w-5 h-5" />}
                     </div>
                   </Button>
 

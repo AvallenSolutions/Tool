@@ -101,7 +101,74 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
+  // Rate limiting for CAPTCHA verification
+  const captchaLimiter = require('express-rate-limit')({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // limit each IP to 10 requests per windowMs
+    message: { success: false, message: "Too many CAPTCHA verification attempts, please try again later." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // CAPTCHA verification endpoint
+  app.post("/api/verify-captcha", captchaLimiter, async (req, res) => {
+    try {
+      const { captchaToken } = req.body;
+      
+      if (!captchaToken) {
+        return res.status(400).json({ success: false, message: "CAPTCHA token is required" });
+      }
+
+      // Verify CAPTCHA with Google
+      const secretKey = process.env.RECAPTCHA_SECRET_KEY || "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"; // Test key for development
+      const verificationUrl = `https://www.google.com/recaptcha/api/siteverify`;
+      
+      const verificationResponse = await fetch(verificationUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `secret=${secretKey}&response=${captchaToken}`,
+      });
+
+      const verificationData = await verificationResponse.json();
+
+      if (verificationData.success) {
+        // Store CAPTCHA verification in session
+        (req.session as any).captchaVerified = true;
+        (req.session as any).captchaVerifiedAt = Date.now();
+        
+        res.json({ success: true, message: "CAPTCHA verified successfully" });
+      } else {
+        console.log('CAPTCHA verification failed:', verificationData);
+        res.status(400).json({ 
+          success: false, 
+          message: "CAPTCHA verification failed",
+          errors: verificationData['error-codes'] || []
+        });
+      }
+    } catch (error) {
+      console.error('CAPTCHA verification error:', error);
+      res.status(500).json({ success: false, message: "Server error during CAPTCHA verification" });
+    }
+  });
+
   app.get("/api/login", (req, res, next) => {
+    // Check if CAPTCHA was verified in the last 5 minutes
+    const session = req.session as any;
+    const captchaVerified = session?.captchaVerified;
+    const captchaVerifiedAt = session?.captchaVerifiedAt;
+    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+
+    if (!captchaVerified || !captchaVerifiedAt || captchaVerifiedAt < fiveMinutesAgo) {
+      console.log('CAPTCHA verification required or expired');
+      return res.redirect('/login?error=captcha_required');
+    }
+
+    // Clear CAPTCHA verification after use
+    delete session.captchaVerified;
+    delete session.captchaVerifiedAt;
+
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],

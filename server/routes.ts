@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import path from "path";
 import fs from "fs";
 import Stripe from "stripe";
+import rateLimit from "express-rate-limit";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";

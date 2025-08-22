@@ -31,7 +31,7 @@ Preferred communication style: Simple, everyday language.
 - **Monorepo Structure**: Shared types between frontend and backend for type safety.
 
 ### System Design Choices
-- **Authentication**: Replit Auth integration, PostgreSQL session storage, automatic user creation/update on login, comprehensive login page redesign, and robust onboarding system.
+- **Authentication**: Replit Auth integration with CAPTCHA security, PostgreSQL session storage, automatic user creation/update on login, comprehensive login page redesign, rate limiting protection, and robust onboarding system.
 - **Database Layer**: Drizzle ORM for type-safe queries, comprehensive schema for users, companies, products, suppliers, and reports.
 - **Data Management**: TanStack Query for server state and caching, optimistic updates, intelligent query invalidation, centralized error handling.
 - **Company Onboarding**: Streamlined 5-step wizard for company setup, including country selection and reporting period configuration.
