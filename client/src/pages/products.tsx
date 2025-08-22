@@ -210,67 +210,117 @@ export default function ProductsPage() {
                 <div className="space-y-4">
                   {/* Main Product (if any) */}
                   {products.filter(p => p.isMainProduct).map((product) => (
-                    <Card key={product.id} className="border-2 border-avallen-green bg-gradient-to-r from-green-50 to-green-25">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-avallen-green/20 rounded-full flex items-center justify-center">
-                              <Package className="w-6 h-6 text-avallen-green" />
-                            </div>
-                            <div>
-                              <div className="flex items-center space-x-2 mb-1">
-                                <h3 className="text-lg font-semibold text-slate-gray">{product.name}</h3>
-                                <Badge className="bg-avallen-green text-white">Main Product</Badge>
-                                <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                                  {product.status}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-gray-600">
-                                {product.sku && `SKU: ${product.sku} • `}
-                                {product.volume || 'Volume TBD'} {product.type} • 
-                                {product.productionModel === 'own' ? ' Own Production' : 
-                                 product.productionModel === 'contract' ? ' Contract Production' : ' Production Model TBD'}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Annual Volume: {product.annualProductionVolume?.toLocaleString() || 'TBD'} {product.productionUnit}
-                                {product.componentCount && ` • ${product.componentCount} Components`}
-                              </p>
+                    <Card key={product.id} className="border-2 border-avallen-green bg-gradient-to-r from-green-50 to-green-25 overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="flex">
+                          {/* Product Image */}
+                          <div className="w-32 h-32 bg-gradient-to-br from-avallen-green/10 to-avallen-green/5 flex items-center justify-center flex-shrink-0">
+                            {product.productImages && product.productImages.length > 0 ? (
+                              <img 
+                                src={product.productImages[0]} 
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  target.nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
+                              <Package className="w-8 h-8 text-avallen-green mb-1" />
+                              <span className="text-xs text-avallen-green font-medium">No Image</span>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-4">
-                            {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
-                              <div className="text-center">
-                                <p className="text-sm font-medium text-green-700">CO₂ Footprint</p>
-                                <p className="text-lg font-semibold text-green-800">
-                                  {product.carbonFootprint.toFixed(2)} kg
-                                </p>
+                          
+                          {/* Product Details */}
+                          <div className="flex-1 p-6">
+                            <div className="flex justify-between h-full">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <h3 className="text-xl font-bold text-slate-gray">{product.name}</h3>
+                                  <Badge className="bg-avallen-green text-white">Main Product</Badge>
+                                  <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                                    {product.status}
+                                  </Badge>
+                                </div>
+                                
+                                {product.description && (
+                                  <p className="text-sm text-gray-600 mb-2 max-w-md">
+                                    {product.description}
+                                  </p>
+                                )}
+                                
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="font-medium text-gray-700">SKU:</span>{' '}
+                                    <span className="text-gray-600">{product.sku || 'Not set'}</span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-gray-700">Volume:</span>{' '}
+                                    <span className="text-gray-600">{product.volume || 'Not set'}</span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-gray-700">Type:</span>{' '}
+                                    <span className="text-gray-600 capitalize">{product.type}</span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-gray-700">Production:</span>{' '}
+                                    <span className="text-gray-600">
+                                      {product.productionModel === 'in-house' ? 'In-House' : 
+                                       product.productionModel === 'contract' ? 'Contract' : 'Not set'}
+                                    </span>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <span className="font-medium text-gray-700">Annual Volume:</span>{' '}
+                                    <span className="text-gray-600">
+                                      {product.annualProductionVolume?.toLocaleString() || 'Not set'} {product.productionUnit}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => navigate(`/app/products/${product.id}`)}
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                View
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
-                              >
-                                <Edit className="w-4 h-4 mr-1" />
-                                Edit
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDelete(product.id, product.name)}
-                                className="text-red-600 hover:text-red-700 hover:border-red-200"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              
+                              {/* Actions & Metrics */}
+                              <div className="flex flex-col items-end justify-between ml-6">
+                                {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
+                                  <div className="text-center bg-white/70 rounded-lg p-3 border border-green-200">
+                                    <p className="text-xs font-medium text-green-700 mb-1">CO₂ Footprint</p>
+                                    <p className="text-lg font-bold text-green-800">
+                                      {product.carbonFootprint.toFixed(2)} kg
+                                    </p>
+                                    <p className="text-xs text-green-600">per unit</p>
+                                  </div>
+                                )}
+                                
+                                <div className="flex items-center space-x-2 mt-4">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate(`/app/products/${product.id}`)}
+                                    className="bg-white/80"
+                                  >
+                                    <Eye className="w-4 h-4 mr-1" />
+                                    View
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
+                                    className="bg-white/80"
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDelete(product.id, product.name)}
+                                    className="text-red-600 hover:text-red-700 hover:border-red-200 bg-white/80"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -279,70 +329,108 @@ export default function ProductsPage() {
                   ))}
 
                   {/* Other Products */}
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {products.filter(p => !p.isMainProduct).map((product) => (
-                      <Card key={product.id} className="border border-light-gray hover:bg-gray-50 transition-colors">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                {product.productionModel === 'own' ? (
-                                  <Factory className="w-5 h-5 text-gray-600" />
+                      <Card key={product.id} className="border border-light-gray hover:shadow-md transition-all duration-200 overflow-hidden">
+                        <CardContent className="p-0">
+                          <div className="flex">
+                            {/* Product Thumbnail */}
+                            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0">
+                              {product.productImages && product.productImages.length > 0 ? (
+                                <img 
+                                  src={product.productImages[0]} 
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    target.nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
+                                {product.productionModel === 'in-house' ? (
+                                  <Factory className="w-6 h-6 text-gray-400 mb-1" />
                                 ) : (
-                                  <ExternalLink className="w-5 h-5 text-gray-600" />
+                                  <ExternalLink className="w-6 h-6 text-gray-400 mb-1" />
                                 )}
-                              </div>
-                              <div>
-                                <div className="flex items-center space-x-2">
-                                  <h3 className="font-medium text-slate-gray">{product.name}</h3>
-                                  <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                                    {product.status}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-gray-500">
-                                  {product.sku && `SKU: ${product.sku} • `}
-                                  {product.volume || 'Volume TBD'} • {product.type}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  Annual: {product.annualProductionVolume?.toLocaleString() || 'TBD'} {product.productionUnit}
-                                  {product.componentCount && ` • ${product.componentCount} Components`}
-                                </p>
+                                <span className="text-xs text-gray-400">No Image</span>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-4">
-                              {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
-                                <div className="text-right">
-                                  <p className="text-xs text-gray-500">CO₂ Footprint</p>
-                                  <p className="text-sm font-medium text-green-700">
-                                    {product.carbonFootprint.toFixed(2)} kg
-                                  </p>
+                            
+                            {/* Product Info */}
+                            <div className="flex-1 p-4">
+                              <div className="flex justify-between items-start h-full">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <h3 className="font-semibold text-slate-gray">{product.name}</h3>
+                                    <Badge variant={product.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                                      {product.status}
+                                    </Badge>
+                                  </div>
+                                  
+                                  {product.description && (
+                                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                      {product.description.length > 80 ? 
+                                        `${product.description.substring(0, 80)}...` : 
+                                        product.description
+                                      }
+                                    </p>
+                                  )}
+                                  
+                                  <div className="space-y-1 text-xs text-gray-500">
+                                    <div className="flex items-center space-x-4">
+                                      <span>
+                                        <span className="font-medium">SKU:</span> {product.sku || 'Not set'}
+                                      </span>
+                                      <span>
+                                        <span className="font-medium">Volume:</span> {product.volume || 'Not set'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Annual:</span> {product.annualProductionVolume?.toLocaleString() || 'Not set'} {product.productionUnit}
+                                    </div>
+                                  </div>
                                 </div>
-                              )}
-                              <div className="flex items-center space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => navigate(`/app/products/${product.id}`)}
-                                >
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  View
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
-                                >
-                                  <Edit className="w-4 h-4 mr-1" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDelete(product.id, product.name)}
-                                  className="text-red-600 hover:text-red-700 hover:border-red-200"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                
+                                {/* Actions & Metrics */}
+                                <div className="flex flex-col items-end justify-between ml-3 h-full">
+                                  {product.carbonFootprint && typeof product.carbonFootprint === 'number' && (
+                                    <div className="text-center bg-green-50 rounded px-2 py-1 border border-green-200 mb-2">
+                                      <p className="text-xs font-medium text-green-700">CO₂</p>
+                                      <p className="text-sm font-bold text-green-800">
+                                        {product.carbonFootprint.toFixed(1)}kg
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  <div className="flex items-center space-x-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => navigate(`/app/products/${product.id}`)}
+                                      className="h-7 px-2"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
+                                      className="h-7 px-2"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDelete(product.id, product.name)}
+                                      className="text-red-600 hover:text-red-700 hover:border-red-200 h-7 px-2"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
