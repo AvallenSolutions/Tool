@@ -118,7 +118,9 @@ export default function AdminMessaging() {
       
       const response = await fetch(`/api/admin/conversations?${params}`);
       if (!response.ok) throw new Error('Failed to fetch conversations');
-      return response.json();
+      const data = await response.json();
+      console.log('🔍 Frontend received conversations data:', data);
+      return data;
     },
     refetchInterval: 5000, // Refresh every 5 seconds
   });

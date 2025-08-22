@@ -761,14 +761,13 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
             .where(eq(users.id, msg.fromUserId));
 
           return {
-            id: `internal-${msg.id}`,
+            id: parseInt(`${msg.id}`), // Use the actual ID as a number
             title: msg.subject || 'Internal Message',
-            type: 'internal_message',
-            status: msg.isRead ? 'read' : 'unread',
+            type: 'direct_message' as const, // Use valid frontend type
+            status: msg.isRead ? 'archived' : 'active' as const, // Use valid frontend status
             participants: [msg.fromUserId, msg.toUserId],
-            lastMessageAt: msg.createdAt,
-            createdAt: msg.createdAt,
-            updatedAt: msg.createdAt,
+            lastMessageAt: msg.createdAt.toISOString(),
+            createdAt: msg.createdAt.toISOString(),
             participantDetails: fromUser ? [{
               userId: fromUser.id,
               firstName: fromUser.firstName,
