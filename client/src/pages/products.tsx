@@ -214,20 +214,21 @@ export default function ProductsPage() {
                       <CardContent className="p-0">
                         <div className="flex">
                           {/* Product Image */}
-                          <div className="w-32 h-32 bg-gradient-to-br from-avallen-green/10 to-avallen-green/5 flex items-center justify-center flex-shrink-0">
-                            {product.productImages && product.productImages.length > 0 ? (
+                          <div className="w-32 h-32 bg-gradient-to-br from-avallen-green/10 to-avallen-green/5 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                            {product.productImages && product.productImages.length > 0 && (
                               <img 
-                                src={product.productImages[0]} 
+                                src={`/simple-image/objects/uploads/${product.productImages[0].split('/').pop()}`}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
-                                  target.nextElementSibling?.classList.remove('hidden');
+                                  const fallback = target.parentElement?.querySelector('.fallback-icon');
+                                  if (fallback) fallback.classList.remove('hidden');
                                 }}
                               />
-                            ) : null}
-                            <div className={`flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
+                            )}
+                            <div className={`fallback-icon flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
                               <Package className="w-8 h-8 text-avallen-green mb-1" />
                               <span className="text-xs text-avallen-green font-medium">No Image</span>
                             </div>
@@ -251,31 +252,27 @@ export default function ProductsPage() {
                                   </p>
                                 )}
                                 
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <span className="font-medium text-gray-700">SKU:</span>{' '}
-                                    <span className="text-gray-600">{product.sku || 'Not set'}</span>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium text-gray-700">Volume:</span>{' '}
-                                    <span className="text-gray-600">{product.volume || 'Not set'}</span>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium text-gray-700">Type:</span>{' '}
-                                    <span className="text-gray-600 capitalize">{product.type}</span>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium text-gray-700">Production:</span>{' '}
-                                    <span className="text-gray-600">
-                                      {product.productionModel === 'in-house' ? 'In-House' : 
-                                       product.productionModel === 'contract' ? 'Contract' : 'Not set'}
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div className="text-center bg-green-50 rounded-lg p-3 border border-green-200">
+                                    <span className="block text-xs font-medium text-green-700 mb-1">CO₂ Footprint</span>
+                                    <span className="block text-lg font-bold text-green-800">
+                                      {product.carbonFootprint ? `${product.carbonFootprint.toFixed(2)} kg` : 'TBD'}
                                     </span>
+                                    <span className="text-xs text-green-600">per unit</span>
                                   </div>
-                                  <div className="col-span-2">
-                                    <span className="font-medium text-gray-700">Annual Volume:</span>{' '}
-                                    <span className="text-gray-600">
-                                      {product.annualProductionVolume?.toLocaleString() || 'Not set'} {product.productionUnit}
+                                  <div className="text-center bg-blue-50 rounded-lg p-3 border border-blue-200">
+                                    <span className="block text-xs font-medium text-blue-700 mb-1">Water Usage</span>
+                                    <span className="block text-lg font-bold text-blue-800">
+                                      {product.waterFootprint ? `${product.waterFootprint.toFixed(1)} L` : 'TBD'}
                                     </span>
+                                    <span className="text-xs text-blue-600">per unit</span>
+                                  </div>
+                                  <div className="text-center bg-orange-50 rounded-lg p-3 border border-orange-200">
+                                    <span className="block text-xs font-medium text-orange-700 mb-1">Waste Generated</span>
+                                    <span className="block text-lg font-bold text-orange-800">
+                                      {product.wasteFootprint ? `${product.wasteFootprint.toFixed(2)} kg` : 'TBD'}
+                                    </span>
+                                    <span className="text-xs text-orange-600">per unit</span>
                                   </div>
                                 </div>
                               </div>
@@ -335,20 +332,21 @@ export default function ProductsPage() {
                         <CardContent className="p-0">
                           <div className="flex">
                             {/* Product Thumbnail */}
-                            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0">
-                              {product.productImages && product.productImages.length > 0 ? (
+                            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                              {product.productImages && product.productImages.length > 0 && (
                                 <img 
-                                  src={product.productImages[0]} 
+                                  src={`/simple-image/objects/uploads/${product.productImages[0].split('/').pop()}`}
                                   alt={product.name}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = 'none';
-                                    target.nextElementSibling?.classList.remove('hidden');
+                                    const fallback = target.parentElement?.querySelector('.fallback-icon');
+                                    if (fallback) fallback.classList.remove('hidden');
                                   }}
                                 />
-                              ) : null}
-                              <div className={`flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
+                              )}
+                              <div className={`fallback-icon flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
                                 {product.productionModel === 'in-house' ? (
                                   <Factory className="w-6 h-6 text-gray-400 mb-1" />
                                 ) : (
@@ -378,17 +376,24 @@ export default function ProductsPage() {
                                     </p>
                                   )}
                                   
-                                  <div className="space-y-1 text-xs text-gray-500">
-                                    <div className="flex items-center space-x-4">
-                                      <span>
-                                        <span className="font-medium">SKU:</span> {product.sku || 'Not set'}
-                                      </span>
-                                      <span>
-                                        <span className="font-medium">Volume:</span> {product.volume || 'Not set'}
+                                  <div className="grid grid-cols-3 gap-2 text-xs">
+                                    <div className="text-center bg-green-50 rounded p-2 border border-green-200">
+                                      <span className="block font-medium text-green-700">CO₂</span>
+                                      <span className="block text-sm font-bold text-green-800">
+                                        {product.carbonFootprint ? `${product.carbonFootprint.toFixed(1)}kg` : 'TBD'}
                                       </span>
                                     </div>
-                                    <div>
-                                      <span className="font-medium">Annual:</span> {product.annualProductionVolume?.toLocaleString() || 'Not set'} {product.productionUnit}
+                                    <div className="text-center bg-blue-50 rounded p-2 border border-blue-200">
+                                      <span className="block font-medium text-blue-700">Water</span>
+                                      <span className="block text-sm font-bold text-blue-800">
+                                        {product.waterFootprint ? `${product.waterFootprint.toFixed(0)}L` : 'TBD'}
+                                      </span>
+                                    </div>
+                                    <div className="text-center bg-orange-50 rounded p-2 border border-orange-200">
+                                      <span className="block font-medium text-orange-700">Waste</span>
+                                      <span className="block text-sm font-bold text-orange-800">
+                                        {product.wasteFootprint ? `${product.wasteFootprint.toFixed(1)}kg` : 'TBD'}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
