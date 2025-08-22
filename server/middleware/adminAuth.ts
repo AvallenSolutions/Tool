@@ -19,9 +19,20 @@ export interface AdminRequest extends Request {
  */
 export async function requireAdminRole(req: AdminRequest, res: Response, next: NextFunction) {
   try {
-    // Development mode bypass for testing
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Development mode: Bypassing admin authentication for admin routes');
+    // SECURITY FIX: Restricted development mode bypass with additional safeguards
+    if (process.env.NODE_ENV === 'development' && process.env.ADMIN_BYPASS_DEV === '1') {
+      // Additional safety check: only allow on localhost
+      const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname.endsWith('.replit.dev');
+      
+      if (!isLocalhost) {
+        console.error('🚨 SECURITY ALERT: Admin bypass attempted on non-localhost domain:', req.hostname);
+        return res.status(403).json({ 
+          error: 'Admin bypass only allowed on localhost',
+          message: 'Security violation detected'
+        });
+      }
+      
+      console.warn('⚠️  DEV MODE: Admin authentication bypassed - THIS SHOULD NEVER HAPPEN IN PRODUCTION');
       
       // Create a mock admin user for development using existing user ID
       req.adminUser = {

@@ -109,7 +109,23 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      // Fetch the guided report from customReports table
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "User not authenticated"
+        });
+      }
+
+      // SECURITY FIX: Verify user owns the company that owns this report
+      const userCompany = await dbStorage.getCompanyByOwner(userId);
+      if (!userCompany) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found for user"
+        });
+      }
+
+      // Fetch the guided report from customReports table with ownership verification
       const { customReports, companies, companySustainabilityData } = await import('@shared/schema');
       const [report] = await db
         .select({
@@ -118,12 +134,15 @@ export function registerRoutes(app: Express): Server {
         })
         .from(customReports)
         .leftJoin(companies, eq(customReports.companyId, companies.id))
-        .where(eq(customReports.id, reportId));
+        .where(and(
+          eq(customReports.id, reportId),
+          eq(customReports.companyId, userCompany.id) // SECURITY: Only reports belonging to user's company
+        ));
 
       if (!report) {
         return res.status(404).json({
           success: false,
-          message: "Report not found"
+          message: "Report not found or access denied"
         });
       }
 
@@ -910,7 +929,28 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Supplier editing endpoints for Super Admin
-  app.put('/api/admin/suppliers/:id', async (req, res) => {
+  app.put('/api/admin/suppliers/:id', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Verify admin role for supplier editing
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user has admin role
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!dbUser || dbUser.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Admin privileges required' 
+      });
+    }
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1005,7 +1045,28 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Get all supplier products for admin management  
-  app.get('/api/admin/supplier-products', async (req, res) => {
+  app.get('/api/admin/supplier-products', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Verify admin role for supplier product management
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user has admin role
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!dbUser || dbUser.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Admin privileges required' 
+      });
+    }
     try {
       const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
@@ -1042,7 +1103,28 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Edit supplier product endpoint
-  app.put('/api/admin/supplier-products/:id', async (req, res) => {
+  app.put('/api/admin/supplier-products/:id', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Verify admin role for supplier product editing
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user has admin role
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!dbUser || dbUser.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Admin privileges required' 
+      });
+    }
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1086,7 +1168,28 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Get all suppliers for admin management
-  app.get('/api/admin/suppliers', async (req, res) => {
+  app.get('/api/admin/suppliers', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Verify admin role for supplier management
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user has admin role
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!dbUser || dbUser.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Admin privileges required' 
+      });
+    }
     try {
       const { verifiedSuppliers } = await import('@shared/schema');
       const suppliers = await db.select().from(verifiedSuppliers);
@@ -1126,7 +1229,15 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Get single supplier product
-  app.get('/api/supplier-products/:id', async (req, res) => {
+  app.get('/api/supplier-products/:id', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Add authentication to prevent unauthorized access
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+    
     try {
       const { id } = req.params;
       const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
@@ -1277,7 +1388,28 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Delete supplier
-  app.delete('/api/verified-suppliers/:id', async (req, res) => {
+  app.delete('/api/verified-suppliers/:id', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Verify admin role for supplier deletion
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user has admin role
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!dbUser || dbUser.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Admin privileges required' 
+      });
+    }
     try {
       const { id } = req.params;
       const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
@@ -1306,7 +1438,28 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Update supplier product
-  app.put('/api/supplier-products/:id', async (req, res) => {
+  app.put('/api/supplier-products/:id', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Verify admin role for supplier product updates
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user has admin role
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!dbUser || dbUser.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Admin privileges required' 
+      });
+    }
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -1340,7 +1493,28 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Delete supplier product
-  app.delete('/api/supplier-products/:id', async (req, res) => {
+  app.delete('/api/supplier-products/:id', isAuthenticated, async (req, res) => {
+    // SECURITY FIX: Verify admin role for supplier product deletion
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user has admin role
+    const [dbUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!dbUser || dbUser.role !== 'admin') {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Admin privileges required' 
+      });
+    }
     try {
       const { id } = req.params;
       const { supplierProducts } = await import('@shared/schema');
@@ -2405,6 +2579,27 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.delete('/api/company/footprint/:id', isAuthenticated, async (req: any, res: any) => {
     try {
       const { id } = req.params;
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // SECURITY FIX: Verify user owns the company that owns this footprint data
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      // Verify the footprint data belongs to the user's company before deleting
+      const existingData = await dbStorage.getCompanyFootprintData(company.id, undefined, undefined);
+      const recordToDelete = existingData.find(d => d.id === parseInt(id));
+      
+      if (!recordToDelete) {
+        return res.status(404).json({ error: 'Footprint data not found or access denied' });
+      }
+      
       await dbStorage.deleteFootprintData(parseInt(id));
       res.json({ success: true, message: 'Footprint data deleted successfully' });
     } catch (error) {
@@ -4259,15 +4454,33 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Validate product for LCA
-  app.get('/api/lca/product/:productId/validate', async (req, res) => {
+  app.get('/api/lca/product/:productId/validate', isAuthenticated, async (req, res) => {
     try {
       const productId = parseInt(req.params.productId);
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
       
       if (isNaN(productId)) {
         return res.status(400).json({ 
           error: 'Invalid product ID',
           details: 'Product ID must be a valid number'
         });
+      }
+
+      // SECURITY FIX: Verify user owns the company that owns this product
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      // Check product ownership
+      const product = await dbStorage.getProductById(productId);
+      if (!product || product.companyId !== company.id) {
+        return res.status(404).json({ error: 'Product not found or access denied' });
       }
 
       const validation = await simpleLcaService.validateProductForLCA(productId);
@@ -4296,15 +4509,33 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Test Enhanced LCA Calculation System
-  app.get('/api/test/enhanced-lca/:productId', async (req, res) => {
+  app.get('/api/test/enhanced-lca/:productId', isAuthenticated, async (req, res) => {
     try {
       const productId = parseInt(req.params.productId);
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
       
       if (isNaN(productId)) {
         return res.status(400).json({ 
           error: 'Invalid product ID',
           details: 'Product ID must be a valid number'
         });
+      }
+
+      // SECURITY FIX: Verify user owns the company that owns this product
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      // Check product ownership
+      const product = await dbStorage.getProductById(productId);
+      if (!product || product.companyId !== company.id) {
+        return res.status(404).json({ error: 'Product not found or access denied' });
       }
 
       // Test the enhanced LCA calculation system end-to-end
@@ -4345,9 +4576,27 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Download LCA PDF report
-  app.get('/api/lca/product/:productId/download-pdf', async (req, res) => {
+  app.get('/api/lca/product/:productId/download-pdf', isAuthenticated, async (req, res) => {
     try {
       const productId = parseInt(req.params.productId);
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      // SECURITY FIX: Verify user owns the company that owns this product
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      // Check product ownership
+      const product = await dbStorage.getProductById(productId);
+      if (!product || product.companyId !== company.id) {
+        return res.status(404).json({ error: 'Product not found or access denied' });
+      }
       
       if (isNaN(productId)) {
         return res.status(400).json({ 
