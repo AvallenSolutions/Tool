@@ -4345,6 +4345,383 @@ Be precise and quote actual text from the content, not generic terms.`;
   // Register admin routes
   app.use('/api/admin', adminRouter);
 
+  // ======================
+  // INTERNAL MESSAGING API
+  // ======================
+  
+  // Get messages for a company/user conversation
+  app.get('/api/messages/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const { internalMessages } = await import('@shared/schema');
+      const { eq, or, and, desc } = await import('drizzle-orm');
+      
+      console.log('isAuthenticated middleware check for:', `/api/messages/${companyId}`, {
+        isAuthenticated: !!(req as any).user,
+        hasUser: !!(req as any).user,
+        hasExpiresAt: !!(req as any).user?.expires_at,
+        userObject: (req as any).user ? Object.keys((req as any).user) : null
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode: Creating mock user for testing');
+        
+        try {
+          await dbStorage.upsertUser({
+            id: '44886248',
+            email: 'tim@avallen.solutions',
+            firstName: 'Tim',
+            lastName: 'Admin',
+            role: 'admin'
+          });
+        } catch (error) {
+          console.log('User already exists, continuing...');
+        }
+        
+        try {
+          let company = await dbStorage.getCompanyByOwner('44886248');
+          if (!company) {
+            const demoCompany = await dbStorage.getCompanyById(1);
+            if (demoCompany) {
+              console.log('Using existing demo company with products:', demoCompany.name, 'ID:', demoCompany.id);
+            }
+          } else {
+            console.log('Using admin company with products:', company.name, 'ID:', company.id);
+          }
+        } catch (error) {
+          console.log('Error getting company:', error);
+        }
+      }
+      
+      // Return mock data for now since tables might not exist yet
+      const messages = [];
+      
+      res.json({ success: true, data: messages });
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+  });
+
+  // Send a new message
+  app.post('/api/messages', isAuthenticated, async (req, res) => {
+    try {
+      console.log('isAuthenticated middleware check for:', '/api/messages', {
+        isAuthenticated: !!(req as any).user,
+        hasUser: !!(req as any).user,
+        hasExpiresAt: !!(req as any).user?.expires_at,
+        userObject: (req as any).user ? Object.keys((req as any).user) : null
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode: Creating mock user for testing');
+        
+        try {
+          await dbStorage.upsertUser({
+            id: '44886248',
+            email: 'tim@avallen.solutions',
+            firstName: 'Tim',
+            lastName: 'Admin',
+            role: 'admin'
+          });
+        } catch (error) {
+          console.log('User already exists, continuing...');
+        }
+      }
+      
+      // Return mock success for now
+      const mockMessage = {
+        id: Date.now(),
+        fromUserId: (req as any).user.claims.sub,
+        toUserId: req.body.toUserId,
+        companyId: req.body.companyId,
+        subject: req.body.subject,
+        message: req.body.message,
+        messageType: req.body.messageType || 'general',
+        threadId: req.body.threadId || null,
+        isRead: false,
+        readAt: null,
+        priority: req.body.priority || 'normal',
+        attachments: req.body.attachments || [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      res.status(201).json({ success: true, data: mockMessage });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      res.status(500).json({ error: 'Failed to send message' });
+    }
+  });
+
+  // Mark message as read
+  app.patch('/api/messages/:messageId/read', isAuthenticated, async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      
+      console.log('isAuthenticated middleware check for:', `/api/messages/${messageId}/read`, {
+        isAuthenticated: !!(req as any).user,
+        hasUser: !!(req as any).user,
+        hasExpiresAt: !!(req as any).user?.expires_at,
+        userObject: (req as any).user ? Object.keys((req as any).user) : null
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode: Creating mock user for testing');
+        
+        try {
+          await dbStorage.upsertUser({
+            id: '44886248',
+            email: 'tim@avallen.solutions',
+            firstName: 'Tim',
+            lastName: 'Admin',
+            role: 'admin'
+          });
+        } catch (error) {
+          console.log('User already exists, continuing...');
+        }
+      }
+      
+      // Return mock success for now
+      const mockUpdatedMessage = {
+        id: parseInt(messageId),
+        isRead: true,
+        readAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      res.json({ success: true, data: mockUpdatedMessage });
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      res.status(500).json({ error: 'Failed to mark message as read' });
+    }
+  });
+
+  // ======================
+  // DOCUMENT REVIEW API
+  // ======================
+  
+  // Get documents for review for a company
+  app.get('/api/documents/:companyId', isAuthenticated, async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      
+      console.log('isAuthenticated middleware check for:', `/api/documents/${companyId}`, {
+        isAuthenticated: !!(req as any).user,
+        hasUser: !!(req as any).user,
+        hasExpiresAt: !!(req as any).user?.expires_at,
+        userObject: (req as any).user ? Object.keys((req as any).user) : null
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode: Creating mock user for testing');
+        
+        try {
+          await dbStorage.upsertUser({
+            id: '44886248',
+            email: 'tim@avallen.solutions',
+            firstName: 'Tim',
+            lastName: 'Admin',
+            role: 'admin'
+          });
+        } catch (error) {
+          console.log('User already exists, continuing...');
+        }
+        
+        try {
+          let company = await dbStorage.getCompanyByOwner('44886248');
+          if (!company) {
+            const demoCompany = await dbStorage.getCompanyById(1);
+            if (demoCompany) {
+              console.log('Using existing demo company with products:', demoCompany.name, 'ID:', demoCompany.id);
+            }
+          } else {
+            console.log('Using admin company with products:', company.name, 'ID:', company.id);
+          }
+        } catch (error) {
+          console.log('Error getting company:', error);
+        }
+      }
+      
+      // Return mock documents for now
+      const mockDocuments = [
+        {
+          id: 1,
+          companyId: parseInt(companyId),
+          uploadedBy: 'user-123',
+          reviewedBy: null,
+          documentName: 'Sustainability Report 2024.pdf',
+          documentUrl: '/uploads/sustainability-report-2024.pdf',
+          documentType: 'sustainability_report',
+          fileSize: 2048576,
+          mimeType: 'application/pdf',
+          status: 'pending',
+          reviewComments: null,
+          reviewNotes: [],
+          version: 1,
+          parentDocumentId: null,
+          approvalRequired: true,
+          approvedAt: null,
+          rejectedAt: null,
+          submittedAt: new Date('2024-08-20T10:00:00Z'),
+          reviewStartedAt: null,
+          reviewCompletedAt: null,
+          createdAt: new Date('2024-08-20T10:00:00Z'),
+          updatedAt: new Date('2024-08-20T10:00:00Z'),
+        },
+        {
+          id: 2,
+          companyId: parseInt(companyId),
+          uploadedBy: 'user-123',
+          reviewedBy: '44886248',
+          documentName: 'Carbon Footprint Analysis.pdf',
+          documentUrl: '/uploads/carbon-footprint-analysis.pdf',
+          documentType: 'lca_report',
+          fileSize: 1536789,
+          mimeType: 'application/pdf',
+          status: 'approved',
+          reviewComments: 'Comprehensive analysis with excellent data quality.',
+          reviewNotes: [
+            {
+              pageNumber: 5,
+              comment: 'Great methodology explanation',
+              timestamp: new Date('2024-08-20T15:30:00Z').toISOString(),
+              reviewerId: '44886248'
+            }
+          ],
+          version: 1,
+          parentDocumentId: null,
+          approvalRequired: true,
+          approvedAt: new Date('2024-08-20T16:00:00Z'),
+          rejectedAt: null,
+          submittedAt: new Date('2024-08-19T14:00:00Z'),
+          reviewStartedAt: new Date('2024-08-20T15:00:00Z'),
+          reviewCompletedAt: new Date('2024-08-20T16:00:00Z'),
+          createdAt: new Date('2024-08-19T14:00:00Z'),
+          updatedAt: new Date('2024-08-20T16:00:00Z'),
+        }
+      ];
+      
+      res.json({ success: true, data: mockDocuments });
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      res.status(500).json({ error: 'Failed to fetch documents' });
+    }
+  });
+
+  // Upload document for review
+  app.post('/api/documents/upload', isAuthenticated, upload.single('document'), async (req, res) => {
+    try {
+      console.log('isAuthenticated middleware check for:', '/api/documents/upload', {
+        isAuthenticated: !!(req as any).user,
+        hasUser: !!(req as any).user,
+        hasExpiresAt: !!(req as any).user?.expires_at,
+        userObject: (req as any).user ? Object.keys((req as any).user) : null
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode: Creating mock user for testing');
+        
+        try {
+          await dbStorage.upsertUser({
+            id: '44886248',
+            email: 'tim@avallen.solutions',
+            firstName: 'Tim',
+            lastName: 'Admin',
+            role: 'admin'
+          });
+        } catch (error) {
+          console.log('User already exists, continuing...');
+        }
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+      
+      // Return mock upload success
+      const mockDocument = {
+        id: Date.now(),
+        companyId: parseInt(req.body.companyId),
+        uploadedBy: (req as any).user.claims.sub,
+        reviewedBy: null,
+        documentName: req.file.originalname,
+        documentUrl: req.file.path,
+        documentType: req.body.documentType || 'general',
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+        status: 'pending',
+        reviewComments: null,
+        reviewNotes: [],
+        version: 1,
+        parentDocumentId: null,
+        approvalRequired: true,
+        approvedAt: null,
+        rejectedAt: null,
+        submittedAt: new Date(),
+        reviewStartedAt: null,
+        reviewCompletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      res.status(201).json({ success: true, data: mockDocument });
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      res.status(500).json({ error: 'Failed to upload document' });
+    }
+  });
+
+  // Update document review status
+  app.patch('/api/documents/:documentId/review', isAuthenticated, async (req, res) => {
+    try {
+      const { documentId } = req.params;
+      const { status, reviewComments, reviewNotes } = req.body;
+      
+      console.log('isAuthenticated middleware check for:', `/api/documents/${documentId}/review`, {
+        isAuthenticated: !!(req as any).user,
+        hasUser: !!(req as any).user,
+        hasExpiresAt: !!(req as any).user?.expires_at,
+        userObject: (req as any).user ? Object.keys((req as any).user) : null
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode: Creating mock user for testing');
+        
+        try {
+          await dbStorage.upsertUser({
+            id: '44886248',
+            email: 'tim@avallen.solutions',
+            firstName: 'Tim',
+            lastName: 'Admin',
+            role: 'admin'
+          });
+        } catch (error) {
+          console.log('User already exists, continuing...');
+        }
+      }
+      
+      // Return mock update success
+      const mockUpdatedDocument = {
+        id: parseInt(documentId),
+        status,
+        reviewedBy: (req as any).user.claims.sub,
+        reviewComments,
+        reviewNotes,
+        reviewStartedAt: new Date(),
+        reviewCompletedAt: status === 'approved' || status === 'rejected' ? new Date() : null,
+        approvedAt: status === 'approved' ? new Date() : null,
+        rejectedAt: status === 'rejected' ? new Date() : null,
+        updatedAt: new Date()
+      };
+      
+      res.json({ success: true, data: mockUpdatedDocument });
+    } catch (error) {
+      console.error('Error updating document review:', error);
+      res.status(500).json({ error: 'Failed to update document review' });
+    }
+  });
+
   // ================== LCA ENDPOINTS ==================
 
   // Create LCA for a specific product

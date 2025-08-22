@@ -688,6 +688,79 @@ export const companySustainabilityData = pgTable("company_sustainability_data", 
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Internal Messages table for admin-company communication
+export const internalMessages = pgTable("internal_messages", {
+  id: serial("id").primaryKey(),
+  fromUserId: varchar("from_user_id").notNull().references(() => users.id),
+  toUserId: varchar("to_user_id").notNull().references(() => users.id),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  
+  subject: varchar("subject", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  messageType: varchar("message_type", { length: 50 }).default("general"), // general, urgent, review_request, etc.
+  
+  // Thread management
+  threadId: integer("thread_id").references(() => internalMessages.id), // NULL for root messages
+  
+  // Status tracking
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  priority: varchar("priority", { length: 20 }).default("normal"), // low, normal, high, urgent
+  
+  // Attachments
+  attachments: jsonb("attachments").$type<{
+    fileName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  }[]>().default([]),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Document Review System table
+export const documentReviews = pgTable("document_reviews", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  
+  // Document metadata
+  documentName: varchar("document_name", { length: 255 }).notNull(),
+  documentUrl: varchar("document_url", { length: 500 }).notNull(),
+  documentType: varchar("document_type", { length: 100 }).notNull(), // sustainability_report, lca_report, certificate, etc.
+  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  
+  // Review status and details
+  status: varchar("status", { length: 50 }).default("pending"), // pending, in_review, approved, rejected, needs_revision
+  reviewComments: text("review_comments"),
+  reviewNotes: jsonb("review_notes").$type<{
+    pageNumber?: number;
+    comment: string;
+    timestamp: string;
+    reviewerId: string;
+  }[]>().default([]),
+  
+  // Version control
+  version: integer("version").default(1),
+  parentDocumentId: integer("parent_document_id").references(() => documentReviews.id),
+  
+  // Approval workflow
+  approvalRequired: boolean("approval_required").default(true),
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+  
+  // Timestamps
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  reviewStartedAt: timestamp("review_started_at"),
+  reviewCompletedAt: timestamp("review_completed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ one, many }) => ({
   company: one(companies, {
@@ -1663,6 +1736,63 @@ export const smartGoalsRelations = relations(smartGoals, ({ one }) => ({
 export type SmartGoal = typeof smartGoals.$inferSelect;
 export type InsertSmartGoal = typeof smartGoals.$inferInsert;
 export const insertSmartGoalSchema = createInsertSchema(smartGoals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Relations for Internal Messages and Document Reviews
+export const internalMessagesRelations = relations(internalMessages, ({ one }) => ({
+  fromUser: one(users, {
+    fields: [internalMessages.fromUserId],
+    references: [users.id],
+  }),
+  toUser: one(users, {
+    fields: [internalMessages.toUserId],
+    references: [users.id],
+  }),
+  company: one(companies, {
+    fields: [internalMessages.companyId],
+    references: [companies.id],
+  }),
+  parentMessage: one(internalMessages, {
+    fields: [internalMessages.threadId],
+    references: [internalMessages.id],
+  }),
+}));
+
+export const documentReviewsRelations = relations(documentReviews, ({ one }) => ({
+  company: one(companies, {
+    fields: [documentReviews.companyId],
+    references: [companies.id],
+  }),
+  uploader: one(users, {
+    fields: [documentReviews.uploadedBy],
+    references: [users.id],
+  }),
+  reviewer: one(users, {
+    fields: [documentReviews.reviewedBy],
+    references: [users.id],
+  }),
+  parentDocument: one(documentReviews, {
+    fields: [documentReviews.parentDocumentId],
+    references: [documentReviews.id],
+  }),
+}));
+
+// Type exports for Internal Messages
+export type InternalMessage = typeof internalMessages.$inferSelect;
+export type InsertInternalMessage = typeof internalMessages.$inferInsert;
+export const insertInternalMessageSchema = createInsertSchema(internalMessages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports for Document Reviews
+export type DocumentReview = typeof documentReviews.$inferSelect;
+export type InsertDocumentReview = typeof documentReviews.$inferInsert;
+export const insertDocumentReviewSchema = createInsertSchema(documentReviews).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
