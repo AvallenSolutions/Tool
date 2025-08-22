@@ -390,52 +390,7 @@ export default function ProductsPage() {
             </CardContent>
           </Card>
 
-          {/* Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <Card className="border-blue-200 bg-blue-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base text-blue-800 flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  Supplier Integration
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-blue-700 mb-3">
-                  Client products are built by selecting components from your verified supplier network. Each component contributes to the overall environmental impact calculation.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/app/supplier-network')}
-                  className="text-blue-700 border-blue-300 hover:bg-blue-100"
-                >
-                  Browse Supplier Network
-                </Button>
-              </CardContent>
-            </Card>
 
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base text-green-800 flex items-center gap-2">
-                  <Leaf className="w-4 h-4" />
-                  Environmental Impact
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-green-700 mb-3">
-                  Track CO₂, water, and waste footprints by combining the environmental data from all selected supplier components for comprehensive sustainability reporting.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/app/lca')}
-                  className="text-green-700 border-green-300 hover:bg-green-100"
-                >
-                  View LCA Reports
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </main>
       </div>
     </div>
