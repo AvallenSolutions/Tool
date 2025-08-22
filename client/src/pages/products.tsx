@@ -425,35 +425,137 @@ export default function ProductsPage() {
                     ))}
                   </div>
 
-                  {/* Summary Card */}
+                  {/* Enhanced Portfolio Overview */}
                   {products.length > 0 && (
-                    <Card className="bg-blue-50 border-blue-200 mt-6">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <Layers className="w-4 h-4 text-blue-600" />
-                              <span className="text-sm font-medium text-blue-800">
-                                Portfolio Overview
-                              </span>
+                    <Card className="bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200 mt-8 shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-avallen-green/10 rounded-lg">
+                              <Layers className="w-5 h-5 text-avallen-green" />
                             </div>
-                            <div className="text-sm text-blue-700">
-                              {products.length} {products.length === 1 ? 'product' : 'products'} •
-                              {products.filter(p => p.status === 'active').length} active •
-                              {products.filter(p => p.carbonFootprint).length} with footprint data
-                            </div>
+                            <h3 className="text-lg font-bold text-slate-gray">Portfolio Overview</h3>
                           </div>
-                          <div className="flex items-center gap-4 text-sm">
-                            <div className="text-blue-700">
-                              <span className="font-medium">Total Annual Volume:</span>{' '}
-                              {products.reduce((sum, p) => sum + (p.annualProductionVolume || 0), 0).toLocaleString()} units
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="bg-white px-2 py-1 rounded border">
+                              {products.length} {products.length === 1 ? 'Product' : 'Products'}
+                            </span>
+                            <span className="bg-green-50 text-green-700 px-2 py-1 rounded border border-green-200">
+                              {products.filter(p => p.status === 'active').length} Active
+                            </span>
+                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">
+                              {products.filter(p => p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string')).length} with Footprint Data
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                          {/* Production Volume */}
+                          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-medium text-gray-700">Annual Production</h4>
+                              <Factory className="w-4 h-4 text-gray-400" />
                             </div>
-                            {products.some(p => p.carbonFootprint && typeof p.carbonFootprint === 'number') && (
-                              <div className="text-blue-700">
-                                <span className="font-medium">Portfolio CO₂:</span>{' '}
-                                {products.reduce((sum, p) => sum + (typeof p.carbonFootprint === 'number' ? p.carbonFootprint : 0), 0).toFixed(2)} kg
+                            <p className="text-2xl font-bold text-slate-gray">
+                              {products.reduce((sum, p) => sum + (parseFloat(p.annualProductionVolume?.toString() || '0') || 0), 0).toLocaleString()}
+                            </p>
+                            <p className="text-xs text-gray-500">units/year</p>
+                          </div>
+
+                          {/* Portfolio Carbon Footprint */}
+                          <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-medium text-green-700">Total CO₂ Impact</h4>
+                              <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
                               </div>
-                            )}
+                            </div>
+                            <p className="text-2xl font-bold text-green-800">
+                              {products.reduce((sum, p) => {
+                                const footprint = p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string') 
+                                  ? Number(p.carbonFootprint) : 0;
+                                const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                return sum + (footprint * volume);
+                              }, 0) > 1000 
+                                ? (products.reduce((sum, p) => {
+                                    const footprint = p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string') 
+                                      ? Number(p.carbonFootprint) : 0;
+                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                    return sum + (footprint * volume);
+                                  }, 0) / 1000).toFixed(1) + 't'
+                                : products.reduce((sum, p) => {
+                                    const footprint = p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string') 
+                                      ? Number(p.carbonFootprint) : 0;
+                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                    return sum + (footprint * volume);
+                                  }, 0).toFixed(0) + 'kg'
+                              }
+                            </p>
+                            <p className="text-xs text-green-600">CO₂e annually</p>
+                          </div>
+
+                          {/* Portfolio Water Footprint */}
+                          <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-medium text-blue-700">Total Water Usage</h4>
+                              <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              </div>
+                            </div>
+                            <p className="text-2xl font-bold text-blue-800">
+                              {products.reduce((sum, p) => {
+                                const waterFootprint = p.waterFootprint && (typeof p.waterFootprint === 'number' || typeof p.waterFootprint === 'string') 
+                                  ? Number(p.waterFootprint) : 0;
+                                const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                return sum + (waterFootprint * volume);
+                              }, 0) > 1000000 
+                                ? (products.reduce((sum, p) => {
+                                    const waterFootprint = p.waterFootprint && (typeof p.waterFootprint === 'number' || typeof p.waterFootprint === 'string') 
+                                      ? Number(p.waterFootprint) : 0;
+                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                    return sum + (waterFootprint * volume);
+                                  }, 0) / 1000000).toFixed(1) + 'M'
+                                : products.reduce((sum, p) => {
+                                    const waterFootprint = p.waterFootprint && (typeof p.waterFootprint === 'number' || typeof p.waterFootprint === 'string') 
+                                      ? Number(p.waterFootprint) : 0;
+                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                    return sum + (waterFootprint * volume);
+                                  }, 0).toLocaleString()
+                              }L
+                            </p>
+                            <p className="text-xs text-blue-600">liters annually</p>
+                          </div>
+
+                          {/* Portfolio Waste Generation */}
+                          <div className="bg-white rounded-lg p-4 border border-orange-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-medium text-orange-700">Total Waste Generated</h4>
+                              <div className="w-4 h-4 rounded-full bg-orange-100 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                              </div>
+                            </div>
+                            <p className="text-2xl font-bold text-orange-800">
+                              {products.reduce((sum, p) => {
+                                const wasteFootprint = p.wasteFootprint && (typeof p.wasteFootprint === 'number' || typeof p.wasteFootprint === 'string') 
+                                  ? Number(p.wasteFootprint) : 0;
+                                const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                return sum + (wasteFootprint * volume);
+                              }, 0) > 1000 
+                                ? (products.reduce((sum, p) => {
+                                    const wasteFootprint = p.wasteFootprint && (typeof p.wasteFootprint === 'number' || typeof p.wasteFootprint === 'string') 
+                                      ? Number(p.wasteFootprint) : 0;
+                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                    return sum + (wasteFootprint * volume);
+                                  }, 0) / 1000).toFixed(1) + 't'
+                                : products.reduce((sum, p) => {
+                                    const wasteFootprint = p.wasteFootprint && (typeof p.wasteFootprint === 'number' || typeof p.wasteFootprint === 'string') 
+                                      ? Number(p.wasteFootprint) : 0;
+                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
+                                    return sum + (wasteFootprint * volume);
+                                  }, 0).toFixed(0) + 'kg'
+                              }
+                            </p>
+                            <p className="text-xs text-orange-600">waste annually</p>
                           </div>
                         </div>
                       </CardContent>
