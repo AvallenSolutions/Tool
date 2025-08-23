@@ -5,8 +5,7 @@ import { reports, insertReportSchema } from '@shared/schema';
 import { db } from '../../db';
 import { eq, desc } from 'drizzle-orm';
 import { logger, logDatabase } from '../../config/logger';
-import { ReportExportService } from '../../services/ReportExportService';
-import { PDFService } from '../../pdfService';
+import { unifiedPDFService } from '../../services/UnifiedPDFService';
 
 const router = Router();
 
@@ -38,11 +37,11 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
     let contentType: string;
     
     if (format === 'pdf') {
-      buffer = await ReportExportService.exportToPDF(reportData, userCompany);
+      buffer = await unifiedPDFService.exportReport(reportData, 'pdf');
       filename = `${reportData.report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pdf`;
       contentType = 'application/pdf';
     } else if (format === 'pptx') {
-      buffer = await ReportExportService.exportToPowerPoint(reportData, userCompany);
+      buffer = await unifiedPDFService.exportReport(reportData, 'pptx');
       filename = `${reportData.report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pptx`;
       contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
     } else {
@@ -95,7 +94,7 @@ router.post('/guided/:reportId/export-pdf', isAuthenticated, async (req: any, re
       return res.status(404).json({ error: 'Report not found' });
     }
     
-    const buffer = await PDFService.generateSustainabilityReport(reportData, userCompany);
+    const buffer = await unifiedPDFService.generateSustainabilityReport(reportData);
     const filename = `sustainability_report_${reportId}_${Date.now()}.pdf`;
     
     res.setHeader('Content-Type', 'application/pdf');
