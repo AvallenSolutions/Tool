@@ -152,46 +152,50 @@ export class UnifiedJobQueueService {
       const queue = this.queues.get(jobData.type);
       
       if (queue) {
-        // Add idempotency key if not provided
+        // Generate deterministic idempotency key from job payload
         const idempotencyKey = (options as any)?.idempotencyKey || 
-          `${jobData.type}_${jobData.userId}_${Date.now()}`;
+          this.generateDeterministicIdempotencyKey(jobData);
 
-        // Check for duplicate jobs using idempotency key
-        const existingJobs = await queue.getJobs(['waiting', 'active', 'delayed']);
-        const duplicateJob = existingJobs.find(job => 
-          job.data.idempotencyKey === idempotencyKey
-        );
-
-        if (duplicateJob) {
+        // Use Redis to check for existing job with same idempotency key
+        const existingJobId = await this.checkExistingJob(jobData.type, idempotencyKey);
+        
+        if (existingJobId) {
           logger.info({ 
-            jobId, 
+            jobId: existingJobId, 
             jobType: jobData.type,
             idempotencyKey,
-            existingJobId: duplicateJob.id 
-          }, 'Duplicate job detected, returning existing job ID');
+            reason: 'duplicate_prevention'
+          }, 'Duplicate job detected via idempotency key, returning existing job ID');
           
-          return duplicateJob.data.jobId;
+          return existingJobId;
         }
+
+        // Set jobId to idempotency key for uniqueness
+        const uniqueJobId = idempotencyKey;
 
         const job = await queue.add(jobData.type, { 
           ...jobData, 
-          jobId,
+          jobId: uniqueJobId,
           idempotencyKey,
           submittedAt: new Date().toISOString(),
         }, {
           priority: jobData.priority || 0,
           attempts: jobData.retryAttempts || 3,
+          jobId: uniqueJobId, // Bull queue-level jobId for deduplication
           ...options,
         });
 
+        // Store idempotency mapping in Redis
+        await this.storeIdempotencyMapping(jobData.type, idempotencyKey, uniqueJobId);
+
         logger.info({ 
-          jobId, 
+          jobId: uniqueJobId, 
           jobType: jobData.type,
           queueId: job.id,
           idempotencyKey
-        }, 'Job added to queue');
+        }, 'Job added to queue with deterministic idempotency');
 
-        return jobId;
+        return uniqueJobId;
       } else {
         if (process.env.NODE_ENV === 'production') {
           throw new Error('Job queues not available in production');
@@ -510,6 +514,156 @@ export class UnifiedJobQueueService {
   private async ensureInitialized(): Promise<void> {
     if (!this.isInitialized) {
       await this.initialize();
+    }
+  }
+
+  /**
+   * Generate deterministic idempotency key from job payload
+   */
+  private generateDeterministicIdempotencyKey(jobData: JobData): string {
+    // Create stable hash from job type, user ID, and relevant payload fields
+    const crypto = require('crypto');
+    
+    // Extract relevant fields for each job type
+    const relevantData: any = {
+      type: jobData.type,
+      userId: jobData.userId,
+    };
+
+    // Add job-specific fields for better deduplication
+    switch (jobData.type) {
+      case 'pdf_generation':
+        relevantData.reportId = jobData.reportId;
+        relevantData.templateId = jobData.templateId;
+        relevantData.pdfType = jobData.pdfOptions?.type;
+        break;
+        
+      case 'lca_calculation':
+        relevantData.productId = jobData.productId;
+        relevantData.calculationMethod = jobData.calculationOptions?.method;
+        // Hash the inputs for uniqueness
+        if (jobData.lcaInputs) {
+          const inputsHash = crypto.createHash('md5')
+            .update(JSON.stringify(this.normalizeForHash(jobData.lcaInputs)))
+            .digest('hex').substring(0, 8);
+          relevantData.inputsHash = inputsHash;
+        }
+        break;
+        
+      case 'data_extraction':
+        relevantData.documentId = jobData.documentId;
+        relevantData.extractionType = jobData.extractionType;
+        relevantData.url = jobData.url;
+        break;
+        
+      case 'report_export':
+        relevantData.reportId = jobData.reportId;
+        relevantData.exportFormat = jobData.exportFormat;
+        relevantData.templateId = jobData.templateId;
+        break;
+        
+      default:
+        // For unknown job types, include serialized data
+        relevantData.dataHash = crypto.createHash('md5')
+          .update(JSON.stringify(jobData))
+          .digest('hex').substring(0, 8);
+    }
+
+    // Create deterministic hash
+    const stableString = JSON.stringify(this.normalizeForHash(relevantData));
+    const hash = crypto.createHash('sha256')
+      .update(stableString)
+      .digest('hex');
+    
+    return `${jobData.type}_${hash.substring(0, 16)}`;
+  }
+
+  /**
+   * Normalize object for consistent hashing
+   */
+  private normalizeForHash(obj: any): any {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.normalizeForHash(item)).sort();
+    }
+    
+    const normalized: any = {};
+    const keys = Object.keys(obj).sort();
+    
+    for (const key of keys) {
+      normalized[key] = this.normalizeForHash(obj[key]);
+    }
+    
+    return normalized;
+  }
+
+  /**
+   * Check if job with idempotency key already exists
+   */
+  private async checkExistingJob(jobType: string, idempotencyKey: string): Promise<string | null> {
+    try {
+      const Redis = require('ioredis');
+      const redis = new Redis(this.redisConfig);
+      
+      const mappingKey = `job_idempotency:${jobType}:${idempotencyKey}`;
+      const existingJobId = await redis.get(mappingKey);
+      
+      await redis.quit();
+      
+      return existingJobId;
+    } catch (error) {
+      logger.warn({ error, jobType, idempotencyKey }, 'Failed to check existing job via Redis');
+      return null;
+    }
+  }
+
+  /**
+   * Store idempotency mapping in Redis
+   */
+  private async storeIdempotencyMapping(jobType: string, idempotencyKey: string, jobId: string): Promise<void> {
+    try {
+      const Redis = require('ioredis');
+      const redis = new Redis(this.redisConfig);
+      
+      const mappingKey = `job_idempotency:${jobType}:${idempotencyKey}`;
+      
+      // Store mapping with 24 hour expiration
+      await redis.setex(mappingKey, 24 * 60 * 60, jobId);
+      
+      await redis.quit();
+      
+      logger.debug({ 
+        jobType, 
+        idempotencyKey, 
+        jobId, 
+        mappingKey 
+      }, 'Stored idempotency mapping');
+      
+    } catch (error) {
+      logger.warn({ error, jobType, idempotencyKey, jobId }, 'Failed to store idempotency mapping');
+    }
+  }
+
+  /**
+   * Clean up completed job idempotency mappings
+   */
+  private async cleanupIdempotencyMapping(jobType: string, idempotencyKey: string): Promise<void> {
+    try {
+      const Redis = require('ioredis');
+      const redis = new Redis(this.redisConfig);
+      
+      const mappingKey = `job_idempotency:${jobType}:${idempotencyKey}`;
+      await redis.del(mappingKey);
+      
+      await redis.quit();
+      
+      logger.debug({ jobType, idempotencyKey }, 'Cleaned up idempotency mapping');
+      
+    } catch (error) {
+      logger.warn({ error, jobType, idempotencyKey }, 'Failed to cleanup idempotency mapping');
     }
   }
 
