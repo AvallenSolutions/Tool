@@ -17,6 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
 
 interface KpiDefinition {
   id: string;
@@ -179,7 +181,15 @@ export function KPIsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-h-screen">
+        <Header 
+          title="KPI Management" 
+          subtitle="Track key performance indicators and sustainability goals"
+        />
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">KPI & Goal Management</h1>
@@ -474,6 +484,9 @@ export function KPIsPage() {
           )}
         </DialogContent>
       </Dialog>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
