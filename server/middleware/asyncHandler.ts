@@ -73,15 +73,93 @@ export function companyOwnerRoute<T = any>(
 }
 
 /**
- * Validated route wrapper - validates request data using provided schema
+ * Validated route wrapper - validates request data using provided Zod schema
  */
-export function validatedRoute<T = any>(
-  validationSchema: any,
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<T>
+export function validatedRoute<TBody = any, TQuery = any, TParams = any>(
+  schemas: {
+    body?: any; // Zod schema for request body
+    query?: any; // Zod schema for query parameters
+    params?: any; // Zod schema for route parameters
+  },
+  fn: (req: Request & { 
+    validatedBody?: TBody; 
+    validatedQuery?: TQuery; 
+    validatedParams?: TParams; 
+  }, res: Response, next: NextFunction) => Promise<any>
 ) {
   return asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    // Validation would be handled by middleware, this is just the wrapper
-    return await fn(req, res, next);
+    const validationErrors: { field: string; issue: string }[] = [];
+
+    // Validate request body
+    if (schemas.body) {
+      try {
+        const validatedBody = schemas.body.parse(req.body);
+        (req as any).validatedBody = validatedBody;
+      } catch (error: any) {
+        if (error.errors) {
+          validationErrors.push(...error.errors.map((err: any) => ({
+            field: `body.${err.path.join('.')}`,
+            issue: err.message
+          })));
+        } else {
+          validationErrors.push({
+            field: 'body',
+            issue: 'Invalid request body format'
+          });
+        }
+      }
+    }
+
+    // Validate query parameters
+    if (schemas.query) {
+      try {
+        const validatedQuery = schemas.query.parse(req.query);
+        (req as any).validatedQuery = validatedQuery;
+      } catch (error: any) {
+        if (error.errors) {
+          validationErrors.push(...error.errors.map((err: any) => ({
+            field: `query.${err.path.join('.')}`,
+            issue: err.message
+          })));
+        } else {
+          validationErrors.push({
+            field: 'query',
+            issue: 'Invalid query parameters'
+          });
+        }
+      }
+    }
+
+    // Validate route parameters
+    if (schemas.params) {
+      try {
+        const validatedParams = schemas.params.parse(req.params);
+        (req as any).validatedParams = validatedParams;
+      } catch (error: any) {
+        if (error.errors) {
+          validationErrors.push(...error.errors.map((err: any) => ({
+            field: `params.${err.path.join('.')}`,
+            issue: err.message
+          })));
+        } else {
+          validationErrors.push({
+            field: 'params',
+            issue: 'Invalid route parameters'
+          });
+        }
+      }
+    }
+
+    // Return validation errors if any
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validationErrors,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return await fn(req as any, res, next);
   });
 }
 

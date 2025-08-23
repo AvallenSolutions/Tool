@@ -113,6 +113,9 @@ export class UnifiedJobQueueService {
     }
 
     try {
+      // Check Redis health first
+      await this.checkRedisHealth();
+
       // Initialize queues for each job type
       await this.initializeQueue('pdf_generation');
       await this.initializeQueue('lca_calculation');
@@ -125,9 +128,15 @@ export class UnifiedJobQueueService {
     } catch (error) {
       logger.error({ error }, 'Failed to initialize job queues');
       
-      // Fallback to in-memory processing if Redis is not available
-      logger.warn({}, 'Falling back to in-memory job processing');
-      this.isInitialized = true;
+      if (process.env.NODE_ENV === 'production') {
+        // In production, Redis is required - don't fallback
+        throw new Error('Redis is required in production environment. Please ensure Redis is running and accessible.');
+      } else {
+        // Development fallback to in-memory processing
+        logger.warn({}, 'Development environment: Falling back to in-memory job processing');
+        this.initializeInMemoryFallback();
+        this.isInitialized = true;
+      }
     }
   }
 
@@ -143,7 +152,33 @@ export class UnifiedJobQueueService {
       const queue = this.queues.get(jobData.type);
       
       if (queue) {
-        const job = await queue.add(jobData.type, { ...jobData, jobId }, {
+        // Add idempotency key if not provided
+        const idempotencyKey = (options as any)?.idempotencyKey || 
+          `${jobData.type}_${jobData.userId}_${Date.now()}`;
+
+        // Check for duplicate jobs using idempotency key
+        const existingJobs = await queue.getJobs(['waiting', 'active', 'delayed']);
+        const duplicateJob = existingJobs.find(job => 
+          job.data.idempotencyKey === idempotencyKey
+        );
+
+        if (duplicateJob) {
+          logger.info({ 
+            jobId, 
+            jobType: jobData.type,
+            idempotencyKey,
+            existingJobId: duplicateJob.id 
+          }, 'Duplicate job detected, returning existing job ID');
+          
+          return duplicateJob.data.jobId;
+        }
+
+        const job = await queue.add(jobData.type, { 
+          ...jobData, 
+          jobId,
+          idempotencyKey,
+          submittedAt: new Date().toISOString(),
+        }, {
           priority: jobData.priority || 0,
           attempts: jobData.retryAttempts || 3,
           ...options,
@@ -152,13 +187,18 @@ export class UnifiedJobQueueService {
         logger.info({ 
           jobId, 
           jobType: jobData.type,
-          queueId: job.id 
+          queueId: job.id,
+          idempotencyKey
         }, 'Job added to queue');
 
         return jobId;
       } else {
-        // Fallback to immediate processing if queue not available
-        logger.warn({ jobType: jobData.type }, 'Queue not available, processing immediately');
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error('Job queues not available in production');
+        }
+        
+        // Development fallback only
+        logger.warn({ jobType: jobData.type }, 'Development: Processing job immediately');
         await this.processJobImmediate(jobData);
         return jobId;
       }
@@ -474,10 +514,100 @@ export class UnifiedJobQueueService {
   }
 
   /**
+   * Check Redis health and connectivity
+   */
+  async checkRedisHealth(): Promise<void> {
+    try {
+      const testQueue = new Bull('health-check', this.redisConfig);
+      
+      // Test basic connectivity
+      await testQueue.add('ping', { timestamp: Date.now() }, {
+        removeOnComplete: 1,
+        removeOnFail: 1,
+      });
+      
+      // Wait a moment for the job to be processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      await testQueue.close();
+      
+      logger.info({}, 'Redis health check passed');
+    } catch (error) {
+      logger.error({ error }, 'Redis health check failed');
+      throw new Error(`Redis health check failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get Redis connection status
+   */
+  async getRedisStatus(): Promise<{
+    connected: boolean;
+    latency?: number;
+    memory?: any;
+    info?: string;
+  }> {
+    try {
+      const startTime = Date.now();
+      
+      // Test with a temporary queue
+      const testQueue = new Bull('status-check', this.redisConfig);
+      await testQueue.add('status', { timestamp: Date.now() });
+      await testQueue.close();
+      
+      const latency = Date.now() - startTime;
+      
+      return {
+        connected: true,
+        latency,
+      };
+    } catch (error) {
+      return {
+        connected: false,
+      };
+    }
+  }
+
+  /**
+   * Initialize in-memory fallback for development
+   */
+  private initializeInMemoryFallback(): void {
+    logger.warn({}, 'Initializing in-memory job processing fallback');
+    
+    // Set up minimal in-memory processing
+    this.inMemoryQueue = [];
+    this.inMemoryProcessor = this.startInMemoryProcessor();
+  }
+
+  private inMemoryQueue: JobData[] = [];
+  private inMemoryProcessor?: NodeJS.Timeout;
+
+  private startInMemoryProcessor(): NodeJS.Timeout {
+    return setInterval(async () => {
+      if (this.inMemoryQueue.length > 0) {
+        const job = this.inMemoryQueue.shift();
+        if (job) {
+          try {
+            await this.processJobImmediate(job);
+          } catch (error) {
+            logger.error({ error, jobType: job.type }, 'In-memory job processing failed');
+          }
+        }
+      }
+    }, 1000); // Process jobs every second
+  }
+
+  /**
    * Cleanup method for graceful shutdown
    */
   async shutdown(): Promise<void> {
     logger.info({}, 'Shutting down job queues...');
+    
+    // Clear in-memory processor
+    if (this.inMemoryProcessor) {
+      clearInterval(this.inMemoryProcessor);
+      this.inMemoryProcessor = undefined;
+    }
     
     const shutdownPromises = Array.from(this.queues.values()).map(queue => 
       queue.close()
@@ -486,6 +616,7 @@ export class UnifiedJobQueueService {
     await Promise.all(shutdownPromises);
     
     this.queues.clear();
+    this.inMemoryQueue = [];
     this.isInitialized = false;
     
     logger.info({}, 'All job queues shut down successfully');
