@@ -307,7 +307,7 @@ export default function Sidebar() {
           <img 
             src={avallenLogo} 
             alt="Powered by Avallen Solutions" 
-            className="h-12 w-auto opacity-80 hover:opacity-100 transition-opacity"
+            className="h-20 w-auto opacity-80 hover:opacity-100 transition-opacity"
           />
         </div>
       </div>
