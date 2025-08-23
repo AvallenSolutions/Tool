@@ -301,6 +301,15 @@ export default function Sidebar() {
             </li>
           )}
         </ul>
+        
+        {/* Avallen Solutions Branding */}
+        <div className="flex items-center justify-center mt-6 pt-4 border-t border-green-600">
+          <img 
+            src={avallenLogo} 
+            alt="Powered by Avallen Solutions" 
+            className="h-12 w-auto opacity-80 hover:opacity-100 transition-opacity"
+          />
+        </div>
       </div>
 
       {/* User Profile */}
@@ -328,15 +337,6 @@ export default function Sidebar() {
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out
         </Button>
-        
-        {/* Avallen Solutions Branding */}
-        <div className="flex items-center justify-center mt-4 pt-4 border-t border-green-600">
-          <img 
-            src={avallenLogo} 
-            alt="Powered by Avallen Solutions" 
-            className="h-12 w-auto opacity-80 hover:opacity-100 transition-opacity"
-          />
-        </div>
       </div>
     </nav>
   );
