@@ -7,6 +7,7 @@ import { lcaService } from "./lca";
 import path from "path";
 import { initializeSentry } from "./config/sentry";
 import { initializeMixpanel } from "./config/mixpanel";
+import { logger, createRequestLogger, logAPI } from "./config/logger.js";
 
 // Initialize monitoring services first
 initializeSentry();
@@ -66,28 +67,22 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
+  const requestId = req.headers['x-request-id'] as string || Date.now().toString();
+  const requestLogger = createRequestLogger(requestId);
+  
+  // Add request logger to request object for use in routes
+  (req as any).logger = requestLogger;
+  res.setHeader('x-request-id', requestId);
+  
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
+    if (req.path.startsWith("/api")) {
+      logAPI(req.method, req.path, res.statusCode, duration, {
+        requestId,
+        userAgent: req.get('user-agent'),
+        contentLength: res.get('content-length'),
+        referer: req.get('referer')
+      });
     }
   });
 
@@ -101,7 +96,7 @@ app.use((req, res, next) => {
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.warn("LCA service initialization failed (OpenLCA may not be available):", errorMessage);
+    logger.warn({ error: errorMessage }, "LCA service initialization failed (OpenLCA may not be available)");
   }
   
   // Initialize OpenLCA ingredient mappings
@@ -109,10 +104,18 @@ app.use((req, res, next) => {
     const { OpenLCAService } = await import('./services/OpenLCAService');
     await OpenLCAService.initializeCommonIngredients();
   } catch (error) {
-    console.warn("Failed to initialize ingredient mappings:", error);
+    logger.warn({ error }, "Failed to initialize ingredient mappings");
   }
   
-  const server = await registerRoutes(app);
+  // Import the new modular router system
+  const { registerRoutes: registerModularRoutes } = await import('./routes/index.js');
+  
+  // Use new modular routes first, then fall back to legacy routes
+  const server = await registerModularRoutes(app);
+  
+  // Import legacy routes for remaining endpoints (temporary during migration)
+  const { registerRoutes: registerLegacyRoutes } = await import('./routes.js');
+  await registerLegacyRoutes(app);
   
   // Add sample report route
   app.get('/sample-report', (req, res) => {
