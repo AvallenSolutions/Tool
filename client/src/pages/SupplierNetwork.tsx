@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useVerifiedSuppliers } from '@/hooks/useVerifiedSuppliers';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
@@ -96,17 +97,8 @@ export default function SupplierNetwork() {
 
 
 
-  // Fetch real data from API
-  const { data: suppliersResponse, isLoading: suppliersLoading, error: suppliersError } = useQuery<{success: boolean, data: Supplier[]}>({
-    queryKey: ['/api/admin/suppliers'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/suppliers', { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to load suppliers');
-      return response.json();
-    },
-  });
-
-  const suppliers = suppliersResponse?.data || [];
+  // Fetch verified suppliers data using the verified suppliers hook
+  const { data: suppliers = [], isLoading: suppliersLoading, error: suppliersError } = useVerifiedSuppliers();
 
   const { data: products, isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['/api/supplier-products'],
