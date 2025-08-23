@@ -1,0 +1,138 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Sentry error tracking initialized
+✅ Mixpanel analytics initialized
+✓ Common agricultural ingredients initialized
+Development mode: returning admin user info: {
+  id: '44886248',
+  email: 'tim@avallen.solutions',
+  firstName: 'Tim',
+  lastName: 'Admin',
+  profileImageUrl: '',
+  role: 'admin'
+Development mode: returning admin user info: {
+  id: '44886248',
+  email: 'tim@avallen.solutions',
+  firstName: 'Tim',
+  lastName: 'Admin',
+  profileImageUrl: '',
+  role: 'admin'
+}
+Development mode: returning admin user info: {
+  id: '44886248',
+  email: 'tim@avallen.solutions',
+  firstName: 'Tim',
+  lastName: 'Admin',
+  profileImageUrl: '',
+  role: 'admin'
+}
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/dashboard/metrics {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/suggestions/next-steps {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Water footprint calculation failed for Molasses, cane: TypeError: OpenLCAService.calculateWaterFootprint is not a function
+    at <anonymous> (/home/runner/workspace/server/routes.ts:3777:60)
+    at Array.map (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:3763:58)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+💧 Fallback water for Molasses, cane: 15L
+🗑️ Waste footprint for Rum Blanc: 0.211 kg
+Products fetched: 1 for company 1
+🔍 Getting suggestions for company 1
+🏢 Using company ID 1 for automated calculations
+🔍 Calculating purchased goods for company 1
+📦 Found 1 products for emissions calculation
+🧮 Processing product: Rum Blanc (ID: 12)
+🧮 Calculating OpenLCA-based emissions for Rum Blanc
+📋 Found 1 ingredients
+🔍 Calculating purchased goods for company 1
+isAuthenticated middleware check for: /api/dashboard/kpis {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+📦 Found 1 products for emissions calculation
+🧮 Processing product: Rum Blanc (ID: 12)
+🧮 Calculating OpenLCA-based emissions for Rum Blanc
+📋 Found 1 ingredients
+Using admin company with products: Demo Company ID: 1
+🌱 OpenLCA Molasses, cane: 1.5 kg = 1.335 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+🌱 OpenLCA Molasses, cane: 1.5 kg = 1.335 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+isAuthenticated middleware check for: /api/smart-goals {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+💾 Stored carbon footprint for Rum Blanc: 1.593 kg CO2e
+📊 Rum Blanc per-unit emissions: 1.593 kg CO2e per unit
+🏭 Rum Blanc annual production: 300,000 units
+🌍 Rum Blanc total annual emissions: 477.9 tonnes CO2e
+📋 Generated 1 suggestions: [ 'Enhance Your Sustainability Reporting' ]
+💾 Stored carbon footprint for Rum Blanc: 1.593 kg CO2e
+📊 Rum Blanc per-unit emissions: 1.593 kg CO2e per unit
+🏭 Rum Blanc annual production: 300,000 units
+🌍 Rum Blanc total annual emissions: 477.9 tonnes CO2e
+isAuthenticated middleware check for: /api/company/water-footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+🔍 Product Rum Blanc: wastePerUnit=0.21090000000000003kg, annual=300000, total waste=63270.00000000001kg
+🗑️ Total calculated waste: 63270.00000000001kg (63.27000000000001 tonnes)
+📈 Production dashboard metrics (FootprintWizard method):
+   CO2e: 505.10 tonnes (505104.8 kg)
+   Water: 0 litres
+   Waste: 63.3 tonnes
+🔍 DEBUG: Production path executed!
+Using admin company with products: Demo Company ID: 1
+isAuthenticated middleware check for: /api/reports {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+🌱 OpenLCA water footprint for Molasses, cane: 39L
+🌱 OpenLCA carbon footprint for Molasses, cane: 1.335 kg CO2e
+♻️  Calculated total company recycled waste: 96990.0 kg annually
+📊 Calculated total company waste: 63270.0 kg annually
+Admin feedback endpoint called

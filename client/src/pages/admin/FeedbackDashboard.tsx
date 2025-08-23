@@ -74,7 +74,7 @@ export default function FeedbackDashboard() {
     },
   });
 
-  const submissions: FeedbackSubmission[] = feedbackData || [];
+  const submissions: FeedbackSubmission[] = feedbackData?.data || [];
 
   // Filter submissions
   const filteredSubmissions = submissions.filter((submission) => {
