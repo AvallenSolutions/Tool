@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles } from "lucide-react";
+import avallenLogo from "@/assets/avallen-logo.png";
 
 export default function Sidebar() {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [reportsExpanded, setReportsExpanded] = useState(false);
+
+  // Fetch company data to show company name in header
+  const { data: company } = useQuery({
+    queryKey: ["/api/company"],
+    retry: false,
+  });
 
   // Auto-expand Reports section when on any reports-related page
   useEffect(() => {
@@ -49,13 +57,17 @@ export default function Sidebar() {
 
   return (
     <nav className="w-64 bg-[#209d50] border-r border-green-600 flex flex-col" id="sidebar-nav">
-      {/* Logo */}
+      {/* Company Logo */}
       <div className="p-6 border-b border-green-600">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-[#209d50] font-bold text-sm">A</span>
+            <span className="text-[#209d50] font-bold text-sm">
+              {company?.name ? company.name.charAt(0).toUpperCase() : 'A'}
+            </span>
           </div>
-          <span className="text-xl font-headline text-white">Avallen Solutions</span>
+          <span className="text-xl font-headline text-white">
+            {company?.name || 'Loading...'}
+          </span>
         </div>
       </div>
 
@@ -316,6 +328,15 @@ export default function Sidebar() {
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out
         </Button>
+        
+        {/* Avallen Solutions Branding */}
+        <div className="flex items-center justify-center mt-4 pt-4 border-t border-green-600">
+          <img 
+            src={avallenLogo} 
+            alt="Powered by Avallen Solutions" 
+            className="h-12 w-auto opacity-80 hover:opacity-100 transition-opacity"
+          />
+        </div>
       </div>
     </nav>
   );
