@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag } from "lucide-react";
 import avallenLogo from "@/assets/avallen-logo.png";
 
 export default function Sidebar() {
@@ -12,6 +12,7 @@ export default function Sidebar() {
   const { user } = useAuth();
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [reportsExpanded, setReportsExpanded] = useState(false);
+  const [kpiGoalsExpanded, setKpiGoalsExpanded] = useState(false);
 
   // Fetch company data to show company name in header
   const { data: company } = useQuery({
@@ -23,6 +24,13 @@ export default function Sidebar() {
   useEffect(() => {
     if (location.startsWith('/app/reports')) {
       setReportsExpanded(true);
+    }
+  }, [location]);
+
+  // Auto-expand KPI & Goals section when on any KPI/Goals-related page
+  useEffect(() => {
+    if (location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')) {
+      setKpiGoalsExpanded(true);
     }
   }, [location]);
 
@@ -44,6 +52,11 @@ export default function Sidebar() {
   const reportsSubItems = [
     { path: "/app/reports/create", label: "Create Reports", icon: Sparkles },
     { path: "/app/reports", label: "View Reports", icon: FileText },
+  ];
+
+  const kpiGoalsSubItems = [
+    { path: "/app/kpis", label: "KPIs", icon: BarChart3 },
+    { path: "/app/initiatives", label: "SMART Goals", icon: Flag },
   ];
 
   const adminSubItems = [
@@ -184,6 +197,55 @@ export default function Sidebar() {
               <Shield className="w-5 h-5 mr-3" />
               <span className="font-body font-medium">GreenwashGuardian</span>
             </Button>
+          </li>
+
+          {/* KPI's & Goals Section with Sub-items */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')
+                  ? "bg-white text-[#209d50] hover:bg-gray-100"
+                  : "text-white hover:bg-green-600"
+              }`}
+              onClick={() => setKpiGoalsExpanded(!kpiGoalsExpanded)}
+            >
+              <Target className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium flex-1 text-left">KPI's & Goals</span>
+              {kpiGoalsExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </Button>
+            
+            {/* KPI & Goals Sub-items */}
+            {kpiGoalsExpanded && (
+              <ul className="mt-2 ml-4 space-y-1">
+                {kpiGoalsSubItems.map((subItem) => {
+                  const SubIcon = subItem.icon;
+                  const isSubActive = location === subItem.path;
+                  
+                  return (
+                    <li key={subItem.path}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
+                          isSubActive
+                            ? "bg-white text-[#209d50] hover:bg-gray-100"
+                            : "text-white/80 hover:bg-green-600 hover:text-white"
+                        }`}
+                        onClick={() => navigate(subItem.path)}
+                      >
+                        <SubIcon className="w-4 h-4 mr-2" />
+                        <span className="font-body text-sm">{subItem.label}</span>
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </li>
 
           {/* Supplier Network */}
