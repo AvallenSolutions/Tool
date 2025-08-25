@@ -8245,6 +8245,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
 
       // Get production facilities for this company
       const facilities = await dbStorage.getProductionFacilitiesByCompany(company.id);
+      console.log(`Found ${facilities.length} facilities for company ${company.id}:`, facilities.map(f => ({ name: f.facility_name, id: f.id })));
       
       if (facilities.length === 0) {
         return res.json({
@@ -8273,21 +8274,23 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       let totalFields = 0;
       let filledFields = 0;
 
-      facilities.forEach(facility => {
+      facilities.forEach((facility, facilityIndex) => {
+        console.log(`Checking facility ${facilityIndex + 1}:`, facility.facility_name);
         requiredFields.forEach(field => {
           totalFields++;
           const value = (facility as any)[field];
-          if (value !== null && value !== undefined && value !== '') {
+          console.log(`  Field ${field}: ${value} (type: ${typeof value})`);
+          if (value !== null && value !== undefined && value !== '' && value !== 0) {
             filledFields++;
           } else {
-            // Convert field name to human readable
+            // Convert snake_case field name to human readable
             const humanReadable = field
-              .replace(/([A-Z])/g, ' $1')
-              .replace(/^./, str => str.toUpperCase())
-              .replace(/Per Year/, ' (per year)')
-              .replace(/Kwh/, 'kWh')
-              .replace(/M3/, 'm³')
-              .replace(/Kg/, 'kg');
+              .replace(/_/g, ' ')
+              .replace(/\b\w/g, (letter) => letter.toUpperCase())
+              .replace(/Per Year/g, '(per year)')
+              .replace(/Kwh/g, 'kWh')
+              .replace(/M3/g, 'm³')
+              .replace(/Kg/g, 'kg');
             
             if (!missingFields.includes(humanReadable)) {
               missingFields.push(humanReadable);
