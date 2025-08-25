@@ -118,9 +118,10 @@ export default function ProductionFacilityForm({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Clean existing data to convert null values to empty strings
+  // Clean existing data to convert null values to empty strings or default values
   const cleanedExistingData = existingData ? {
     ...existingData,
+    // Numeric fields - convert null to empty string
     annualCapacityVolume: existingData.annualCapacityVolume || '',
     totalElectricityKwhPerYear: existingData.totalElectricityKwhPerYear || '',
     totalGasM3PerYear: existingData.totalGasM3PerYear || '',
@@ -136,6 +137,10 @@ export default function ProductionFacilityForm({
     totalHazardousWasteKgPerYear: existingData.totalHazardousWasteKgPerYear || '',
     wasteRecycledPercent: existingData.wasteRecycledPercent || '',
     averageUtilizationPercent: existingData.averageUtilizationPercent || '',
+    // Fix the validation error fields - convert null to appropriate defaults
+    contractPartnerId: existingData.contractPartnerId || '',
+    waterSource: existingData.waterSource || 'municipal',
+    wasteDisposalMethod: existingData.wasteDisposalMethod || 'recycling',
   } : null;
 
   const form = useForm<ProductionFacilityForm>({
