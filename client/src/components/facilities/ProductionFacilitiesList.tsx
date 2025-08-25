@@ -37,10 +37,7 @@ export default function ProductionFacilitiesList() {
     staleTime: 0,
     cacheTime: 0,
     refetchOnMount: 'always',
-    select: (data: any) => {
-      console.log('🏭 Raw facilities API response:', data);
-      return data?.data || [];
-    },
+    select: (data: any) => data?.data || [],
   });
 
   const handleFormComplete = () => {
