@@ -3007,6 +3007,37 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ PRODUCTION FACILITIES ENDPOINTS ============
 
+  // Helper function to calculate facility data completeness
+  const calculateFacilityCompleteness = (facility: any): number => {
+    const requiredFields = [
+      'facilityName', 'facilityType', 'location', 'annualCapacityVolume', 
+      'operatingDaysPerYear', 'shiftsPerDay', 'averageUtilizationPercent'
+    ];
+    
+    const energyFields = [
+      'totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalSteamKgPerYear', 
+      'totalFuelLitersPerYear', 'renewableEnergyPercent', 'energySource'
+    ];
+    
+    const waterFields = [
+      'totalProcessWaterLitersPerYear', 'totalCleaningWaterLitersPerYear', 
+      'totalCoolingWaterLitersPerYear', 'waterSource', 'waterRecyclingPercent'
+    ];
+    
+    const wasteFields = [
+      'totalOrganicWasteKgPerYear', 'totalPackagingWasteKgPerYear', 
+      'totalHazardousWasteKgPerYear', 'wasteRecycledPercent', 'wasteDisposalMethod'
+    ];
+    
+    const allFields = [...requiredFields, ...energyFields, ...waterFields, ...wasteFields];
+    const filledFields = allFields.filter(field => {
+      const value = facility[field];
+      return value !== null && value !== undefined && value !== '';
+    });
+    
+    return Math.round((filledFields.length / allFields.length) * 100);
+  };
+
   // Get production facilities for company
   app.get('/api/production-facilities', isAuthenticated, async (req: any, res: any) => {
     try {
@@ -3023,7 +3054,14 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
       
       const facilities = await dbStorage.getProductionFacilitiesByCompany(company.id);
-      res.json({ success: true, data: facilities });
+      
+      // Add completeness scores to each facility
+      const facilitiesWithCompleteness = facilities.map(facility => ({
+        ...facility,
+        completenessScore: calculateFacilityCompleteness(facility)
+      }));
+      
+      res.json({ success: true, data: facilitiesWithCompleteness });
     } catch (error) {
       console.error('Error fetching production facilities:', error);
       res.status(500).json({ error: 'Internal server error' });

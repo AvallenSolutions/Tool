@@ -17,11 +17,12 @@ interface ProductionFacility {
   annualCapacityVolume: string | null;
   capacityUnit: string;
   averageUtilizationPercent: string | null;
-  completenessScore?: number;
-  electricityKwhPerUnit?: number;
-  processWaterLitersPerUnit?: number;
-  organicWasteKgPerUnit?: number;
+  // Actual database fields for energy/water
+  totalElectricityKwhPerYear?: string | null;
+  totalProcessWaterLitersPerYear?: string | null;
   renewableEnergyPercent?: string | null;
+  // Calculated field from backend
+  completenessScore?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -190,8 +191,8 @@ export default function ProductionFacilitiesList() {
                     </div>
                     <div className="text-xs text-gray-500">Energy</div>
                     <div className="text-xs font-medium">
-                      {facility.electricityKwhPerUnit ? 
-                        `${facility.electricityKwhPerUnit} kWh` : 
+                      {facility.totalElectricityKwhPerYear ? 
+                        `${parseFloat(facility.totalElectricityKwhPerYear).toLocaleString()} kWh/yr` : 
                         'Not set'
                       }
                     </div>
@@ -202,8 +203,8 @@ export default function ProductionFacilitiesList() {
                     </div>
                     <div className="text-xs text-gray-500">Water</div>
                     <div className="text-xs font-medium">
-                      {facility.processWaterLitersPerUnit ? 
-                        `${facility.processWaterLitersPerUnit} L` : 
+                      {facility.totalProcessWaterLitersPerYear ? 
+                        `${parseFloat(facility.totalProcessWaterLitersPerYear).toLocaleString()} L/yr` : 
                         'Not set'
                       }
                     </div>
