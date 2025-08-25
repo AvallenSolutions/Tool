@@ -18,6 +18,8 @@ interface Ingredient {
   unit: string;
   subcategory: string;
   co2ePerUnit?: number | null;
+  waterFootprintPerUnit?: number | null;
+  wasteFootprintPerUnit?: number | null;
 }
 
 export function IngredientSearchSelector({ form, index }: IngredientSearchSelectorProps) {
@@ -127,6 +129,16 @@ export function IngredientSearchSelector({ form, index }: IngredientSearchSelect
                       {selectedIngredient.co2ePerUnit.toFixed(3)} kg CO₂e/{selectedIngredient.unit}
                     </Badge>
                   )}
+                  {selectedIngredient.waterFootprintPerUnit !== null && selectedIngredient.waterFootprintPerUnit !== undefined && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      {selectedIngredient.waterFootprintPerUnit.toFixed(1)} L H₂O/{selectedIngredient.unit}
+                    </Badge>
+                  )}
+                  {selectedIngredient.wasteFootprintPerUnit !== null && selectedIngredient.wasteFootprintPerUnit !== undefined && (
+                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      {selectedIngredient.wasteFootprintPerUnit.toFixed(2)} m² waste/{selectedIngredient.unit}
+                    </Badge>
+                  )}
                 </div>
               )}
 
@@ -170,6 +182,16 @@ export function IngredientSearchSelector({ form, index }: IngredientSearchSelect
                           {ingredient.co2ePerUnit !== null && ingredient.co2ePerUnit !== undefined && (
                             <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600">
                               {ingredient.co2ePerUnit.toFixed(3)} kg CO₂e/{ingredient.unit}
+                            </Badge>
+                          )}
+                          {ingredient.waterFootprintPerUnit !== null && ingredient.waterFootprintPerUnit !== undefined && (
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
+                              {ingredient.waterFootprintPerUnit.toFixed(1)} L H₂O/{ingredient.unit}
+                            </Badge>
+                          )}
+                          {ingredient.wasteFootprintPerUnit !== null && ingredient.wasteFootprintPerUnit !== undefined && (
+                            <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
+                              {ingredient.wasteFootprintPerUnit.toFixed(2)} m² waste/{ingredient.unit}
                             </Badge>
                           )}
                         </div>

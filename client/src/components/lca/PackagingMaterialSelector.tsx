@@ -202,31 +202,11 @@ export function PackagingMaterialSelector({
                   value={material.materialName}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{material.materialName}</span>
-                      <span className="text-xs text-muted-foreground">per {material.unit}</span>
-                    </div>
+                    <span className="font-medium">{material.materialName}</span>
                     {material.impact && (
-                      <div className="flex items-center gap-2 ml-3">
-                        <div className="flex items-center gap-1 text-xs">
-                          <TreePine className="h-3 w-3 text-green-600" />
-                          <span className="font-mono">{material.impact.co2.toFixed(2)}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs">
-                          <Droplets className="h-3 w-3 text-blue-600" />
-                          <span className="font-mono">{material.impact.water.toFixed(0)}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs">
-                          <Zap className="h-3 w-3 text-orange-600" />
-                          <span className="font-mono">{material.impact.energy.toFixed(1)}</span>
-                        </div>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${getImpactBadgeStyle(material.impact.co2)}`}
-                        >
-                          {getImpactLevel(material.impact.co2)}
-                        </Badge>
-                      </div>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {material.impact.co2.toFixed(2)} kg CO₂eq
+                      </span>
                     )}
                   </div>
                 </SelectItem>

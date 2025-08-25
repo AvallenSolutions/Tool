@@ -8150,35 +8150,41 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         const enhancedResults = await Promise.all(
           limitedResults.map(async (ingredient) => {
             try {
-              // Get CO2 footprint for 1 unit of this ingredient
-              const co2Footprint = await OpenLCAService.calculateCarbonFootprint(
-                ingredient.materialName, 
-                1, 
+              // Get detailed impact data for 1 unit of this ingredient including water and waste
+              const detailedImpact = await OpenLCAService.calculateIngredientImpact(
+                ingredient.materialName,
+                1,
                 ingredient.unit
               );
               
               return {
                 ...ingredient,
-                co2ePerUnit: co2Footprint > 0 ? co2Footprint : null, // Only return if positive
+                co2ePerUnit: detailedImpact.carbonFootprint > 0 ? detailedImpact.carbonFootprint : null,
+                waterFootprintPerUnit: detailedImpact.waterFootprint > 0 ? detailedImpact.waterFootprint : null,
+                wasteFootprintPerUnit: detailedImpact.landUse > 0 ? detailedImpact.landUse : null, // Using landUse as waste proxy
               };
             } catch (error) {
               console.error(`Error calculating CO2 for ${ingredient.materialName}:`, error);
               // Try to get category-based estimation as fallback
               try {
                 const { OpenLCAService: FallbackService } = await import('./services/OpenLCAService');
-                const fallbackCO2 = await FallbackService.calculateCarbonFootprint(
-                  ingredient.materialName, 
-                  1, 
+                const fallbackImpact = await FallbackService.calculateIngredientImpact(
+                  ingredient.materialName,
+                  1,
                   ingredient.unit
                 );
                 return {
                   ...ingredient,
-                  co2ePerUnit: fallbackCO2 > 0 ? fallbackCO2 : null,
+                  co2ePerUnit: fallbackImpact.carbonFootprint > 0 ? fallbackImpact.carbonFootprint : null,
+                  waterFootprintPerUnit: fallbackImpact.waterFootprint > 0 ? fallbackImpact.waterFootprint : null,
+                  wasteFootprintPerUnit: fallbackImpact.landUse > 0 ? fallbackImpact.landUse : null,
                 };
               } catch (fallbackError) {
                 return {
                   ...ingredient,
                   co2ePerUnit: null,
+                  waterFootprintPerUnit: null,
+                  wasteFootprintPerUnit: null,
                 };
               }
             }
@@ -8255,6 +8261,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       
       for (const material of materials) {
         try {
+          const { OpenLCAService } = await import('./services/OpenLCAService');
           const impact = await OpenLCAService.calculateIngredientImpact(material.materialName, 1, material.unit || 'kg');
           impactData[material.materialName] = {
             co2: impact.carbonFootprint,
