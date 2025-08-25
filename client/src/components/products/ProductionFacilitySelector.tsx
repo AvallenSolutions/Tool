@@ -44,7 +44,7 @@ export default function ProductionFacilitySelector({
 
   // Update selected facility when selectedFacilityId changes
   useEffect(() => {
-    if (selectedFacilityId && facilities) {
+    if (selectedFacilityId && Array.isArray(facilities)) {
       const facility = facilities.find(f => f.id === selectedFacilityId);
       setSelectedFacility(facility || null);
     } else {
@@ -58,7 +58,7 @@ export default function ProductionFacilitySelector({
       onFacilitySelect(undefined);
     } else {
       const facilityIdNum = parseInt(facilityId);
-      const facility = facilities?.find(f => f.id === facilityIdNum);
+      const facility = Array.isArray(facilities) ? facilities.find(f => f.id === facilityIdNum) : undefined;
       setSelectedFacility(facility || null);
       onFacilitySelect(facilityIdNum);
     }
@@ -118,7 +118,7 @@ export default function ProductionFacilitySelector({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No facility selected</SelectItem>
-                  {facilities?.map((facility) => (
+                  {Array.isArray(facilities) && facilities.map((facility) => (
                     <SelectItem key={facility.id} value={facility.id.toString()}>
                       <div className="flex items-center gap-2">
                         {getFacilityTypeIcon(facility.facilityType)}
@@ -146,7 +146,7 @@ export default function ProductionFacilitySelector({
             )}
           </div>
 
-          {!facilities || facilities.length === 0 ? (
+          {!Array.isArray(facilities) || facilities.length === 0 ? (
             <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
               <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h4 className="font-medium text-gray-600 mb-2">No Production Facilities</h4>
