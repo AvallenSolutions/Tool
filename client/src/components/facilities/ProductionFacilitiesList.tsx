@@ -32,10 +32,11 @@ export default function ProductionFacilitiesList() {
   const [editingFacility, setEditingFacility] = useState<ProductionFacility | null>(null);
 
   const { data: facilities, isLoading, refetch } = useQuery({
-    queryKey: ['/api/production-facilities', Date.now()], // Force cache invalidation
+    queryKey: ['/api/production-facilities'],
     retry: false,
     staleTime: 0,
     cacheTime: 0,
+    refetchOnMount: 'always',
     select: (data: any) => {
       console.log('🏭 Raw facilities API response:', data);
       return data?.data || [];
