@@ -8227,6 +8227,164 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
+  // ============ DATA COMPLETENESS ENDPOINTS ============
+  
+  // Get company data completeness for In House production path
+  app.get('/api/company/data-completeness', isAuthenticated, async (req: any, res: any) => {
+    try {
+      // Get user and company
+      const userId = getUserId(req);
+      const company = await getCompanyWithFallback(userId);
+      
+      if (!company) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'Company not found. Please complete your company profile first.' 
+        });
+      }
+
+      // Get production facilities for this company
+      const facilities = await dbStorage.getProductionFacilitiesByCompany(company.id);
+      
+      if (facilities.length === 0) {
+        return res.json({
+          success: true,
+          data: {
+            isComplete: false,
+            missingFields: ['Production Facility'],
+            message: 'No production facilities found. Please add at least one facility.'
+          }
+        });
+      }
+
+      // Check facility data completeness (using same logic as facility completeness calculation)
+      const requiredFields = [
+        'facilityName', 'facilityType', 'location', 'annualCapacityVolume', 
+        'operatingDaysPerYear', 'shiftsPerDay', 'averageUtilizationPercent',
+        'totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalSteamKgPerYear', 
+        'totalFuelLitersPerYear', 'renewableEnergyPercent', 'energySource',
+        'totalProcessWaterLitersPerYear', 'totalCleaningWaterLitersPerYear', 
+        'totalCoolingWaterLitersPerYear', 'waterSource', 'waterRecyclingPercent',
+        'totalOrganicWasteKgPerYear', 'totalPackagingWasteKgPerYear', 
+        'totalHazardousWasteKgPerYear', 'wasteRecycledPercent', 'wasteDisposalMethod'
+      ];
+
+      const missingFields: string[] = [];
+      let totalFields = 0;
+      let filledFields = 0;
+
+      facilities.forEach(facility => {
+        requiredFields.forEach(field => {
+          totalFields++;
+          const value = (facility as any)[field];
+          if (value !== null && value !== undefined && value !== '') {
+            filledFields++;
+          } else {
+            // Convert field name to human readable
+            const humanReadable = field
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/^./, str => str.toUpperCase())
+              .replace(/Per Year/, ' (per year)')
+              .replace(/Kwh/, 'kWh')
+              .replace(/M3/, 'm³')
+              .replace(/Kg/, 'kg');
+            
+            if (!missingFields.includes(humanReadable)) {
+              missingFields.push(humanReadable);
+            }
+          }
+        });
+      });
+
+      const completenessPercentage = Math.round((filledFields / totalFields) * 100);
+      const isComplete = completenessPercentage >= 90; // 90% threshold for "complete"
+
+      return res.json({
+        success: true,
+        data: {
+          isComplete,
+          completenessPercentage,
+          missingFields: isComplete ? [] : missingFields.slice(0, 10), // Limit to first 10
+          totalFacilities: facilities.length,
+          message: isComplete 
+            ? 'Your company data is complete and ready for production calculations.'
+            : 'Some facility data is missing. Complete it for accurate footprint calculations.'
+        }
+      });
+
+    } catch (error) {
+      console.error('Error checking data completeness:', error);
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Failed to check data completeness' 
+      });
+    }
+  });
+
+  // Get Ecoinvent process templates for Contract Manufacturing path
+  app.get('/api/lca/ecoinvent-processes', isAuthenticated, async (req: any, res: any) => {
+    try {
+      // Get available Ecoinvent processes from lca_process_mappings table
+      const processes = await db
+        .select({
+          id: lcaProcessMappings.id,
+          materialName: lcaProcessMappings.materialName,
+          processName: lcaProcessMappings.olcaProcessName,
+          unit: lcaProcessMappings.unit,
+          subcategory: lcaProcessMappings.subcategory
+        })
+        .from(lcaProcessMappings)
+        .where(eq(lcaProcessMappings.category, 'Production')) // Filter for production processes
+        .orderBy(asc(lcaProcessMappings.materialName));
+
+      // If no production processes, get general processes
+      if (processes.length === 0) {
+        const generalProcesses = await db
+          .select({
+            id: lcaProcessMappings.id,
+            materialName: lcaProcessMappings.materialName,
+            processName: lcaProcessMappings.olcaProcessName,
+            unit: lcaProcessMappings.unit,
+            subcategory: lcaProcessMappings.subcategory
+          })
+          .from(lcaProcessMappings)
+          .orderBy(asc(lcaProcessMappings.materialName))
+          .limit(50); // Limit to prevent overwhelming the dropdown
+
+        return res.json({
+          success: true,
+          data: generalProcesses.map(p => ({
+            id: p.id?.toString() || '',
+            materialName: p.materialName || 'Unknown Process',
+            processName: p.processName || '',
+            unit: p.unit || 'unit',
+            subcategory: p.subcategory || 'General'
+          }))
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: processes.map(p => ({
+          id: p.id?.toString() || '',
+          materialName: p.materialName || 'Unknown Process',
+          processName: p.processName || '',
+          unit: p.unit || 'unit',
+          subcategory: p.subcategory || 'Production'
+        }))
+      });
+
+    } catch (error) {
+      console.error('Error fetching Ecoinvent processes:', error);
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch production processes' 
+      });
+    }
+  });
+
+  // ============ END DATA COMPLETENESS ENDPOINTS ============
+
   // ============ LCA INGREDIENT ENDPOINTS ============
   
   // GET /api/lca/ingredients - Get available ingredients from process mappings

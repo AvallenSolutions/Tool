@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import SupplierSelectionModal from '@/components/supplier-network/SupplierSelectionModal';
-import ProductionFacilitySelector from './ProductionFacilitySelector';
+import ProductionTypeSelector from './ProductionTypeSelector';
 import { Save, Loader2, Package, Wheat, Box, Factory, Leaf, Award, Truck, Recycle, Plus, Trash2, Search, Building2, CheckCircle, Activity, Calculator } from 'lucide-react';
 import { ImageUploader } from '@/components/ImageUploader';
 import { TourProvider } from '@/components/tour/TourProvider';
@@ -110,10 +110,21 @@ const enhancedProductSchema = z.object({
     }).optional(),
   }),
   
-  // Production Tab - Facility-based production data
+  // Production Tab - Enhanced production type selection with branching logic
   production: z.object({
-    facilityId: z.coerce.number().optional(),
-    productionModel: z.string().min(1, "Production model is required"),
+    // New production type selection fields
+    productionType: z.enum(['in-house', 'contract-manufacturing', 'hybrid']).optional(),
+    facilityId: z.coerce.number().optional(), // For in-house production
+    ecoinventProcessId: z.string().optional(), // For contract manufacturing
+    stages: z.array(z.object({
+      id: z.string(),
+      name: z.string().min(1, "Stage name is required"),
+      type: z.enum(['in-house', 'outsourced']),
+      ecoinventProcessId: z.string().optional(), // For outsourced stages
+    })).optional(), // For hybrid production
+    
+    // Legacy fields maintained for compatibility
+    productionModel: z.string().optional(),
     annualProductionVolume: z.coerce.number().min(0, "Production volume must be positive"),
     productionUnit: z.string().default('units'),
     facilityLocation: z.string().optional(),
@@ -563,6 +574,13 @@ export default function EnhancedProductForm({
         },
       },
       production: {
+        // New production type selection fields
+        productionType: undefined,
+        facilityId: undefined,
+        ecoinventProcessId: undefined,
+        stages: undefined,
+        
+        // Legacy fields maintained for compatibility
         productionModel: '',
         annualProductionVolume: 0,
         productionUnit: 'units',
@@ -2359,17 +2377,38 @@ export default function EnhancedProductForm({
 
           {/* Production Tab */}
           <TabsContent value="production" className="space-y-6">
-            <ProductionFacilitySelector
-              selectedFacilityId={form.getValues('production.facilityId')}
-              onFacilitySelect={(facilityId) => {
-                form.setValue('production.facilityId', facilityId);
+            <ProductionTypeSelector
+              onComplete={(productionData) => {
+                // Update form based on production type selection
+                form.setValue('production.productionType', productionData.productionType);
                 
-                // If a facility is selected, set production model to in-house
-                if (facilityId) {
+                if (productionData.productionType === 'in-house') {
+                  // Clear other fields and set legacy compatibility
+                  form.setValue('production.ecoinventProcessId', undefined);
+                  form.setValue('production.stages', undefined);
                   form.setValue('production.productionModel', 'in-house');
+                } else if (productionData.productionType === 'contract-manufacturing') {
+                  // Set ecoinvent process and clear other fields
+                  form.setValue('production.ecoinventProcessId', productionData.ecoinventProcessId);
+                  form.setValue('production.facilityId', undefined);
+                  form.setValue('production.stages', undefined);
+                  form.setValue('production.productionModel', 'outsourced');
+                } else if (productionData.productionType === 'hybrid') {
+                  // Set stages and clear other fields
+                  form.setValue('production.stages', productionData.stages);
+                  form.setValue('production.ecoinventProcessId', undefined);
+                  form.setValue('production.facilityId', undefined);
+                  form.setValue('production.productionModel', 'hybrid');
                 }
+                
+                // Show success toast
+                toast({
+                  title: "✅ Production Type Set",
+                  description: `Production configured as ${productionData.productionType.replace('-', ' ')}`,
+                  duration: 3000,
+                });
               }}
-              onCreateFacility={() => {
+              onBack={() => {
                 // Navigate to Company page facilities tab
                 window.open('/company?tab=production-facilities', '_blank');
               }}
