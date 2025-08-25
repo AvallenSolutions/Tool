@@ -635,13 +635,59 @@ export class EnhancedKPIService {
   }
 
   /**
-   * Create a new KPI goal for a company
+   * Calculate baseline value for a KPI using current platform data
    */
-  async createKpiGoal(goalData: InsertCompanyKpiGoal): Promise<CompanyKpiGoal | null> {
+  async calculateBaselineValue(kpiDefinitionId: string, companyId: number): Promise<number> {
     try {
+      // Get the KPI definition
+      const [kpiDefinition] = await db
+        .select()
+        .from(kpiDefinitions)
+        .where(eq(kpiDefinitions.id, kpiDefinitionId));
+
+      if (!kpiDefinition) {
+        console.error(`KPI definition not found: ${kpiDefinitionId}`);
+        return 0;
+      }
+
+      // Calculate current value as baseline using existing formula logic
+      const baselineValue = await this.calculateCurrentKpiValue(kpiDefinition, companyId);
+      
+      console.log(`📊 Calculated baseline for ${kpiDefinition.kpiName}: ${baselineValue.toFixed(4)} ${kpiDefinition.unit}`);
+      return baselineValue;
+    } catch (error) {
+      console.error('Error calculating baseline value:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Create a new KPI goal for a company with automatic baseline calculation
+   */
+  async createKpiGoal(goalData: Omit<InsertCompanyKpiGoal, 'baselineValue'> & { baselineValue?: string }): Promise<CompanyKpiGoal | null> {
+    try {
+      // Calculate baseline automatically if not provided
+      let baselineValue: string;
+      
+      if (goalData.baselineValue && goalData.baselineValue !== '0') {
+        // Use provided baseline (for manual override cases)
+        baselineValue = goalData.baselineValue;
+        console.log(`🎯 Using provided baseline value: ${baselineValue}`);
+      } else {
+        // Calculate baseline automatically using current platform data
+        const calculatedBaseline = await this.calculateBaselineValue(goalData.kpiDefinitionId, goalData.companyId);
+        baselineValue = calculatedBaseline.toString();
+        console.log(`🤖 Auto-calculated baseline value: ${baselineValue}`);
+      }
+
+      const completeGoalData: InsertCompanyKpiGoal = {
+        ...goalData,
+        baselineValue
+      };
+
       const [newGoal] = await db
         .insert(companyKpiGoals)
-        .values(goalData)
+        .values(completeGoalData)
         .returning();
       
       return newGoal;
