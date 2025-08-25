@@ -12,38 +12,89 @@ interface EmissionsResult {
  */
 export async function calculatePurchasedGoodsEmissions(companyId: number): Promise<EmissionsResult> {
   try {
+    console.log('🔍 Calculating purchased goods for company', companyId);
+    
     const companyProducts = await db
       .select()
       .from(products)
       .where(eq(products.companyId, companyId));
 
+    console.log('📦 Found', companyProducts.length, 'products for emissions calculation');
+
     let totalEmissions = 0;
     const breakdown: Record<string, number> = {};
+    const details: Array<{productId: number; name: string; emissions: number}> = [];
 
     for (const product of companyProducts) {
-      // Calculate emissions from ingredients and raw materials
-      if (product.ingredients && product.annualProductionVolume) {
-        const ingredients = product.ingredients as any[];
-        const annualVolume = parseFloat(product.annualProductionVolume);
+      console.log('🧮 Processing product:', product.name, `(ID: ${product.id})`);
+      
+      // Use OpenLCA methodology for authoritative emissions calculation
+      let productEmissions = 0; // kg CO2e per unit
+      
+      // Calculate OpenLCA-based emissions for ingredients
+      if (product.ingredients && Array.isArray(product.ingredients)) {
+        console.log('🧮 Calculating OpenLCA-based emissions for', product.name);
+        console.log('📋 Found', product.ingredients.length, 'ingredients');
         
-        for (const ingredient of ingredients) {
+        for (const ingredient of product.ingredients) {
           if (ingredient.name && ingredient.amount) {
-            // Use standard emission factor for agricultural ingredients (0.375 kg CO2e/L)
-            const ingredientEmissions = parseFloat(ingredient.amount) * annualVolume * 0.375; // kg CO2e
-            
-            totalEmissions += ingredientEmissions;
-            breakdown[ingredient.name] = (breakdown[ingredient.name] || 0) + ingredientEmissions;
+            try {
+              // Use OpenLCA service for ecoinvent data (matches individual product calculation)
+              const { OpenLCAService } = await import('./OpenLCAService');
+              const impactData = await OpenLCAService.calculateIngredientImpact(ingredient.name, parseFloat(ingredient.amount), 'kg');
+              
+              if (impactData && impactData.carbonFootprint > 0) {
+                productEmissions += impactData.carbonFootprint;
+                console.log(`🌱 OpenLCA ${ingredient.name}: ${ingredient.amount} kg = ${impactData.carbonFootprint.toFixed(3)} kg CO2e`);
+                breakdown[ingredient.name] = (breakdown[ingredient.name] || 0) + impactData.carbonFootprint;
+              } else {
+                console.log(`⚠️ No OpenLCA data for ${ingredient.name} - skipped`);
+              }
+            } catch (error) {
+              console.error(`Error calculating OpenLCA impact for ${ingredient.name}:`, error);
+            }
           }
         }
       }
 
-      // Add packaging emissions based on bottle weight
-      if (product.bottleWeight && product.annualProductionVolume) {
-        const bottleWeightKg = parseFloat(product.bottleWeight) / 1000; // Convert grams to kg
-        const packagingEmissions = bottleWeightKg * parseFloat(product.annualProductionVolume) * 0.51; // 0.51 kg CO2e/kg packaging
-        totalEmissions += packagingEmissions;
-        breakdown['Packaging'] = (breakdown['Packaging'] || 0) + packagingEmissions;
+      // Calculate OpenLCA-based packaging emissions  
+      if (product.bottleWeight && product.bottleRecycledContent) {
+        const bottleWeightG = parseFloat(product.bottleWeight);
+        const recycledContent = parseFloat(product.bottleRecycledContent) / 100;
+        
+        // Use OpenLCA glass calculation (matches individual product calculation)
+        const glassFootprintFactor = 0.487; // kg CO2e per kg glass (virgin)
+        const recycledGlassFootprintFactor = 0.314; // kg CO2e per kg glass (recycled)
+        
+        const virginPortion = 1 - recycledContent;
+        const recycledPortion = recycledContent;
+        
+        const bottleEmissions = (bottleWeightG / 1000) * (
+          virginPortion * glassFootprintFactor + 
+          recycledPortion * recycledGlassFootprintFactor
+        );
+        
+        productEmissions += bottleEmissions;
+        console.log(`🍾 Glass bottle: ${bottleWeightG}g, ${(recycledContent*100).toFixed(2)}% recycled = ${bottleEmissions.toFixed(3)} kg CO2e`);
+        breakdown['Glass Packaging'] = (breakdown['Glass Packaging'] || 0) + bottleEmissions;
       }
+
+      // Calculate total annual emissions for this product
+      const annualVolume = parseFloat(product.annualProductionVolume || '1');
+      const annualProductEmissions = productEmissions * annualVolume; // kg CO2e
+      
+      console.log(`✅ Using OpenLCA calculated footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO₂e per unit`);
+      console.log(`📋 Calculation breakdown: ${(productEmissions - (breakdown['Glass Packaging'] || 0)).toFixed(3)} kg CO₂e (ingredients) + ${(breakdown['Glass Packaging'] || 0).toFixed(3)} kg CO₂e (packaging)`);
+      console.log(`📊 ${product.name} per-unit emissions: ${productEmissions.toFixed(3)} kg CO₂e per unit`);
+      console.log(`🏭 ${product.name} annual production: ${annualVolume.toLocaleString()} units`);
+      console.log(`🌍 ${product.name} total annual emissions: ${(annualProductEmissions/1000).toFixed(1)} tonnes CO₂e`);
+      
+      totalEmissions += annualProductEmissions;
+      details.push({
+        productId: product.id,
+        name: product.name,
+        emissions: annualProductEmissions
+      });
     }
 
     // Convert from kg to tonnes
@@ -53,7 +104,8 @@ export async function calculatePurchasedGoodsEmissions(companyId: number): Promi
       totalEmissions: totalInTonnes,
       breakdown: Object.fromEntries(
         Object.entries(breakdown).map(([key, value]) => [key, value / 1000])
-      )
+      ),
+      details: details
     };
 
   } catch (error) {
