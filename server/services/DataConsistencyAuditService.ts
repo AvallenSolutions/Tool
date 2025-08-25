@@ -1,4 +1,4 @@
-import { storage } from '../storage';
+// Storage will be imported dynamically to avoid circular dependencies
 import { EnhancedLCACalculationService, EnhancedLCAResults } from './EnhancedLCACalculationService';
 
 export interface ProductAuditResult {
@@ -57,7 +57,9 @@ export class DataConsistencyAuditService {
   public static async auditAllProducts(): Promise<AuditSummary> {
     console.log('🔍 Starting comprehensive data consistency audit...');
     
-    const products = await storage.getAllProducts();
+    // Import storage from the correct location
+    const { storage: dbStorage } = await import('../storage');
+    const products = await dbStorage.getAllProducts();
     const auditResults: ProductAuditResult[] = [];
     const overallFindings: string[] = [];
     
@@ -104,7 +106,8 @@ export class DataConsistencyAuditService {
    * Audit a single product for consistency
    */
   public static async auditSingleProduct(productId: number): Promise<ProductAuditResult> {
-    const product = await storage.getProductById(productId);
+    const { storage: dbStorage } = await import('../storage');
+    const product = await dbStorage.getProductById(productId);
     if (!product) {
       throw new Error(`Product not found: ${productId}`);
     }
