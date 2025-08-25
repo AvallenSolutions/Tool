@@ -8234,7 +8234,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     try {
       // Get user and company (using development mode)
       const userId = '44886248'; // Development mode user ID
-      const company = await storage.getCompanyByOwner(userId);
+      const company = await dbStorage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ 
@@ -8257,16 +8257,16 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         });
       }
 
-      // Check facility data completeness (using same logic as facility completeness calculation)
+      // Check facility data completeness (using correct database column names)
       const requiredFields = [
-        'facilityName', 'facilityType', 'location', 'annualCapacityVolume', 
-        'operatingDaysPerYear', 'shiftsPerDay', 'averageUtilizationPercent',
-        'totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalSteamKgPerYear', 
-        'totalFuelLitersPerYear', 'renewableEnergyPercent', 'energySource',
-        'totalProcessWaterLitersPerYear', 'totalCleaningWaterLitersPerYear', 
-        'totalCoolingWaterLitersPerYear', 'waterSource', 'waterRecyclingPercent',
-        'totalOrganicWasteKgPerYear', 'totalPackagingWasteKgPerYear', 
-        'totalHazardousWasteKgPerYear', 'wasteRecycledPercent', 'wasteDisposalMethod'
+        'facility_name', 'facility_type', 'location', 'annual_capacity_volume', 
+        'operating_days_per_year', 'shifts_per_day', 'average_utilization_percent',
+        'total_electricity_kwh_per_year', 'total_gas_m3_per_year', 'total_steam_kg_per_year', 
+        'total_fuel_liters_per_year', 'renewable_energy_percent', 'energy_source',
+        'total_process_water_liters_per_year', 'total_cleaning_water_liters_per_year', 
+        'total_cooling_water_liters_per_year', 'water_source', 'water_recycling_percent',
+        'total_organic_waste_kg_per_year', 'total_packaging_waste_kg_per_year', 
+        'total_hazardous_waste_kg_per_year', 'waste_recycled_percent', 'waste_disposal_method'
       ];
 
       const missingFields: string[] = [];
