@@ -8245,7 +8245,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
 
       // Get production facilities for this company
       const facilities = await dbStorage.getProductionFacilitiesByCompany(company.id);
-      console.log(`Found ${facilities.length} facilities for company ${company.id}:`, facilities.map(f => ({ name: f.facility_name, id: f.id })));
+      console.log(`Found ${facilities.length} facilities for company ${company.id}:`);
+      console.log('First facility object:', JSON.stringify(facilities[0], null, 2));
       
       if (facilities.length === 0) {
         return res.json({
