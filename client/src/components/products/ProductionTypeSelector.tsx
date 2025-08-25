@@ -107,49 +107,49 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-testid="production-type-buttons">
-            {/* In House Button */}
+            {/* In House Button - Green */}
             <Button
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center gap-4 hover:border-green-500 hover:bg-green-50"
+              className="h-auto p-6 flex flex-col items-center gap-4 border-green-200 bg-green-50 hover:border-green-400 hover:bg-green-100 text-green-800"
               onClick={() => handleTypeSelection('in-house')}
               data-testid="button-in-house"
             >
               <Building2 className="w-12 h-12 text-green-600" />
               <div className="text-center">
-                <h3 className="font-semibold text-lg">In House</h3>
-                <p className="text-sm text-muted-foreground mt-2">
+                <h3 className="font-semibold text-lg text-green-800">In House</h3>
+                <p className="text-sm text-green-700 mt-2">
                   We manufacture this product in our own facilities using our equipment and processes.
                 </p>
               </div>
             </Button>
 
-            {/* Contract Manufacturing Button */}
+            {/* Contract Manufacturing Button - Blue */}
             <Button
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center gap-4 hover:border-blue-500 hover:bg-blue-50"
+              className="h-auto p-6 flex flex-col items-center gap-4 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 text-blue-800"
               onClick={() => handleTypeSelection('contract-manufacturing')}
               data-testid="button-contract-manufacturing"
             >
               <Users className="w-12 h-12 text-blue-600" />
               <div className="text-center">
-                <h3 className="font-semibold text-lg">Contract Manufacturing</h3>
-                <p className="text-sm text-muted-foreground mt-2">
+                <h3 className="font-semibold text-lg text-blue-800">Contract Manufacturing</h3>
+                <p className="text-sm text-blue-700 mt-2">
                   A third-party manufacturer produces this product for us using their facilities.
                 </p>
               </div>
             </Button>
 
-            {/* Hybrid Button */}
+            {/* Hybrid Button - Purple */}
             <Button
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center gap-4 hover:border-purple-500 hover:bg-purple-50"
+              className="h-auto p-6 flex flex-col items-center gap-4 border-purple-200 bg-purple-50 hover:border-purple-400 hover:bg-purple-100 text-purple-800"
               onClick={() => handleTypeSelection('hybrid')}
               data-testid="button-hybrid"
             >
               <Factory className="w-12 h-12 text-purple-600" />
               <div className="text-center">
-                <h3 className="font-semibold text-lg">Hybrid</h3>
-                <p className="text-sm text-muted-foreground mt-2">
+                <h3 className="font-semibold text-lg text-purple-800">Hybrid</h3>
+                <p className="text-sm text-purple-700 mt-2">
                   Some production stages are done in-house, others are outsourced to different partners.
                 </p>
               </div>

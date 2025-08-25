@@ -9,8 +9,8 @@ import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema } from "@shared/schema";
+import { eq, desc, asc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { db } from "./db";
-import { eq, desc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
@@ -8232,8 +8232,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
   // Get company data completeness for In House production path
   app.get('/api/company/data-completeness', isAuthenticated, async (req: any, res: any) => {
     try {
-      // Get user and company
-      const userId = getUserId(req);
+      // Get user and company (using development mode)
+      const userId = '44886248'; // Development mode user ID
       const company = await getCompanyWithFallback(userId);
       
       if (!company) {

@@ -2414,78 +2414,42 @@ export default function EnhancedProductForm({
               }}
             />
 
-            {/* Keep basic production fields for compatibility */}
+            {/* Annual Production Volume */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Factory className="w-5 h-5 text-blue-600" />
-                  Additional Production Details
+                  <Package className="w-5 h-5 text-blue-600" />
+                  Annual Production Volume
                 </CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Enter the number of units you produce annually for this product.
+                </p>
               </CardHeader>
-              <CardContent className="space-y-6">
-
-                {/* Basic Production Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="production.productionModel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Production Model *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select production model" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="in-house">In-house Production</SelectItem>
-                            <SelectItem value="contract">Contract Manufacturing</SelectItem>
-                            <SelectItem value="co-packing">Co-packing</SelectItem>
-                            <SelectItem value="hybrid">Hybrid Model</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
+              <CardContent>
+                <div className="max-w-md">
                   <FormField
                     control={form.control}
                     name="production.annualProductionVolume"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Annual Production Volume *</FormLabel>
+                        <FormLabel>Number of Units per Year</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
-                            placeholder="10000" 
+                            placeholder="e.g., 300000" 
                             {...field} 
                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            data-testid="input-annual-production-volume"
                           />
                         </FormControl>
+                        <FormDescription>
+                          This helps calculate the environmental impact per unit.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-
-                {/* Migration Notice */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Building2 className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-blue-900 mb-1">Production Data Centralization</h4>
-                      <p className="text-sm text-blue-800">
-                        Production metrics are now managed through your company's production facilities. 
-                        Select a facility above to automatically apply comprehensive production data for accurate LCA calculations.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-
-
               </CardContent>
             </Card>
           </TabsContent>
