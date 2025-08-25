@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -27,36 +27,36 @@ const productionFacilitySchema = z.object({
   contractPartnerId: z.string().optional(),
   
   // Production Capacity
-  annualCapacityVolume: z.number().min(0, "Capacity must be positive"),
+  annualCapacityVolume: z.string().refine(val => !val || parseFloat(val) >= 0, "Capacity must be positive").optional(),
   capacityUnit: z.enum(['liters', 'bottles', 'cases', 'kg']).default('liters'),
-  operatingDaysPerYear: z.number().min(1).max(365).default(250),
-  shiftsPerDay: z.number().min(1).max(3).default(1),
+  operatingDaysPerYear: z.coerce.number().min(1).max(365).default(250),
+  shiftsPerDay: z.coerce.number().min(1).max(3).default(1),
   
   // Energy Infrastructure (total facility consumption)
-  totalElectricityKwhPerYear: z.number().min(0, "Must be positive").optional(),
-  totalGasM3PerYear: z.number().min(0, "Must be positive").optional(),
-  totalSteamKgPerYear: z.number().min(0, "Must be positive").optional(),
-  totalFuelLitersPerYear: z.number().min(0, "Must be positive").optional(),
-  renewableEnergyPercent: z.number().min(0).max(100).optional(),
+  totalElectricityKwhPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  totalGasM3PerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  totalSteamKgPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  totalFuelLitersPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  renewableEnergyPercent: z.string().refine(val => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 100), "Must be between 0-100").optional(),
   energySource: z.enum(['grid', 'solar', 'wind', 'mixed']).optional(),
   
   // Water Infrastructure (total facility consumption)
-  totalProcessWaterLitersPerYear: z.number().min(0, "Must be positive").optional(),
-  totalCleaningWaterLitersPerYear: z.number().min(0, "Must be positive").optional(),
-  totalCoolingWaterLitersPerYear: z.number().min(0, "Must be positive").optional(),
+  totalProcessWaterLitersPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  totalCleaningWaterLitersPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  totalCoolingWaterLitersPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
   waterSource: z.enum(['municipal', 'well', 'surface', 'mixed']).optional(),
   wasteWaterTreatment: z.boolean().default(false),
-  waterRecyclingPercent: z.number().min(0).max(100).optional(),
+  waterRecyclingPercent: z.string().refine(val => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 100), "Must be between 0-100").optional(),
   
   // Waste Management (total facility waste)
-  totalOrganicWasteKgPerYear: z.number().min(0, "Must be positive").optional(),
-  totalPackagingWasteKgPerYear: z.number().min(0, "Must be positive").optional(),
-  totalHazardousWasteKgPerYear: z.number().min(0, "Must be positive").optional(),
-  wasteRecycledPercent: z.number().min(0).max(100).optional(),
+  totalOrganicWasteKgPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  totalPackagingWasteKgPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  totalHazardousWasteKgPerYear: z.string().refine(val => !val || parseFloat(val) >= 0, "Must be positive").optional(),
+  wasteRecycledPercent: z.string().refine(val => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 100), "Must be between 0-100").optional(),
   wasteDisposalMethod: z.enum(['recycling', 'landfill', 'incineration', 'composting']).optional(),
   
   // Operational Parameters
-  averageUtilizationPercent: z.number().min(0).max(100).default(80),
+  averageUtilizationPercent: z.string().refine(val => !val || (parseFloat(val) >= 0 && parseFloat(val) <= 100), "Must be between 0-100").optional(),
   isPrimaryFacility: z.boolean().default(false),
 });
 
@@ -339,7 +339,7 @@ export default function ProductionFacilityForm({
                               type="number"
                               placeholder="0"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={e => field.onChange(parseInt(e.target.value) || 0)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -385,7 +385,7 @@ export default function ProductionFacilityForm({
                               max="100"
                               placeholder="80"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || 80)}
+                              onChange={e => field.onChange(e.target.value || "80")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -464,7 +464,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 125000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -487,7 +487,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 25000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -510,7 +510,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 50000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -533,7 +533,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 15000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -559,7 +559,7 @@ export default function ProductionFacilityForm({
                               max="100"
                               placeholder="0"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -625,7 +625,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 500000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -648,7 +648,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 200000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -671,7 +671,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 300000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -722,7 +722,7 @@ export default function ProductionFacilityForm({
                               max="100"
                               placeholder="0"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -788,7 +788,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 25000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -811,7 +811,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 15000"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -834,7 +834,7 @@ export default function ProductionFacilityForm({
                               step="1"
                               placeholder="e.g., 500"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
@@ -860,7 +860,7 @@ export default function ProductionFacilityForm({
                               max="100"
                               placeholder="0"
                               {...field}
-                              onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormDescription>
