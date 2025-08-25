@@ -188,8 +188,11 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
   
+  // Check if req.isAuthenticated is available (passport.js method)
+  const isAuthenticatedFn = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false;
+  
   console.log('isAuthenticated middleware check for:', req.url, {
-    isAuthenticated: req.isAuthenticated(),
+    isAuthenticated: isAuthenticatedFn,
     hasUser: !!user,
     hasExpiresAt: !!user?.expires_at,
     userObject: user ? Object.keys(user) : 'no user'

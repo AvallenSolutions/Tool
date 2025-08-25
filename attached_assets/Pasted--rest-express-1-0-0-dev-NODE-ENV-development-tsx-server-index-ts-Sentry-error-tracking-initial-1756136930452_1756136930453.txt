@@ -1,0 +1,47 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Sentry error tracking initialized
+✅ Mixpanel analytics initialized
+✓ Common agricultural ingredients initialized
+[15:45:28] INFO: UnifiedPDFService initialized
+[15:45:29] INFO: Feature routes configured successfully
+[15:45:29] INFO: HTTP server configured with feature routers {"port":"5000"}
+[15:46:00] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[15:46:01] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). The promise rejected with the reason:
+TypeError: req.isAuthenticated is not a function
+    at isAuthenticated (/home/runner/workspace/server/replitAuth.ts:192:26)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at <anonymous> (/home/runner/workspace/node_modules/@opentelemetry/context-async-hooks/src/AbstractAsyncHooksContextManager.ts:75:49)
+    at AsyncLocalStorage.run (node:async_hooks:346:14)
+    at SentryContextManager.with (/home/runner/workspace/node_modules/@opentelemetry/context-async-hooks/src/AsyncLocalStorageContextManager.ts:40:36)
+    at SentryContextManager.with (/home/runner/workspace/node_modules/@sentry/opentelemetry/src/contextManager.ts:70:24)
+    at contextWrapper (/home/runner/workspace/node_modules/@opentelemetry/context-async-hooks/src/AbstractAsyncHooksContextManager.ts:75:26)
+    at patched (/home/runner/workspace/node_modules/@opentelemetry/instrumentation-express/src/instrumentation.ts:308:57)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at Function.handle (/home/runner/workspace/node_modules/express/lib/router/index.js:175:3)
+    at router (/home/runner/workspace/node_modules/express/lib/router/index.js:47:12)
+    at <anonymous> (/home/runner/workspace/node_modules/@opentelemetry/context-async-hooks/src/AbstractAsyncHooksContextManager.ts:75:49)
+    at AsyncLocalStorage.run (node:async_hooks:346:14)
+    at SentryContextManager.with (/home/runner/workspace/node_modules/@opentelemetry/context-async-hooks/src/AsyncLocalStorageContextManager.ts:40:36)
+    at SentryContextManager.with (/home/runner/workspace/node_modules/@sentry/opentelemetry/src/contextManager.ts:70:24)
+    at contextWrapper (/home/runner/workspace/node_modules/@opentelemetry/context-async-hooks/src/AbstractAsyncHooksContextManager.ts:75:26)
+    at patched (/home/runner/workspace/node_modules/@opentelemetry/instrumentation-express/src/instrumentation.ts:308:57)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at <anonymous> (/home/runner/workspace/server/index.ts:89:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at urlencodedParser (/home/runner/workspace/node_modules/body-parser/lib/types/urlencoded.js:94:7)
