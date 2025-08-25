@@ -1827,7 +1827,7 @@ export default function EnhancedProductForm({
                       name="packaging.primaryContainer.color"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Color</FormLabel>
+                          <FormLabel>Colour</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="Clear, Green, Amber" 

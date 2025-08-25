@@ -200,14 +200,25 @@ export function PackagingMaterialSelector({
                 <SelectItem 
                   key={`${material.materialName}-${idx}`} 
                   value={material.materialName}
+                  className="px-4 py-3"
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-medium">{material.materialName}</span>
-                    {material.impact && (
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {material.impact.co2.toFixed(2)} kg CO₂eq
-                      </span>
-                    )}
+                  <div className="w-full">
+                    <div className="font-medium text-gray-900 mb-1">
+                      {material.materialName}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
+                        {category}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
+                        per unit
+                      </Badge>
+                      {material.impact && (
+                        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600">
+                          {material.impact.co2.toFixed(3)} kg CO₂e/unit
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </SelectItem>
               ))}
