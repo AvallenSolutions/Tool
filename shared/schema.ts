@@ -1848,6 +1848,103 @@ export const insertDocumentReviewSchema = createInsertSchema(documentReviews).om
   updatedAt: true,
 });
 
+// Production Facilities table - Master data for company-level production facilities
+export const productionFacilities = pgTable("production_facilities", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  
+  // Facility Information
+  facilityName: varchar("facility_name", { length: 255 }).notNull(),
+  facilityType: varchar("facility_type", { length: 100 }).notNull(), // distillery, brewery, winery, cidery, blending, bottling, contract_facility
+  location: text("location"),
+  isOwnFacility: boolean("is_own_facility").default(true), // true for owned, false for contract
+  contractPartnerId: integer("contract_partner_id").references(() => verifiedSuppliers.id), // Reference to contract facility
+  
+  // Production Capacity
+  annualCapacityVolume: decimal("annual_capacity_volume", { precision: 12, scale: 2 }),
+  capacityUnit: varchar("capacity_unit", { length: 50 }).default("liters"), // liters, bottles, cases, kg
+  operatingDaysPerYear: integer("operating_days_per_year").default(250),
+  shiftsPerDay: integer("shifts_per_day").default(1),
+  
+  // Energy Infrastructure
+  electricityKwhPerUnit: decimal("electricity_kwh_per_unit", { precision: 10, scale: 4 }), // kWh per production unit
+  gasM3PerUnit: decimal("gas_m3_per_unit", { precision: 10, scale: 4 }), // m³ per production unit
+  steamKgPerUnit: decimal("steam_kg_per_unit", { precision: 10, scale: 4 }), // kg per production unit
+  fuelLitersPerUnit: decimal("fuel_liters_per_unit", { precision: 10, scale: 4 }), // liters per production unit
+  renewableEnergyPercent: decimal("renewable_energy_percent", { precision: 5, scale: 2 }),
+  energySource: varchar("energy_source", { length: 100 }), // grid, solar, wind, mixed
+  
+  // Water Infrastructure
+  processWaterLitersPerUnit: decimal("process_water_liters_per_unit", { precision: 10, scale: 3 }), // liters per production unit
+  cleaningWaterLitersPerUnit: decimal("cleaning_water_liters_per_unit", { precision: 10, scale: 3 }),
+  coolingWaterLitersPerUnit: decimal("cooling_water_liters_per_unit", { precision: 10, scale: 3 }),
+  waterSource: varchar("water_source", { length: 100 }), // municipal, well, surface, mixed
+  wasteWaterTreatment: boolean("waste_water_treatment").default(false),
+  waterRecyclingPercent: decimal("water_recycling_percent", { precision: 5, scale: 2 }),
+  
+  // Waste Management
+  organicWasteKgPerUnit: decimal("organic_waste_kg_per_unit", { precision: 10, scale: 4 }), // kg per production unit
+  packagingWasteKgPerUnit: decimal("packaging_waste_kg_per_unit", { precision: 10, scale: 4 }),
+  hazardousWasteKgPerUnit: decimal("hazardous_waste_kg_per_unit", { precision: 10, scale: 4 }),
+  wasteRecycledPercent: decimal("waste_recycled_percent", { precision: 5, scale: 2 }),
+  wasteDisposalMethod: varchar("waste_disposal_method", { length: 100 }), // recycling, landfill, incineration, composting
+  
+  // Equipment and Technology
+  productionEquipment: jsonb("production_equipment").$type<Array<{
+    equipmentType: string;
+    model?: string;
+    capacity?: number;
+    energyRating?: string;
+    installationYear?: number;
+  }>>(),
+  
+  // Quality and Certifications
+  qualityCertifications: jsonb("quality_certifications").$type<string[]>(), // ISO, HACCP, organic, etc.
+  environmentalCertifications: jsonb("environmental_certifications").$type<string[]>(), // ISO 14001, carbon neutral, etc.
+  
+  // Operational Parameters
+  averageUtilizationPercent: decimal("average_utilization_percent", { precision: 5, scale: 2 }).default('80'), // % capacity utilization
+  seasonalOperations: jsonb("seasonal_operations").$type<{
+    hasSeasonality: boolean;
+    peakMonths?: string[];
+    offSeasonMonths?: string[];
+  }>(),
+  
+  // Status and Metadata
+  isActive: boolean("is_active").default(true),
+  isPrimaryFacility: boolean("is_primary_facility").default(false),
+  completenessScore: decimal("completeness_score", { precision: 5, scale: 2 }), // Data completeness percentage
+  lastValidated: timestamp("last_validated"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Product-Facility relationships table
+export const productFacilityMappings = pgTable("product_facility_mappings", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  facilityId: integer("facility_id").references(() => productionFacilities.id).notNull(),
+  
+  // Product-specific overrides for facility data
+  productionStageOverrides: jsonb("production_stage_overrides").$type<{
+    energyMultiplier?: number; // Multiply facility energy by this factor for this product
+    waterMultiplier?: number; // Multiply facility water by this factor for this product
+    wasteMultiplier?: number; // Multiply facility waste by this factor for this product
+    customProcessingTime?: number; // Custom processing time in hours
+    specialEquipmentRequired?: string[];
+  }>(),
+  
+  // Product allocation within facility
+  allocationPercent: decimal("allocation_percent", { precision: 5, scale: 2 }), // % of facility capacity allocated to this product
+  primaryFacility: boolean("primary_facility").default(true), // Is this the main facility for this product?
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_product_facility_mapping").on(table.productId, table.facilityId),
+]);
+
 // Beta Testing: Feedback Submissions table
 export const feedbackSubmissions = pgTable("feedback_submissions", {
   id: serial("id").primaryKey(),
@@ -1886,6 +1983,55 @@ export const lcaJobsRelations = relations(lcaJobs, ({ one }) => ({
   }),
 }));
 
+// Relations for Companies
+export const companiesRelations = relations(companies, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [companies.ownerId],
+    references: [users.id],
+  }),
+  productionFacilities: many(productionFacilities),
+  products: many(products),
+  suppliers: many(suppliers),
+  reports: many(reports),
+  companyData: many(companyData),
+  companyFootprintData: many(companyFootprintData),
+}));
+
+// Relations for Products
+export const productsRelations = relations(products, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [products.companyId],
+    references: [companies.id],
+  }),
+  facilityMappings: many(productFacilityMappings),
+  inputs: many(productInputs),
+}));
+
+// Relations for Production Facilities
+export const productionFacilitiesRelations = relations(productionFacilities, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [productionFacilities.companyId],
+    references: [companies.id],
+  }),
+  contractPartner: one(verifiedSuppliers, {
+    fields: [productionFacilities.contractPartnerId],
+    references: [verifiedSuppliers.id],
+  }),
+  productMappings: many(productFacilityMappings),
+}));
+
+// Relations for Product-Facility Mappings
+export const productFacilityMappingsRelations = relations(productFacilityMappings, ({ one }) => ({
+  product: one(products, {
+    fields: [productFacilityMappings.productId],
+    references: [products.id],
+  }),
+  facility: one(productionFacilities, {
+    fields: [productFacilityMappings.facilityId],
+    references: [productionFacilities.id],
+  }),
+}));
+
 // Type exports for Feedback Submissions
 export type FeedbackSubmission = typeof feedbackSubmissions.$inferSelect;
 export type InsertFeedbackSubmission = typeof feedbackSubmissions.$inferInsert;
@@ -1903,4 +2049,24 @@ export const insertLcaJobSchema = createInsertSchema(lcaJobs).omit({
   completedAt: true,
   durationSeconds: true,
   errorMessage: true,
+});
+
+// Type exports for Production Facilities
+export type ProductionFacility = typeof productionFacilities.$inferSelect;
+export type InsertProductionFacility = typeof productionFacilities.$inferInsert;
+export const insertProductionFacilitySchema = createInsertSchema(productionFacilities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completenessScore: true,
+  lastValidated: true,
+});
+
+// Type exports for Product-Facility Mappings
+export type ProductFacilityMapping = typeof productFacilityMappings.$inferSelect;
+export type InsertProductFacilityMapping = typeof productFacilityMappings.$inferInsert;
+export const insertProductFacilityMappingSchema = createInsertSchema(productFacilityMappings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });

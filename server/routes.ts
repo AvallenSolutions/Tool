@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -3004,6 +3004,159 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // ============ END COMPANY FOOTPRINT DATA ENDPOINTS ============
+
+  // ============ PRODUCTION FACILITIES ENDPOINTS ============
+
+  // Get production facilities for company
+  app.get('/api/production-facilities', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      const facilities = await dbStorage.getProductionFacilitiesByCompany(company.id);
+      res.json({ success: true, data: facilities });
+    } catch (error) {
+      console.error('Error fetching production facilities:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get specific production facility
+  app.get('/api/production-facilities/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      const facility = await dbStorage.getProductionFacilityById(parseInt(id));
+      if (!facility || facility.companyId !== company.id) {
+        return res.status(404).json({ error: 'Production facility not found or access denied' });
+      }
+      
+      res.json({ success: true, data: facility });
+    } catch (error) {
+      console.error('Error fetching production facility:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Create production facility
+  app.post('/api/production-facilities', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Validate facility data using zod schema
+      const facilityData = insertProductionFacilitySchema.parse({
+        ...req.body,
+        companyId: company.id,
+      });
+
+      const facility = await dbStorage.createProductionFacility(facilityData);
+      res.json({ success: true, data: facility });
+    } catch (error) {
+      console.error('Error creating production facility:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid facility data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Update production facility
+  app.put('/api/production-facilities/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      // Verify facility belongs to user's company
+      const existingFacility = await dbStorage.getProductionFacilityById(parseInt(id));
+      if (!existingFacility || existingFacility.companyId !== company.id) {
+        return res.status(404).json({ error: 'Production facility not found or access denied' });
+      }
+
+      // Validate updated facility data
+      const updateData = insertProductionFacilitySchema.partial().parse(req.body);
+      
+      const facility = await dbStorage.updateProductionFacility(parseInt(id), updateData);
+      res.json({ success: true, data: facility });
+    } catch (error) {
+      console.error('Error updating production facility:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid facility data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Delete production facility
+  app.delete('/api/production-facilities/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { id } = req.params;
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      // Verify facility belongs to user's company
+      const existingFacility = await dbStorage.getProductionFacilityById(parseInt(id));
+      if (!existingFacility || existingFacility.companyId !== company.id) {
+        return res.status(404).json({ error: 'Production facility not found or access denied' });
+      }
+      
+      await dbStorage.deleteProductionFacility(parseInt(id));
+      res.json({ success: true, message: 'Production facility deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting production facility:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // ============ END PRODUCTION FACILITIES ENDPOINTS ============
 
   // ============ SUPPLIER INVITATION ENDPOINTS ============
 

@@ -18,6 +18,8 @@ import {
   companySustainabilityData,
   companyGoals,
   customReports,
+  productionFacilities,
+  productFacilityMappings,
   type User,
   type UpsertUser,
   type Company,
@@ -54,6 +56,10 @@ import {
   type InsertCompanyGoal,
   type CustomReport,
   type InsertCustomReport,
+  type ProductionFacility,
+  type InsertProductionFacility,
+  type ProductFacilityMapping,
+  type InsertProductFacilityMapping,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, ilike, or } from "drizzle-orm";
@@ -164,6 +170,18 @@ export interface IStorage {
   getReportsByCompanyCustom(companyId: number): Promise<CustomReport[]>;
   createCustomReport(report: InsertCustomReport): Promise<CustomReport>;
   updateCustomReport(id: string, updates: Partial<InsertCustomReport>): Promise<CustomReport>;
+
+  // Production Facilities operations
+  getProductionFacilitiesByCompany(companyId: number): Promise<ProductionFacility[]>;
+  getProductionFacilityById(id: number): Promise<ProductionFacility | undefined>;
+  createProductionFacility(facility: InsertProductionFacility): Promise<ProductionFacility>;
+  updateProductionFacility(id: number, updates: Partial<InsertProductionFacility>): Promise<ProductionFacility>;
+  deleteProductionFacility(id: number): Promise<void>;
+
+  // Product Facility Mapping operations
+  getProductFacilityMappings(productId?: number, facilityId?: number): Promise<ProductFacilityMapping[]>;
+  createProductFacilityMapping(mapping: InsertProductFacilityMapping): Promise<ProductFacilityMapping>;
+  deleteProductFacilityMapping(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -968,6 +986,89 @@ export class DatabaseStorage implements IStorage {
       .where(eq(customReports.id, id))
       .returning();
     return report;
+  }
+
+  // Production Facilities operations
+  async getProductionFacilitiesByCompany(companyId: number): Promise<ProductionFacility[]> {
+    const facilities = await db
+      .select()
+      .from(productionFacilities)
+      .where(eq(productionFacilities.companyId, companyId))
+      .orderBy(desc(productionFacilities.isPrimaryFacility), productionFacilities.facilityName);
+    return facilities;
+  }
+
+  async getProductionFacilityById(id: number): Promise<ProductionFacility | undefined> {
+    const [facility] = await db
+      .select()
+      .from(productionFacilities)
+      .where(eq(productionFacilities.id, id));
+    return facility;
+  }
+
+  async createProductionFacility(facility: InsertProductionFacility): Promise<ProductionFacility> {
+    const [newFacility] = await db
+      .insert(productionFacilities)
+      .values({
+        ...facility,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return newFacility;
+  }
+
+  async updateProductionFacility(id: number, updates: Partial<InsertProductionFacility>): Promise<ProductionFacility> {
+    const [facility] = await db
+      .update(productionFacilities)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(productionFacilities.id, id))
+      .returning();
+    return facility;
+  }
+
+  async deleteProductionFacility(id: number): Promise<void> {
+    await db
+      .delete(productionFacilities)
+      .where(eq(productionFacilities.id, id));
+  }
+
+  // Product Facility Mapping operations
+  async getProductFacilityMappings(productId?: number, facilityId?: number): Promise<ProductFacilityMapping[]> {
+    let query = db.select().from(productFacilityMappings);
+    
+    if (productId && facilityId) {
+      query = query.where(and(
+        eq(productFacilityMappings.productId, productId),
+        eq(productFacilityMappings.facilityId, facilityId)
+      ));
+    } else if (productId) {
+      query = query.where(eq(productFacilityMappings.productId, productId));
+    } else if (facilityId) {
+      query = query.where(eq(productFacilityMappings.facilityId, facilityId));
+    }
+    
+    return await query;
+  }
+
+  async createProductFacilityMapping(mapping: InsertProductFacilityMapping): Promise<ProductFacilityMapping> {
+    const [newMapping] = await db
+      .insert(productFacilityMappings)
+      .values({
+        ...mapping,
+        createdAt: new Date(),
+      })
+      .returning();
+    return newMapping;
+  }
+
+  async deleteProductFacilityMapping(id: number): Promise<void> {
+    await db
+      .delete(productFacilityMappings)
+      .where(eq(productFacilityMappings.id, id));
   }
 }
 

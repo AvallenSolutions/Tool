@@ -20,6 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import CompanyStorySection from "@/components/company/CompanyStorySection";
+import ProductionFacilitiesList from "@/components/facilities/ProductionFacilitiesList";
 
 // Sustainability data constants extracted from Settings
 const certificationOptions = [
@@ -391,7 +392,7 @@ export default function Company() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7 h-auto p-1 bg-gray-100">
+            <TabsList className="grid w-full grid-cols-8 h-auto p-1 bg-gray-100">
               <TabsTrigger 
                 value="overview" 
                 className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
@@ -414,7 +415,15 @@ export default function Company() {
               >
                 <Leaf className="w-5 h-5" />
                 <span className="text-sm font-medium">Operations</span>
-                <span className="text-xs text-gray-500">Facilities</span>
+                <span className="text-xs text-gray-500">Company Data</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="production-facilities" 
+                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
+              >
+                <Building2 className="w-5 h-5" />
+                <span className="text-sm font-medium">Facilities</span>
+                <span className="text-xs text-gray-500">Production Data</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="goals" 
@@ -452,6 +461,36 @@ export default function Company() {
 
             <TabsContent value="footprint" className="space-y-6">
               <FootprintWizard />
+            </TabsContent>
+
+            <TabsContent value="production-facilities" className="space-y-6">
+              {/* Production Facilities Management */}
+              <Card className="border-l-4 border-l-green-500">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-gray-50">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="p-2 bg-green-100 rounded-lg mr-3">
+                        <Building2 className="w-5 h-5 text-green-600" />
+                      </div>
+                      Production Facilities Management
+                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Add New Facility
+                    </Button>
+                  </CardTitle>
+                  <CardDescription>
+                    Create and manage your production facilities. Define detailed production metrics that will 
+                    automatically feed into product-level calculations and LCA assessments.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                  <ProductionFacilitiesList />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="overview" className="space-y-6">
@@ -738,6 +777,107 @@ export default function Company() {
             </TabsContent>
 
             <TabsContent value="operations" className="space-y-6">
+              {/* Master Production Data Section */}
+              <Card className="border-l-4 border-l-green-500">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-gray-50">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="p-2 bg-green-100 rounded-lg mr-3">
+                        <Building2 className="w-5 h-5 text-green-600" />
+                      </div>
+                      Master Production Data
+                    </div>
+                    <Button
+                      onClick={() => setActiveTab("production-facilities")}
+                      variant="outline"
+                      size="sm"
+                      className="text-green-600 border-green-300 hover:bg-green-50"
+                    >
+                      Manage Facilities
+                    </Button>
+                  </CardTitle>
+                  <CardDescription>
+                    Define your production facilities once and reuse across products to eliminate repetitive data entry. 
+                    This master data feeds into all LCA calculations and product impact assessments.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-blue-900 mb-1">Master Data Approach</h4>
+                        <p className="text-sm text-blue-800">
+                          Set up your production facilities here with detailed energy, water, and waste metrics per unit. 
+                          When creating products, you'll select which facility produces them, automatically inheriting the production data.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Production Facilities Summary */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-lg font-semibold text-gray-800">Production Facilities</h4>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        0 facilities configured
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Placeholder for when no facilities exist */}
+                      <Card className="border-2 border-dashed border-gray-300 bg-gray-50">
+                        <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                          <Building2 className="w-12 h-12 text-gray-400 mb-4" />
+                          <h4 className="font-medium text-gray-600 mb-2">No Facilities Yet</h4>
+                          <p className="text-sm text-gray-500 mb-4">
+                            Create your first production facility to get started
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-green-600 border-green-300 hover:bg-green-50"
+                          >
+                            Add Primary Facility
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+
+                  {/* Benefits of Master Data */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Target className="w-4 h-4 text-purple-600" />
+                        <h5 className="font-medium text-purple-900">Reduce Data Entry</h5>
+                      </div>
+                      <p className="text-sm text-purple-800">
+                        Enter production metrics once per facility, not per product
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <h5 className="font-medium text-blue-900">Improve Accuracy</h5>
+                      </div>
+                      <p className="text-sm text-blue-800">
+                        Consistent facility data across all products reduces errors
+                      </p>
+                    </div>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calculator className="w-4 h-4 text-orange-600" />
+                        <h5 className="font-medium text-orange-900">Better LCA</h5>
+                      </div>
+                      <p className="text-sm text-orange-800">
+                        Facility-level data feeds directly into LCA calculations
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Enhanced Facilities and Operations */}
               <Card className="border-l-4 border-l-orange-500">
                 <CardHeader className="bg-gradient-to-r from-orange-50 to-gray-50">
@@ -745,10 +885,10 @@ export default function Company() {
                     <div className="p-2 bg-orange-100 rounded-lg mr-3">
                       <Leaf className="w-5 h-5 text-orange-600" />
                     </div>
-                    Facilities and Operations Data
+                    Company-Level Operations Data
                   </CardTitle>
                   <CardDescription>
-                    Provide detailed information about your facilities' environmental performance and operational practices.
+                    Company-wide operational policies and high-level environmental performance data.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8 pt-6">
