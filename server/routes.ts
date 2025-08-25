@@ -8234,7 +8234,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     try {
       // Get user and company (using development mode)
       const userId = '44886248'; // Development mode user ID
-      const company = await storage.getCompanyByUserId(userId);
+      const company = await storage.getCompanyByOwner(userId);
       
       if (!company) {
         return res.status(404).json({ 
