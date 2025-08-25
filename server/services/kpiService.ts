@@ -279,11 +279,11 @@ export class KPICalculationService {
   }
 
   /**
-   * Calculate total carbon footprint for company using OpenLCA methodology
+   * Calculate total carbon footprint for company (kg CO2e)
+   * Uses OpenLCA for ingredients plus packaging and production impacts
    */
   async calculateTotalCarbonFootprint(companyId: number): Promise<number> {
     try {
-      // Calculate from OpenLCA data - authoritative source
       const companyProducts = await db
         .select()
         .from(products)
@@ -294,28 +294,26 @@ export class KPICalculationService {
       for (const product of companyProducts) {
         if (product.annualProductionVolume) {
           const annualProduction = parseFloat(product.annualProductionVolume.toString());
-          
-          // Get OpenLCA calculation for this product
           let productFootprintKg = 0;
           
+          // 1. Calculate OpenLCA ingredient footprint
           if (product.ingredients) {
-            // Calculate using OpenLCA for primary ingredient
             try {
               const ingredients = Array.isArray(product.ingredients) 
                 ? product.ingredients 
                 : JSON.parse(product.ingredients as string);
               
               if (ingredients && ingredients.length > 0) {
-                const primaryIngredient = ingredients[0]; // Use primary ingredient for calculation
+                const primaryIngredient = ingredients[0];
                 const openLcaResult = await OpenLCAService.calculateIngredientImpact(
                   primaryIngredient.name || 'molasses',
-                  parseFloat(primaryIngredient.amount || '0.89'),
+                  parseFloat(primaryIngredient.amount || '1.5'),
                   primaryIngredient.unit || 'kg'
                 );
                 
                 if (openLcaResult) {
                   productFootprintKg = openLcaResult.carbonFootprint;
-                  console.log(`🌱 OpenLCA carbon footprint for ${product.name}: ${productFootprintKg} kg CO₂e/bottle`);
+                  console.log(`🌱 OpenLCA ingredients for ${product.name}: ${productFootprintKg.toFixed(3)} kg CO₂e/bottle`);
                 }
               }
             } catch (error) {
@@ -323,21 +321,62 @@ export class KPICalculationService {
             }
           }
           
-          // Fallback to stored value only if OpenLCA fails
+          // 2. Add packaging footprint (glass bottle)
+          if (product.bottleWeight && product.bottleRecycledContent) {
+            const bottleWeightG = parseFloat(product.bottleWeight.toString());
+            const recycledContent = parseFloat(product.bottleRecycledContent.toString()) / 100;
+            
+            const glassFootprintFactor = 0.487; // Virgin glass kg CO2e per kg
+            const recycledGlassFootprintFactor = 0.314; // Recycled glass
+            
+            const virginPortion = 1 - recycledContent;
+            const bottleEmissions = (bottleWeightG / 1000) * (
+              virginPortion * glassFootprintFactor + 
+              recycledContent * recycledGlassFootprintFactor
+            );
+            productFootprintKg += bottleEmissions;
+            console.log(`🍾 Glass bottle (${bottleWeightG}g, ${(recycledContent*100).toFixed(0)}% recycled): ${bottleEmissions.toFixed(3)} kg CO₂e/bottle`);
+          }
+          
+          // 3. Add label footprint  
+          if (product.labelWeight) {
+            const labelWeightKg = parseFloat(product.labelWeight.toString()) / 1000;
+            const labelEmissions = labelWeightKg * 1.1; // Paper emission factor
+            productFootprintKg += labelEmissions;
+            console.log(`🏷️ Label (${product.labelWeight}g): ${labelEmissions.toFixed(3)} kg CO₂e/bottle`);
+          }
+          
+          // 4. Add closure footprint
+          if (product.closureType && product.closureType !== 'none') {
+            const closureEmissions = 0.003 * 2.1; // 3g aluminum cap
+            productFootprintKg += closureEmissions;
+            console.log(`🔒 Closure: ${closureEmissions.toFixed(3)} kg CO₂e/bottle`);
+          }
+          
+          // 5. Add production energy (distillation, bottling)
+          const productionEmissions = 0.3; 
+          productFootprintKg += productionEmissions;
+          console.log(`⚡ Production energy: ${productionEmissions} kg CO₂e/bottle`);
+          
+          // 6. Add secondary packaging
+          const secondaryPackagingEmissions = 0.05;
+          productFootprintKg += secondaryPackagingEmissions;
+          console.log(`📦 Secondary packaging: ${secondaryPackagingEmissions} kg CO₂e/bottle`);
+          
+          // Fallback to stored value only if all calculations fail
           if (productFootprintKg === 0 && product.carbonFootprint) {
             productFootprintKg = parseFloat(product.carbonFootprint.toString());
-            console.log(`⚠️ Using stored carbon footprint for ${product.name}: ${productFootprintKg} kg CO₂e/bottle (OpenLCA failed)`);
+            console.log(`⚠️ Using stored carbon footprint for ${product.name}: ${productFootprintKg} kg CO₂e/bottle`);
           }
           
           const productTotalKg = productFootprintKg * annualProduction;
           totalFootprintKg += productTotalKg;
-          
-          console.log(`📊 ${product.name}: ${productFootprintKg} kg CO₂e/bottle × ${annualProduction} bottles = ${productTotalKg.toFixed(0)} kg CO₂e`);
+          console.log(`📊 TOTAL ${product.name}: ${productFootprintKg.toFixed(3)} kg CO₂e/bottle × ${annualProduction} bottles = ${productTotalKg.toFixed(0)} kg CO₂e`);
         }
       }
 
       console.log(`🧮 Total company carbon footprint: ${totalFootprintKg.toFixed(0)} kg CO₂e (${(totalFootprintKg/1000).toFixed(1)} tonnes)`);
-      return totalFootprintKg; // Return in kg, not tonnes
+      return totalFootprintKg;
     } catch (error) {
       console.error('Error calculating total carbon footprint:', error);
       return 0;
