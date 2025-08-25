@@ -8259,16 +8259,16 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         });
       }
 
-      // Check facility data completeness (using correct database column names)
+      // Check facility data completeness (using camelCase field names as returned by Drizzle)
       const requiredFields = [
-        'facility_name', 'facility_type', 'location', 'annual_capacity_volume', 
-        'operating_days_per_year', 'shifts_per_day', 'average_utilization_percent',
-        'total_electricity_kwh_per_year', 'total_gas_m3_per_year', 'total_steam_kg_per_year', 
-        'total_fuel_liters_per_year', 'renewable_energy_percent', 'energy_source',
-        'total_process_water_liters_per_year', 'total_cleaning_water_liters_per_year', 
-        'total_cooling_water_liters_per_year', 'water_source', 'water_recycling_percent',
-        'total_organic_waste_kg_per_year', 'total_packaging_waste_kg_per_year', 
-        'total_hazardous_waste_kg_per_year', 'waste_recycled_percent', 'waste_disposal_method'
+        'facilityName', 'facilityType', 'location', 'annualCapacityVolume', 
+        'operatingDaysPerYear', 'shiftsPerDay', 'averageUtilizationPercent',
+        'totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalSteamKgPerYear', 
+        'totalFuelLitersPerYear', 'renewableEnergyPercent', 'energySource',
+        'totalProcessWaterLitersPerYear', 'totalCleaningWaterLitersPerYear', 
+        'totalCoolingWaterLitersPerYear', 'waterSource', 'waterRecyclingPercent',
+        'totalOrganicWasteKgPerYear', 'totalPackagingWasteKgPerYear', 
+        'totalHazardousWasteKgPerYear', 'wasteRecycledPercent', 'wasteDisposalMethod'
       ];
 
       const missingFields: string[] = [];
@@ -8284,11 +8284,11 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           if (value !== null && value !== undefined && value !== '' && value !== 0) {
             filledFields++;
           } else {
-            // Convert snake_case field name to human readable
+            // Convert camelCase field name to human readable
             const humanReadable = field
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, (letter) => letter.toUpperCase())
-              .replace(/Per Year/g, '(per year)')
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/^./, str => str.toUpperCase())
+              .replace(/Per Year/g, ' (per year)')
               .replace(/Kwh/g, 'kWh')
               .replace(/M3/g, 'm³')
               .replace(/Kg/g, 'kg');

@@ -1,0 +1,49 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Sentry error tracking initialized
+✅ Mixpanel analytics initialized
+✓ Common agricultural ingredients initialized
+[19:18:01] INFO: UnifiedPDFService initialized
+[19:18:01] INFO: Feature routes configured successfully
+[19:18:01] INFO: HTTP server configured with feature routers {"port":"5000"}
+[19:18:16] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[19:18:29] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[19:18:29] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+isAuthenticated middleware check for: / {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/dashboard/metrics {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+📊 Using stored footprints for Rum Blanc: CO₂=1.87kg, Water=23.8L, Waste=0.25kg
+Products fetched: 1 for company 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+🏢 Using company ID 1 for automated calculations
+🔍 Calculating purchased goods for company 1
