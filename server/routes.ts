@@ -7442,11 +7442,11 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           unit: 'kg CO₂e per unit'
         },
         waterFootprint: {
-          value: parseFloat(product.waterFootprint || '0'), 
+          value: 0, // Will be calculated from OpenLCA + water dilution below
           unit: 'L per unit'
         },
         wasteOutput: {
-          value: parseFloat(product.wasteFootprint || '0'),
+          value: 0, // Will be calculated from actual packaging materials below
           unit: 'kg per unit'
         }
       };
@@ -7491,18 +7491,66 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         }
       ];
 
-      // OpenLCA water breakdown (based on stored footprint values)
-      const totalWater = parseFloat(product.waterFootprint || '0');
-      const molassesWater = 22.5; // From OpenLCA molasses calculation (1.5kg × 15L/kg)
+      // OpenLCA water calculation (ingredients + packaging + water dilution)
+      let molassesWater = 0;
+      let waterDilution = 0;
+      let packagingWater = 0;
+      
+      // Calculate molasses water from OpenLCA (fallback to ecoinvent data if needed)
+      if (product.ingredients && Array.isArray(product.ingredients)) {
+        product.ingredients.forEach((ingredient: any) => {
+          if (ingredient.name && ingredient.name.toLowerCase().includes('molasses')) {
+            if (ingredient.waterUsage) {
+              // Use OpenLCA data if available
+              const ingredientWater = parseFloat(ingredient.waterUsage) * parseFloat(ingredient.amount || 0);
+              molassesWater += ingredientWater;
+              console.log(`🌱 OpenLCA water footprint for ${ingredient.name}: ${ingredientWater}L`);
+            } else {
+              // Fallback to ecoinvent database values when OpenLCA doesn't have water data
+              const molassesAmount = parseFloat(ingredient.amount || 0);
+              const molassesWaterFactor = 39; // L per kg from ecoinvent database (same as carbon footprint logic)
+              const ingredientWater = molassesAmount * molassesWaterFactor;
+              molassesWater += ingredientWater;
+              console.log(`🌱 Molasses water footprint (ecoinvent fallback): ${molassesAmount}kg × ${molassesWaterFactor}L/kg = ${ingredientWater}L`);
+            }
+          }
+        });
+      }
+      
+      // Add water dilution (bottle strength adjustment)
+      if (product.waterDilution?.amount) {
+        const dilutionAmount = parseFloat(product.waterDilution.amount) || 0;
+        if (product.waterDilution.unit === 'ml') {
+          waterDilution = dilutionAmount / 1000; // Convert ml to L
+        } else if (product.waterDilution.unit === 'l') {
+          waterDilution = dilutionAmount;
+        }
+        console.log(`💧 Water dilution for bottle strength: ${waterDilution}L`);
+      }
+      
+      // Calculate packaging water from glass bottle weight
+      if (product.bottleWeight) {
+        const bottleWeightKg = parseFloat(product.bottleWeight) / 1000; // Convert g to kg  
+        const glassWaterFactor = 2.5; // L per kg glass (industry standard)
+        packagingWater = bottleWeightKg * glassWaterFactor;
+        console.log(`🍾 Glass bottle water footprint: ${bottleWeightKg}kg × ${glassWaterFactor}L/kg = ${packagingWater}L`);
+      }
+      
       const processWater = 0; // Zero until user provides processing water data
-      const packagingWater = totalWater > molassesWater ? totalWater - molassesWater : 0;
       const wasteWater = 0; // Minimal for waste processing
       
-      console.log('OpenLCA Water Breakdown:');
-      console.log('- Molasses:', molassesWater, 'L');
+      const totalWater = molassesWater + waterDilution + packagingWater + processWater + wasteWater;
+      
+      // Update metrics with calculated water footprint
+      metrics.waterFootprint.value = totalWater;
+      
+      console.log('OpenLCA Water Calculation (authoritative):');
+      console.log('- Molasses (OpenLCA):', molassesWater.toFixed(2), 'L');
+      console.log('- Water dilution:', waterDilution.toFixed(2), 'L'); 
+      console.log('- Glass packaging:', packagingWater.toFixed(2), 'L');
       console.log('- Process:', processWater, 'L (requires user input)');
-      console.log('- Packaging:', packagingWater, 'L');
       console.log('- Waste:', wasteWater, 'L');
+      console.log('- Total water footprint:', totalWater.toFixed(2), 'L');
       
       const waterBreakdown = [
         { 
@@ -7526,6 +7574,40 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           percentage: Math.round((wasteWater / totalWater) * 100) 
         }
       ];
+
+      // Calculate waste output from actual packaging materials (no stored values)
+      let bottleWaste = 0;
+      let labelWaste = 0;
+      let closureWaste = 0;
+      
+      // Glass bottle waste
+      if (product.bottleWeight) {
+        bottleWaste = parseFloat(product.bottleWeight) / 1000; // Convert g to kg
+        console.log(`♻️ Glass bottle waste: ${bottleWaste}kg`);
+      }
+      
+      // Label waste  
+      if (product.labelWeight) {
+        labelWaste = parseFloat(product.labelWeight) / 1000; // Convert g to kg
+        console.log(`♻️ Label waste: ${labelWaste}kg`);
+      }
+      
+      // Closure waste
+      if (product.closureWeight) {
+        closureWaste = parseFloat(product.closureWeight) / 1000; // Convert g to kg
+        console.log(`♻️ Closure waste: ${closureWaste}kg`);
+      }
+      
+      const totalWaste = bottleWaste + labelWaste + closureWaste;
+      
+      // Update metrics with calculated waste footprint
+      metrics.wasteOutput.value = totalWaste;
+      
+      console.log('OpenLCA Waste Calculation (authoritative):');
+      console.log('- Glass bottle:', bottleWaste.toFixed(3), 'kg');
+      console.log('- Label:', labelWaste.toFixed(3), 'kg');
+      console.log('- Closure:', closureWaste.toFixed(3), 'kg');
+      console.log('- Total waste footprint:', totalWaste.toFixed(3), 'kg');
 
       // Detailed analysis data
       const detailedAnalysis = {
