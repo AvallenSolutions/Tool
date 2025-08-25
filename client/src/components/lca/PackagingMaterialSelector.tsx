@@ -207,25 +207,19 @@ export function PackagingMaterialSelector({
                       {material.materialName}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
-                        {category}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
-                        per unit
-                      </Badge>
                       {material.impact && (
                         <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600">
-                          {material.impact.co2.toFixed(3)} kg CO₂e/unit
+                          {material.impact.co2.toFixed(3)} kg CO₂e/kg
                         </Badge>
                       )}
                       {material.impact && (
                         <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
-                          {material.impact.water.toFixed(1)} L H₂O/unit
+                          {material.impact.water.toFixed(1)} L H₂O/kg
                         </Badge>
                       )}
                       {material.impact && (
                         <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
-                          {material.impact.energy.toFixed(2)} MJ waste/unit
+                          {material.impact.energy.toFixed(2)} MJ waste/kg
                         </Badge>
                       )}
                     </div>

@@ -8239,6 +8239,10 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
 
   // GET /api/lca/packaging-impact - Get impact data for packaging materials by category
   app.get('/api/lca/packaging-impact', async (req, res) => {
+    // Disable caching for this endpoint to ensure fresh calculations
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     try {
       const { category } = req.query;
       
@@ -8260,14 +8264,23 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       const impactData: Record<string, {co2: number; water: number; energy: number}> = {};
       
       for (const material of materials) {
+        console.log(`Processing material: ${material.materialName} in category: ${category}`);
+        
         try {
           const { OpenLCAService } = await import('./services/OpenLCAService');
           
           // Try OpenLCA service first
           const impact = await OpenLCAService.calculateIngredientImpact(material.materialName, 1, material.unit || 'kg');
           
-          if (impact && impact.carbonFootprint > 0) {
-            // Use real OpenLCA data
+          // Check if OpenLCA is returning the same generic fallback values for everything
+          const isGenericFallback = impact && 
+            impact.carbonFootprint === 0.85 && 
+            impact.waterFootprint === 15 && 
+            impact.energyConsumption === 12.5;
+
+          if (impact && impact.carbonFootprint > 0 && !isGenericFallback) {
+            // Use real OpenLCA data only if it's genuine material-specific data
+            console.log(`Using real OpenLCA data for ${material.materialName}:`, impact);
             impactData[material.materialName] = {
               co2: impact.carbonFootprint,
               water: impact.waterFootprint, 
@@ -8275,12 +8288,16 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
             };
           } else {
             // Use scientifically-based estimates with material-specific variations
-            impactData[material.materialName] = getPackagingMaterialEstimate(material.materialName, category);
+            const estimate = getPackagingMaterialEstimate(material.materialName, category);
+            console.log(`Using material-specific estimate for ${material.materialName}:`, estimate);
+            impactData[material.materialName] = estimate;
           }
         } catch (error) {
           console.warn(`OpenLCA calculation failed for ${material.materialName}, using estimates:`, error.message);
           // Use fallback estimation with unique values per material
-          impactData[material.materialName] = getPackagingMaterialEstimate(material.materialName, category);
+          const estimate = getPackagingMaterialEstimate(material.materialName, category);
+          console.log(`Using fallback estimate for ${material.materialName}:`, estimate);
+          impactData[material.materialName] = estimate;
         }
       }
       
