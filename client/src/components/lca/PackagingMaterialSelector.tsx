@@ -218,6 +218,16 @@ export function PackagingMaterialSelector({
                           {material.impact.co2.toFixed(3)} kg CO₂e/unit
                         </Badge>
                       )}
+                      {material.impact && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
+                          {material.impact.water.toFixed(1)} L H₂O/unit
+                        </Badge>
+                      )}
+                      {material.impact && (
+                        <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
+                          {material.impact.energy.toFixed(2)} MJ waste/unit
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </SelectItem>
