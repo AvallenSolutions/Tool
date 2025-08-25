@@ -32,9 +32,14 @@ export default function ProductionFacilitiesList() {
   const [editingFacility, setEditingFacility] = useState<ProductionFacility | null>(null);
 
   const { data: facilities, isLoading, refetch } = useQuery({
-    queryKey: ['/api/production-facilities'],
+    queryKey: ['/api/production-facilities', Date.now()], // Force cache invalidation
     retry: false,
-    select: (data: any) => data?.data || [],
+    staleTime: 0,
+    cacheTime: 0,
+    select: (data: any) => {
+      console.log('🏭 Raw facilities API response:', data);
+      return data?.data || [];
+    },
   });
 
   const handleFormComplete = () => {

@@ -3032,10 +3032,14 @@ Be precise and quote actual text from the content, not generic terms.`;
     const allFields = [...requiredFields, ...energyFields, ...waterFields, ...wasteFields];
     const filledFields = allFields.filter(field => {
       const value = facility[field];
-      return value !== null && value !== undefined && value !== '';
+      const isFilled = value !== null && value !== undefined && value !== '';
+      console.log(`🔍 Field ${field}: "${value}" -> ${isFilled ? 'FILLED' : 'EMPTY'}`);
+      return isFilled;
     });
     
-    return Math.round((filledFields.length / allFields.length) * 100);
+    const completeness = Math.round((filledFields.length / allFields.length) * 100);
+    console.log(`📊 Completeness for ${facility.facilityName}: ${filledFields.length}/${allFields.length} = ${completeness}%`);
+    return completeness;
   };
 
   // Get production facilities for company
@@ -3056,10 +3060,15 @@ Be precise and quote actual text from the content, not generic terms.`;
       const facilities = await dbStorage.getProductionFacilitiesByCompany(company.id);
       
       // Add completeness scores to each facility
-      const facilitiesWithCompleteness = facilities.map(facility => ({
-        ...facility,
-        completenessScore: calculateFacilityCompleteness(facility)
-      }));
+      console.log(`🏭 Processing ${facilities.length} facilities for completeness calculation`);
+      const facilitiesWithCompleteness = facilities.map(facility => {
+        console.log(`\n🔍 Processing facility: ${facility.facilityName} (ID: ${facility.id})`);
+        const completeness = calculateFacilityCompleteness(facility);
+        return {
+          ...facility,
+          completenessScore: completeness
+        };
+      });
       
       res.json({ success: true, data: facilitiesWithCompleteness });
     } catch (error) {
