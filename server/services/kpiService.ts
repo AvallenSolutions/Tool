@@ -13,6 +13,7 @@ import {
   type CompanyKpiGoal,
   type InsertCompanyKpiGoal
 } from "@shared/schema";
+import { OpenLCAService } from "./OpenLCAService";
 
 export interface DashboardKPIData {
   id: string;
@@ -278,11 +279,11 @@ export class KPICalculationService {
   }
 
   /**
-   * Calculate total carbon footprint for company
+   * Calculate total carbon footprint for company using OpenLCA methodology
    */
   async calculateTotalCarbonFootprint(companyId: number): Promise<number> {
     try {
-      // Calculate from actual product data - no more hardcoded values
+      // Calculate from OpenLCA data - authoritative source
       const companyProducts = await db
         .select()
         .from(products)
@@ -291,9 +292,43 @@ export class KPICalculationService {
       let totalFootprintKg = 0;
 
       for (const product of companyProducts) {
-        if (product.carbonFootprint && product.annualProductionVolume) {
-          const productFootprintKg = parseFloat(product.carbonFootprint.toString());
+        if (product.annualProductionVolume) {
           const annualProduction = parseFloat(product.annualProductionVolume.toString());
+          
+          // Get OpenLCA calculation for this product
+          let productFootprintKg = 0;
+          
+          if (product.ingredients) {
+            // Calculate using OpenLCA for primary ingredient
+            try {
+              const ingredients = Array.isArray(product.ingredients) 
+                ? product.ingredients 
+                : JSON.parse(product.ingredients as string);
+              
+              if (ingredients && ingredients.length > 0) {
+                const primaryIngredient = ingredients[0]; // Use primary ingredient for calculation
+                const openLcaResult = await OpenLCAService.calculateIngredientImpact(
+                  primaryIngredient.name || 'molasses',
+                  parseFloat(primaryIngredient.amount || '0.89'),
+                  primaryIngredient.unit || 'kg'
+                );
+                
+                if (openLcaResult) {
+                  productFootprintKg = openLcaResult.carbonFootprint;
+                  console.log(`🌱 OpenLCA carbon footprint for ${product.name}: ${productFootprintKg} kg CO₂e/bottle`);
+                }
+              }
+            } catch (error) {
+              console.error(`Error calculating OpenLCA for ${product.name}:`, error);
+            }
+          }
+          
+          // Fallback to stored value only if OpenLCA fails
+          if (productFootprintKg === 0 && product.carbonFootprint) {
+            productFootprintKg = parseFloat(product.carbonFootprint.toString());
+            console.log(`⚠️ Using stored carbon footprint for ${product.name}: ${productFootprintKg} kg CO₂e/bottle (OpenLCA failed)`);
+          }
+          
           const productTotalKg = productFootprintKg * annualProduction;
           totalFootprintKg += productTotalKg;
           
@@ -335,27 +370,61 @@ export class KPICalculationService {
 
   async calculateTotalWaterConsumption(companyId: number): Promise<number> {
     try {
-      // TEMPORARY FIX: Use hardcoded realistic data until proper data integration
-      // Typical drinks company: ~900,000 L water annually (3L water per bottle)
-      if (companyId === 1) {
-        console.log('🔧 Using hardcoded water consumption: 900,000 L/year');
-        return 900000; // liters
-      }
-      
+      // Calculate from OpenLCA data - authoritative source
       const companyProducts = await db
         .select()
         .from(products)
         .where(eq(products.companyId, companyId));
 
       let totalWater = 0;
+      
       for (const product of companyProducts) {
-        if (product.waterFootprint && product.annualProduction) {
-          const waterFootprint = parseFloat(product.waterFootprint.toString());
-          const annualProduction = parseInt(product.annualProduction.toString());
-          totalWater += waterFootprint * annualProduction;
+        if (product.annualProductionVolume) {
+          const annualProduction = parseFloat(product.annualProductionVolume.toString());
+          
+          // Get OpenLCA calculation for this product
+          let waterFootprintPerBottle = 0;
+          
+          if (product.ingredients) {
+            // Calculate using OpenLCA for primary ingredient
+            try {
+              const ingredients = Array.isArray(product.ingredients) 
+                ? product.ingredients 
+                : JSON.parse(product.ingredients as string);
+              
+              if (ingredients && ingredients.length > 0) {
+                const primaryIngredient = ingredients[0]; // Use primary ingredient for calculation
+                const openLcaResult = await OpenLCAService.calculateIngredientImpact(
+                  primaryIngredient.name || 'molasses',
+                  parseFloat(primaryIngredient.amount || '0.89'),
+                  primaryIngredient.unit || 'kg'
+                );
+                
+                if (openLcaResult) {
+                  // Add water dilution factor (0.5L) for spirits production
+                  waterFootprintPerBottle = openLcaResult.waterFootprint + 0.5;
+                  console.log(`🌱 OpenLCA water footprint for ${product.name}: ${openLcaResult.waterFootprint}L + 0.5L dilution = ${waterFootprintPerBottle}L`);
+                }
+              }
+            } catch (error) {
+              console.error(`Error calculating OpenLCA water for ${product.name}:`, error);
+            }
+          }
+          
+          // Fallback to stored value only if OpenLCA fails
+          if (waterFootprintPerBottle === 0 && product.waterFootprint) {
+            waterFootprintPerBottle = parseFloat(product.waterFootprint.toString());
+            console.log(`⚠️ Using stored water footprint for ${product.name}: ${waterFootprintPerBottle}L (OpenLCA failed)`);
+          }
+          
+          const productTotalWater = waterFootprintPerBottle * annualProduction;
+          totalWater += productTotalWater;
+          
+          console.log(`💧 ${product.name}: ${waterFootprintPerBottle}L × ${annualProduction} bottles = ${productTotalWater.toFixed(0)}L`);
         }
       }
 
+      console.log(`🧮 Total company water footprint: ${totalWater.toFixed(0)}L`);
       return totalWater;
     } catch (error) {
       console.error('Error calculating total water consumption:', error);
