@@ -92,7 +92,7 @@ export default function ProductionFacilitiesList() {
               Add Facility
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
             <ProductionFacilityForm
               onComplete={handleFormComplete}
               onCancel={() => setShowCreateForm(false)}
@@ -118,7 +118,7 @@ export default function ProductionFacilitiesList() {
                   Create First Facility
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
                 <ProductionFacilityForm
                   onComplete={handleFormComplete}
                   onCancel={() => setShowCreateForm(false)}
@@ -258,7 +258,7 @@ export default function ProductionFacilitiesList() {
                         Edit
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
                       <ProductionFacilityForm
                         facilityId={facility.id}
                         existingData={facility}
