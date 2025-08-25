@@ -2626,7 +2626,8 @@ export default function EnhancedProductForm({
             )}
           </Button>
         </div>
+        </form>
       </Form>
-    </div>
+    </TourProvider>
   );
 }
