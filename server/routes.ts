@@ -4068,8 +4068,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Product not found' });
       }
 
-      // FIXED: Trigger carbon footprint recalculation after product update
-      if (updateData.ingredients || updateData.bottleWeight || updateData.bottleRecycledContent) {
+      // DISABLED: Automatic recalculation disabled to preserve manually set footprint values
+      if (false && (updateData.ingredients || updateData.bottleWeight || updateData.bottleRecycledContent)) {
         console.log('🔄 Triggering carbon footprint recalculation for updated product');
         
         try {
