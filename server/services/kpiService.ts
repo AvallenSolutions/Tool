@@ -264,7 +264,7 @@ export class KPICalculationService {
   private getDefaultTarget(kpiName: string): number {
     // Default targets for common KPIs
     const defaults: Record<string, number> = {
-      'Carbon Intensity': 1.5,
+      'Carbon Intensity': 2.5, // kg CO2e/L - realistic target for sustainable production
       'Water Intensity': 8.0,
       'Energy Intensity': 2.0,
       'Waste Diversion Rate': 85,
@@ -518,6 +518,43 @@ export class KPICalculationService {
     // Placeholder - would connect to actual ingredients data
     return 2000; // total liters of ingredients (example)
   }
+
+  /**
+   * Calculate total liters produced by company (for Carbon Intensity calculation)
+   */
+  async calculateTotalLitersProduced(companyId: number): Promise<number> {
+    try {
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, companyId));
+
+      let totalLiters = 0;
+
+      for (const product of companyProducts) {
+        const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
+        
+        if (annualProduction > 0 && product.volume) {
+          // Extract volume in ml from volume string (e.g., "750ml" -> 750)
+          const volumeStr = product.volume.toString();
+          const volumeMatch = volumeStr.match(/([0-9.]+)/);
+          
+          if (volumeMatch) {
+            const volumeMl = parseFloat(volumeMatch[1]);
+            // Convert ml to liters and multiply by annual production
+            const litersPerUnit = volumeMl / 1000;
+            totalLiters += litersPerUnit * annualProduction;
+          }
+        }
+      }
+
+      console.log(`🧮 Calculated total company production: ${totalLiters.toFixed(1)} liters annually`);
+      return totalLiters;
+    } catch (error) {
+      console.error('Error calculating total liters produced:', error);
+      return 0;
+    }
+  }
 }
 
 // Export singleton instance
@@ -719,6 +756,8 @@ export class EnhancedKPIService {
         return totalVolume > 0 ? (localVolume / totalVolume) * 100 : 0;
       case 'totalEnergyConsumed':
         return await calcService.calculateTotalEnergyConsumption(companyId);
+      case 'totalLitersProduced':
+        return await calcService.calculateTotalLitersProduced(companyId);
       default:
         return 0;
     }

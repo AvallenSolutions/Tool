@@ -16,6 +16,18 @@ const kpiDefinitionsData = [
     description: "Measures the carbon footprint per bottle produced, enabling direct comparison of product efficiency"
   },
   {
+    kpiName: "Carbon Intensity",
+    kpiCategory: "Environmental",
+    unit: "kg CO₂e/L",
+    formulaJson: {
+      numerator: "totalCarbonEmissions",
+      denominator: "totalLitersProduced", 
+      calculation_type: "ratio" as const,
+      description: "Total carbon emissions (in kg) divided by total liters produced"
+    },
+    description: "Carbon footprint per liter of product produced - enables precise environmental impact measurement and benchmarking"
+  },
+  {
     kpiName: "Total Carbon Emissions",
     kpiCategory: "Environmental",
     unit: "tonnes CO₂e",
