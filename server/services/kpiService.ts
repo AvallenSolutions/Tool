@@ -353,15 +353,9 @@ export class KPICalculationService {
             console.log(`🔒 Closure: ${closureEmissions.toFixed(3)} kg CO₂e/bottle`);
           }
           
-          // 5. Add production energy (distillation, bottling)
-          const productionEmissions = 0.3; 
-          productFootprintKg += productionEmissions;
-          console.log(`⚡ Production energy: ${productionEmissions} kg CO₂e/bottle`);
-          
-          // 6. Add secondary packaging
-          const secondaryPackagingEmissions = 0.05;
-          productFootprintKg += secondaryPackagingEmissions;
-          console.log(`📦 Secondary packaging: ${secondaryPackagingEmissions} kg CO₂e/bottle`);
+          // Production energy and secondary packaging: Only add when actual data is available
+          // TODO: Add production energy calculation when actual energy consumption data is provided
+          // TODO: Add secondary packaging calculation when actual packaging data is provided
           
           // Fallback to stored value only if all calculations fail
           if (productFootprintKg === 0 && product.carbonFootprint) {
