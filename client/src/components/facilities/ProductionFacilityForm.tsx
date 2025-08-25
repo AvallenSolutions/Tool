@@ -355,7 +355,7 @@ export default function ProductionFacilityForm({
                               type="number"
                               placeholder="0"
                               {...field}
-                              onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={e => field.onChange(e.target.value || "")}
                             />
                           </FormControl>
                           <FormMessage />
