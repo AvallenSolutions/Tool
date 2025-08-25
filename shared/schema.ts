@@ -263,6 +263,7 @@ export const products = pgTable("products", {
   // Calculated footprints
   carbonFootprint: decimal("carbon_footprint", { precision: 10, scale: 4 }),
   waterFootprint: decimal("water_footprint", { precision: 10, scale: 2 }),
+  wasteFootprint: decimal("waste_footprint", { precision: 10, scale: 4 }),
   
   // Status and priorities
   status: varchar("status").default("active"), // active, discontinued, development
