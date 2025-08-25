@@ -2908,10 +2908,10 @@ Be precise and quote actual text from the content, not generic terms.`;
         if (mockCompany) {
           console.log(`Using admin company with products: ${mockCompany.companyName} ID: ${mockCompany.id}`);
           
-          // Use updated KPI service with OpenLCA calculations
-          const totalCarbonFootprintKg = await enhancedKpiService.calculateTotalCarbonFootprint(mockCompany.id);
-          const totalWaterUsage = await enhancedKpiService.calculateTotalWaterConsumption(mockCompany.id);
-          const totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(mockCompany.id);
+          // Use KPI calculation service with OpenLCA calculations
+          const totalCarbonFootprintKg = await kpiCalculationService.calculateTotalCarbonFootprint(mockCompany.id);
+          const totalWaterUsage = await kpiCalculationService.calculateTotalWaterConsumption(mockCompany.id);
+          const totalWasteGenerated = await kpiCalculationService.calculateTotalWasteGenerated(mockCompany.id);
           
           console.log(`📊 Dashboard metrics (OpenLCA methodology):`);
           console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
@@ -2939,9 +2939,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
 
       // Production mode: Use KPI service with OpenLCA calculations
-      const totalCarbonFootprintKg = await enhancedKpiService.calculateTotalCarbonFootprint(company.id);
-      const totalWaterUsage = await enhancedKpiService.calculateTotalWaterConsumption(company.id);
-      const totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(company.id);
+      const totalCarbonFootprintKg = await kpiCalculationService.calculateTotalCarbonFootprint(company.id);
+      const totalWaterUsage = await kpiCalculationService.calculateTotalWaterConsumption(company.id);
+      const totalWasteGenerated = await kpiCalculationService.calculateTotalWasteGenerated(company.id);
 
       console.log(`📊 Production dashboard metrics (OpenLCA methodology):`);
       console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
