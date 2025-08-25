@@ -2612,8 +2612,8 @@ export default function EnhancedProductForm({
 
         {/* Submit Button */}
         <div className="flex justify-end space-x-4 pt-6">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? (
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving Product...
