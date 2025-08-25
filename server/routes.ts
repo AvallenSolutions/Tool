@@ -4216,6 +4216,64 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // Phase 2: Data Consistency Audit System
+  app.get('/api/products/audit-consistency', isAuthenticated, async (req, res) => {
+    try {
+      const { DataConsistencyAuditService } = await import('./services/DataConsistencyAuditService');
+      
+      console.log('🔍 Starting comprehensive data consistency audit...');
+      
+      const auditSummary = await DataConsistencyAuditService.auditAllProducts();
+      
+      // Generate detailed report text
+      const report = DataConsistencyAuditService.generateAuditReport(auditSummary);
+      
+      console.log('✅ Audit completed:', auditSummary.overallFindings.join(' | '));
+      
+      res.json({
+        success: true,
+        auditSummary,
+        report,
+        message: 'Data consistency audit completed successfully'
+      });
+    } catch (error) {
+      console.error('Error during consistency audit:', error);
+      res.status(500).json({ 
+        error: 'Failed to run consistency audit',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  app.get('/api/products/:id/audit-consistency', isAuthenticated, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+
+      const { DataConsistencyAuditService } = await import('./services/DataConsistencyAuditService');
+      
+      console.log(`🔍 Auditing single product: ${productId}`);
+      
+      const auditResult = await DataConsistencyAuditService.auditSingleProduct(productId);
+      
+      console.log(`${auditResult.hasDiscrepancies ? '⚠️' : '✅'} Single product audit complete: ${auditResult.productName}`);
+      
+      res.json({
+        success: true,
+        auditResult,
+        message: `Product audit completed: ${auditResult.hasDiscrepancies ? 'discrepancies found' : 'consistent data'}`
+      });
+    } catch (error) {
+      console.error('Error during single product audit:', error);
+      res.status(500).json({ 
+        error: 'Failed to audit product',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Draft product endpoint
   app.post('/api/products/draft', async (req, res) => {
     try {
