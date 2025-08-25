@@ -213,6 +213,9 @@ export default function ProductionFacilityForm({
       // Convert empty strings to undefined for numeric fields
       const cleanedData = {
         ...data,
+        // Optional ID fields - convert empty string to undefined
+        contractPartnerId: data.contractPartnerId || undefined,
+        // Numeric measurement fields - convert empty string to undefined  
         annualCapacityVolume: data.annualCapacityVolume || undefined,
         totalElectricityKwhPerYear: data.totalElectricityKwhPerYear || undefined,
         totalGasM3PerYear: data.totalGasM3PerYear || undefined,
