@@ -79,6 +79,8 @@ export function KPIsPage() {
     targetDate: undefined,
     baselineValue: 0,
   });
+  const [calculatedBaseline, setCalculatedBaseline] = useState<number | null>(null);
+  const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -141,17 +143,42 @@ export function KPIsPage() {
 
   const categories = ['all', ...Array.from(new Set(definitions.map(d => d.kpiCategory)))];
 
-  const handleSetGoal = (kpi: KpiDefinition) => {
+  const handleSetGoal = async (kpi: KpiDefinition) => {
     setSelectedKpi(kpi);
     setGoalFormData(prev => ({ ...prev, kpiDefinitionId: kpi.id }));
     setIsGoalDialogOpen(true);
+    
+    // Calculate baseline automatically when KPI is selected
+    setIsCalculatingBaseline(true);
+    setCalculatedBaseline(null);
+    
+    try {
+      const response = await fetch(`/api/enhanced-kpis/calculate-baseline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kpiDefinitionId: kpi.id }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCalculatedBaseline(data.baseline);
+      } else {
+        console.error('Failed to calculate baseline');
+        setCalculatedBaseline(0);
+      }
+    } catch (error) {
+      console.error('Error calculating baseline:', error);
+      setCalculatedBaseline(0);
+    } finally {
+      setIsCalculatingBaseline(false);
+    }
   };
 
   const handleCreateGoal = () => {
-    if (!selectedKpi || !goalFormData.targetDate || goalFormData.baselineValue <= 0) {
+    if (!selectedKpi || !goalFormData.targetDate || calculatedBaseline === null) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields",
+        description: "Please wait for baseline calculation to complete and select a target date.",
         variant: "destructive",
       });
       return;
@@ -161,7 +188,7 @@ export function KPIsPage() {
       kpiDefinitionId: goalFormData.kpiDefinitionId,
       targetReductionPercentage: goalFormData.targetReductionPercentage,
       targetDate: format(goalFormData.targetDate, 'yyyy-MM-dd'),
-      baselineValue: goalFormData.baselineValue,
+      // Note: baselineValue will be calculated automatically by the backend
     });
   };
 
@@ -411,16 +438,27 @@ export function KPIsPage() {
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="baseline">Current Baseline Value</Label>
-                  <Input
-                    id="baseline"
-                    type="number"
-                    step="0.01"
-                    value={goalFormData.baselineValue}
-                    onChange={(e) => setGoalFormData(prev => ({ ...prev, baselineValue: parseFloat(e.target.value) || 0 }))}
-                    placeholder={`Enter current ${selectedKpi.unit}`}
-                  />
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <Label className="text-blue-900 font-medium">Calculated Baseline Value</Label>
+                  <div className="mt-2">
+                    {isCalculatingBaseline ? (
+                      <div className="flex items-center space-x-2 text-blue-700">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <span className="text-sm">Calculating baseline...</span>
+                      </div>
+                    ) : calculatedBaseline !== null ? (
+                      <div>
+                        <p className="text-lg font-semibold text-blue-900">
+                          {calculatedBaseline.toFixed(4)} {selectedKpi.unit}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          🤖 Auto-calculated from your current platform data
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-blue-600">Baseline will be calculated automatically</p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -434,7 +472,10 @@ export function KPIsPage() {
                     onChange={(e) => setGoalFormData(prev => ({ ...prev, targetReductionPercentage: parseInt(e.target.value) || 10 }))}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Target: {(goalFormData.baselineValue * (1 - goalFormData.targetReductionPercentage / 100)).toFixed(2)} {selectedKpi.unit}
+                    {calculatedBaseline !== null 
+                      ? `Target: ${(calculatedBaseline * (1 - goalFormData.targetReductionPercentage / 100)).toFixed(2)} ${selectedKpi.unit}`
+                      : 'Target will be calculated after baseline is determined'
+                    }
                   </p>
                 </div>
 

@@ -5606,6 +5606,40 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
+  // POST /api/enhanced-kpis/calculate-baseline - Calculate baseline for a KPI
+  app.post('/api/enhanced-kpis/calculate-baseline', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      const { kpiDefinitionId } = req.body;
+      
+      if (!kpiDefinitionId) {
+        return res.status(400).json({ error: 'kpiDefinitionId is required' });
+      }
+      
+      const baseline = await enhancedKpiService.calculateBaselineValue(kpiDefinitionId, company.id);
+      
+      res.json({ 
+        success: true, 
+        baseline,
+        message: 'Baseline calculated successfully' 
+      });
+    } catch (error) {
+      console.error('Error calculating baseline:', error);
+      res.status(500).json({ error: 'Failed to calculate baseline' });
+    }
+  });
+
   // POST /api/enhanced-kpis/goals - Create a new KPI goal
   app.post('/api/enhanced-kpis/goals', isAuthenticated, async (req, res) => {
     try {
@@ -5623,9 +5657,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       const { kpiDefinitionId, targetReductionPercentage, targetDate, baselineValue } = req.body;
       
-      if (!kpiDefinitionId || !targetReductionPercentage || !targetDate || !baselineValue) {
+      if (!kpiDefinitionId || !targetReductionPercentage || !targetDate) {
         return res.status(400).json({ 
-          error: 'Missing required fields: kpiDefinitionId, targetReductionPercentage, targetDate, baselineValue' 
+          error: 'Missing required fields: kpiDefinitionId, targetReductionPercentage, targetDate' 
         });
       }
       
@@ -5634,7 +5668,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         kpiDefinitionId,
         targetReductionPercentage: targetReductionPercentage.toString(),
         targetDate,
-        baselineValue: baselineValue.toString(),
+        baselineValue: baselineValue ? baselineValue.toString() : undefined,
         isActive: true,
       };
       
