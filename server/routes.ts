@@ -2895,94 +2895,41 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ DASHBOARD METRICS ENDPOINT ============
   
-  // Get dashboard metrics (using FootprintWizard's exact calculation method)
+  // Get dashboard metrics (using OpenLCA methodology via KPI service)
   app.get('/api/dashboard/metrics', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub;
       
       if (!userId) {
-        // Development mode: Use FootprintWizard's calculation method
-        console.log('🔍 DEBUG: Development mode triggered - !userId path');
+        // Development mode: Use KPI service with OpenLCA calculations
         console.log('Development mode: Creating mock user for testing');
         const mockCompany = await dbStorage.getCompanyByOwner('mock-user-123');
         if (mockCompany) {
-          console.log(`Using existing company with products: ${mockCompany.companyName} ID: ${mockCompany.id}`);
+          console.log(`Using admin company with products: ${mockCompany.companyName} ID: ${mockCompany.id}`);
           
-          // Use exact FootprintWizard calculation: Manual Scope 1+2 + Automated Scope 3
-          let manualEmissions = 0;
-          try {
-            const footprintData = await dbStorage.getCompanyFootprintData(mockCompany.id);
-            for (const entry of footprintData) {
-              if (entry.scope === 1 || entry.scope === 2) {
-                manualEmissions += parseFloat(entry.calculatedEmissions || '0');
-              }
-            }
-          } catch (error) {
-            console.error('Error fetching footprint data:', error);
-          }
+          // Use updated KPI service with OpenLCA calculations
+          const totalCarbonFootprintKg = await enhancedKpiService.calculateTotalCarbonFootprint(mockCompany.id);
+          const totalWaterUsage = await enhancedKpiService.calculateTotalWaterConsumption(mockCompany.id);
+          const totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(mockCompany.id);
           
-          let automatedEmissions = 0;
-          try {
-            const [purchasedGoods, fuelEnergyUpstream] = await Promise.all([
-              calculatePurchasedGoodsEmissions(mockCompany.id),
-              calculateFuelEnergyUpstreamEmissions(mockCompany.id)
-            ]);
-            automatedEmissions = (purchasedGoods.totalEmissions + fuelEnergyUpstream.totalEmissions) * 1000; // Convert tonnes to kg
-          } catch (error) {
-            console.error('Error calculating automated emissions:', error);
-          }
-          
-          // Target: 483,943.76 kg as specified by user
-          const targetCO2eKg = 483943.76;
-          const calculatedCO2eKg = manualEmissions + automatedEmissions;
-          
-          console.log(`📊 FootprintWizard calculation method:`);
-          console.log(`   Manual (Scope 1+2): ${manualEmissions.toFixed(1)} kg CO2e`);
-          console.log(`   Automated (Scope 3): ${automatedEmissions.toFixed(1)} kg CO2e`);
-          console.log(`   Calculated total: ${calculatedCO2eKg.toFixed(2)} kg CO2e`);
-          console.log(`   Target total: ${targetCO2eKg} kg CO2e`);
-          
-          // Calculate actual values from product data
-          let totalWaterUsage = 0;
-          let totalWasteGenerated = 0;
-
-          // Calculate water usage from actual product footprints
-          for (const product of companyProducts) {
-            const waterFootprint = parseFloat(product.waterFootprint || '0');
-            const annualProduction = parseFloat(product.annualProductionVolume || '0');
-            totalWaterUsage += waterFootprint * annualProduction;
-          }
-          
-          // Use proper KPI service for waste calculation
-          totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(mockCompany.id);
-          console.log(`🗑️ KPI Service calculated waste: ${totalWasteGenerated} kg (${totalWasteGenerated/1000} tonnes)`);
-          
-          console.log(`📈 Dashboard metrics (calculated from product data):`);
-          console.log(`   CO2e: ${(targetCO2eKg/1000).toFixed(2)} tonnes (${targetCO2eKg} kg)`);
+          console.log(`📊 Dashboard metrics (OpenLCA methodology):`);
+          console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
           console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres`);
           console.log(`   Waste: ${(totalWasteGenerated/1000).toFixed(1)} tonnes`);
           
           return res.json({
-            totalCO2e: targetCO2eKg / 1000, // Return as tonnes
-            waterUsage: totalWaterUsage, // 11.7M litres
-            wasteGenerated: totalWasteGenerated / 1000 // Return calculated waste in tonnes
+            totalCO2e: totalCarbonFootprintKg / 1000, // Return as tonnes
+            waterUsage: totalWaterUsage,
+            wasteGenerated: totalWasteGenerated / 1000 // Return as tonnes
           });
         }
         
-        // Calculate actual values using KPI service
-        const totalWaterUsage = 11700000; // Keep this as fallback for now
-        const totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(1); // Use company ID 1 for development
-        
-        console.log(`📈 Fallback dashboard metrics (copied from existing calculations):`);
-        console.log(`   CO2e: 483.94 tonnes`);
-        console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres`);
-        console.log(`   Waste: ${(totalWasteGenerated/1000).toFixed(1)} tonnes`);
-        
+        // Fallback
         return res.json({
-          totalCO2e: 483.94376, // Target value in tonnes
-          waterUsage: totalWaterUsage, // 11.7M litres
-          wasteGenerated: totalWasteGenerated / 1000 // 0.1 tonnes
+          totalCO2e: 0,
+          waterUsage: 0,
+          wasteGenerated: 0
         });
       }
 
@@ -2991,85 +2938,20 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Company not found' });
       }
 
-      // Production mode: Use FootprintWizard calculation method
-      let manualEmissions = 0;
-      try {
-        const footprintData = await dbStorage.getCompanyFootprintData(company.id);
-        for (const entry of footprintData) {
-          if (entry.scope === 1 || entry.scope === 2) {
-            manualEmissions += parseFloat(entry.calculatedEmissions || '0');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching footprint data:', error);
-      }
-      
-      let automatedEmissions = 0;
-      try {
-        const [purchasedGoods, fuelEnergyUpstream] = await Promise.all([
-          calculatePurchasedGoodsEmissions(company.id),
-          calculateFuelEnergyUpstreamEmissions(company.id)
-        ]);
-        automatedEmissions = (purchasedGoods.totalEmissions + fuelEnergyUpstream.totalEmissions) * 1000;
-      } catch (error) {
-        console.error('Error calculating automated emissions:', error);
-      }
-      
-      const totalCO2eKg = manualEmissions + automatedEmissions;
+      // Production mode: Use KPI service with OpenLCA calculations
+      const totalCarbonFootprintKg = await enhancedKpiService.calculateTotalCarbonFootprint(company.id);
+      const totalWaterUsage = await enhancedKpiService.calculateTotalWaterConsumption(company.id);
+      const totalWasteGenerated = await enhancedKpiService.calculateTotalWasteGenerated(company.id);
 
-      // Calculate water and waste from products for consistency  
-      const { products } = await import('@shared/schema');
-      const { eq } = await import('drizzle-orm');
-      
-      const companyProducts = await db
-        .select()
-        .from(products)
-        .where(eq(products.companyId, company.id));
+      console.log(`📊 Production dashboard metrics (OpenLCA methodology):`);
+      console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
+      console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres`);
+      console.log(`   Waste: ${(totalWasteGenerated/1000).toFixed(1)} tonnes`);
 
-      let totalWaterUsage = 0;
-      let totalWasteGenerated = 0;
-
-      for (const product of companyProducts) {
-        const waterFootprint = parseFloat(product.waterFootprint || '0');
-        const annualProduction = parseFloat(product.annualProductionVolume || '0');
-        totalWaterUsage += waterFootprint * annualProduction;
-        
-        // Calculate waste from actual packaging data (same logic as KPI service)
-        if (product.bottleWeight) {
-          const bottleWeightKg = parseFloat(product.bottleWeight.toString()) / 1000; // Convert grams to kg
-          const recycledContent = parseFloat(product.bottleRecycledContent?.toString() || '0') / 100;
-          
-          // Primary packaging waste (bottle)
-          let wastePerUnit = bottleWeightKg * (1 - recycledContent);
-          
-          // Add label waste if available
-          if (product.labelWeight) {
-            const labelWeightKg = parseFloat(product.labelWeight.toString()) / 1000; // Convert grams to kg
-            wastePerUnit += labelWeightKg;
-          }
-          
-          // Add closure waste estimate (average screw cap ~3g)
-          if (product.closureType && product.closureType !== 'none') {
-            wastePerUnit += 0.003; // 3g closure in kg
-          }
-          
-          totalWasteGenerated += (wastePerUnit * annualProduction) / 1000; // Convert to tonnes
-          console.log(`🔍 Product ${product.name}: wastePerUnit=${wastePerUnit}kg, annual=${annualProduction}, total waste=${wastePerUnit * annualProduction}kg`);
-        }
-      }
-      
-      console.log(`🗑️ Total calculated waste: ${totalWasteGenerated*1000}kg (${totalWasteGenerated} tonnes)`);
-
-      console.log(`📈 Production dashboard metrics (FootprintWizard method):`);
-      console.log(`   CO2e: ${(totalCO2eKg/1000).toFixed(2)} tonnes (${totalCO2eKg.toFixed(1)} kg)`);
-      console.log(`   Water: ${totalWaterUsage.toFixed(0)} litres`);
-      console.log(`   Waste: ${(totalWasteGenerated).toFixed(1)} tonnes`);
-      console.log(`🔍 DEBUG: Production path executed!`);
-      
-      res.json({
-        totalCO2e: totalCO2eKg / 1000, // Use FootprintWizard calculation in tonnes
-        waterUsage: Math.round(totalWaterUsage),
-        wasteGenerated: parseFloat(totalWasteGenerated.toFixed(1))
+      return res.json({
+        totalCO2e: totalCarbonFootprintKg / 1000, // Return as tonnes
+        waterUsage: totalWaterUsage,
+        wasteGenerated: totalWasteGenerated / 1000 // Return as tonnes  
       });
       
     } catch (error) {
