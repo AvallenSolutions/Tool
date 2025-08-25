@@ -100,15 +100,15 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
             {/* In House Button - Green */}
             <Button
               variant="outline"
-              className="h-auto p-4 flex flex-col items-center justify-start gap-2 border-green-200 bg-green-50 hover:border-green-400 hover:bg-green-100 text-green-800 min-h-[240px] w-full overflow-hidden"
+              className="h-[200px] p-3 flex flex-col items-center justify-center gap-2 border-green-200 bg-green-50 hover:border-green-400 hover:bg-green-100 text-green-800 w-full overflow-hidden"
               onClick={() => handleTypeSelection('in-house')}
               data-testid="button-in-house"
             >
-              <Building2 className="w-8 h-8 text-green-600 flex-shrink-0 mt-2" />
-              <div className="text-center px-2 flex-1 flex flex-col justify-center">
-                <h3 className="font-semibold text-sm text-green-800 mb-2">In House</h3>
-                <p className="text-xs text-green-700 leading-tight break-words hyphens-auto">
-                  We manufacture this product in our own facilities using our equipment and processes.
+              <Building2 className="w-8 h-8 text-green-600 flex-shrink-0" />
+              <div className="text-center w-full max-w-full">
+                <h3 className="font-semibold text-sm text-green-800 mb-1">In House</h3>
+                <p className="text-xs text-green-700 leading-tight break-words max-w-full">
+                  We manufacture in our own facilities
                 </p>
               </div>
             </Button>
@@ -116,15 +116,15 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
             {/* Contract Manufacturing Button - Blue */}
             <Button
               variant="outline"
-              className="h-auto p-4 flex flex-col items-center justify-start gap-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 text-blue-800 min-h-[240px] w-full overflow-hidden"
+              className="h-[200px] p-3 flex flex-col items-center justify-center gap-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 text-blue-800 w-full overflow-hidden"
               onClick={() => handleTypeSelection('contract-manufacturing')}
               data-testid="button-contract-manufacturing"
             >
-              <Users className="w-8 h-8 text-blue-600 flex-shrink-0 mt-2" />
-              <div className="text-center px-2 flex-1 flex flex-col justify-center">
-                <h3 className="font-semibold text-sm text-blue-800 mb-2">Contract Manufacturing</h3>
-                <p className="text-xs text-blue-700 leading-tight break-words hyphens-auto">
-                  A third-party manufacturer produces this product for us using their facilities.
+              <Users className="w-8 h-8 text-blue-600 flex-shrink-0" />
+              <div className="text-center w-full max-w-full">
+                <h3 className="font-semibold text-sm text-blue-800 mb-1">Contract Manufacturing</h3>
+                <p className="text-xs text-blue-700 leading-tight break-words max-w-full">
+                  Third-party produces for us
                 </p>
               </div>
             </Button>
@@ -132,15 +132,15 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
             {/* Hybrid Button - Purple */}
             <Button
               variant="outline"
-              className="h-auto p-4 flex flex-col items-center justify-start gap-2 border-purple-200 bg-purple-50 hover:border-purple-400 hover:bg-purple-100 text-purple-800 min-h-[240px] w-full overflow-hidden"
+              className="h-[200px] p-3 flex flex-col items-center justify-center gap-2 border-purple-200 bg-purple-50 hover:border-purple-400 hover:bg-purple-100 text-purple-800 w-full overflow-hidden"
               onClick={() => handleTypeSelection('hybrid')}
               data-testid="button-hybrid"
             >
-              <Factory className="w-8 h-8 text-purple-600 flex-shrink-0 mt-2" />
-              <div className="text-center px-2 flex-1 flex flex-col justify-center">
-                <h3 className="font-semibold text-sm text-purple-800 mb-2">Hybrid</h3>
-                <p className="text-xs text-purple-700 leading-tight break-words hyphens-auto">
-                  Some production stages are done in-house, others are outsourced to different partners.
+              <Factory className="w-8 h-8 text-purple-600 flex-shrink-0" />
+              <div className="text-center w-full max-w-full">
+                <h3 className="font-semibold text-sm text-purple-800 mb-1">Hybrid</h3>
+                <p className="text-xs text-purple-700 leading-tight break-words max-w-full">
+                  Mix of in-house and outsourced
                 </p>
               </div>
             </Button>
