@@ -118,9 +118,29 @@ export default function ProductionFacilityForm({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Clean existing data to convert null values to empty strings
+  const cleanedExistingData = existingData ? {
+    ...existingData,
+    annualCapacityVolume: existingData.annualCapacityVolume || '',
+    totalElectricityKwhPerYear: existingData.totalElectricityKwhPerYear || '',
+    totalGasM3PerYear: existingData.totalGasM3PerYear || '',
+    totalSteamKgPerYear: existingData.totalSteamKgPerYear || '',
+    totalFuelLitersPerYear: existingData.totalFuelLitersPerYear || '',
+    renewableEnergyPercent: existingData.renewableEnergyPercent || '',
+    totalProcessWaterLitersPerYear: existingData.totalProcessWaterLitersPerYear || '',
+    totalCleaningWaterLitersPerYear: existingData.totalCleaningWaterLitersPerYear || '',
+    totalCoolingWaterLitersPerYear: existingData.totalCoolingWaterLitersPerYear || '',
+    waterRecyclingPercent: existingData.waterRecyclingPercent || '',
+    totalOrganicWasteKgPerYear: existingData.totalOrganicWasteKgPerYear || '',
+    totalPackagingWasteKgPerYear: existingData.totalPackagingWasteKgPerYear || '',
+    totalHazardousWasteKgPerYear: existingData.totalHazardousWasteKgPerYear || '',
+    wasteRecycledPercent: existingData.wasteRecycledPercent || '',
+    averageUtilizationPercent: existingData.averageUtilizationPercent || '',
+  } : null;
+
   const form = useForm<ProductionFacilityForm>({
     resolver: zodResolver(productionFacilitySchema),
-    defaultValues: existingData || {
+    defaultValues: cleanedExistingData || {
       facilityName: '',
       facilityType: 'distillery',
       location: '',
