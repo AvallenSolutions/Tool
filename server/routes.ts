@@ -8272,11 +8272,21 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           // Try OpenLCA service first
           const impact = await OpenLCAService.calculateIngredientImpact(material.materialName, 1, material.unit || 'kg');
           
-          // Check if OpenLCA is returning the same generic fallback values for everything
-          const isGenericFallback = impact && 
-            impact.carbonFootprint === 0.85 && 
-            impact.waterFootprint === 15 && 
-            impact.energyConsumption === 12.5;
+          // Check if OpenLCA is returning generic category-based fallback values for all categories
+          const categoryFallbacks = {
+            'Container Materials': { co2: 0.85, water: 15, energy: 12.5 },
+            'Label Materials': { co2: 1.2, water: 35, energy: 18.5 },
+            'Printing Materials': { co2: 2.1, water: 85, energy: 25.4 },
+            'Closure Materials': { co2: 1.85, water: 8, energy: 14.2 },
+            'Secondary Packaging': { co2: 0.65, water: 25, energy: 8.5 },
+            'Protective Materials': { co2: 3.2, water: 45, energy: 35.8 }
+          };
+          
+          const categoryFallback = categoryFallbacks[category];
+          const isGenericFallback = impact && categoryFallback &&
+            impact.carbonFootprint === categoryFallback.co2 && 
+            impact.waterFootprint === categoryFallback.water && 
+            impact.energyConsumption === categoryFallback.energy;
 
           if (impact && impact.carbonFootprint > 0 && !isGenericFallback) {
             // Use real OpenLCA data only if it's genuine material-specific data
