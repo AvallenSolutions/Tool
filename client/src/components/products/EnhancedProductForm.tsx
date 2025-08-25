@@ -2377,56 +2377,70 @@ export default function EnhancedProductForm({
 
           {/* Production Tab */}
           <TabsContent value="production" className="space-y-6">
-            <ProductionTypeSelector
-              onComplete={(productionData) => {
-                // Update form based on production type selection
-                form.setValue('production.productionType', productionData.productionType);
-                
-                if (productionData.productionType === 'in-house') {
-                  // Clear other fields and set legacy compatibility
-                  form.setValue('production.ecoinventProcessId', undefined);
-                  form.setValue('production.stages', undefined);
-                  form.setValue('production.productionModel', 'in-house');
-                } else if (productionData.productionType === 'contract-manufacturing') {
-                  // Set ecoinvent process and clear other fields
-                  form.setValue('production.ecoinventProcessId', productionData.ecoinventProcessId);
-                  form.setValue('production.facilityId', undefined);
-                  form.setValue('production.stages', undefined);
-                  form.setValue('production.productionModel', 'outsourced');
-                } else if (productionData.productionType === 'hybrid') {
-                  // Set stages and clear other fields
-                  form.setValue('production.stages', productionData.stages);
-                  form.setValue('production.ecoinventProcessId', undefined);
-                  form.setValue('production.facilityId', undefined);
-                  form.setValue('production.productionModel', 'hybrid');
-                }
-                
-                // Show success toast
-                toast({
-                  title: "✅ Production Type Set",
-                  description: `Production configured as ${productionData.productionType.replace('-', ' ')}`,
-                  duration: 3000,
-                });
-              }}
-              onBack={() => {
-                // Navigate to Company page facilities tab
-                window.open('/company?tab=production-facilities', '_blank');
-              }}
-            />
+            {/* Production Type Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Factory className="w-5 h-5 text-avallen-green" />
+                  Production Type Selection
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  How is this product manufactured? Choose the option that best describes your production setup.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ProductionTypeSelector
+                  onComplete={(productionData) => {
+                    // Update form based on production type selection
+                    form.setValue('production.productionType', productionData.productionType);
+                    
+                    if (productionData.productionType === 'in-house') {
+                      // Clear other fields and set legacy compatibility
+                      form.setValue('production.ecoinventProcessId', undefined);
+                      form.setValue('production.stages', undefined);
+                      form.setValue('production.productionModel', 'in-house');
+                    } else if (productionData.productionType === 'contract-manufacturing') {
+                      // Set ecoinvent process and clear other fields
+                      form.setValue('production.ecoinventProcessId', productionData.ecoinventProcessId);
+                      form.setValue('production.facilityId', undefined);
+                      form.setValue('production.stages', undefined);
+                      form.setValue('production.productionModel', 'outsourced');
+                    } else if (productionData.productionType === 'hybrid') {
+                      // Set stages and clear other fields
+                      form.setValue('production.stages', productionData.stages);
+                      form.setValue('production.ecoinventProcessId', undefined);
+                      form.setValue('production.facilityId', undefined);
+                      form.setValue('production.productionModel', 'hybrid');
+                    }
+                    
+                    // Show success toast
+                    toast({
+                      title: "✅ Production Type Set",
+                      description: `Production configured as ${productionData.productionType.replace('-', ' ')}`,
+                      duration: 3000,
+                    });
+                  }}
+                  onBack={() => {
+                    // Navigate to Company page facilities tab
+                    window.open('/company?tab=production-facilities', '_blank');
+                  }}
+                />
+              </CardContent>
+            </Card>
 
             {/* Annual Production Volume */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Package className="w-5 h-5 text-blue-600" />
+                  <Package className="w-5 h-5 text-avallen-green" />
                   Annual Production Volume
                 </CardTitle>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground">
                   Enter the number of units you produce annually for this product.
                 </p>
               </CardHeader>
-              <CardContent>
-                <div className="max-w-md">
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="production.annualProductionVolume"
@@ -2449,6 +2463,16 @@ export default function EnhancedProductForm({
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Auto-Sync Status */}
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-sm text-green-700">
+                      Production data automatically syncs to LCA calculations
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

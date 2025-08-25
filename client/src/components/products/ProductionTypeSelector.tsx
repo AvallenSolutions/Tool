@@ -95,18 +95,8 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
   // Type Selection Step
   if (step === 'type-selection') {
     return (
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Factory className="w-5 h-5 text-green-600" />
-            Production Type Selection
-          </CardTitle>
-          <p className="text-muted-foreground">
-            How is this product manufactured? Choose the option that best describes your production setup.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-testid="production-type-buttons">
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-testid="production-type-buttons">
             {/* In House Button - Green */}
             <Button
               variant="outline"
@@ -157,15 +147,14 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
           </div>
 
           {onBack && (
-            <div className="flex justify-start mt-6">
-              <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <div className="flex justify-start mt-6">
+            <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+          </div>
+        )}
+      </div>
     );
   }
 
