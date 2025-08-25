@@ -53,7 +53,6 @@ interface GoalFormData {
   kpiDefinitionId: string;
   targetReductionPercentage: number;
   targetDate: Date | undefined;
-  baselineValue: number;
 }
 
 const statusConfig = {
@@ -77,7 +76,6 @@ export function KPIsPage() {
     kpiDefinitionId: '',
     targetReductionPercentage: 10,
     targetDate: undefined,
-    baselineValue: 0,
   });
   const [calculatedBaseline, setCalculatedBaseline] = useState<number | null>(null);
   const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
@@ -122,7 +120,9 @@ export function KPIsPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/goals'] });
       setIsGoalDialogOpen(false);
       setSelectedKpi(null);
-      setGoalFormData({ kpiDefinitionId: '', targetReductionPercentage: 10, targetDate: undefined, baselineValue: 0 });
+      setGoalFormData({ kpiDefinitionId: '', targetReductionPercentage: 10, targetDate: undefined });
+      setCalculatedBaseline(null);
+      setIsCalculatingBaseline(false);
       toast({
         title: "Goal Created",
         description: "Your KPI goal has been successfully created.",
