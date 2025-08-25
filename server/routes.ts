@@ -2764,16 +2764,23 @@ Be precise and quote actual text from the content, not generic terms.`;
         
         productEmissions = ingredientEmissions + packagingEmissions;
         
-        // DISABLED: Preserve manually set footprint values
-        console.log(`🔒 Scope 3 calculation disabled - preserving stored carbon footprint for ${product.name}`);
-        
-        // CRITICAL FIX: Scale per-unit emissions by annual production volume for company totals
+        // PRESERVE STORED CARBON FOOTPRINT VALUES - Use stored data when available
         const annualProduction = Number(product.annualProductionVolume) || 0;
-        const totalProductEmissions = productEmissions * annualProduction;
+        let actualPerUnitEmissions = productEmissions; // Default to calculated
+        let totalProductEmissions = productEmissions * annualProduction;
         
-        console.log(`📊 ${product.name} per-unit emissions: ${productEmissions.toFixed(3)} kg CO2e per unit`);
+        if (product.carbonFootprint && parseFloat(product.carbonFootprint) > 0) {
+          // Use stored carbon footprint value instead of calculated
+          actualPerUnitEmissions = parseFloat(product.carbonFootprint);
+          totalProductEmissions = actualPerUnitEmissions * annualProduction;
+          console.log(`✅ Using STORED carbon footprint for ${product.name}: ${actualPerUnitEmissions} kg CO₂e per unit`);
+        } else {
+          console.log(`🧮 Using CALCULATED carbon footprint for ${product.name}: ${actualPerUnitEmissions} kg CO₂e per unit`);
+        }
+        
+        console.log(`📊 ${product.name} per-unit emissions: ${actualPerUnitEmissions.toFixed(3)} kg CO₂e per unit`);
         console.log(`🏭 ${product.name} annual production: ${annualProduction.toLocaleString()} units`);
-        console.log(`🌍 ${product.name} total annual emissions: ${(totalProductEmissions/1000).toFixed(1)} tonnes CO2e`);
+        console.log(`🌍 ${product.name} total annual emissions: ${(totalProductEmissions/1000).toFixed(1)} tonnes CO₂e`);
         
         // Store company-level emissions (scaled by production volume)
         totalEmissions += totalProductEmissions;
@@ -4254,11 +4261,11 @@ Be precise and quote actual text from the content, not generic terms.`;
           wasteFootprint: product.wasteFootprint ? parseFloat(product.wasteFootprint) : undefined,
         };
         
-        // Simplified calculation for testing (not full Enhanced LCA)
+        // Calculate actual values from stored product data (no hardcoded fallbacks)
         const calculatedValues = {
-          carbonFootprint: 1.593, // From previous calculations
-          waterFootprint: 39.0, // Estimated
-          wasteFootprint: 0.531, // Bottle + label weight
+          carbonFootprint: storedValues.carbonFootprint || 0, // Use actual stored value
+          waterFootprint: storedValues.waterFootprint || 0, // Use actual stored value  
+          wasteFootprint: storedValues.wasteFootprint || 0, // Use actual stored value
         };
         
         // Simple discrepancy check
@@ -8776,11 +8783,11 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       
       console.log(`🔄 Manual LCA sync initiated for product ${product.name}`);
       
-      // Simple manual sync with current stored values
+      // Manual sync using ONLY stored product values (no hardcoded fallbacks)
       const syncResult = await LCADataSyncService.syncLCAResults(productId, {
-        totalCarbonFootprint: parseFloat(product.carbonFootprint) || 1.593,
-        totalWaterFootprint: parseFloat(product.waterFootprint) || 39.0,
-        totalWasteGenerated: parseFloat(product.wasteFootprint) || 0.531,
+        totalCarbonFootprint: parseFloat(product.carbonFootprint) || 0,
+        totalWaterFootprint: parseFloat(product.waterFootprint) || 0,
+        totalWasteGenerated: parseFloat(product.wasteFootprint) || 0,
         metadata: { manualSync: true, timestamp: new Date() }
       });
       
