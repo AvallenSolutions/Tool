@@ -2764,19 +2764,15 @@ Be precise and quote actual text from the content, not generic terms.`;
         
         productEmissions = ingredientEmissions + packagingEmissions;
         
-        // PRESERVE STORED CARBON FOOTPRINT VALUES - Use stored data when available
+        // USE OPENLCA AS AUTHORITATIVE SOURCE - Calculate from ingredients and packaging
         const annualProduction = Number(product.annualProductionVolume) || 0;
-        let actualPerUnitEmissions = productEmissions; // Default to calculated
+        let actualPerUnitEmissions = productEmissions; // Always use calculated from OpenLCA
         let totalProductEmissions = productEmissions * annualProduction;
         
-        if (product.carbonFootprint && parseFloat(product.carbonFootprint) > 0) {
-          // Use stored carbon footprint value instead of calculated
-          actualPerUnitEmissions = parseFloat(product.carbonFootprint);
-          totalProductEmissions = actualPerUnitEmissions * annualProduction;
-          console.log(`✅ Using STORED carbon footprint for ${product.name}: ${actualPerUnitEmissions} kg CO₂e per unit`);
-        } else {
-          console.log(`🧮 Using CALCULATED carbon footprint for ${product.name}: ${actualPerUnitEmissions} kg CO₂e per unit`);
-        }
+        console.log(`✅ Using OpenLCA calculated footprint for ${product.name}: ${actualPerUnitEmissions.toFixed(3)} kg CO₂e per unit`);
+        console.log(`📋 Calculation breakdown: ${ingredientEmissions.toFixed(3)} kg CO₂e (ingredients) + ${packagingEmissions.toFixed(3)} kg CO₂e (packaging)`);
+        
+        // Note: Stored carbon footprint (${product.carbonFootprint}) replaced by OpenLCA calculation
         
         console.log(`📊 ${product.name} per-unit emissions: ${actualPerUnitEmissions.toFixed(3)} kg CO₂e per unit`);
         console.log(`🏭 ${product.name} annual production: ${annualProduction.toLocaleString()} units`);
