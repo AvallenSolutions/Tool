@@ -157,11 +157,8 @@ if (lcaCalculationQueue) {
         olcaSystemName: productSystem.name,
       });
 
-      // Update product with ISO-compliant footprints
-      await storage.updateProduct(productId, {
-        carbonFootprint: results.total_co2e.toString(), // Use ISO-compliant total
-        waterFootprint: results.totalWaterFootprint.toString(),
-      });
+      // DISABLED: Preserve manually set footprint values
+      console.log('🔒 ISO LCA job product update disabled to preserve stored footprint values');
 
       job.progress(100);
       return results;
@@ -578,11 +575,8 @@ class InMemoryLCAProcessor {
         olcaSystemName: results.systemName,
       });
 
-      // Update product with calculated footprints
-      await storage.updateProduct(productId, {
-        carbonFootprint: results.totalCarbonFootprint.toString(),
-        waterFootprint: results.totalWaterFootprint.toString(),
-      });
+      // DISABLED: Preserve manually set footprint values
+      console.log('🔒 Simplified LCA job product update disabled to preserve stored footprint values');
 
       
       
