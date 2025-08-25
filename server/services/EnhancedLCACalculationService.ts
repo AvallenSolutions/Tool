@@ -242,22 +242,14 @@ export class EnhancedLCACalculationService {
       productData.ingredients.forEach((ingredient: any) => {
         console.log(`Processing ingredient: ${ingredient.name}, amount: ${ingredient.amount}${ingredient.unit}`);
         
-        if (ingredient.name && ingredient.name.toLowerCase().includes('molasses')) {
-          // Molasses from sugarcane - use realistic OpenLCA-style values
-          const molassesAmount = parseFloat(ingredient.amount || 0) * productionVolume;
-          
-          // Real molasses carbon footprint is much lower: ~0.2-0.3 kg CO₂e per kg molasses
-          const molassesCarbonFootprint = molassesAmount * 0.25; // kg CO₂e per kg molasses
-          agricultureImpact += molassesCarbonFootprint;
-          
-          console.log(`Molasses carbon footprint: ${molassesAmount}kg × 0.25 kg CO₂e/kg = ${molassesCarbonFootprint} kg CO₂e`);
-        }
-        
-        // Add other ingredient carbon footprints if available
+        // Use OpenLCA database values when available (no hardcoded factors)
         if (ingredient.carbonFootprint) {
-          const ingredientCarbon = parseFloat(ingredient.carbonFootprint) * productionVolume;
+          const ingredientCarbon = parseFloat(ingredient.carbonFootprint) * parseFloat(ingredient.amount || 0) * productionVolume;
           agricultureImpact += ingredientCarbon;
           console.log(`${ingredient.name} carbon footprint from OpenLCA: ${ingredientCarbon} kg CO₂e`);
+        } else {
+          // Fallback: User must provide emission factor via OpenLCA or manual input
+          console.log(`⚠️ No OpenLCA data for ${ingredient.name} - manual emission factor required`);
         }
       });
     }
@@ -291,28 +283,35 @@ export class EnhancedLCACalculationService {
       breakdown.inboundTransport = transportImpact;
     }
 
-    // 3. Processing & Production - Use realistic rum production values
-    console.log('=== PROCESSING CALCULATION DEBUG ===');
+    // 3. Processing & Production - Requires manual input (no hardcoded estimates)
     let processingImpact = 0;
     let processingWater = 0;
     
-    // For rum production, use realistic energy values instead of synthetic data
-    const productVolume = productData.volume ? parseFloat(productData.volume.replace(/[^\d.]/g, '')) : 750; // ml
+    // Processing energy calculation from actual LCA data (user must input)
+    if (lcaData.processing) {
+      const proc = lcaData.processing;
+      
+      // Energy consumption (electricity, gas, etc.)
+      if (proc.electricityKwhPerTonCrop && productData.ingredients) {
+        const totalIngredientMass = productData.ingredients.reduce((total: number, ingredient: any) => {
+          return total + (parseFloat(ingredient.amount) || 0);
+        }, 0);
+        
+        const electricityUsage = proc.electricityKwhPerTonCrop * (totalIngredientMass / 1000) * productionVolume;
+        processingImpact += electricityUsage * this.EMISSION_FACTORS.electricity_grid;
+        primaryEnergyDemand += electricityUsage * 3.6; // Convert kWh to MJ
+        
+        console.log(`Processing electricity: ${electricityUsage.toFixed(2)} kWh × ${this.EMISSION_FACTORS.electricity_grid} kg CO₂e/kWh = ${(electricityUsage * this.EMISSION_FACTORS.electricity_grid).toFixed(3)} kg CO₂e`);
+      }
+      
+      // Water treatment impact
+      if (proc.waterM3PerTonCrop) {
+        processingWater += proc.waterM3PerTonCrop * (productionVolume / 1000) * 1000; // Convert m3 to L
+        processingImpact += processingWater * this.EMISSION_FACTORS.water_treatment;
+      }
+    }
     
-    // Realistic rum processing energy per bottle
-    const distillationEnergy = 2.5; // kWh per liter of product (realistic for double distillation)
-    const totalEnergyKWh = (distillationEnergy * productVolume / 1000) * productionVolume;
-    processingImpact += totalEnergyKWh * this.EMISSION_FACTORS.electricity_grid;
-    
-    console.log(`Rum distillation energy: ${productVolume}ml × ${distillationEnergy} kWh/L × ${this.EMISSION_FACTORS.electricity_grid} kg CO₂e/kWh = ${totalEnergyKWh * this.EMISSION_FACTORS.electricity_grid} kg CO₂e`);
-    
-    // Fermentation impact (much lower)
-    const fermentationEnergy = 0.5; // kWh per liter (temperature control)
-    const fermentationImpact = (fermentationEnergy * productVolume / 1000) * productionVolume * this.EMISSION_FACTORS.electricity_grid;
-    processingImpact += fermentationImpact;
-    
-    console.log(`Fermentation energy: ${fermentationImpact} kg CO₂e`);
-    console.log(`Total processing impact: ${processingImpact} kg CO₂e`);
+    console.log(`Total processing impact: ${processingImpact} kg CO₂e (from user-provided data)`);
     
     // OLD SYNTHETIC DATA (commenting out):
     // if (lcaData.processing) {
