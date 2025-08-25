@@ -14,14 +14,14 @@ interface ProductionFacility {
   location: string;
   isOwnFacility: boolean;
   isPrimaryFacility: boolean;
-  annualCapacityVolume: number;
+  annualCapacityVolume: string | null;
   capacityUnit: string;
-  averageUtilizationPercent: number;
+  averageUtilizationPercent: string | null;
   completenessScore?: number;
   electricityKwhPerUnit?: number;
   processWaterLitersPerUnit?: number;
   organicWasteKgPerUnit?: number;
-  renewableEnergyPercent?: number;
+  renewableEnergyPercent?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,13 +41,17 @@ export default function ProductionFacilitiesList() {
     refetch();
   };
 
-  const formatCapacity = (volume: number, unit: string) => {
-    if (volume >= 1000000) {
-      return `${(volume / 1000000).toFixed(1)}M ${unit}`;
-    } else if (volume >= 1000) {
-      return `${(volume / 1000).toFixed(1)}K ${unit}`;
+  const formatCapacity = (volume: string | null, unit: string) => {
+    if (!volume) return `0 ${unit}`;
+    const numVolume = parseFloat(volume);
+    if (isNaN(numVolume)) return `0 ${unit}`;
+    
+    if (numVolume >= 1000000) {
+      return `${(numVolume / 1000000).toFixed(1)}M ${unit}`;
+    } else if (numVolume >= 1000) {
+      return `${(numVolume / 1000).toFixed(1)}K ${unit}`;
     }
-    return `${volume.toLocaleString()} ${unit}`;
+    return `${numVolume.toLocaleString()} ${unit}`;
   };
 
   const getFacilityTypeIcon = (type: string) => {
