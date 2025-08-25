@@ -102,7 +102,7 @@ export default function ProductionFacilitiesList() {
       </div>
 
       {/* Facilities Grid */}
-      {!facilities || facilities.length === 0 ? (
+      {!facilities || !Array.isArray(facilities) || facilities.length === 0 ? (
         <Card className="border-2 border-dashed border-gray-300 bg-gray-50">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Building2 className="w-16 h-16 text-gray-400 mb-4" />
