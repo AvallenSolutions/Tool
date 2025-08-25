@@ -1039,7 +1039,17 @@ export default function ProductionFacilityForm({
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700"
-                onClick={() => console.log('🔘 Update button clicked!', { isSubmitting, formValid: form.formState.isValid })}
+                onClick={() => {
+                  console.log('🔘 Update button clicked!', { 
+                    isSubmitting, 
+                    formValid: form.formState.isValid,
+                    errors: form.formState.errors,
+                    formValues: form.getValues()
+                  });
+                  if (!form.formState.isValid) {
+                    console.log('❌ Form validation errors:', form.formState.errors);
+                  }
+                }}
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {facilityId ? 'Update Facility' : 'Create Facility'}
