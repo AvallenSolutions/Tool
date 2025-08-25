@@ -30,9 +30,10 @@ export default function ProductionFacilitiesList() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingFacility, setEditingFacility] = useState<ProductionFacility | null>(null);
 
-  const { data: facilities, isLoading, refetch } = useQuery<ProductionFacility[]>({
+  const { data: facilities, isLoading, refetch } = useQuery({
     queryKey: ['/api/production-facilities'],
     retry: false,
+    select: (data: any) => data?.data || [],
   });
 
   const handleFormComplete = () => {
