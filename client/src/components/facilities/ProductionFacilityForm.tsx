@@ -125,13 +125,29 @@ export default function ProductionFacilityForm({
       facilityType: 'distillery',
       location: '',
       isOwnFacility: true,
-      annualCapacityVolume: 0,
+      annualCapacityVolume: '',
       capacityUnit: 'liters',
       operatingDaysPerYear: 250,
       shiftsPerDay: 1,
-      averageUtilizationPercent: 80,
+      averageUtilizationPercent: '80',
       isPrimaryFacility: false,
       wasteWaterTreatment: false,
+      // Energy consumption defaults
+      totalElectricityKwhPerYear: '',
+      totalGasM3PerYear: '',
+      totalSteamKgPerYear: '',
+      totalFuelLitersPerYear: '',
+      renewableEnergyPercent: '',
+      // Water consumption defaults
+      totalProcessWaterLitersPerYear: '',
+      totalCleaningWaterLitersPerYear: '',
+      totalCoolingWaterLitersPerYear: '',
+      waterRecyclingPercent: '',
+      // Waste generation defaults
+      totalOrganicWasteKgPerYear: '',
+      totalPackagingWasteKgPerYear: '',
+      totalHazardousWasteKgPerYear: '',
+      wasteRecycledPercent: '',
     },
   });
 
