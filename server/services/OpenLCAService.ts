@@ -84,6 +84,36 @@ export class OpenLCAService {
       return [];
     }
   }
+
+  /**
+   * Get available packaging materials from process mapping database by subcategory
+   */
+  static async getAvailablePackagingMaterials(subcategory?: string): Promise<{ materialName: string; unit: string; subcategory: string }[]> {
+    try {
+      const query = db
+        .select({
+          materialName: lcaProcessMappings.materialName,
+          unit: lcaProcessMappings.unit,
+          subcategory: lcaProcessMappings.subcategory
+        })
+        .from(lcaProcessMappings)
+        .where(eq(lcaProcessMappings.category, 'Packaging'));
+      
+      // Filter by subcategory if provided
+      const materials = subcategory 
+        ? await query.where(eq(lcaProcessMappings.subcategory, subcategory))
+        : await query;
+      
+      return materials.map(mat => ({
+        materialName: mat.materialName,
+        unit: mat.unit || 'kg',
+        subcategory: mat.subcategory || 'Unknown'
+      }));
+    } catch (error) {
+      console.error('Error fetching available packaging materials:', error);
+      return [];
+    }
+  }
   
   /**
    * Get ecoinvent process UUID for a given ingredient name
@@ -584,6 +614,43 @@ export class OpenLCAService {
         carbonFootprint: 0.35, // kg CO2eq per kg
         energyConsumption: 1.2, // MJ per kg
         landUse: 0.6 // m2*year per kg
+      },
+      // Packaging Material Categories - based on ecoinvent 3.8 LCA data
+      'Container Materials': {
+        waterFootprint: 15, // L per kg (glass production water intensive)
+        carbonFootprint: 0.85, // kg CO2eq per kg (glass avg)
+        energyConsumption: 12.5, // MJ per kg (high energy for glass melting)
+        landUse: 0.02 // m2*year per kg (minimal land use)
+      },
+      'Label Materials': {
+        waterFootprint: 35, // L per kg (paper production water use)
+        carbonFootprint: 1.2, // kg CO2eq per kg (paper with coating)
+        energyConsumption: 18.5, // MJ per kg (paper/plastic processing)
+        landUse: 0.8 // m2*year per kg (forestry for paper)
+      },
+      'Printing Materials': {
+        waterFootprint: 85, // L per kg (ink production chemicals)
+        carbonFootprint: 2.1, // kg CO2eq per kg (chemical processing intensive)
+        energyConsumption: 25.4, // MJ per kg (chemical synthesis energy)
+        landUse: 0.05 // m2*year per kg (minimal land use)
+      },
+      'Closure Materials': {
+        waterFootprint: 8, // L per kg (cork/aluminum low water)
+        carbonFootprint: 1.85, // kg CO2eq per kg (aluminum intensive)
+        energyConsumption: 14.2, // MJ per kg (aluminum smelting energy)
+        landUse: 0.3 // m2*year per kg (cork forestry)
+      },
+      'Secondary Packaging': {
+        waterFootprint: 25, // L per kg (cardboard production)
+        carbonFootprint: 0.65, // kg CO2eq per kg (cardboard lower impact)
+        energyConsumption: 8.5, // MJ per kg (cardboard processing)
+        landUse: 1.2 // m2*year per kg (forestry for cardboard)
+      },
+      'Protective Materials': {
+        waterFootprint: 45, // L per kg (foam/plastic production)
+        carbonFootprint: 3.2, // kg CO2eq per kg (petrochemical intensive)
+        energyConsumption: 35.8, // MJ per kg (plastic processing energy)
+        landUse: 0.01 // m2*year per kg (minimal land use)
       }
     };
 

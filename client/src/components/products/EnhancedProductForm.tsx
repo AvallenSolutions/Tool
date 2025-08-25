@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { IngredientSearchSelector } from '@/components/lca/IngredientSearchSelector';
+import { PackagingMaterialSelector } from '@/components/lca/PackagingMaterialSelector';
 import '@/styles/shepherd.css';
 
 // Enhanced Product Schema with all 8 tabs including LCA Data Collection
@@ -1749,34 +1750,24 @@ export default function EnhancedProductForm({
                 <div className="space-y-4">
                   <h4 className="font-medium">Primary Container</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="packaging.primaryContainer.material"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Material *</FormLabel>
-                          <Select onValueChange={(value) => {
-                            field.onChange(value);
-                            // Auto-sync to LCA Data
-                            form.setValue('lcaData.packagingDetailed.container.materialType', value.toLowerCase() as any);
-                          }} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select material" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="glass">Glass</SelectItem>
-                              <SelectItem value="plastic">Plastic</SelectItem>
-                              <SelectItem value="aluminum">Aluminum</SelectItem>
-                              <SelectItem value="steel">Steel</SelectItem>
-                              <SelectItem value="cardboard">Cardboard</SelectItem>
-                              <SelectItem value="mixed">Mixed</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <PackagingMaterialSelector
+                      form={form}
+                      fieldName="packaging.primaryContainer.material"
+                      category="Container Materials"
+                      label="Container Material *"
+                      placeholder="Select container material"
+                      description="Choose from OpenLCA authenticated container materials"
+                      onMaterialChange={(materialName) => {
+                        // Auto-sync to LCA Data with precise material mapping
+                        let materialType = 'glass'; // default
+                        if (materialName.toLowerCase().includes('glass')) materialType = 'glass';
+                        else if (materialName.toLowerCase().includes('plastic') || materialName.toLowerCase().includes('pet') || materialName.toLowerCase().includes('hdpe')) materialType = 'plastic';
+                        else if (materialName.toLowerCase().includes('aluminum')) materialType = 'aluminum';
+                        else if (materialName.toLowerCase().includes('steel')) materialType = 'steel';
+                        else if (materialName.toLowerCase().includes('ceramic')) materialType = 'ceramic';
+                        
+                        form.setValue('lcaData.packagingDetailed.container.materialType', materialType as any);
+                      }}
                     />
                     
                     <FormField
@@ -2022,29 +2013,23 @@ export default function EnhancedProductForm({
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="packaging.labeling.labelMaterial"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Label Material</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select material" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="paper">Paper</SelectItem>
-                              <SelectItem value="plastic">Plastic</SelectItem>
-                              <SelectItem value="metal">Metal</SelectItem>
-                              <SelectItem value="fabric">Fabric</SelectItem>
-                              <SelectItem value="none">No Labels</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <PackagingMaterialSelector
+                      form={form}
+                      fieldName="packaging.labeling.labelMaterial"
+                      category="Label Materials"
+                      label="Label Material"
+                      placeholder="Select label material"
+                      description="Choose from OpenLCA authenticated label materials"
+                      onMaterialChange={(materialName) => {
+                        // Auto-sync to LCA Data with precise material mapping
+                        let materialType = 'paper'; // default
+                        if (materialName.toLowerCase().includes('paper')) materialType = 'paper';
+                        else if (materialName.toLowerCase().includes('plastic') || materialName.toLowerCase().includes('film')) materialType = 'plastic';
+                        else if (materialName.toLowerCase().includes('aluminum') || materialName.toLowerCase().includes('foil')) materialType = 'foil';
+                        else if (materialName.toLowerCase().includes('biodegradable')) materialType = 'biodegradable';
+                        
+                        form.setValue('lcaData.packagingDetailed.label.materialType', materialType as any);
+                      }}
                     />
                     
                     <FormField
@@ -2094,29 +2079,23 @@ export default function EnhancedProductForm({
                       )}
                     />
                     
-                    <FormField
-                      control={form.control}
-                      name="packaging.labeling.inkType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ink Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select ink type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="water-based">Water-based</SelectItem>
-                              <SelectItem value="solvent-based">Solvent-based</SelectItem>
-                              <SelectItem value="uv-cured">UV-cured</SelectItem>
-                              <SelectItem value="eco-friendly">Eco-friendly</SelectItem>
-                              <SelectItem value="none">No Ink</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <PackagingMaterialSelector
+                      form={form}
+                      fieldName="packaging.labeling.inkType"
+                      category="Printing Materials"
+                      label="Ink Type"
+                      placeholder="Select ink type"
+                      description="Choose from OpenLCA authenticated printing inks"
+                      onMaterialChange={(materialName) => {
+                        // Auto-sync to LCA Data with precise ink mapping
+                        let inkType = 'conventional'; // default
+                        if (materialName.toLowerCase().includes('water')) inkType = 'water_based';
+                        else if (materialName.toLowerCase().includes('solvent')) inkType = 'solvent_based';
+                        else if (materialName.toLowerCase().includes('uv')) inkType = 'conventional';
+                        else if (materialName.toLowerCase().includes('soy')) inkType = 'eco_friendly';
+                        
+                        form.setValue('lcaData.packagingDetailed.label.inkType', inkType as any);
+                      }}
                     />
                   </div>
 
@@ -2160,42 +2139,40 @@ export default function EnhancedProductForm({
                 <div className="space-y-4">
                   <h4 className="font-medium">Closure System</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="packaging.closure.closureType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Closure Type</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select closure type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="cork">Cork</SelectItem>
-                              <SelectItem value="screw-cap">Screw Cap</SelectItem>
-                              <SelectItem value="crown-cap">Crown Cap</SelectItem>
-                              <SelectItem value="swing-top">Swing Top</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="packaging.closure.material"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Closure Material</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Natural cork, Aluminum, Plastic" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <PackagingMaterialSelector
+                      form={form}
+                      fieldName="packaging.closure.material"
+                      category="Closure Materials"
+                      label="Closure Type & Material *"
+                      placeholder="Select closure material"
+                      description="Choose from OpenLCA authenticated closure materials"
+                      onMaterialChange={(materialName) => {
+                        // Auto-sync closure type from material name
+                        let closureType = 'cork'; // default
+                        if (materialName.toLowerCase().includes('cork') && !materialName.toLowerCase().includes('synthetic')) {
+                          closureType = 'cork';
+                        } else if (materialName.toLowerCase().includes('synthetic cork')) {
+                          closureType = 'synthetic-cork';
+                        } else if (materialName.toLowerCase().includes('screw cap')) {
+                          closureType = 'screw-cap';
+                        } else if (materialName.toLowerCase().includes('crown cap')) {
+                          closureType = 'crown-cap';
+                        } else if (materialName.toLowerCase().includes('swing top')) {
+                          closureType = 'swing-top';
+                        }
+                        
+                        // Auto-sync closure type for backward compatibility
+                        form.setValue('packaging.closure.closureType', closureType);
+                        
+                        // Auto-sync to LCA Data with precise material mapping
+                        let materialType = 'cork'; // default
+                        if (materialName.toLowerCase().includes('natural cork')) materialType = 'cork';
+                        else if (materialName.toLowerCase().includes('synthetic cork')) materialType = 'synthetic_cork';
+                        else if (materialName.toLowerCase().includes('aluminum') || materialName.toLowerCase().includes('screw cap')) materialType = 'screw_cap';
+                        else if (materialName.toLowerCase().includes('crown cap')) materialType = 'crown_cap';
+                        
+                        form.setValue('lcaData.packagingDetailed.closure.materialType', materialType as any);
+                      }}
                     />
                     
                     <FormField
@@ -2283,29 +2260,24 @@ export default function EnhancedProductForm({
                   {form.watch('packaging.secondaryPackaging.hasSecondaryPackaging') && (
                     <div className="space-y-4 pl-6 border-l-2 border-gray-200">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="packaging.secondaryPackaging.boxMaterial"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Box/Case Material</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select material" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="cardboard">Cardboard</SelectItem>
-                                  <SelectItem value="plastic">Plastic</SelectItem>
-                                  <SelectItem value="wood">Wood</SelectItem>
-                                  <SelectItem value="metal">Metal</SelectItem>
-                                  <SelectItem value="none">None</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                        <PackagingMaterialSelector
+                          form={form}
+                          fieldName="packaging.secondaryPackaging.boxMaterial"
+                          category="Secondary Packaging"
+                          label="Box/Case Material"
+                          placeholder="Select box material"
+                          description="Choose from OpenLCA authenticated secondary packaging materials"
+                          onMaterialChange={(materialName) => {
+                            // Auto-sync to LCA Data with precise material mapping
+                            let boxMaterial = 'cardboard'; // default
+                            if (materialName.toLowerCase().includes('cardboard') || materialName.toLowerCase().includes('corrugated')) boxMaterial = 'cardboard';
+                            else if (materialName.toLowerCase().includes('wood')) boxMaterial = 'wood';
+                            else if (materialName.toLowerCase().includes('plastic')) boxMaterial = 'plastic';
+                            else if (materialName.toLowerCase().includes('metal') || materialName.toLowerCase().includes('tin')) boxMaterial = 'metal';
+                            
+                            form.setValue('lcaData.packagingDetailed.secondaryPackaging.boxMaterial', boxMaterial as any);
+                            form.setValue('lcaData.packagingDetailed.secondaryPackaging.hasBox', true);
+                          }}
                         />
                         
                         <FormField
@@ -2329,29 +2301,18 @@ export default function EnhancedProductForm({
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="packaging.secondaryPackaging.fillerMaterial"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Filler Material</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select filler" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="foam">Foam</SelectItem>
-                                  <SelectItem value="paper">Paper</SelectItem>
-                                  <SelectItem value="plastic">Plastic</SelectItem>
-                                  <SelectItem value="biodegradable">Biodegradable Packing</SelectItem>
-                                  <SelectItem value="none">No Filler</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                        <PackagingMaterialSelector
+                          form={form}
+                          fieldName="packaging.secondaryPackaging.fillerMaterial"
+                          category="Protective Materials"
+                          label="Protective/Filler Material"
+                          placeholder="Select protective material"
+                          description="Choose from OpenLCA authenticated protective packaging materials"
+                          onMaterialChange={(materialName) => {
+                            // Auto-sync to LCA Data with precise material mapping
+                            let protectiveMaterial = materialName; // Use full material name for LCA precision
+                            form.setValue('lcaData.packagingDetailed.secondaryPackaging.protectiveMaterial', protectiveMaterial);
+                          }}
                         />
                         
                         <FormField
