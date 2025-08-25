@@ -2764,17 +2764,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         
         productEmissions = ingredientEmissions + packagingEmissions;
         
-        // Store calculated carbon footprint in database for future use
-        if (productEmissions > 0) {
-          try {
-            await dbStorage.updateProduct(product.id, { 
-              carbonFootprint: productEmissions.toString() 
-            });
-            console.log(`💾 Stored carbon footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO2e`);
-          } catch (error) {
-            console.error(`Error storing carbon footprint for ${product.name}:`, error);
-          }
-        }
+        // DISABLED: Preserve manually set footprint values
+        console.log(`🔒 Scope 3 calculation disabled - preserving stored carbon footprint for ${product.name}`);
         
         // CRITICAL FIX: Scale per-unit emissions by annual production volume for company totals
         const annualProduction = Number(product.annualProductionVolume) || 0;
