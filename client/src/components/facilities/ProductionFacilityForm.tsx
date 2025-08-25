@@ -200,6 +200,9 @@ export default function ProductionFacilityForm({
   });
 
   const onSubmit = async (data: ProductionFacilityForm) => {
+    console.log('🔄 Form submission started', { data, facilityId });
+    console.log('🔍 Form errors:', form.formState.errors);
+    
     setIsSubmitting(true);
     try {
       // Convert empty strings to undefined for numeric fields
@@ -1036,6 +1039,7 @@ export default function ProductionFacilityForm({
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700"
+                onClick={() => console.log('🔘 Update button clicked!', { isSubmitting, formValid: form.formState.isValid })}
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {facilityId ? 'Update Facility' : 'Create Facility'}
