@@ -100,14 +100,14 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
             {/* In House Button - Green */}
             <Button
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center gap-4 border-green-200 bg-green-50 hover:border-green-400 hover:bg-green-100 text-green-800"
+              className="h-auto p-4 flex flex-col items-center gap-3 border-green-200 bg-green-50 hover:border-green-400 hover:bg-green-100 text-green-800 min-h-[180px] w-full"
               onClick={() => handleTypeSelection('in-house')}
               data-testid="button-in-house"
             >
-              <Building2 className="w-12 h-12 text-green-600" />
-              <div className="text-center">
-                <h3 className="font-semibold text-lg text-green-800">In House</h3>
-                <p className="text-sm text-green-700 mt-2">
+              <Building2 className="w-10 h-10 text-green-600 flex-shrink-0" />
+              <div className="text-center max-w-full">
+                <h3 className="font-semibold text-base text-green-800 mb-2">In House</h3>
+                <p className="text-xs text-green-700 leading-relaxed break-words">
                   We manufacture this product in our own facilities using our equipment and processes.
                 </p>
               </div>
@@ -116,14 +116,14 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
             {/* Contract Manufacturing Button - Blue */}
             <Button
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center gap-4 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 text-blue-800"
+              className="h-auto p-4 flex flex-col items-center gap-3 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 text-blue-800 min-h-[180px] w-full"
               onClick={() => handleTypeSelection('contract-manufacturing')}
               data-testid="button-contract-manufacturing"
             >
-              <Users className="w-12 h-12 text-blue-600" />
-              <div className="text-center">
-                <h3 className="font-semibold text-lg text-blue-800">Contract Manufacturing</h3>
-                <p className="text-sm text-blue-700 mt-2">
+              <Users className="w-10 h-10 text-blue-600 flex-shrink-0" />
+              <div className="text-center max-w-full">
+                <h3 className="font-semibold text-base text-blue-800 mb-2">Contract Manufacturing</h3>
+                <p className="text-xs text-blue-700 leading-relaxed break-words">
                   A third-party manufacturer produces this product for us using their facilities.
                 </p>
               </div>
@@ -132,14 +132,14 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
             {/* Hybrid Button - Purple */}
             <Button
               variant="outline"
-              className="h-auto p-6 flex flex-col items-center gap-4 border-purple-200 bg-purple-50 hover:border-purple-400 hover:bg-purple-100 text-purple-800"
+              className="h-auto p-4 flex flex-col items-center gap-3 border-purple-200 bg-purple-50 hover:border-purple-400 hover:bg-purple-100 text-purple-800 min-h-[180px] w-full"
               onClick={() => handleTypeSelection('hybrid')}
               data-testid="button-hybrid"
             >
-              <Factory className="w-12 h-12 text-purple-600" />
-              <div className="text-center">
-                <h3 className="font-semibold text-lg text-purple-800">Hybrid</h3>
-                <p className="text-sm text-purple-700 mt-2">
+              <Factory className="w-10 h-10 text-purple-600 flex-shrink-0" />
+              <div className="text-center max-w-full">
+                <h3 className="font-semibold text-base text-purple-800 mb-2">Hybrid</h3>
+                <p className="text-xs text-purple-700 leading-relaxed break-words">
                   Some production stages are done in-house, others are outsourced to different partners.
                 </p>
               </div>
