@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,7 @@ export function KPIsPage() {
   });
   const [calculatedBaseline, setCalculatedBaseline] = useState<number | null>(null);
   const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
+  const [kpiBaselines, setKpiBaselines] = useState<Record<string, number>>({});
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -142,6 +143,43 @@ export function KPIsPage() {
   const summary = dashboardData?.data?.summary || { total: 0, onTrack: 0, atRisk: 0, behind: 0, achieved: 0 };
 
   const categories = ['all', ...Array.from(new Set(definitions.map(d => d.kpiCategory)))];
+
+  // Load baselines for all KPIs when definitions are loaded
+  const loadKpiBaselines = async () => {
+    if (definitions.length === 0) return;
+    
+    const baselinePromises = definitions.map(async (kpi) => {
+      try {
+        const response = await fetch('/api/enhanced-kpis/calculate-baseline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kpiDefinitionId: kpi.id }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          return { kpiId: kpi.id, baseline: data.baseline };
+        }
+        return { kpiId: kpi.id, baseline: 0 };
+      } catch (error) {
+        console.error(`Error calculating baseline for ${kpi.kpiName}:`, error);
+        return { kpiId: kpi.id, baseline: 0 };
+      }
+    });
+    
+    const results = await Promise.all(baselinePromises);
+    const baselinesMap = results.reduce((acc, { kpiId, baseline }) => {
+      acc[kpiId] = baseline;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    setKpiBaselines(baselinesMap);
+  };
+
+  // Load baselines when definitions change
+  useEffect(() => {
+    loadKpiBaselines();
+  }, [definitions.length]);
 
   const handleSetGoal = async (kpi: KpiDefinition) => {
     setSelectedKpi(kpi);
@@ -321,13 +359,21 @@ export function KPIsPage() {
                     {kpi.description}
                   </CardDescription>
                   
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-600 font-medium mb-1">Formula</p>
-                    <p className="text-sm text-gray-800">
-                      {kpi.formulaJson.calculation_type === 'ratio' && kpi.formulaJson.denominator
-                        ? `${kpi.formulaJson.numerator} ÷ ${kpi.formulaJson.denominator}`
-                        : kpi.formulaJson.numerator}
-                    </p>
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <p className="text-xs text-blue-600 font-medium mb-1">Current Baseline</p>
+                    <div className="flex items-center space-x-2">
+                      {kpiBaselines[kpi.id] !== undefined ? (
+                        <p className="text-sm font-semibold text-blue-900">
+                          {kpiBaselines[kpi.id].toFixed(4)} {kpi.unit}
+                        </p>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-600"></div>
+                          <span className="text-xs text-blue-600">Calculating...</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-blue-500 mt-1">🤖 Live data from your platform</p>
                   </div>
 
                   <Button 
