@@ -8231,6 +8231,81 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
+  // GET /api/lca/packaging-impact - Get impact data for packaging materials by category
+  app.get('/api/lca/packaging-impact', async (req, res) => {
+    try {
+      const { category } = req.query;
+      
+      if (!category || typeof category !== 'string') {
+        return res.status(400).json({ error: 'Category parameter is required' });
+      }
+      
+      // Get materials for this category
+      const materials = await db
+        .select({
+          materialName: lcaProcessMappings.materialName,
+          unit: lcaProcessMappings.unit,
+          subcategory: lcaProcessMappings.subcategory
+        })
+        .from(lcaProcessMappings)
+        .where(eq(lcaProcessMappings.subcategory, category));
+      
+      // Calculate impact data for each material using OpenLCAService
+      const impactData: Record<string, {co2: number; water: number; energy: number}> = {};
+      
+      for (const material of materials) {
+        try {
+          const impact = await OpenLCAService.calculateIngredientImpact(material.materialName, 1, material.unit || 'kg');
+          impactData[material.materialName] = {
+            co2: impact.carbonFootprint,
+            water: impact.waterFootprint, 
+            energy: impact.energyConsumption
+          };
+        } catch (error) {
+          console.warn(`Failed to calculate impact for ${material.materialName}:`, error);
+          // Use fallback estimation
+          impactData[material.materialName] = getPackagingMaterialEstimate(material.materialName, category);
+        }
+      }
+      
+      res.json(impactData);
+    } catch (error) {
+      console.error('Error fetching packaging impact data:', error);
+      res.status(500).json({ error: 'Failed to fetch impact data' });
+    }
+  });
+
+  // Helper function for packaging material impact estimation
+  function getPackagingMaterialEstimate(materialName: string, category: string): {co2: number; water: number; energy: number} {
+    const categoryDefaults: Record<string, {co2: number; water: number; energy: number}> = {
+      'Container Materials': { co2: 0.85, water: 15, energy: 12.5 },
+      'Label Materials': { co2: 1.2, water: 35, energy: 18.5 },
+      'Printing Materials': { co2: 2.1, water: 85, energy: 25.4 },
+      'Closure Materials': { co2: 1.85, water: 8, energy: 14.2 },
+      'Secondary Packaging': { co2: 0.65, water: 25, energy: 8.5 },
+      'Protective Materials': { co2: 3.2, water: 45, energy: 35.8 }
+    };
+    
+    const defaults = categoryDefaults[category] || { co2: 1.0, water: 20, energy: 15 };
+    
+    // Material-specific adjustments
+    const nameLower = materialName.toLowerCase();
+    let multiplier = 1.0;
+    
+    if (nameLower.includes('recycled') || nameLower.includes('bio')) multiplier = 0.7;
+    else if (nameLower.includes('virgin') || nameLower.includes('new')) multiplier = 1.3;
+    else if (nameLower.includes('aluminum') || nameLower.includes('metal')) multiplier = 1.8;
+    else if (nameLower.includes('plastic') || nameLower.includes('pet')) multiplier = 1.4;
+    else if (nameLower.includes('glass')) multiplier = 1.2;
+    else if (nameLower.includes('paper') || nameLower.includes('cardboard')) multiplier = 0.8;
+    
+    return {
+      co2: defaults.co2 * multiplier,
+      water: defaults.water * multiplier,
+      energy: defaults.energy * multiplier
+    };
+  }
+
   // GET /api/lca/categories - Get available ingredient categories
   app.get('/api/lca/categories', async (req, res) => {
     try {
