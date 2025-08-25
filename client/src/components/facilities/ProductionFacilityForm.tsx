@@ -182,7 +182,27 @@ export default function ProductionFacilityForm({
   const onSubmit = async (data: ProductionFacilityForm) => {
     setIsSubmitting(true);
     try {
-      await saveFacilityMutation.mutateAsync(data);
+      // Convert empty strings to undefined for numeric fields
+      const cleanedData = {
+        ...data,
+        annualCapacityVolume: data.annualCapacityVolume || undefined,
+        totalElectricityKwhPerYear: data.totalElectricityKwhPerYear || undefined,
+        totalGasM3PerYear: data.totalGasM3PerYear || undefined,
+        totalSteamKgPerYear: data.totalSteamKgPerYear || undefined,
+        totalFuelLitersPerYear: data.totalFuelLitersPerYear || undefined,
+        renewableEnergyPercent: data.renewableEnergyPercent || undefined,
+        totalProcessWaterLitersPerYear: data.totalProcessWaterLitersPerYear || undefined,
+        totalCleaningWaterLitersPerYear: data.totalCleaningWaterLitersPerYear || undefined,
+        totalCoolingWaterLitersPerYear: data.totalCoolingWaterLitersPerYear || undefined,
+        waterRecyclingPercent: data.waterRecyclingPercent || undefined,
+        totalOrganicWasteKgPerYear: data.totalOrganicWasteKgPerYear || undefined,
+        totalPackagingWasteKgPerYear: data.totalPackagingWasteKgPerYear || undefined,
+        totalHazardousWasteKgPerYear: data.totalHazardousWasteKgPerYear || undefined,
+        wasteRecycledPercent: data.wasteRecycledPercent || undefined,
+        averageUtilizationPercent: data.averageUtilizationPercent || undefined,
+      };
+      
+      await saveFacilityMutation.mutateAsync(cleanedData);
     } finally {
       setIsSubmitting(false);
     }
