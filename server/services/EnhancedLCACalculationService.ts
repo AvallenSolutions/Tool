@@ -512,7 +512,7 @@ export class EnhancedLCACalculationService {
     const dataQuality = this.assessDataQuality(lcaData);
     const uncertaintyPercentage = dataQuality === 'high' ? 15 : dataQuality === 'medium' ? 25 : 40;
 
-    return {
+    const results: EnhancedLCAResults = {
       totalCarbonFootprint,
       totalWaterFootprint,
       totalLandUse,
@@ -534,6 +534,30 @@ export class EnhancedLCACalculationService {
         ]
       }
     };
+
+    // Phase 3: Auto-sync results to database if enabled
+    if (lcaData.productId) {
+      try {
+        const { LCADataSyncService } = await import('./LCADataSyncService');
+        if (LCADataSyncService.isAutoSyncEnabled()) {
+          console.log(`🔄 Auto-syncing LCA results for product ${lcaData.productId}...`);
+          const totalWasteGenerated = (lcaData.packaging?.bottleWeight || 0) + 
+                                    (lcaData.packaging?.labelWeight || 0) + 
+                                    (lcaData.packaging?.closureWeight || 0);
+          const syncResult = await LCADataSyncService.syncLCAResults(lcaData.productId, {
+            totalCarbonFootprint,
+            totalWaterFootprint,
+            totalWasteGenerated: totalWasteGenerated / 1000, // Convert g to kg
+            metadata: results.metadata
+          });
+          console.log(`${syncResult.success ? '✅' : '❌'} Auto-sync completed for product ${lcaData.productId}`);
+        }
+      } catch (error) {
+        console.warn('⚠️  Auto-sync failed:', error.message);
+      }
+    }
+
+    return results;
   }
 
   private static assessDataQuality(lcaData: LCADataInputs): 'high' | 'medium' | 'low' {

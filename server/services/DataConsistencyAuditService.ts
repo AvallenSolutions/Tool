@@ -185,7 +185,17 @@ export class DataConsistencyAuditService {
    * Calculate live values using Enhanced LCA service
    */
   private static async calculateLiveValues(product: any): Promise<EnhancedLCAResults & { totalWasteGenerated?: number }> {
-    const productionVolume = parseFloat(product.annualProductionVolume || '1000');
+    // Validate product data first
+    if (!product || !product.id) {
+      throw new Error('Invalid product data provided');
+    }
+    
+    console.log(`🔍 Calculating live values for product: ${product.name} (ID: ${product.id})`);
+    
+    const productionVolume = parseFloat(product.annualProductionVolume?.toString() || '1000');
+    if (isNaN(productionVolume)) {
+      console.warn(`⚠️ Invalid production volume for product ${product.name}, using default 1000`);
+    }
     
     // Prepare LCA inputs from product data
     const lcaInputs = {
