@@ -1866,26 +1866,26 @@ export const productionFacilities = pgTable("production_facilities", {
   operatingDaysPerYear: integer("operating_days_per_year").default(250),
   shiftsPerDay: integer("shifts_per_day").default(1),
   
-  // Energy Infrastructure
-  electricityKwhPerUnit: decimal("electricity_kwh_per_unit", { precision: 10, scale: 4 }), // kWh per production unit
-  gasM3PerUnit: decimal("gas_m3_per_unit", { precision: 10, scale: 4 }), // m³ per production unit
-  steamKgPerUnit: decimal("steam_kg_per_unit", { precision: 10, scale: 4 }), // kg per production unit
-  fuelLitersPerUnit: decimal("fuel_liters_per_unit", { precision: 10, scale: 4 }), // liters per production unit
+  // Energy Infrastructure - Total annual consumption
+  totalElectricityKwhPerYear: decimal("total_electricity_kwh_per_year", { precision: 12, scale: 2 }), // Total kWh per year
+  totalGasM3PerYear: decimal("total_gas_m3_per_year", { precision: 12, scale: 2 }), // Total m³ per year
+  totalSteamKgPerYear: decimal("total_steam_kg_per_year", { precision: 12, scale: 2 }), // Total kg per year
+  totalFuelLitersPerYear: decimal("total_fuel_liters_per_year", { precision: 12, scale: 2 }), // Total liters per year
   renewableEnergyPercent: decimal("renewable_energy_percent", { precision: 5, scale: 2 }),
   energySource: varchar("energy_source", { length: 100 }), // grid, solar, wind, mixed
   
-  // Water Infrastructure
-  processWaterLitersPerUnit: decimal("process_water_liters_per_unit", { precision: 10, scale: 3 }), // liters per production unit
-  cleaningWaterLitersPerUnit: decimal("cleaning_water_liters_per_unit", { precision: 10, scale: 3 }),
-  coolingWaterLitersPerUnit: decimal("cooling_water_liters_per_unit", { precision: 10, scale: 3 }),
+  // Water Infrastructure - Total annual consumption
+  totalProcessWaterLitersPerYear: decimal("total_process_water_liters_per_year", { precision: 12, scale: 2 }), // Total liters per year
+  totalCleaningWaterLitersPerYear: decimal("total_cleaning_water_liters_per_year", { precision: 12, scale: 2 }),
+  totalCoolingWaterLitersPerYear: decimal("total_cooling_water_liters_per_year", { precision: 12, scale: 2 }),
   waterSource: varchar("water_source", { length: 100 }), // municipal, well, surface, mixed
   wasteWaterTreatment: boolean("waste_water_treatment").default(false),
   waterRecyclingPercent: decimal("water_recycling_percent", { precision: 5, scale: 2 }),
   
-  // Waste Management
-  organicWasteKgPerUnit: decimal("organic_waste_kg_per_unit", { precision: 10, scale: 4 }), // kg per production unit
-  packagingWasteKgPerUnit: decimal("packaging_waste_kg_per_unit", { precision: 10, scale: 4 }),
-  hazardousWasteKgPerUnit: decimal("hazardous_waste_kg_per_unit", { precision: 10, scale: 4 }),
+  // Waste Management - Total annual generation
+  totalOrganicWasteKgPerYear: decimal("total_organic_waste_kg_per_year", { precision: 12, scale: 2 }), // Total kg per year
+  totalPackagingWasteKgPerYear: decimal("total_packaging_waste_kg_per_year", { precision: 12, scale: 2 }),
+  totalHazardousWasteKgPerYear: decimal("total_hazardous_waste_kg_per_year", { precision: 12, scale: 2 }),
   wasteRecycledPercent: decimal("waste_recycled_percent", { precision: 5, scale: 2 }),
   wasteDisposalMethod: varchar("waste_disposal_method", { length: 100 }), // recycling, landfill, incineration, composting
   

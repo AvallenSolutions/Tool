@@ -32,26 +32,26 @@ const productionFacilitySchema = z.object({
   operatingDaysPerYear: z.number().min(1).max(365).default(250),
   shiftsPerDay: z.number().min(1).max(3).default(1),
   
-  // Energy Infrastructure (per unit)
-  electricityKwhPerUnit: z.number().min(0, "Must be positive").optional(),
-  gasM3PerUnit: z.number().min(0, "Must be positive").optional(),
-  steamKgPerUnit: z.number().min(0, "Must be positive").optional(),
-  fuelLitersPerUnit: z.number().min(0, "Must be positive").optional(),
+  // Energy Infrastructure (total facility consumption)
+  totalElectricityKwhPerYear: z.number().min(0, "Must be positive").optional(),
+  totalGasM3PerYear: z.number().min(0, "Must be positive").optional(),
+  totalSteamKgPerYear: z.number().min(0, "Must be positive").optional(),
+  totalFuelLitersPerYear: z.number().min(0, "Must be positive").optional(),
   renewableEnergyPercent: z.number().min(0).max(100).optional(),
   energySource: z.enum(['grid', 'solar', 'wind', 'mixed']).optional(),
   
-  // Water Infrastructure (per unit)
-  processWaterLitersPerUnit: z.number().min(0, "Must be positive").optional(),
-  cleaningWaterLitersPerUnit: z.number().min(0, "Must be positive").optional(),
-  coolingWaterLitersPerUnit: z.number().min(0, "Must be positive").optional(),
+  // Water Infrastructure (total facility consumption)
+  totalProcessWaterLitersPerYear: z.number().min(0, "Must be positive").optional(),
+  totalCleaningWaterLitersPerYear: z.number().min(0, "Must be positive").optional(),
+  totalCoolingWaterLitersPerYear: z.number().min(0, "Must be positive").optional(),
   waterSource: z.enum(['municipal', 'well', 'surface', 'mixed']).optional(),
   wasteWaterTreatment: z.boolean().default(false),
   waterRecyclingPercent: z.number().min(0).max(100).optional(),
   
-  // Waste Management (per unit)
-  organicWasteKgPerUnit: z.number().min(0, "Must be positive").optional(),
-  packagingWasteKgPerUnit: z.number().min(0, "Must be positive").optional(),
-  hazardousWasteKgPerUnit: z.number().min(0, "Must be positive").optional(),
+  // Waste Management (total facility waste)
+  totalOrganicWasteKgPerYear: z.number().min(0, "Must be positive").optional(),
+  totalPackagingWasteKgPerYear: z.number().min(0, "Must be positive").optional(),
+  totalHazardousWasteKgPerYear: z.number().min(0, "Must be positive").optional(),
   wasteRecycledPercent: z.number().min(0).max(100).optional(),
   wasteDisposalMethod: z.enum(['recycling', 'landfill', 'incineration', 'composting']).optional(),
   
@@ -176,8 +176,8 @@ export default function ProductionFacilityForm({
     const values = form.getValues();
     const requiredFields = ['facilityName', 'facilityType', 'location', 'annualCapacityVolume'];
     const optionalFields = [
-      'electricityKwhPerUnit', 'gasM3PerUnit', 'processWaterLitersPerUnit',
-      'organicWasteKgPerUnit', 'renewableEnergyPercent', 'wasteRecycledPercent'
+      'totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalProcessWaterLitersPerYear',
+      'totalOrganicWasteKgPerYear', 'renewableEnergyPercent', 'wasteRecycledPercent'
     ];
     
     const requiredComplete = requiredFields.filter(field => {
@@ -431,10 +431,10 @@ export default function ProductionFacilityForm({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Zap className="w-5 h-5" />
-                    Energy Consumption (per unit)
+                    Energy Consumption (Total Facility)
                   </CardTitle>
                   <CardDescription>
-                    Energy consumption metrics per production unit
+                    Total annual energy consumption for this facility
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -442,10 +442,10 @@ export default function ProductionFacilityForm({
                     <div className="flex items-start gap-3">
                       <Info className="w-5 h-5 text-blue-600 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-blue-900 mb-1">Per Unit Metrics</h4>
+                        <h4 className="font-medium text-blue-900 mb-1">Total Facility Consumption</h4>
                         <p className="text-sm text-blue-800">
-                          Enter energy consumption per production unit (e.g., per liter, per bottle). 
-                          This will be multiplied by product volumes for accurate LCA calculations.
+                          Enter the total annual energy consumption for this entire facility. 
+                          The system will automatically calculate per-unit values by dividing by your annual production capacity.
                         </p>
                       </div>
                     </div>
@@ -454,19 +454,22 @@ export default function ProductionFacilityForm({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="electricityKwhPerUnit"
+                      name="totalElectricityKwhPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Electricity (kWh per unit)</FormLabel>
+                          <FormLabel>Total Electricity (kWh/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 125000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Total annual electricity consumption from utility bills
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -474,19 +477,22 @@ export default function ProductionFacilityForm({
                     
                     <FormField
                       control={form.control}
-                      name="gasM3PerUnit"
+                      name="totalGasM3PerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Natural Gas (m³ per unit)</FormLabel>
+                          <FormLabel>Total Natural Gas (m³/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 25000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Total annual gas consumption from utility bills
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -494,19 +500,22 @@ export default function ProductionFacilityForm({
 
                     <FormField
                       control={form.control}
-                      name="steamKgPerUnit"
+                      name="totalSteamKgPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Steam (kg per unit)</FormLabel>
+                          <FormLabel>Total Steam (kg/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 50000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Total annual steam consumption
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -514,19 +523,22 @@ export default function ProductionFacilityForm({
 
                     <FormField
                       control={form.control}
-                      name="fuelLitersPerUnit"
+                      name="totalFuelLitersPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Fuel (liters per unit)</FormLabel>
+                          <FormLabel>Total Fuel (liters/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 15000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Total annual fuel consumption (diesel, heating oil, etc.)
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -593,29 +605,32 @@ export default function ProductionFacilityForm({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Droplets className="w-5 h-5" />
-                    Water Consumption (per unit)
+                    Water Consumption (Total Facility)
                   </CardTitle>
                   <CardDescription>
-                    Water usage metrics per production unit
+                    Total annual water consumption for this facility
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                       control={form.control}
-                      name="processWaterLitersPerUnit"
+                      name="totalProcessWaterLitersPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Process Water (L per unit)</FormLabel>
+                          <FormLabel>Process Water (Liters/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 500000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Water used directly in production processes
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -623,19 +638,22 @@ export default function ProductionFacilityForm({
                     
                     <FormField
                       control={form.control}
-                      name="cleaningWaterLitersPerUnit"
+                      name="totalCleaningWaterLitersPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Cleaning Water (L per unit)</FormLabel>
+                          <FormLabel>Cleaning Water (Liters/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 200000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Water used for equipment and facility cleaning
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -643,19 +661,22 @@ export default function ProductionFacilityForm({
 
                     <FormField
                       control={form.control}
-                      name="coolingWaterLitersPerUnit"
+                      name="totalCoolingWaterLitersPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Cooling Water (L per unit)</FormLabel>
+                          <FormLabel>Cooling Water (Liters/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 300000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Water used for cooling systems and heat exchangers
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -747,29 +768,32 @@ export default function ProductionFacilityForm({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Trash2 className="w-5 h-5" />
-                    Waste Generation (per unit)
+                    Waste Generation (Total Facility)
                   </CardTitle>
                   <CardDescription>
-                    Waste output metrics per production unit
+                    Total annual waste generation for this facility
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
                       control={form.control}
-                      name="organicWasteKgPerUnit"
+                      name="totalOrganicWasteKgPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Organic Waste (kg per unit)</FormLabel>
+                          <FormLabel>Organic Waste (kg/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 25000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Total annual organic waste (spent grains, pomace, etc.)
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -777,19 +801,22 @@ export default function ProductionFacilityForm({
                     
                     <FormField
                       control={form.control}
-                      name="packagingWasteKgPerUnit"
+                      name="totalPackagingWasteKgPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Packaging Waste (kg per unit)</FormLabel>
+                          <FormLabel>Packaging Waste (kg/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 15000"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Total annual packaging waste (cardboard, plastic, etc.)
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -797,19 +824,22 @@ export default function ProductionFacilityForm({
 
                     <FormField
                       control={form.control}
-                      name="hazardousWasteKgPerUnit"
+                      name="totalHazardousWasteKgPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Hazardous Waste (kg per unit)</FormLabel>
+                          <FormLabel>Hazardous Waste (kg/year)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
-                              step="0.001"
-                              placeholder="0.000"
+                              step="1"
+                              placeholder="e.g., 500"
                               {...field}
                               onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                             />
                           </FormControl>
+                          <FormDescription>
+                            Total annual hazardous waste (chemicals, solvents, etc.)
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
