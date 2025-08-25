@@ -282,31 +282,27 @@ export class KPICalculationService {
    */
   async calculateTotalCarbonFootprint(companyId: number): Promise<number> {
     try {
-      // TEMPORARY FIX: Use hardcoded realistic data until proper data integration
-      // User has 505 tonnes CO2e footprint and 300,000 units sold
-      if (companyId === 1) {
-        console.log('🔧 Using hardcoded CO2 footprint data: 505,000 kg (505 tonnes)');
-        return 505000; // kg CO2e (505 tonnes converted to kg)
-      }
-      
-      // Get all products for the company
+      // Calculate from actual product data - no more hardcoded values
       const companyProducts = await db
         .select()
         .from(products)
         .where(eq(products.companyId, companyId));
 
-      let totalFootprint = 0;
+      let totalFootprintKg = 0;
 
       for (const product of companyProducts) {
-        if (product.carbonFootprint && product.annualProduction) {
-          const productFootprint = parseFloat(product.carbonFootprint.toString());
-          const annualProduction = parseInt(product.annualProduction.toString());
-          totalFootprint += productFootprint * annualProduction;
+        if (product.carbonFootprint && product.annualProductionVolume) {
+          const productFootprintKg = parseFloat(product.carbonFootprint.toString());
+          const annualProduction = parseFloat(product.annualProductionVolume.toString());
+          const productTotalKg = productFootprintKg * annualProduction;
+          totalFootprintKg += productTotalKg;
+          
+          console.log(`📊 ${product.name}: ${productFootprintKg} kg CO₂e/bottle × ${annualProduction} bottles = ${productTotalKg.toFixed(0)} kg CO₂e`);
         }
       }
 
-      // Convert to tonnes and return
-      return totalFootprint / 1000;
+      console.log(`🧮 Total company carbon footprint: ${totalFootprintKg.toFixed(0)} kg CO₂e (${(totalFootprintKg/1000).toFixed(1)} tonnes)`);
+      return totalFootprintKg; // Return in kg, not tonnes
     } catch (error) {
       console.error('Error calculating total carbon footprint:', error);
       return 0;
@@ -315,22 +311,22 @@ export class KPICalculationService {
 
   async calculateTotalProductionVolume(companyId: number): Promise<number> {
     try {
-      // TEMPORARY FIX: Use hardcoded realistic data until proper data integration
-      // User has 300,000 units sold
-      if (companyId === 1) {
-        console.log('🔧 Using hardcoded production volume: 300,000 bottles');
-        return 300000; // bottles
-      }
-      
+      // Calculate from actual product data - no more hardcoded values
       const companyProducts = await db
         .select()
         .from(products)
         .where(eq(products.companyId, companyId));
 
-      return companyProducts.reduce((total, product) => {
-        const volume = parseInt(product.annualProduction?.toString() || '0');
-        return total + volume;
-      }, 0);
+      let totalProduction = 0;
+      
+      for (const product of companyProducts) {
+        const volume = parseFloat(product.annualProductionVolume?.toString() || '0');
+        totalProduction += volume;
+        console.log(`📊 ${product.name}: ${volume} bottles/year`);
+      }
+
+      console.log(`🧮 Total company production: ${totalProduction} bottles/year`);
+      return totalProduction;
     } catch (error) {
       console.error('Error calculating total production volume:', error);
       return 0;
