@@ -253,29 +253,7 @@ export default function ProductsPage() {
                                   </p>
                                 )}
                                 
-                                <div className="grid grid-cols-3 gap-4 text-sm">
-                                  <div className="text-center bg-green-50 rounded-lg p-3 border border-green-200">
-                                    <span className="block text-xs font-medium text-green-700 mb-1">CO₂ Footprint</span>
-                                    <span className="block text-lg font-bold text-green-800">
-                                      {product.carbonFootprint && (typeof product.carbonFootprint === 'number' || typeof product.carbonFootprint === 'string') ? `${Number(product.carbonFootprint).toFixed(2)} kg` : 'TBD'}
-                                    </span>
-                                    <span className="text-xs text-green-600">per unit</span>
-                                  </div>
-                                  <div className="text-center bg-blue-50 rounded-lg p-3 border border-blue-200">
-                                    <span className="block text-xs font-medium text-blue-700 mb-1">Water Usage</span>
-                                    <span className="block text-lg font-bold text-blue-800">
-                                      {product.waterFootprint && (typeof product.waterFootprint === 'number' || typeof product.waterFootprint === 'string') ? `${Number(product.waterFootprint).toFixed(1)} L` : 'TBD'}
-                                    </span>
-                                    <span className="text-xs text-blue-600">per unit</span>
-                                  </div>
-                                  <div className="text-center bg-orange-50 rounded-lg p-3 border border-orange-200">
-                                    <span className="block text-xs font-medium text-orange-700 mb-1">Waste Generated</span>
-                                    <span className="block text-lg font-bold text-orange-800">
-                                      {product.wasteFootprint && (typeof product.wasteFootprint === 'number' || typeof product.wasteFootprint === 'string') ? `${Number(product.wasteFootprint).toFixed(2)} kg` : 'TBD'}
-                                    </span>
-                                    <span className="text-xs text-orange-600">per unit</span>
-                                  </div>
-                                </div>
+                                <ProductLCAMetricsDisplay productId={product.id} />
                               </div>
                               
                               {/* Actions */}

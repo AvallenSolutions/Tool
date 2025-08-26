@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema, products } from "@shared/schema";
 import { eq, desc, asc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { db } from "./db";
 import { nanoid } from "nanoid";

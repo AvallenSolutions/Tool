@@ -17,15 +17,21 @@ export function useProductLCAMetrics(productId: number): ProductLCAMetrics {
   const { data: verifiedSupplierData, isLoading: supplierLoading } = useQuery({
     queryKey: [`/api/products/${productId}/verified-supplier-impacts`],
     queryFn: async () => {
-      const response = await fetch(`/api/products/${productId}/verified-supplier-impacts`, {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) return null;
-      return response.json();
+      try {
+        const response = await fetch(`/api/products/${productId}/verified-supplier-impacts`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.log('No verified supplier data available, falling back to refined LCA');
+        return null;
+      }
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!productId,
@@ -48,6 +54,7 @@ export function useProductLCAMetrics(productId: number): ProductLCAMetrics {
 
   if (refinedLCAResponse?.success && refinedLCAResponse.data) {
     const data = refinedLCAResponse.data;
+    console.log('✅ Using refined LCA data:', data.perUnit);
     return {
       co2e: `${data.perUnit.co2e_kg.toFixed(1)}kg`,
       water: `${Math.round(data.perUnit.water_liters)}L`,
@@ -57,6 +64,13 @@ export function useProductLCAMetrics(productId: number): ProductLCAMetrics {
     };
   }
 
+  console.log('❌ No LCA data available:', { 
+    refinedLCAResponse: refinedLCAResponse?.success, 
+    verifiedSupplierData: verifiedSupplierData?.success,
+    isLoading, 
+    error 
+  });
+  
   return {
     co2e: 'TBD',
     water: 'TBD',
