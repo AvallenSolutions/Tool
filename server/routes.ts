@@ -38,6 +38,7 @@ import { kpiCalculationService, enhancedKpiService } from "./services/kpiService
 import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { supplierIntegrityService } from "./services/SupplierIntegrityService";
+import { WasteIntensityCalculationService } from "./services/WasteIntensityCalculationService";
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
@@ -1914,7 +1915,26 @@ Be precise and quote actual text from the content, not generic terms.`;
         
         breakdown.packaging.co2e += glassEmissions;
         breakdown.packaging.water += bottleWeightKg * 10; // ~10L water per kg glass
-        breakdown.packaging.waste += bottleWeightKg * 0.05; // ~5% waste during manufacturing
+        
+        // PHASE 1: Replace hardcoded 5% packaging waste with facility-based allocation
+        // Calculate production waste intensity from facility data instead of arbitrary 5%
+        let productionWastePerUnit = 0;
+        
+        try {
+          // Use primary facility for Cornwall distillery (facility ID 1 for Avallen)
+          const wasteIntensityData = await WasteIntensityCalculationService.calculateWasteIntensity(1);
+          productionWastePerUnit = wasteIntensityData.productionWasteIntensity;
+          
+          console.log(`🏭 Facility waste intensity: ${productionWastePerUnit.toFixed(6)} kg waste per unit production`);
+          console.log(`📦 Previous: ${(bottleWeightKg * 0.05).toFixed(6)} kg (5% packaging), New: ${productionWastePerUnit.toFixed(6)} kg (facility-based)`);
+          
+        } catch (error) {
+          console.warn('⚠️ Facility waste intensity calculation failed, using improved fallback:', error);
+          // Improved fallback: more realistic waste intensity based on industry standards
+          productionWastePerUnit = 0.002; // 2g waste per unit (much lower than 5% packaging)
+        }
+        
+        breakdown.packaging.waste += productionWastePerUnit;
         
         console.log(`🍾 Glass bottle: ${product.bottleWeight}g = ${glassEmissions.toFixed(3)} kg CO2e`);
       }

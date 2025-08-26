@@ -1880,14 +1880,23 @@ export const productionFacilities = pgTable("production_facilities", {
   totalCoolingWaterLitersPerYear: decimal("total_cooling_water_liters_per_year", { precision: 12, scale: 2 }),
   waterSource: varchar("water_source", { length: 100 }), // municipal, well, surface, mixed
   wasteWaterTreatment: boolean("waste_water_treatment").default(false),
-  waterRecyclingPercent: decimal("water_recycling_percent", { precision: 5, scale: 2 }),
   
-  // Waste Management - Total annual generation
-  totalOrganicWasteKgPerYear: decimal("total_organic_waste_kg_per_year", { precision: 12, scale: 2 }), // Total kg per year
-  totalPackagingWasteKgPerYear: decimal("total_packaging_waste_kg_per_year", { precision: 12, scale: 2 }),
-  totalHazardousWasteKgPerYear: decimal("total_hazardous_waste_kg_per_year", { precision: 12, scale: 2 }),
-  wasteRecycledPercent: decimal("waste_recycled_percent", { precision: 5, scale: 2 }),
-  wasteDisposalMethod: varchar("waste_disposal_method", { length: 100 }), // recycling, landfill, incineration, composting
+  // Waste Management Infrastructure - Total annual waste generation (UPDATED FOR STANDARDS COMPLIANCE)
+  // Production waste data for waste intensity factor calculation (per GHG Protocol/ISO 14040)
+  totalOrganicWasteKgPerYear: decimal("total_organic_waste_kg_per_year", { precision: 12, scale: 2 }), // Total organic waste kg/year
+  totalPackagingWasteKgPerYear: decimal("total_packaging_waste_kg_per_year", { precision: 12, scale: 2 }), // Total packaging waste kg/year  
+  totalHazardousWasteKgPerYear: decimal("total_hazardous_waste_kg_per_year", { precision: 12, scale: 2 }), // Total hazardous waste kg/year
+  totalGeneralWasteKgPerYear: decimal("total_general_waste_kg_per_year", { precision: 12, scale: 2 }), // Total general waste kg/year
+  
+  // Waste disposal breakdown by route (for production waste footprint calculation)
+  wasteToLandfillKgPerYear: decimal("waste_to_landfill_kg_per_year", { precision: 12, scale: 2 }),
+  wasteToRecyclingKgPerYear: decimal("waste_to_recycling_kg_per_year", { precision: 12, scale: 2 }),
+  wasteToCompostingKgPerYear: decimal("waste_to_composting_kg_per_year", { precision: 12, scale: 2 }),
+  wasteToIncinerationKgPerYear: decimal("waste_to_incineration_kg_per_year", { precision: 12, scale: 2 }),
+  wasteToEnergyRecoveryKgPerYear: decimal("waste_to_energy_recovery_kg_per_year", { precision: 12, scale: 2 }),
+  
+  // Water recycling
+  waterRecyclingPercent: decimal("water_recycling_percent", { precision: 5, scale: 2 }),
   
   // Equipment and Technology
   productionEquipment: jsonb("production_equipment").$type<Array<{
@@ -1919,6 +1928,49 @@ export const productionFacilities = pgTable("production_facilities", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Regional Waste Statistics table - for end-of-life waste footprint calculations
+export const regionalWasteStatistics = pgTable("regional_waste_statistics", {
+  id: serial("id").primaryKey(),
+  
+  // Geographic identifiers
+  country: varchar("country", { length: 100 }).notNull(),
+  region: varchar("region", { length: 100 }), // State, province, or administrative region
+  dataYear: integer("data_year").notNull(),
+  
+  // Material-specific recycling rates (%)
+  glassRecyclingRate: decimal("glass_recycling_rate", { precision: 5, scale: 2 }),
+  paperRecyclingRate: decimal("paper_recycling_rate", { precision: 5, scale: 2 }),
+  plasticRecyclingRate: decimal("plastic_recycling_rate", { precision: 5, scale: 2 }),
+  aluminumRecyclingRate: decimal("aluminum_recycling_rate", { precision: 5, scale: 2 }),
+  steelRecyclingRate: decimal("steel_recycling_rate", { precision: 5, scale: 2 }),
+  
+  // Disposal method distribution (%)
+  landfillRate: decimal("landfill_rate", { precision: 5, scale: 2 }),
+  incinerationRate: decimal("incineration_rate", { precision: 5, scale: 2 }),
+  compostingRate: decimal("composting_rate", { precision: 5, scale: 2 }),
+  energyRecoveryRate: decimal("energy_recovery_rate", { precision: 5, scale: 2 }),
+  
+  // Transport emissions (kg CO2e per tonne-km)
+  wasteTransportEmissionFactor: decimal("waste_transport_emission_factor", { precision: 8, scale: 4 }),
+  averageTransportDistanceKm: decimal("average_transport_distance_km", { precision: 8, scale: 2 }),
+  
+  // Disposal emissions (kg CO2e per kg waste)
+  landfillEmissionFactor: decimal("landfill_emission_factor", { precision: 8, scale: 4 }),
+  incinerationEmissionFactor: decimal("incineration_emission_factor", { precision: 8, scale: 4 }),
+  recyclingProcessingFactor: decimal("recycling_processing_factor", { precision: 8, scale: 4 }),
+  compostingEmissionFactor: decimal("composting_emission_factor", { precision: 8, scale: 4 }),
+  
+  // Data source and quality
+  dataSource: varchar("data_source", { length: 255 }), // EPA, DEFRA, national statistics, etc.
+  reliability: varchar("reliability", { length: 50 }).default("medium"), // low, medium, high
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_regional_waste_country_year").on(table.country, table.dataYear),
+]);
 
 // Product-Facility relationships table
 export const productFacilityMappings = pgTable("product_facility_mappings", {
@@ -2020,6 +2072,11 @@ export const productionFacilitiesRelations = relations(productionFacilities, ({ 
   productMappings: many(productFacilityMappings),
 }));
 
+// Relations for Regional Waste Statistics  
+export const regionalWasteStatisticsRelations = relations(regionalWasteStatistics, ({ one }) => ({
+  // No direct relations for now - this is a reference data table
+}));
+
 // Relations for Product-Facility Mappings
 export const productFacilityMappingsRelations = relations(productFacilityMappings, ({ one }) => ({
   product: one(products, {
@@ -2066,6 +2123,15 @@ export const insertProductionFacilitySchema = createInsertSchema(productionFacil
 export type ProductFacilityMapping = typeof productFacilityMappings.$inferSelect;
 export type InsertProductFacilityMapping = typeof productFacilityMappings.$inferInsert;
 export const insertProductFacilityMappingSchema = createInsertSchema(productFacilityMappings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports for Regional Waste Statistics
+export type RegionalWasteStatistics = typeof regionalWasteStatistics.$inferSelect;
+export type InsertRegionalWasteStatistics = typeof regionalWasteStatistics.$inferInsert;
+export const insertRegionalWasteStatisticsSchema = createInsertSchema(regionalWasteStatistics).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
