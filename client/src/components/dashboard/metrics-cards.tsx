@@ -66,10 +66,12 @@ export default function MetricsCards() {
     );
   }
 
-  const totalCO2e = calculateTotalCO2e();
-  // Use hardcoded values from Water Footprint Breakdown Total as requested by user
-  const waterUsage = metrics?.waterUsage || 11700000; // 11.7M litres
-  const wasteGenerated = metrics?.wasteGenerated || 0.1; // 0.1 tonnes
+  // Use refined LCA CO2e calculation from dashboard metrics (consistent with product detail pages)
+  const totalCO2e = metrics?.totalCO2e || calculateTotalCO2e();
+  // Display water usage in millions of liters
+  const waterUsage = metrics?.waterUsage || 11700000; // fallback to 11.7M litres
+  const waterUsageInMillions = (waterUsage / 1000000).toFixed(2); // Convert to millions with 2 decimal places
+  const wasteGenerated = metrics?.wasteGenerated || 0.1; // fallback to 0.1 tonnes
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -106,7 +108,7 @@ export default function MetricsCards() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-slate-gray mb-2">
-            {waterUsage.toLocaleString()}
+            {waterUsageInMillions}M
           </div>
           <div className="text-sm text-gray-500 mb-4">litres</div>
           <div className="flex items-center text-sm">
