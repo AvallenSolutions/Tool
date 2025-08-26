@@ -117,6 +117,16 @@ app.use((req, res, next) => {
   const { registerRoutes: registerLegacyRoutes } = await import('./routes.js');
   await registerLegacyRoutes(app);
   
+  // Add health check endpoint for Replit webview detection
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      service: 'Drinks Sustainability Tool',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV 
+    });
+  });
+
   // Add sample report route
   app.get('/sample-report', (req, res) => {
     const filePath = path.join(process.cwd(), 'sample_enhanced_report.html');
@@ -152,6 +162,8 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`🚀 Drinks Sustainability Tool serving on port ${port}`);
+    log(`📊 Application ready at http://localhost:${port}`);
+    log(`🔧 Environment: ${process.env.NODE_ENV}`);
   });
 })();
