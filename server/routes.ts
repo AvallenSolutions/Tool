@@ -1826,23 +1826,34 @@ Be precise and quote actual text from the content, not generic terms.`;
   // ============ REFINED PRODUCT LCA CALCULATION API ============
   
   /**
-   * Phase 4: Supplier Verification Override Helper Function
-   * Checks if a verified supplier has pre-calculated LCA data for the ingredient or packaging
+   * Supplier Verification Override Helper Function
+   * ONLY checks for explicitly user-selected supplier products with verified LCA data
+   * Prevents automatic matching to ensure data integrity
    */
-  async function getVerifiedSupplierData(productName: string): Promise<any> {
+  async function getVerifiedSupplierData(productName: string, productData: any): Promise<any> {
     try {
+      // Check if user has explicitly selected a supplier product for this ingredient/packaging
+      const selectedSupplierProductId = getSelectedSupplierProductId(productName, productData);
+      
+      if (!selectedSupplierProductId) {
+        // No explicit supplier selection - use OpenLCA as primary source
+        return null;
+      }
+      
+      // Query only the explicitly selected supplier product
       const verifiedProduct = await db
         .select({
           lcaData: supplierProducts.lcaDataJson,
           supplierName: verifiedSuppliers.supplierName,
           verificationStatus: verifiedSuppliers.verificationStatus,
+          productName: supplierProducts.productName,
           isVerified: supplierProducts.isVerified
         })
         .from(supplierProducts)
         .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
         .where(
           and(
-            eq(supplierProducts.productName, productName),
+            eq(supplierProducts.id, selectedSupplierProductId),
             eq(supplierProducts.hasPrecalculatedLca, true),
             eq(supplierProducts.isVerified, true),
             eq(verifiedSuppliers.verificationStatus, 'verified')
@@ -1851,7 +1862,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         .limit(1);
       
       if (verifiedProduct.length > 0 && verifiedProduct[0].lcaData) {
-        console.log(`🔍 Found verified supplier data for ${productName} from ${verifiedProduct[0].supplierName}`);
+        console.log(`✅ Using EXPLICITLY SELECTED supplier product: ${verifiedProduct[0].productName} from ${verifiedProduct[0].supplierName}`);
+        console.log(`   Selection confirmed by user, data verified by external body`);
         return verifiedProduct[0].lcaData;
       }
       
@@ -1860,6 +1872,32 @@ Be precise and quote actual text from the content, not generic terms.`;
       console.error(`Error checking verified supplier data for ${productName}:`, error);
       return null;
     }
+  }
+
+  /**
+   * Helper function to get user-selected supplier product ID
+   * Only returns ID if user has explicitly selected a supplier product
+   */
+  function getSelectedSupplierProductId(productName: string, productData: any): string | null {
+    // Check ingredient-level supplier selections
+    if (productData.ingredients && Array.isArray(productData.ingredients)) {
+      for (const ingredient of productData.ingredients) {
+        if (ingredient.name === productName && ingredient.selectedSupplierProductId) {
+          console.log(`📋 Found user-selected supplier product for ingredient: ${productName}`);
+          return ingredient.selectedSupplierProductId;
+        }
+      }
+    }
+    
+    // Check packaging-level supplier selections
+    if (productData.selectedPackagingSupplier && 
+        productData.selectedPackagingSupplier.productName === productName) {
+      console.log(`📋 Found user-selected supplier product for packaging: ${productName}`);
+      return productData.selectedPackagingSupplier.id;
+    }
+    
+    console.log(`ℹ️ No user selection found for ${productName} - using OpenLCA as primary source`);
+    return null;
   }
   
   /**
@@ -1906,8 +1944,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         for (const ingredient of product.ingredients) {
           if (ingredient.name && ingredient.amount > 0) {
             try {
-              // Phase 4: Check for verified supplier data first
-              const verifiedData = await getVerifiedSupplierData(ingredient.name);
+              // Check for explicitly selected verified supplier data first
+              const verifiedData = await getVerifiedSupplierData(ingredient.name, product);
               
               if (verifiedData) {
                 // Use verified supplier LCA data
