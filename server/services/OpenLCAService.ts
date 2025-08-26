@@ -244,7 +244,7 @@ export class OpenLCAService {
       // For now, simulate LCI flows with realistic GHG emissions data
       const mockLCIFlows: LCIFlow[] = [
         {
-          flowName: 'Carbon dioxide, fossil',
+          flowName: 'Carbon dioxide, fossil (CO2)',
           flowUuid: 'co2-fossil-uuid',
           category: 'air',
           compartment: 'low population density',
@@ -252,7 +252,7 @@ export class OpenLCAService {
           unit: 'kg'
         },
         {
-          flowName: 'Methane, fossil',
+          flowName: 'Methane, fossil (CH4)',
           flowUuid: 'ch4-fossil-uuid', 
           category: 'air',
           compartment: 'low population density',
@@ -260,11 +260,27 @@ export class OpenLCAService {
           unit: 'kg'
         },
         {
-          flowName: 'Dinitrogen monoxide',
+          flowName: 'Dinitrogen monoxide (N2O)',
           flowUuid: 'n2o-uuid',
           category: 'air',
           compartment: 'low population density', 
           amount: amount * 0.0008, // kg N2O per kg ingredient
+          unit: 'kg'
+        },
+        {
+          flowName: 'Sulfur hexafluoride (SF6)',
+          flowUuid: 'sf6-uuid',
+          category: 'air',
+          compartment: 'low population density', 
+          amount: amount * 0.000001, // kg SF6 per kg ingredient (very small amount)
+          unit: 'kg'
+        },
+        {
+          flowName: 'Nitrogen trifluoride (NF3)',
+          flowUuid: 'nf3-uuid',
+          category: 'air',
+          compartment: 'low population density', 
+          amount: amount * 0.000002, // kg NF3 per kg ingredient (very small amount)
           unit: 'kg'
         }
       ];

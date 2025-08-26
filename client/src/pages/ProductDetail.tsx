@@ -178,12 +178,12 @@ function ProductDetail() {
   return (
     <div className="flex h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-lightest-gray">
         <Header 
           title={product.name} 
           subtitle="Product details and environmental impact analysis" 
         />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6 overflow-y-auto bg-lightest-gray">
           <div className="mb-6">
             <div className="flex gap-2">
               <Button 
@@ -1285,7 +1285,7 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
       </Card>
 
       {/* Comprehensive Greenhouse Gas Analysis (ISO 14040/14044 Compliant) */}
-      {ghgBreakdown && ghgBreakdown.individual_gases && ghgBreakdown.individual_gases.length > 0 && (
+      {ghgBreakdown && ghgBreakdown.individual_gases && ghgBreakdown.individual_gases.length > 0 ? (
         <Card className="border-light-gray">
           <CardHeader>
             <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
@@ -1338,6 +1338,34 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
             </div>
           </CardContent>
         </Card>
+      ) : (
+        <Card className="border-light-gray">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+              🌍 Greenhouse Gas Analysis (ISO 14040 Compliant)
+            </CardTitle>
+            <CardDescription>Complete breakdown of all 7 greenhouse gases using IPCC AR5 GWP factors</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <div className="text-gray-500 mb-4">
+                <span className="text-2xl">🔬</span>
+              </div>
+              <p className="text-gray-600 mb-2">GHG breakdown calculation in progress</p>
+              <p className="text-xs text-gray-500">Individual greenhouse gas data will appear here once OpenLCA analysis completes</p>
+              {ghgBreakdown && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-left">
+                  <div className="text-sm text-gray-700">
+                    <div>Debug Info:</div>
+                    <div className="text-xs">GHG Breakdown Available: {ghgBreakdown ? 'Yes' : 'No'}</div>
+                    <div className="text-xs">Individual Gases: {ghgBreakdown?.individual_gases?.length || 0}</div>
+                    <div className="text-xs">Total CO₂e: {ghgBreakdown?.total_co2e_from_ghg?.toFixed(3) || 0} kg</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Impact Breakdown by Category */}
@@ -1377,18 +1405,18 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
             <div>
               <h4 className="font-medium text-gray-900 mb-3">Water Footprint (L per unit, excluding dilution)</h4>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                   <span className="text-sm font-medium">Ingredients</span>
-                  <span className="text-sm font-bold text-blue-600">{breakdown.ingredients.water.toFixed(1)} L</span>
+                  <span className="text-sm font-bold text-avallen-green">{breakdown.ingredients.water.toFixed(1)} L</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <span className="text-sm font-medium">Packaging</span>
                   <span className="text-sm font-bold text-gray-600">{breakdown.packaging.water.toFixed(1)} L</span>
                 </div>
                 {breakdown.facilities && (
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <span className="text-sm font-medium">Facilities</span>
-                    <span className="text-sm font-bold text-avallen-green">{breakdown.facilities.water.toFixed(1)} L</span>
+                    <span className="text-sm font-bold text-blue-600">{breakdown.facilities.water.toFixed(1)} L</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
