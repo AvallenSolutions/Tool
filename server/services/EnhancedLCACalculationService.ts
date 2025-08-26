@@ -350,20 +350,11 @@ export class EnhancedLCACalculationService {
       });
     }
 
-    // Add water dilution from product data (manual entry)
+    // NOTE: Water dilution is recorded at product level for future use but excluded from product water footprint
+    // to prevent double-counting since it's already included in facility-level water consumption
     if (productData.waterDilution?.amount) {
-      let dilutionWater = 0;
       const dilutionAmount = parseFloat(productData.waterDilution.amount) || 0;
-      
-      // Convert to liters per unit based on unit type
-      if (productData.waterDilution.unit === 'ml') {
-        dilutionWater = (dilutionAmount / 1000) * productionVolume; // Convert ml to L
-      } else if (productData.waterDilution.unit === 'L') {
-        dilutionWater = dilutionAmount * productionVolume;
-      }
-      
-      console.log(`Adding water dilution: ${dilutionAmount} ${productData.waterDilution.unit} per bottle = ${dilutionWater}L total for ${productionVolume} units`);
-      totalWaterFootprint += dilutionWater;
+      console.log(`Water dilution recorded: ${dilutionAmount} ${productData.waterDilution.unit} per bottle (excluded from product water footprint to prevent double-counting)`);
     }
 
     // 4. Enhanced Packaging

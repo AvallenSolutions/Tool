@@ -7,6 +7,7 @@ import LcaHeader from "@/components/lca/LcaHeader";
 import PrimaryBreakdownCharts from "@/components/lca/PrimaryBreakdownCharts";
 import DetailedAnalysisTabs from "@/components/lca/DetailedAnalysisTabs";
 import ActionableInsights from "@/components/lca/ActionableInsights";
+import { useRefinedLCA, transformRefinedLCAToMetrics, transformRefinedLCAToBreakdown } from "@/hooks/useRefinedLCA";
 
 interface ProductLcaData {
   product: {
@@ -41,8 +42,8 @@ export default function ProductLcaPage() {
   // Get report ID from URL params or use default
   const reportId = new URLSearchParams(location.split('?')[1] || '').get('reportId') || '1';
 
-  // Fetch LCA visual data
-  const { data: lcaData, isLoading, error } = useQuery<ProductLcaData>({
+  // Fetch legacy LCA visual data (fallback)
+  const { data: lcaData, isLoading: legacyLoading, error: legacyError } = useQuery<ProductLcaData>({
     queryKey: ['/api/reports', reportId, 'visual-data'],
     queryFn: async () => {
       const response = await fetch(`/api/reports/${reportId}/visual-data`, {
@@ -56,6 +57,17 @@ export default function ProductLcaPage() {
     retry: 1,
     refetchOnWindowFocus: false,
   });
+
+  // Fetch refined LCA data (primary source)
+  const { 
+    data: refinedLCAResponse, 
+    isLoading: refinedLoading, 
+    error: refinedError 
+  } = useRefinedLCA(productId ? parseInt(productId) : undefined);
+
+  // Determine which data to use and loading state
+  const isLoading = refinedLoading || legacyLoading;
+  const error = refinedError || legacyError;
 
   if (isLoading) {
     return (
@@ -125,7 +137,43 @@ export default function ProductLcaPage() {
     );
   }
 
-  if (!lcaData) {
+  // Prepare data - prioritize refined LCA if available
+  let displayData: ProductLcaData | null = null;
+  let dataSource = 'legacy';
+  
+  if (refinedLCAResponse?.success && refinedLCAResponse.data) {
+    const refinedLCA = refinedLCAResponse.data;
+    const refinedMetrics = transformRefinedLCAToMetrics(refinedLCA);
+    const refinedBreakdown = transformRefinedLCAToBreakdown(refinedLCA);
+    
+    displayData = {
+      product: {
+        id: refinedLCA.productId,
+        name: refinedLCA.productName,
+        image: null // Will be populated from legacy data if needed
+      },
+      metrics: refinedMetrics,
+      breakdown: {
+        carbon: refinedBreakdown.carbonBreakdown,
+        water: refinedBreakdown.waterBreakdown,
+      },
+      detailedAnalysis: lcaData?.detailedAnalysis || {
+        carbon: [],
+        water: [],
+        waste: []
+      },
+      insights: lcaData?.insights || {
+        carbon_hotspot: { component: 'Data updating', percentage: 0, suggestion: 'Refined LCA calculations in progress' },
+        water_hotspot: { component: 'Data updating', percentage: 0, suggestion: 'Refined LCA calculations in progress' },
+      }
+    };
+    dataSource = 'refined';
+  } else if (lcaData) {
+    displayData = lcaData;
+    dataSource = 'legacy';
+  }
+
+  if (!displayData) {
     return null;
   }
 
@@ -146,32 +194,37 @@ export default function ProductLcaPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Product Life Cycle Assessment</h1>
           <p className="text-gray-600 mt-2">
-            Comprehensive environmental impact analysis for {lcaData.product.name}
+            Comprehensive environmental impact analysis for {displayData.product.name}
           </p>
+          {dataSource === 'refined' && (
+            <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              ✓ Using Refined OpenLCA Calculations (Water dilution excluded)
+            </div>
+          )}
         </div>
 
         {/* Four Sections */}
         <div className="space-y-8">
           {/* Section 1: Header with Key Metrics */}
           <LcaHeader 
-            product={lcaData.product}
-            metrics={lcaData.metrics}
+            product={displayData.product}
+            metrics={displayData.metrics}
           />
 
           {/* Section 2: Primary Breakdown Charts */}
           <PrimaryBreakdownCharts 
-            carbonBreakdown={lcaData.breakdown.carbon}
-            waterBreakdown={lcaData.breakdown.water}
+            carbonBreakdown={displayData.breakdown.carbon}
+            waterBreakdown={displayData.breakdown.water}
           />
 
           {/* Section 3: Detailed Analysis Tabs */}
           <DetailedAnalysisTabs 
-            detailedAnalysis={lcaData.detailedAnalysis}
+            detailedAnalysis={displayData.detailedAnalysis}
           />
 
           {/* Section 4: Actionable Insights */}
           <ActionableInsights 
-            insights={lcaData.insights}
+            insights={displayData.insights}
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 
 interface KeyMetric {
-  value: number;
+  value: string | number;
   unit: string;
 }
 
@@ -22,7 +22,7 @@ interface LcaHeaderProps {
 
 interface KeyMetricCardProps {
   title: string;
-  value: number;
+  value: string | number;
   unit: string;
   color: string;
 }
@@ -34,7 +34,7 @@ function KeyMetricCard({ title, value, unit, color }: KeyMetricCardProps) {
         <div className="text-center">
           <h3 className="text-sm font-medium text-gray-600 mb-2">{title}</h3>
           <div className={`text-3xl font-bold mb-1 ${color}`}>
-            {value.toFixed(2)}
+            {typeof value === 'number' ? value.toFixed(2) : value}
           </div>
           <p className="text-sm text-gray-500">{unit}</p>
         </div>

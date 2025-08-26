@@ -21,6 +21,7 @@ import DetailedAnalysisTabs from '@/components/lca/DetailedAnalysisTabs';
 import ActionableInsights from '@/components/lca/ActionableInsights';
 import ProductSustainabilityHeader from '@/components/lca/ProductSustainabilityHeader';
 import ProductPDFExport from '@/components/lca/ProductPDFExport';
+import { useRefinedLCA, transformRefinedLCAToMetrics } from '@/hooks/useRefinedLCA';
 
 interface Product {
   id: number;
@@ -1069,55 +1070,263 @@ function ProductDetail() {
                   </Card>
                 )}
 
-                {/* Environmental Impact Summary */}
-                {(product.carbonFootprint || product.waterFootprint) && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Leaf className="w-5 h-5" />
-                        Environmental Impact Summary
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {product.carbonFootprint && (
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Carbon Footprint</label>
-                            <p className="text-gray-800">{product.carbonFootprint} kg CO₂e</p>
-                          </div>
-                        )}
-                        {product.waterFootprint && (
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Water Footprint</label>
-                            <p className="text-gray-800">{product.waterFootprint} L</p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* If no end-of-life data available */}
-                {!product.returnableContainer && !product.recyclingRate && !product.disposalMethod && !product.consumerEducation && (
-                  <Card>
-                    <CardContent className="text-center py-8">
-                      <Recycle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No end-of-life information available</p>
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Environmental Impact Summary - Using Refined LCA */}
+                <EnvironmentalImpactSummary productId={product.id} />
               </div>
             </TabsContent>
 
-            {/* LCA Tab */}
-            <TabsContent value="lca">
-              <LCATabContent product={product} />
+            {/* Environmental Impact Tab */}
+            <TabsContent value="environmental">
+              <div className="space-y-6">
+                <EnvironmentalImpactDetails productId={product.id} />
+              </div>
             </TabsContent>
           </Tabs>
         </main>
       </div>
     </div>
   );
+
+  return null;
+}
+
+// New component for Environmental Impact Summary using Refined LCA
+function EnvironmentalImpactSummary({ productId }: { productId: number }) {
+  const { data: refinedLCAResponse, isLoading, error } = useRefinedLCA(productId);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Leaf className="w-5 h-5" />
+            Environmental Impact Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-avallen-green"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !refinedLCAResponse?.success) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Leaf className="w-5 h-5" />
+            Environmental Impact Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Leaf className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Environmental impact data unavailable</p>
+            <p className="text-xs text-gray-400 mt-2">Refined LCA calculations in progress</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const refinedLCA = refinedLCAResponse.data;
+  const metrics = transformRefinedLCAToMetrics(refinedLCA);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Leaf className="w-5 h-5" />
+          Environmental Impact Summary
+        </CardTitle>
+        <CardDescription>
+          Per-unit impact using OpenLCA calculations (Water dilution excluded to prevent double-counting)
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600 mb-1">
+              {metrics.carbonFootprint.value}
+            </div>
+            <div className="text-sm font-medium text-gray-600 mb-1">Carbon Footprint</div>
+            <div className="text-xs text-gray-500">{metrics.carbonFootprint.unit}</div>
+          </div>
+          
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600 mb-1">
+              {metrics.waterFootprint.value}
+            </div>
+            <div className="text-sm font-medium text-gray-600 mb-1">Water Footprint</div>
+            <div className="text-xs text-gray-500">{metrics.waterFootprint.unit}</div>
+          </div>
+          
+          <div className="text-center p-4 bg-amber-50 rounded-lg">
+            <div className="text-2xl font-bold text-amber-600 mb-1">
+              {metrics.wasteOutput.value}
+            </div>
+            <div className="text-sm font-medium text-gray-600 mb-1">Waste Output</div>
+            <div className="text-xs text-gray-500">{metrics.wasteOutput.unit}</div>
+          </div>
+        </div>
+        
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="text-sm text-gray-600 space-y-2">
+            <div className="flex justify-between">
+              <span>Annual Production Volume:</span>
+              <span className="font-medium">{refinedLCA.metadata.productionVolume.toLocaleString()} units</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Annual CO₂e:</span>
+              <span className="font-medium">{(refinedLCA.annualTotal.co2e_kg / 1000).toFixed(1)} tonnes</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Annual Water:</span>
+              <span className="font-medium">{refinedLCA.annualTotal.water_liters.toLocaleString()} L</span>
+            </div>
+            {refinedLCA.breakdown.dilutionRecorded.amount > 0 && (
+              <div className="flex justify-between text-xs text-gray-500 pt-2 border-t">
+                <span>Water dilution (recorded but excluded):</span>
+                <span>{refinedLCA.breakdown.dilutionRecorded.amount} {refinedLCA.breakdown.dilutionRecorded.unit} per bottle</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="mt-4 text-xs text-gray-500">
+          Data source: {refinedLCA.metadata.dataSource} • Updated: {new Date(refinedLCA.metadata.calculatedAt).toLocaleDateString()}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// New component for Detailed Environmental Impact Analysis
+function EnvironmentalImpactDetails({ productId }: { productId: number }) {
+  const { data: refinedLCAResponse, isLoading, error } = useRefinedLCA(productId);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Environmental Impact Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-avallen-green"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !refinedLCAResponse?.success) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Environmental Impact Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12">
+            <p className="text-gray-500">Detailed impact breakdown unavailable</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const refinedLCA = refinedLCAResponse.data;
+  const breakdown = refinedLCA.breakdown;
+
+  return (
+    <div className="space-y-6">
+      {/* Impact Breakdown by Category */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Environmental Impact Breakdown</CardTitle>
+          <CardDescription>Impact contributions by ingredient and packaging components</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Carbon Breakdown */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Carbon Footprint (kg CO₂e per unit)</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <span className="text-sm font-medium">Ingredients</span>
+                  <span className="text-sm font-bold text-green-600">{breakdown.ingredients.co2e.toFixed(3)} kg</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium">Packaging</span>
+                  <span className="text-sm font-bold text-gray-600">{breakdown.packaging.co2e.toFixed(3)} kg</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                  <span className="text-sm font-bold">Total</span>
+                  <span className="text-sm font-bold text-blue-600">{(breakdown.ingredients.co2e + breakdown.packaging.co2e).toFixed(3)} kg</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Water Breakdown */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Water Footprint (L per unit, excluding dilution)</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                  <span className="text-sm font-medium">Ingredients</span>
+                  <span className="text-sm font-bold text-blue-600">{breakdown.ingredients.water.toFixed(1)} L</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium">Packaging</span>
+                  <span className="text-sm font-bold text-gray-600">{breakdown.packaging.water.toFixed(1)} L</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                  <span className="text-sm font-bold">Total</span>
+                  <span className="text-sm font-bold text-blue-600">{(breakdown.ingredients.water + breakdown.packaging.water).toFixed(1)} L</span>
+                </div>
+                {breakdown.dilutionRecorded.amount > 0 && (
+                  <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <span className="text-sm font-medium">Dilution water (recorded, excluded from total)</span>
+                    <span className="text-sm font-medium text-yellow-600">{breakdown.dilutionRecorded.amount} {breakdown.dilutionRecorded.unit}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Data Quality Indicator */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Quality & Methodology</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Calculation Method:</span>
+              <span className="text-sm">{refinedLCA.calculationMethod}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Data Source:</span>
+              <span className="text-sm">{refinedLCA.metadata.dataSource}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Water Dilution Policy:</span>
+              <span className="text-sm text-green-600">Excluded from product footprint ✓</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Last Updated:</span>
+              <span className="text-sm">{new Date(refinedLCA.metadata.calculatedAt).toLocaleString()}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
 }
 
 // LCA Tab Content Component
