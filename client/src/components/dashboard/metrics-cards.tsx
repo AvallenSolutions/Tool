@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Droplets, Trash2, TrendingUp, TrendingDown } from "lucide-react";
+import { Zap, Droplets, Trash2 } from "lucide-react";
 
 export default function MetricsCards() {
   // Fetch company carbon footprint data (same as FootprintWizard "Overall Progress")
@@ -89,11 +89,6 @@ export default function MetricsCards() {
             {totalCO2e.toLocaleString()}
           </div>
           <div className="text-sm text-gray-500 mb-4">tonnes CO2e</div>
-          <div className="flex items-center text-sm">
-            <TrendingDown className="w-4 h-4 text-success-green mr-1" />
-            <span className="text-success-green">12%</span>
-            <span className="text-gray-500 ml-1">vs last period</span>
-          </div>
         </CardContent>
       </Card>
 
@@ -111,11 +106,6 @@ export default function MetricsCards() {
             {waterUsageInMillions}M
           </div>
           <div className="text-sm text-gray-500 mb-4">litres</div>
-          <div className="flex items-center text-sm">
-            <TrendingUp className="w-4 h-4 text-error-red mr-1" />
-            <span className="text-error-red">3%</span>
-            <span className="text-gray-500 ml-1">vs last period</span>
-          </div>
         </CardContent>
       </Card>
 
@@ -133,11 +123,6 @@ export default function MetricsCards() {
             {wasteGenerated.toLocaleString()}
           </div>
           <div className="text-sm text-gray-500 mb-4">tonnes</div>
-          <div className="flex items-center text-sm">
-            <TrendingDown className="w-4 h-4 text-success-green mr-1" />
-            <span className="text-success-green">8%</span>
-            <span className="text-gray-500 ml-1">vs last period</span>
-          </div>
         </CardContent>
       </Card>
     </div>
