@@ -1962,6 +1962,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       // PHASE 2: Add production waste carbon footprint from facility disposal routes
       let productionWasteFootprint = 0;
       
+      // PHASE 3: Add end-of-life packaging waste footprint using regional recycling rates
+      let endOfLifePackagingFootprint = 0;
+      
       if (facilities.length > 0) {
         for (const facility of facilities) {
           // Calculate per-unit facility impacts based on annual production volume
@@ -2012,6 +2015,30 @@ Be precise and quote actual text from the content, not generic terms.`;
           // Only CO2e and water impacts from facilities are included in product calculations
         }
         console.log(`🏭 Total facility impacts: CO2e=${facilityImpacts.co2e.toFixed(3)}kg, Water=${facilityImpacts.water.toFixed(1)}L per unit (waste excluded per requirements)`);
+        
+        // PHASE 3: Calculate end-of-life packaging waste footprint
+        try {
+          const packagingComponents = {
+            glassBottleWeightKg: product.bottleWeight ? parseFloat(product.bottleWeight) / 1000 : 0,
+            paperLabelWeightKg: product.labelWeight ? parseFloat(product.labelWeight) / 1000 : 0,
+            aluminumClosureWeightKg: product.closureWeight ? parseFloat(product.closureWeight) / 1000 : 0
+          };
+          
+          const eolFootprint = await WasteIntensityCalculationService.calculatePackagingEndOfLifeFootprint(
+            packagingComponents, 
+            'United Kingdom'
+          );
+          
+          endOfLifePackagingFootprint = eolFootprint.totalEolCarbonFootprint;
+          
+          console.log(`♻️ End-of-life packaging footprint: ${eolFootprint.totalEolCarbonFootprint.toFixed(6)} kg CO2e per unit`);
+          console.log(`   Glass: ${eolFootprint.glassBottleFootprint.toFixed(6)}, Paper: ${eolFootprint.paperLabelFootprint.toFixed(6)}, Aluminum: ${eolFootprint.aluminumClosureFootprint.toFixed(6)} kg CO2e`);
+          console.log(`   Recycling rates: Glass=${eolFootprint.recyclingRatesUsed.glass*100}%, Paper=${eolFootprint.recyclingRatesUsed.paper*100}%, Aluminum=${eolFootprint.recyclingRatesUsed.aluminum*100}%`);
+          
+        } catch (error) {
+          console.warn('⚠️ End-of-life packaging footprint calculation failed:', error);
+          endOfLifePackagingFootprint = 0; // No additional emissions if calculation fails
+        }
       } else {
         console.log(`ℹ️ No facility data found for company ${product.companyId} - facility impacts not included`);
       }
@@ -2036,8 +2063,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // 5. Calculate final totals including facility impacts and production waste footprint
-      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + facilityImpacts.co2e + productionWasteFootprint;
+      // 5. Calculate final totals including facility impacts, production waste, and end-of-life packaging footprint
+      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + facilityImpacts.co2e + productionWasteFootprint + endOfLifePackagingFootprint;
       totalWater = breakdown.ingredients.water + breakdown.packaging.water + facilityImpacts.water; // Excludes dilution
       totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste; // Facility waste excluded per requirements
       
@@ -2064,7 +2091,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       };
       
-      console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (includes facilities), Water=${totalWater.toFixed(1)}L (excludes dilution, includes facilities), Waste=${totalWaste.toFixed(3)}kg (facilities excluded per requirements)`);
+      console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (includes facilities + production waste + end-of-life), Water=${totalWater.toFixed(1)}L (excludes dilution, includes facilities), Waste=${totalWaste.toFixed(3)}kg (facilities excluded per requirements)`);
       
       res.json({
         success: true,
