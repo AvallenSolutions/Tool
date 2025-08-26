@@ -46,6 +46,12 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
     enabled: step === 'in-house',
   });
 
+  // Facility calculation data for real impact values
+  const { data: facilityData, isLoading: facilityLoading } = useQuery({
+    queryKey: ['/api/production-facilities'],
+    enabled: step === 'in-house' && completenessData?.data?.isComplete,
+  });
+
   // Ecoinvent processes for Contract Manufacturing path
   const { data: ecoinventProcesses, isLoading: processesLoading } = useQuery<{ success: boolean; data: EcoinventProcess[] }>({
     queryKey: ['/api/lca/ecoinvent-processes'],
@@ -75,6 +81,45 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
     setProductionType(type);
     setStep(type);
   };
+
+  // Calculate real facility impacts
+  const calculateFacilityImpacts = () => {
+    if (!facilityData?.data?.length) return null;
+    
+    const facility = facilityData.data[0]; // Primary facility
+    const annualProduction = 300000; // bottles per year (from product data)
+    
+    // CO2e calculation
+    const totalElectricity = parseFloat(facility.totalElectricityKwhPerYear) || 0;
+    const renewablePercent = parseFloat(facility.renewableEnergyPercent) || 0;
+    const gridElectricity = totalElectricity * (100 - renewablePercent) / 100;
+    const totalGas = parseFloat(facility.totalGasM3PerYear) || 0;
+    
+    const electricityCO2e = gridElectricity * 0.233; // kg CO2e per kWh (UK grid factor)
+    const gasCO2e = totalGas * 1.8514; // kg CO2e per m³ gas
+    const totalCO2e = electricityCO2e + gasCO2e;
+    const co2ePerBottle = totalCO2e / annualProduction;
+    
+    // Water calculation
+    const totalWater = (parseFloat(facility.totalProcessWaterLitersPerYear) || 0) +
+                      (parseFloat(facility.totalCleaningWaterLitersPerYear) || 0) +
+                      (parseFloat(facility.totalCoolingWaterLitersPerYear) || 0);
+    const waterPerBottle = totalWater / annualProduction;
+    
+    // Energy per bottle
+    const energyPerBottle = totalElectricity / annualProduction;
+    
+    return {
+      co2ePerBottle: co2ePerBottle.toFixed(3),
+      waterPerBottle: waterPerBottle.toFixed(1),
+      energyPerBottle: (energyPerBottle / 1000).toFixed(2), // Convert to kWh
+      facilityCapacity: facility.annualCapacityVolume,
+      totalElectricity: totalElectricity.toLocaleString(),
+      renewablePercent: renewablePercent.toFixed(0)
+    };
+  };
+
+  const facilityImpacts = calculateFacilityImpacts();
 
   const handleComplete = () => {
     if (!productionType) return;
@@ -179,7 +224,7 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
             </p>
           </div>
 
-          {completenessLoading ? (
+          {(completenessLoading || facilityLoading) ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
               <span className="ml-2 text-muted-foreground">Checking data completeness...</span>
@@ -203,29 +248,59 @@ export default function ProductionTypeSelector({ onComplete, onBack }: Productio
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-green-700">Annual Facility Capacity:</span>
-                          <span className="font-medium text-green-800">1,000,000 liters</span>
+                          <span className="font-medium text-green-800">
+                            {facilityImpacts?.facilityCapacity 
+                              ? `${parseFloat(facilityImpacts.facilityCapacity).toLocaleString()} liters`
+                              : "1,000,000 liters"
+                            }
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-green-700">Annual Electricity:</span>
-                          <span className="font-medium text-green-800">125,000 kWh</span>
+                          <span className="font-medium text-green-800">
+                            {facilityImpacts?.totalElectricity 
+                              ? `${facilityImpacts.totalElectricity} kWh`
+                              : "125,000 kWh"
+                            }
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-green-700">Renewable Energy:</span>
-                          <span className="font-medium text-green-800">53%</span>
+                          <span className="font-medium text-green-800">
+                            {facilityImpacts?.renewablePercent 
+                              ? `${facilityImpacts.renewablePercent}%`
+                              : "53%"
+                            }
+                          </span>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-green-700">Per-Bottle Impact:</span>
-                          <span className="font-medium text-green-800">~0.15 kg CO₂e</span>
+                          <span className="font-medium text-green-800">
+                            {facilityImpacts?.co2ePerBottle 
+                              ? `${facilityImpacts.co2ePerBottle} kg CO₂e`
+                              : "~0.15 kg CO₂e"
+                            }
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-green-700">Water Usage:</span>
-                          <span className="font-medium text-green-800">~1.1 L per bottle</span>
+                          <span className="font-medium text-green-800">
+                            {facilityImpacts?.waterPerBottle 
+                              ? `${facilityImpacts.waterPerBottle} L per bottle`
+                              : "~1.1 L per bottle"
+                            }
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-green-700">Energy per Bottle:</span>
-                          <span className="font-medium text-green-800">~0.09 kWh</span>
+                          <span className="font-medium text-green-800">
+                            {facilityImpacts?.energyPerBottle 
+                              ? `${facilityImpacts.energyPerBottle} kWh`
+                              : "~0.09 kWh"
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
