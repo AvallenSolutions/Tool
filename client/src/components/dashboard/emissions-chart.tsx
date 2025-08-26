@@ -173,24 +173,24 @@ export default function EmissionsChart() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-4 border-t">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {scope1.toFixed(1)}
+              {ingredients.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">tonnes Scope 1</div>
-            <div className="text-xs text-gray-500">Direct emissions</div>
+            <div className="text-sm text-gray-600">tonnes Ingredients</div>
+            <div className="text-xs text-gray-500">Raw materials</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-slate-600">
-              {scope2.toFixed(1)}
+              {packaging.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">tonnes Scope 2</div>
-            <div className="text-xs text-gray-500">Energy indirect</div>
+            <div className="text-sm text-gray-600">tonnes Packaging</div>
+            <div className="text-xs text-gray-500">Bottles, labels, closures</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {scope3.toFixed(1)}
+              {facilities.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">tonnes Scope 3</div>
-            <div className="text-xs text-gray-500">Supply chain</div>
+            <div className="text-sm text-gray-600">tonnes Facilities</div>
+            <div className="text-xs text-gray-500">Energy, water, waste</div>
           </div>
         </div>
       </CardContent>
