@@ -211,111 +211,112 @@ function ProductDetail() {
 
             {/* Overview Tab */}
             <TabsContent value="overview">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Product Images */}
-                <div className="lg:col-span-1">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Package className="w-5 h-5" />
-                        Product Images
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {product.product_images && product.product_images.length > 0 ? (
-                        <div className="space-y-4">
-                          <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
-                          {product.product_images.map((photo: string, index: number) => {
-                            return <ImageDisplay key={index} photo={photo} productName={product.name} index={index} />;
-                          })}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-500">No product images available</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+              <div className="space-y-6">
+                <Card className="border-light-gray bg-gradient-to-r from-green-50 to-green-25">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+                      <Package className="w-5 h-5 text-avallen-green" />
+                      Product Overview
+                    </CardTitle>
+                    <CardDescription>Complete product information and key specifications</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Product Images */}
+                      <div className="lg:col-span-1">
+                        {product.product_images && product.product_images.length > 0 ? (
+                          <div className="space-y-4">
+                            <div className="text-sm text-gray-500 mb-2">Found {product.product_images?.length || 0} images</div>
+                            {product.product_images.map((photo: string, index: number) => {
+                              return <ImageDisplay key={index} photo={photo} productName={product.name} index={index} />;
+                            })}
+                          </div>
+                        ) : (
+                          <div className="aspect-square bg-white rounded-lg flex items-center justify-center border border-gray-200 shadow-sm">
+                            <div className="text-center text-gray-500">
+                              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-500">No product images available</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-                {/* Basic Product Information */}
-                <div className="lg:col-span-2 space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-2xl">{product.name}</CardTitle>
-                          <CardDescription>Basic Product Information</CardDescription>
+                      {/* Basic Product Information */}
+                      <div className="lg:col-span-2 space-y-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h2 className="text-2xl font-bold text-slate-gray">{product.name}</h2>
+                            <p className="text-gray-600">Basic Product Specifications</p>
+                          </div>
+                          <div className="flex gap-2">
+                            {product.status === 'draft' && (
+                              <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+                                Draft
+                              </Badge>
+                            )}
+                            {product.hasPrecalculatedLca && (
+                              <Badge className="bg-green-100 text-green-800 border-green-300">
+                                <FileText className="w-3 h-3 mr-1" />
+                                LCA Data Available
+                              </Badge>
+                            )}
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setLocation(`/create-enhanced-product?id=${product.id}`)}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Product
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          {product.status === 'draft' && (
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
-                              Draft
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="p-3 bg-white rounded-lg border border-gray-200">
+                            <label className="text-sm font-medium text-gray-600">SKU</label>
+                            <p className="font-medium text-slate-gray">{product.sku || 'Not specified'}</p>
+                          </div>
+                          <div className="p-3 bg-white rounded-lg border border-gray-200">
+                            <label className="text-sm font-medium text-gray-600">Type</label>
+                            <p className="font-medium text-slate-gray capitalize">{product.type}</p>
+                          </div>
+                          <div className="p-3 bg-white rounded-lg border border-gray-200">
+                            <label className="text-sm font-medium text-gray-600">Volume</label>
+                            <p className="font-medium text-slate-gray">{product.volume || 'Not specified'}</p>
+                          </div>
+                          <div className="p-3 bg-white rounded-lg border border-gray-200">
+                            <label className="text-sm font-medium text-gray-600">Status</label>
+                            <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
+                              {product.status}
                             </Badge>
-                          )}
-                          {product.hasPrecalculatedLca && (
-                            <Badge className="bg-green-100 text-green-800 border-green-300">
-                              <FileText className="w-3 h-3 mr-1" />
-                              LCA Data Available
-                            </Badge>
-                          )}
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setLocation(`/create-enhanced-product?id=${product.id}`)}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Product
-                          </Button>
+                          </div>
                         </div>
+                        
+                        {product.description && (
+                          <div className="p-3 bg-white rounded-lg border border-gray-200">
+                            <label className="text-sm font-medium text-gray-600">Description</label>
+                            <p className="text-slate-gray mt-1">{product.description}</p>
+                          </div>
+                        )}
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">SKU</label>
-                          <p className="text-gray-800">{product.sku || 'Not specified'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Type</label>
-                          <p className="text-gray-800 capitalize">{product.type}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Volume</label>
-                          <p className="text-gray-800">{product.volume || 'Not specified'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Status</label>
-                          <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                            {product.status}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      {product.description && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-600">Description</label>
-                          <p className="text-gray-800 mt-1">{product.description}</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
 
             {/* Ingredients Tab */}
             <TabsContent value="ingredients">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Wheat className="w-5 h-5" />
-                    Key Ingredients
-                  </CardTitle>
-                  <CardDescription>Primary ingredients and their specifications</CardDescription>
-                </CardHeader>
-                <CardContent>
+              <div className="space-y-6">
+                <Card className="border-light-gray">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+                      <Wheat className="w-5 h-5 text-avallen-green" />
+                      Key Ingredients
+                    </CardTitle>
+                    <CardDescription>Primary ingredients and their specifications</CardDescription>
+                  </CardHeader>
+                  <CardContent>
                   {product.ingredients ? (
                     <div className="space-y-4">
                       {(() => {
@@ -434,8 +435,9 @@ function ProductDetail() {
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             {/* Packaging Tab */}
@@ -443,10 +445,10 @@ function ProductDetail() {
               <div className="space-y-6">
                 {/* Selected Supplier Information */}
                 {(product.packagingSupplier || product.packagingSupplierId) && (
-                  <Card>
+                  <Card className="border-light-gray">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Building2 className="w-5 h-5" />
+                      <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-avallen-green" />
                         Selected Packaging Supplier
                       </CardTitle>
                       <CardDescription>Supplier information for packaging components</CardDescription>
@@ -1284,6 +1286,75 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
         </CardContent>
       </Card>
 
+
+
+      {/* Impact Breakdown by Category */}
+      <Card className="border-light-gray">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold text-slate-gray">Impact Breakdown by Component</CardTitle>
+          <CardDescription>Environmental impact contributions by ingredients, packaging, and facilities</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Carbon Breakdown */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Carbon Footprint (kg CO₂e per unit)</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                  <span className="text-sm font-medium">Ingredients</span>
+                  <span className="text-sm font-bold text-avallen-green">{breakdown.ingredients.co2e.toFixed(3)} kg</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium">Packaging</span>
+                  <span className="text-sm font-bold text-gray-600">{breakdown.packaging.co2e.toFixed(3)} kg</span>
+                </div>
+                {breakdown.facilities && (
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <span className="text-sm font-medium">Facilities</span>
+                    <span className="text-sm font-bold text-blue-600">{breakdown.facilities.co2e.toFixed(3)} kg</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
+                  <span className="text-sm font-bold">Total</span>
+                  <span className="text-sm font-bold text-slate-700">{refinedLCA.perUnit.co2e_kg.toFixed(3)} kg</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Water Breakdown */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Water Footprint (L per unit, excluding dilution)</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                  <span className="text-sm font-medium">Ingredients</span>
+                  <span className="text-sm font-bold text-avallen-green">{breakdown.ingredients.water.toFixed(1)} L</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium">Packaging</span>
+                  <span className="text-sm font-bold text-gray-600">{breakdown.packaging.water.toFixed(1)} L</span>
+                </div>
+                {breakdown.facilities && (
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <span className="text-sm font-medium">Facilities</span>
+                    <span className="text-sm font-bold text-blue-600">{breakdown.facilities.water.toFixed(1)} L</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
+                  <span className="text-sm font-bold">Total</span>
+                  <span className="text-sm font-bold text-slate-700">{refinedLCA.perUnit.water_liters.toFixed(1)} L</span>
+                </div>
+                {breakdown.dilutionRecorded.amount > 0 && (
+                  <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <span className="text-sm font-medium">Dilution water (recorded, excluded from total)</span>
+                    <span className="text-sm font-medium text-yellow-600">{breakdown.dilutionRecorded.amount} {breakdown.dilutionRecorded.unit}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Comprehensive Greenhouse Gas Analysis (ISO 14040/14044 Compliant) */}
       {ghgBreakdown && ghgBreakdown.individual_gases && ghgBreakdown.individual_gases.length > 0 ? (
         <Card className="border-light-gray">
@@ -1372,73 +1443,6 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
           </CardContent>
         </Card>
       )}
-
-      {/* Impact Breakdown by Category */}
-      <Card className="border-light-gray">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-slate-gray">Impact Breakdown by Component</CardTitle>
-          <CardDescription>Environmental impact contributions by ingredients, packaging, and facilities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Carbon Breakdown */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Carbon Footprint (kg CO₂e per unit)</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <span className="text-sm font-medium">Ingredients</span>
-                  <span className="text-sm font-bold text-avallen-green">{breakdown.ingredients.co2e.toFixed(3)} kg</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-sm font-medium">Packaging</span>
-                  <span className="text-sm font-bold text-gray-600">{breakdown.packaging.co2e.toFixed(3)} kg</span>
-                </div>
-                {breakdown.facilities && (
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <span className="text-sm font-medium">Facilities</span>
-                    <span className="text-sm font-bold text-blue-600">{breakdown.facilities.co2e.toFixed(3)} kg</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
-                  <span className="text-sm font-bold">Total</span>
-                  <span className="text-sm font-bold text-slate-700">{refinedLCA.perUnit.co2e_kg.toFixed(3)} kg</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Water Breakdown */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">Water Footprint (L per unit, excluding dilution)</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <span className="text-sm font-medium">Ingredients</span>
-                  <span className="text-sm font-bold text-avallen-green">{breakdown.ingredients.water.toFixed(1)} L</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-sm font-medium">Packaging</span>
-                  <span className="text-sm font-bold text-gray-600">{breakdown.packaging.water.toFixed(1)} L</span>
-                </div>
-                {breakdown.facilities && (
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <span className="text-sm font-medium">Facilities</span>
-                    <span className="text-sm font-bold text-blue-600">{breakdown.facilities.water.toFixed(1)} L</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
-                  <span className="text-sm font-bold">Total</span>
-                  <span className="text-sm font-bold text-slate-700">{refinedLCA.perUnit.water_liters.toFixed(1)} L</span>
-                </div>
-                {breakdown.dilutionRecorded.amount > 0 && (
-                  <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <span className="text-sm font-medium">Dilution water (recorded, excluded from total)</span>
-                    <span className="text-sm font-medium text-yellow-600">{breakdown.dilutionRecorded.amount} {breakdown.dilutionRecorded.unit}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* ISO Certification Data Quality & Methodology */}
       <Card className="border-light-gray">
