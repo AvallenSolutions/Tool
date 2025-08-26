@@ -39,7 +39,7 @@ import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { supplierIntegrityService } from "./services/SupplierIntegrityService";
 import { WasteIntensityCalculationService } from "./services/WasteIntensityCalculationService";
-import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities } from "@shared/schema";
+import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities, verifiedSuppliers } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
 
@@ -1826,6 +1826,43 @@ Be precise and quote actual text from the content, not generic terms.`;
   // ============ REFINED PRODUCT LCA CALCULATION API ============
   
   /**
+   * Phase 4: Supplier Verification Override Helper Function
+   * Checks if a verified supplier has pre-calculated LCA data for the ingredient or packaging
+   */
+  async function getVerifiedSupplierData(productName: string): Promise<any> {
+    try {
+      const verifiedProduct = await db
+        .select({
+          lcaData: supplierProducts.lcaDataJson,
+          supplierName: verifiedSuppliers.supplierName,
+          verificationStatus: verifiedSuppliers.verificationStatus,
+          isVerified: supplierProducts.isVerified
+        })
+        .from(supplierProducts)
+        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+        .where(
+          and(
+            eq(supplierProducts.productName, productName),
+            eq(supplierProducts.hasPrecalculatedLca, true),
+            eq(supplierProducts.isVerified, true),
+            eq(verifiedSuppliers.verificationStatus, 'verified')
+          )
+        )
+        .limit(1);
+      
+      if (verifiedProduct.length > 0 && verifiedProduct[0].lcaData) {
+        console.log(`🔍 Found verified supplier data for ${productName} from ${verifiedProduct[0].supplierName}`);
+        return verifiedProduct[0].lcaData;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`Error checking verified supplier data for ${productName}:`, error);
+      return null;
+    }
+  }
+  
+  /**
    * Calculate refined product LCA impacts using OpenLCA as authoritative source
    * Integrates Ingredient OpenLCA data, Packaging OpenLCA data, and Facilities data
    * Excludes water dilution from product water footprint to prevent double-counting
@@ -1862,39 +1899,55 @@ Be precise and quote actual text from the content, not generic terms.`;
         dilutionRecorded: { amount: 0, unit: '', excluded: true } // Recorded but excluded from calculations
       };
       
-      // 1. Calculate ingredient impacts using OpenLCA
+      // 1. Calculate ingredient impacts using Phase 4: Supplier Verification Override
       if (product.ingredients && Array.isArray(product.ingredients)) {
         console.log(`🌱 Calculating ingredient impacts for ${product.ingredients.length} ingredients`);
         
         for (const ingredient of product.ingredients) {
           if (ingredient.name && ingredient.amount > 0) {
             try {
-              const { OpenLCAService } = await import('./services/OpenLCAService');
+              // Phase 4: Check for verified supplier data first
+              const verifiedData = await getVerifiedSupplierData(ingredient.name);
               
-              // Calculate carbon footprint
-              const carbonFootprint = await OpenLCAService.calculateCarbonFootprint(
-                ingredient.name,
-                ingredient.amount,
-                ingredient.unit || 'kg'
-              );
-              
-              // Calculate ingredient impact (includes water footprint)
-              const impactData = await OpenLCAService.calculateIngredientImpact(
-                ingredient.name,
-                ingredient.amount,
-                ingredient.unit || 'kg'
-              );
-              
-              if (impactData) {
-                breakdown.ingredients.co2e += impactData.carbonFootprint;
-                breakdown.ingredients.water += impactData.waterFootprint;
-                console.log(`✅ OpenLCA ${ingredient.name}: CO2e=${impactData.carbonFootprint.toFixed(3)}kg, Water=${impactData.waterFootprint.toFixed(1)}L`);
-              } else if (carbonFootprint > 0) {
-                breakdown.ingredients.co2e += carbonFootprint;
-                console.log(`✅ OpenLCA ${ingredient.name}: CO2e=${carbonFootprint.toFixed(3)}kg (water data unavailable)`);
+              if (verifiedData) {
+                // Use verified supplier LCA data
+                const verifiedCarbon = verifiedData.carbon_footprint_kg_co2_eq * ingredient.amount;
+                const verifiedWater = verifiedData.water_footprint_liters * ingredient.amount;
+                
+                breakdown.ingredients.co2e += verifiedCarbon;
+                breakdown.ingredients.water += verifiedWater;
+                
+                console.log(`🏆 ${ingredient.name} using VERIFIED supplier data: CO2e=${verifiedCarbon.toFixed(3)}kg, Water=${verifiedWater.toFixed(1)}L`);
+                console.log(`   Source: ${verifiedData.data_source}, Verified by: ${verifiedData.verification_body}`);
+              } else {
+                // Fallback to OpenLCA calculations
+                const { OpenLCAService } = await import('./services/OpenLCAService');
+                
+                // Calculate carbon footprint
+                const carbonFootprint = await OpenLCAService.calculateCarbonFootprint(
+                  ingredient.name,
+                  ingredient.amount,
+                  ingredient.unit || 'kg'
+                );
+                
+                // Calculate ingredient impact (includes water footprint)
+                const impactData = await OpenLCAService.calculateIngredientImpact(
+                  ingredient.name,
+                  ingredient.amount,
+                  ingredient.unit || 'kg'
+                );
+                
+                if (impactData) {
+                  breakdown.ingredients.co2e += impactData.carbonFootprint;
+                  breakdown.ingredients.water += impactData.waterFootprint;
+                  console.log(`✅ OpenLCA ${ingredient.name}: CO2e=${impactData.carbonFootprint.toFixed(3)}kg, Water=${impactData.waterFootprint.toFixed(1)}L`);
+                } else if (carbonFootprint > 0) {
+                  breakdown.ingredients.co2e += carbonFootprint;
+                  console.log(`✅ OpenLCA ${ingredient.name}: CO2e=${carbonFootprint.toFixed(3)}kg (water data unavailable)`);
+                }
               }
             } catch (error) {
-              console.error(`OpenLCA calculation failed for ${ingredient.name}:`, error);
+              console.error(`Calculation failed for ${ingredient.name}:`, error);
             }
           }
         }

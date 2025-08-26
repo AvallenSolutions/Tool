@@ -148,6 +148,63 @@ export interface EnhancedLCAResults {
 
 export class EnhancedLCACalculationService {
   
+  /**
+   * Helper method to generate packaging product names for supplier lookup
+   */
+  private static getPackagingProductName(materialType: string, packageType: string): string {
+    const materialMap: { [key: string]: string } = {
+      'glass': 'Glass Bottle',
+      'aluminum': 'Aluminum',
+      'plastic': 'Plastic Bottle',
+      'paper': 'Paper Label',
+      'cardboard': 'Cardboard Box'
+    };
+    
+    return materialMap[materialType] || `${materialType} ${packageType}`;
+  }
+
+  /**
+   * Phase 4: Supplier Verification Override
+   * Checks if a verified supplier has pre-calculated LCA data for the ingredient or packaging
+   */
+  private static async getVerifiedSupplierData(productName: string): Promise<any> {
+    try {
+      const { db } = await import('../db');
+      const { supplierProducts, verifiedSuppliers } = await import('../../shared/schema');
+      const { eq, and } = await import('drizzle-orm');
+      
+      // Query for verified supplier products that match the ingredient name
+      const verifiedProduct = await db
+        .select({
+          lcaData: supplierProducts.lcaDataJson,
+          supplierName: verifiedSuppliers.supplierName,
+          verificationStatus: verifiedSuppliers.verificationStatus,
+          isVerified: supplierProducts.isVerified
+        })
+        .from(supplierProducts)
+        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
+        .where(
+          and(
+            eq(supplierProducts.productName, productName),
+            eq(supplierProducts.hasPrecalculatedLca, true),
+            eq(supplierProducts.isVerified, true),
+            eq(verifiedSuppliers.verificationStatus, 'verified')
+          )
+        )
+        .limit(1);
+      
+      if (verifiedProduct.length > 0 && verifiedProduct[0].lcaData) {
+        console.log(`🔍 Found verified supplier data for ${productName} from ${verifiedProduct[0].supplierName}`);
+        return verifiedProduct[0].lcaData;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`Error checking verified supplier data for ${productName}:`, error);
+      return null;
+    }
+  }
+  
   // Emission factors (kg CO2e per unit)
   private static readonly EMISSION_FACTORS = {
     // Agriculture
@@ -237,21 +294,33 @@ export class EnhancedLCACalculationService {
     let agricultureImpact = 0;
     let agricultureWater = 0;
     
-    // Use actual ingredient data from OpenLCA (if available) or realistic values
+    // Use verified supplier data if available, otherwise use OpenLCA calculations
     if (productData.ingredients && Array.isArray(productData.ingredients)) {
-      productData.ingredients.forEach((ingredient: any) => {
+      for (const ingredient of productData.ingredients) {
         console.log(`Processing ingredient: ${ingredient.name}, amount: ${ingredient.amount}${ingredient.unit}`);
         
-        // Use OpenLCA database values when available (no hardcoded factors)
-        if (ingredient.carbonFootprint) {
+        // Phase 4: Check for verified supplier data first
+        const verifiedData = await this.getVerifiedSupplierData(ingredient.name);
+        
+        if (verifiedData) {
+          const ingredientCarbon = verifiedData.carbon_footprint_kg_co2_eq * parseFloat(ingredient.amount || 0) * productionVolume;
+          const ingredientWater = verifiedData.water_footprint_liters * parseFloat(ingredient.amount || 0) * productionVolume;
+          
+          agricultureImpact += ingredientCarbon;
+          agricultureWater += ingredientWater;
+          
+          console.log(`🏆 ${ingredient.name} using VERIFIED supplier data: ${ingredientCarbon} kg CO₂e, ${ingredientWater}L water`);
+          console.log(`   Source: ${verifiedData.data_source}, Verified by: ${verifiedData.verification_body}`);
+        } else if (ingredient.carbonFootprint) {
+          // Fallback to OpenLCA database values
           const ingredientCarbon = parseFloat(ingredient.carbonFootprint) * parseFloat(ingredient.amount || 0) * productionVolume;
           agricultureImpact += ingredientCarbon;
           console.log(`${ingredient.name} carbon footprint from OpenLCA: ${ingredientCarbon} kg CO₂e`);
         } else {
-          // Fallback: User must provide emission factor via OpenLCA or manual input
-          console.log(`⚠️ No OpenLCA data for ${ingredient.name} - manual emission factor required`);
+          // No data available
+          console.log(`⚠️ No verified supplier data or OpenLCA data for ${ingredient.name} - manual emission factor required`);
         }
-      });
+      }
     }
     
     breakdown.agriculture = agricultureImpact;
@@ -363,12 +432,24 @@ export class EnhancedLCACalculationService {
       let packagingImpact = 0;
       let packagingWater = 0;
 
-      // Container impact
+      // Container impact - Check for verified supplier data first
       if (pkg.container?.materialType && pkg.container?.weightGrams) {
-        const materialFactor = this.EMISSION_FACTORS[pkg.container.materialType] || 
-                              this.EMISSION_FACTORS.glass;
         const containerWeight = pkg.container.weightGrams / 1000; // Convert to kg
-        let containerImpact = containerWeight * materialFactor * productionVolume;
+        let containerImpact = 0;
+        
+        // Phase 4: Check for verified packaging supplier data
+        const packageName = this.getPackagingProductName(pkg.container.materialType, 'bottle');
+        const verifiedPackagingData = await this.getVerifiedSupplierData(packageName);
+        
+        if (verifiedPackagingData) {
+          containerImpact = verifiedPackagingData.carbon_footprint_kg_co2_eq * containerWeight * productionVolume;
+          console.log(`🏆 Container using VERIFIED supplier data: ${packageName} = ${containerImpact} kg CO₂e`);
+          console.log(`   Source: ${verifiedPackagingData.data_source}, Verified by: ${verifiedPackagingData.verification_body}`);
+        } else {
+          // Fallback to emission factors
+          const materialFactor = this.EMISSION_FACTORS[pkg.container.materialType] || this.EMISSION_FACTORS.glass;
+          containerImpact = containerWeight * materialFactor * productionVolume;
+        }
 
         // Recycled content benefit
         if (pkg.container.recycledContentPercentage) {
