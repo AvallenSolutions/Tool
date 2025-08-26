@@ -1937,7 +1937,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       // Get facility data for this company
       const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
       
-      let facilityImpacts = { co2e: 0, water: 0, waste: 0 };
+      let facilityImpacts = { co2e: 0, water: 0, waste: 0 }; // Only co2e and water used per requirements
       
       if (facilities.length > 0) {
         for (const facility of facilities) {
@@ -1972,18 +1972,10 @@ Be precise and quote actual text from the content, not generic terms.`;
             console.log(`💧 Facility water: ${totalFacilityWater.toFixed(0)}L/year = ${waterPerUnit.toFixed(1)}L per unit`);
           }
           
-          // Waste generation
-          const totalFacilityWaste = 
-            (facility.totalOrganicWasteKgPerYear ? parseFloat(facility.totalOrganicWasteKgPerYear) : 0) +
-            (facility.totalPackagingWasteKgPerYear ? parseFloat(facility.totalPackagingWasteKgPerYear) : 0) +
-            (facility.totalHazardousWasteKgPerYear ? parseFloat(facility.totalHazardousWasteKgPerYear) : 0);
-          
-          if (totalFacilityWaste > 0) {
-            const wastePerUnit = totalFacilityWaste / productionVolume;
-            facilityImpacts.waste += wastePerUnit;
-            console.log(`♻️ Facility waste: ${totalFacilityWaste.toFixed(0)}kg/year = ${wastePerUnit.toFixed(3)}kg per unit`);
-          }
+          // Note: Facility waste data excluded from product LCA per user requirements
+          // Only CO2e and water impacts from facilities are included in product calculations
         }
+        console.log(`🏭 Total facility impacts: CO2e=${facilityImpacts.co2e.toFixed(3)}kg, Water=${facilityImpacts.water.toFixed(1)}L per unit (waste excluded per requirements)`);
       } else {
         console.log(`ℹ️ No facility data found for company ${product.companyId} - facility impacts not included`);
       }
@@ -2008,10 +2000,10 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // 5. Calculate final totals including facility impacts
+      // 5. Calculate final totals including facility impacts (CO2e and water only)
       totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + facilityImpacts.co2e;
       totalWater = breakdown.ingredients.water + breakdown.packaging.water + facilityImpacts.water; // Excludes dilution
-      totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste + facilityImpacts.waste;
+      totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste; // Facility waste excluded per requirements
       
       const refinedLCA = {
         productId: product.id,
@@ -2036,7 +2028,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       };
       
-      console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg, Water=${totalWater.toFixed(1)}L (excluding dilution), Waste=${totalWaste.toFixed(3)}kg per unit`);
+      console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (includes facilities), Water=${totalWater.toFixed(1)}L (excludes dilution, includes facilities), Waste=${totalWaste.toFixed(3)}kg (facilities excluded per requirements)`);
       
       res.json({
         success: true,
@@ -3292,32 +3284,44 @@ Be precise and quote actual text from the content, not generic terms.`;
   // ============ PRODUCTION FACILITIES ENDPOINTS ============
 
   // Helper function to calculate facility data completeness
+  // Updated to be less strict - only requires essential fields for CO2e and water calculations
   const calculateFacilityCompleteness = (facility: any): number => {
-    const requiredFields = [
-      'facilityName', 'facilityType', 'location', 'annualCapacityVolume', 
-      'operatingDaysPerYear', 'shiftsPerDay', 'averageUtilizationPercent'
+    const essentialFields = [
+      'facilityName', 'facilityType', 'location'
     ];
     
-    const energyFields = [
-      'totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalSteamKgPerYear', 
-      'totalFuelLitersPerYear', 'renewableEnergyPercent', 'energySource'
+    // For LCA calculations, we only need basic energy and water data
+    const lcaFields = [
+      'totalElectricityKwhPerYear', 'totalProcessWaterLitersPerYear'
     ];
     
-    const waterFields = [
-      'totalProcessWaterLitersPerYear', 'totalCleaningWaterLitersPerYear', 
-      'totalCoolingWaterLitersPerYear', 'waterSource', 'waterRecyclingPercent'
+    // Optional fields that enhance accuracy but aren't required
+    const optionalFields = [
+      'totalGasM3PerYear', 'renewableEnergyPercent', 'totalCleaningWaterLitersPerYear', 
+      'totalCoolingWaterLitersPerYear', 'annualCapacityVolume'
     ];
     
-    const wasteFields = [
-      'totalOrganicWasteKgPerYear', 'totalPackagingWasteKgPerYear', 
-      'totalHazardousWasteKgPerYear', 'wasteRecycledPercent', 'wasteDisposalMethod'
-    ];
-    
-    const allFields = [...requiredFields, ...energyFields, ...waterFields, ...wasteFields];
+    const allFields = [...essentialFields, ...lcaFields, ...optionalFields];
     const filledFields = allFields.filter(field => {
       const value = facility[field];
       return value !== null && value !== undefined && value !== '';
     });
+    
+    // Calculate completeness but ensure it's at least 80% if essential and LCA fields are filled
+    const essentialFilled = essentialFields.filter(field => {
+      const value = facility[field];
+      return value !== null && value !== undefined && value !== '';
+    });
+    
+    const lcaFilled = lcaFields.filter(field => {
+      const value = facility[field];
+      return value !== null && value !== undefined && value !== '';
+    });
+    
+    // If essential and basic LCA fields are complete, consider it sufficient for LCA calculations
+    if (essentialFilled.length === essentialFields.length && lcaFilled.length > 0) {
+      return 100; // Mark as complete if essential fields for LCA are filled
+    }
     
     return Math.round((filledFields.length / allFields.length) * 100);
   };
@@ -8543,60 +8547,64 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         });
       }
 
-      // Check facility data completeness (using camelCase field names as returned by Drizzle)
-      const requiredFields = [
-        'facilityName', 'facilityType', 'location', 'annualCapacityVolume', 
-        'operatingDaysPerYear', 'shiftsPerDay', 'averageUtilizationPercent',
-        'totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalSteamKgPerYear', 
-        'totalFuelLitersPerYear', 'renewableEnergyPercent', 'energySource',
-        'totalProcessWaterLitersPerYear', 'totalCleaningWaterLitersPerYear', 
-        'totalCoolingWaterLitersPerYear', 'waterSource', 'waterRecyclingPercent',
-        'totalOrganicWasteKgPerYear', 'totalPackagingWasteKgPerYear', 
-        'totalHazardousWasteKgPerYear', 'wasteRecycledPercent', 'wasteDisposalMethod'
-      ];
+      // Use the same logic as calculateFacilityCompleteness function
+      // Check if at least one facility has sufficient data for LCA calculations
+      const hasMinimumData = facilities.some(facility => {
+        const facilityCompleteness = calculateFacilityCompleteness(facility);
+        return facilityCompleteness === 100; // As per updated completion logic
+      });
 
-      const missingFields: string[] = [];
-      let totalFields = 0;
-      let filledFields = 0;
+      // If at least one facility is complete, mark as complete for LCA calculations
+      if (hasMinimumData) {
+        return res.json({
+          success: true,
+          data: {
+            isComplete: true,
+            completenessPercentage: 100,
+            missingFields: [],
+            totalFacilities: facilities.length,
+            message: 'Your company data is complete and ready for production calculations.'
+          }
+        });
+      }
+
+      // If no facilities have sufficient data, identify what's missing across all facilities
+      const allMissingFields = new Set<string>();
+      let totalCompleteness = 0;
 
       facilities.forEach((facility, facilityIndex) => {
-        console.log(`Checking facility ${facilityIndex + 1}:`, facility.facility_name);
-        requiredFields.forEach(field => {
-          totalFields++;
+        console.log(`Checking facility ${facilityIndex + 1}:`, facility.facilityName);
+        const facilityScore = calculateFacilityCompleteness(facility);
+        totalCompleteness += facilityScore;
+        
+        // Add missing essential fields to the list
+        const essentialFields = ['facilityName', 'facilityType', 'location', 'annualCapacityVolume'];
+        const lcaFields = ['totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalProcessWaterLitersPerYear'];
+        
+        [...essentialFields, ...lcaFields].forEach(field => {
           const value = (facility as any)[field];
-          console.log(`  Field ${field}: ${value} (type: ${typeof value})`);
-          if (value !== null && value !== undefined && value !== '' && value !== 0) {
-            filledFields++;
-          } else {
-            // Convert camelCase field name to human readable
+          if (value === null || value === undefined || value === '') {
             const humanReadable = field
               .replace(/([A-Z])/g, ' $1')
               .replace(/^./, str => str.toUpperCase())
               .replace(/Per Year/g, ' (per year)')
-              .replace(/Kwh/g, 'kWh')
-              .replace(/M3/g, 'm³')
-              .replace(/Kg/g, 'kg');
-            
-            if (!missingFields.includes(humanReadable)) {
-              missingFields.push(humanReadable);
-            }
+              .replace(/Kwh/g, 'kWh');
+            allMissingFields.add(humanReadable);
           }
         });
       });
 
-      const completenessPercentage = Math.round((filledFields / totalFields) * 100);
-      const isComplete = completenessPercentage >= 90; // 90% threshold for "complete"
+      const completenessPercentage = Math.round(totalCompleteness / facilities.length);
+      const isComplete = false;
 
       return res.json({
         success: true,
         data: {
           isComplete,
           completenessPercentage,
-          missingFields: isComplete ? [] : missingFields.slice(0, 10), // Limit to first 10
+          missingFields: Array.from(allMissingFields).slice(0, 10), // Limit to first 10
           totalFacilities: facilities.length,
-          message: isComplete 
-            ? 'Your company data is complete and ready for production calculations.'
-            : 'Some facility data is missing. Complete it for accurate footprint calculations.'
+          message: 'Some facility data is missing. Complete it for accurate footprint calculations.'
         }
       });
 
