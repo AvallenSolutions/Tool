@@ -58,7 +58,7 @@ export function useProductLCAMetrics(productId: number): ProductLCAMetrics {
     return {
       co2e: `${data.perUnit.co2e_kg.toFixed(1)}kg`,
       water: `${Math.round(data.perUnit.water_liters)}L`,
-      waste: `${data.perUnit.waste_kg.toFixed(1)}kg`,
+      waste: `${data.perUnit.waste_kg.toFixed(3)}kg`,
       isLoading: false,
       error: false
     };

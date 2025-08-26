@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers, Eye } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { ProductLCAMetricsDisplay } from '@/components/products/ProductLCAMetricsDisplay';
+import { usePortfolioMetrics } from '@/hooks/usePortfolioMetrics';
 
 interface ClientProduct {
   id: number;
@@ -69,6 +70,9 @@ export default function ProductsPage() {
   });
 
   const products: ClientProduct[] = rawProducts || [];
+
+  // Get portfolio metrics with calculated LCA data
+  const portfolioMetrics = usePortfolioMetrics(products);
 
   console.log('🔍 Current products state:', products, 'Loading:', isLoading, 'Error:', error);
   console.log('🔍 Products array length:', products.length);
@@ -404,7 +408,7 @@ export default function ProductsPage() {
                               {products.filter(p => p.status === 'active').length} Active
                             </span>
                             <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">
-                              {products.filter(p => p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string')).length} with Footprint Data
+                              {portfolioMetrics.withLCADataCount} with Footprint Data
                             </span>
                           </div>
                         </div>
@@ -431,24 +435,9 @@ export default function ProductsPage() {
                               </div>
                             </div>
                             <p className="text-2xl font-bold text-green-800">
-                              {products.reduce((sum, p) => {
-                                const footprint = p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string') 
-                                  ? Number(p.carbonFootprint) : 0;
-                                const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                return sum + (footprint * volume);
-                              }, 0) > 1000 
-                                ? (products.reduce((sum, p) => {
-                                    const footprint = p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string') 
-                                      ? Number(p.carbonFootprint) : 0;
-                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                    return sum + (footprint * volume);
-                                  }, 0) / 1000).toFixed(1) + 't'
-                                : products.reduce((sum, p) => {
-                                    const footprint = p.carbonFootprint && (typeof p.carbonFootprint === 'number' || typeof p.carbonFootprint === 'string') 
-                                      ? Number(p.carbonFootprint) : 0;
-                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                    return sum + (footprint * volume);
-                                  }, 0).toFixed(0) + 'kg'
+                              {portfolioMetrics.totalCO2e > 1000 
+                                ? (portfolioMetrics.totalCO2e / 1000).toFixed(1) + 't'
+                                : portfolioMetrics.totalCO2e.toFixed(0) + 'kg'
                               }
                             </p>
                             <p className="text-xs text-green-600">CO₂e annually</p>
@@ -463,24 +452,9 @@ export default function ProductsPage() {
                               </div>
                             </div>
                             <p className="text-2xl font-bold text-blue-800">
-                              {products.reduce((sum, p) => {
-                                const waterFootprint = p.waterFootprint && (typeof p.waterFootprint === 'number' || typeof p.waterFootprint === 'string') 
-                                  ? Number(p.waterFootprint) : 0;
-                                const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                return sum + (waterFootprint * volume);
-                              }, 0) > 1000000 
-                                ? (products.reduce((sum, p) => {
-                                    const waterFootprint = p.waterFootprint && (typeof p.waterFootprint === 'number' || typeof p.waterFootprint === 'string') 
-                                      ? Number(p.waterFootprint) : 0;
-                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                    return sum + (waterFootprint * volume);
-                                  }, 0) / 1000000).toFixed(1) + 'M'
-                                : products.reduce((sum, p) => {
-                                    const waterFootprint = p.waterFootprint && (typeof p.waterFootprint === 'number' || typeof p.waterFootprint === 'string') 
-                                      ? Number(p.waterFootprint) : 0;
-                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                    return sum + (waterFootprint * volume);
-                                  }, 0).toLocaleString()
+                              {portfolioMetrics.totalWater > 1000000 
+                                ? (portfolioMetrics.totalWater / 1000000).toFixed(1) + 'M'
+                                : portfolioMetrics.totalWater.toLocaleString()
                               }L
                             </p>
                             <p className="text-xs text-blue-600">liters annually</p>
@@ -495,24 +469,9 @@ export default function ProductsPage() {
                               </div>
                             </div>
                             <p className="text-2xl font-bold text-orange-800">
-                              {products.reduce((sum, p) => {
-                                const wasteFootprint = p.wasteFootprint && (typeof p.wasteFootprint === 'number' || typeof p.wasteFootprint === 'string') 
-                                  ? Number(p.wasteFootprint) : 0;
-                                const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                return sum + (wasteFootprint * volume);
-                              }, 0) > 1000 
-                                ? (products.reduce((sum, p) => {
-                                    const wasteFootprint = p.wasteFootprint && (typeof p.wasteFootprint === 'number' || typeof p.wasteFootprint === 'string') 
-                                      ? Number(p.wasteFootprint) : 0;
-                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                    return sum + (wasteFootprint * volume);
-                                  }, 0) / 1000).toFixed(1) + 't'
-                                : products.reduce((sum, p) => {
-                                    const wasteFootprint = p.wasteFootprint && (typeof p.wasteFootprint === 'number' || typeof p.wasteFootprint === 'string') 
-                                      ? Number(p.wasteFootprint) : 0;
-                                    const volume = parseFloat(p.annualProductionVolume?.toString() || '0') || 0;
-                                    return sum + (wasteFootprint * volume);
-                                  }, 0).toFixed(0) + 'kg'
+                              {portfolioMetrics.totalWaste > 1000 
+                                ? (portfolioMetrics.totalWaste / 1000).toFixed(1) + 't'
+                                : portfolioMetrics.totalWaste.toFixed(0) + 'kg'
                               }
                             </p>
                             <p className="text-xs text-orange-600">waste annually</p>
