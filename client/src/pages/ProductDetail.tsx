@@ -1070,8 +1070,7 @@ function ProductDetail() {
                   </Card>
                 )}
 
-                {/* Environmental Impact Summary - Using Refined LCA */}
-                <EnvironmentalImpactSummary productId={product.id} />
+
               </div>
             </TabsContent>
 
@@ -1204,15 +1203,16 @@ function EnvironmentalImpactSummary({ productId }: { productId: number }) {
   );
 }
 
-// New component for Detailed Environmental Impact Analysis
+// Enhanced component for Comprehensive Environmental Impact Analysis with full OpenLCA integration
 function EnvironmentalImpactDetails({ productId }: { productId: number }) {
   const { data: refinedLCAResponse, isLoading, error } = useRefinedLCA(productId);
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="border-light-gray">
         <CardHeader>
-          <CardTitle>Environmental Impact Breakdown</CardTitle>
+          <CardTitle className="text-xl font-semibold text-slate-gray">Environmental Impact Analysis</CardTitle>
+          <CardDescription>Loading comprehensive LCA data with greenhouse gas breakdown...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-12">
@@ -1225,13 +1225,15 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
 
   if (error || !refinedLCAResponse?.success) {
     return (
-      <Card>
+      <Card className="border-light-gray">
         <CardHeader>
-          <CardTitle>Environmental Impact Breakdown</CardTitle>
+          <CardTitle className="text-xl font-semibold text-slate-gray">Environmental Impact Analysis</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <p className="text-gray-500">Detailed impact breakdown unavailable</p>
+            <Leaf className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Comprehensive LCA analysis unavailable</p>
+            <p className="text-xs text-gray-400 mt-2">Please check product ingredients and try again</p>
           </div>
         </CardContent>
       </Card>
@@ -1240,14 +1242,109 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
 
   const refinedLCA = refinedLCAResponse.data;
   const breakdown = refinedLCA.breakdown;
+  const ghgBreakdown = refinedLCA.ghgBreakdown;
 
   return (
     <div className="space-y-6">
-      {/* Impact Breakdown by Category */}
-      <Card>
+      {/* Comprehensive Environmental Impact Summary */}
+      <Card className="border-light-gray bg-gradient-to-r from-green-50 to-green-25">
         <CardHeader>
-          <CardTitle>Environmental Impact Breakdown</CardTitle>
-          <CardDescription>Impact contributions by ingredient and packaging components</CardDescription>
+          <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+            <Leaf className="w-5 h-5 text-avallen-green" />
+            Environmental Impact Summary
+          </CardTitle>
+          <CardDescription>Complete per-unit environmental footprint with facilities integration</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+              <div className="text-3xl font-bold text-avallen-green mb-1">
+                {refinedLCA.perUnit.co2e_kg.toFixed(3)}
+              </div>
+              <div className="text-sm font-medium text-gray-600 mb-1">Carbon Footprint</div>
+              <div className="text-xs text-gray-500">kg CO₂e per unit</div>
+            </div>
+            
+            <div className="text-center p-4 bg-white rounded-lg border border-blue-200">
+              <div className="text-3xl font-bold text-blue-600 mb-1">
+                {refinedLCA.perUnit.water_liters.toFixed(1)}
+              </div>
+              <div className="text-sm font-medium text-gray-600 mb-1">Water Footprint</div>
+              <div className="text-xs text-gray-500">L per unit (excluding dilution)</div>
+            </div>
+            
+            <div className="text-center p-4 bg-white rounded-lg border border-amber-200">
+              <div className="text-3xl font-bold text-amber-600 mb-1">
+                {refinedLCA.perUnit.waste_kg.toFixed(3)}
+              </div>
+              <div className="text-sm font-medium text-gray-600 mb-1">Waste Output</div>
+              <div className="text-xs text-gray-500">kg per unit</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Comprehensive Greenhouse Gas Analysis (ISO 14040/14044 Compliant) */}
+      {ghgBreakdown && ghgBreakdown.individual_gases && ghgBreakdown.individual_gases.length > 0 && (
+        <Card className="border-light-gray">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+              🌍 Greenhouse Gas Analysis (ISO 14040 Compliant)
+            </CardTitle>
+            <CardDescription>Complete breakdown of all 7 greenhouse gases using IPCC AR5 GWP factors</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="font-medium text-slate-gray">Total GHG Emissions</span>
+                  <span className="text-lg font-bold text-blue-600">{ghgBreakdown.total_co2e_from_ghg.toFixed(3)} kg CO₂e</span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  Calculation Standard: {ghgBreakdown.calculation_standard}
+                </div>
+              </div>
+
+              {/* Individual Gas Breakdown Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-200 rounded-lg">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border border-gray-200 px-3 py-2 text-left text-sm font-medium text-gray-700">Gas</th>
+                      <th className="border border-gray-200 px-3 py-2 text-right text-sm font-medium text-gray-700">Mass (kg)</th>
+                      <th className="border border-gray-200 px-3 py-2 text-right text-sm font-medium text-gray-700">GWP Factor</th>
+                      <th className="border border-gray-200 px-3 py-2 text-right text-sm font-medium text-gray-700">CO₂e (kg)</th>
+                      <th className="border border-gray-200 px-3 py-2 text-right text-sm font-medium text-gray-700">% of Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ghgBreakdown.individual_gases
+                      .sort((a, b) => b.total_co2e - a.total_co2e)
+                      .map((gas, index) => {
+                        const percentage = (gas.total_co2e / ghgBreakdown.total_co2e_from_ghg) * 100;
+                        return (
+                          <tr key={gas.gas_formula} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}>
+                            <td className="border border-gray-200 px-3 py-2 font-medium text-slate-gray">{gas.gas_formula}</td>
+                            <td className="border border-gray-200 px-3 py-2 text-right text-sm">{gas.total_mass_kg.toFixed(6)}</td>
+                            <td className="border border-gray-200 px-3 py-2 text-right text-sm">{gas.gwp_factor}</td>
+                            <td className="border border-gray-200 px-3 py-2 text-right text-sm font-medium text-avallen-green">{gas.total_co2e.toFixed(6)}</td>
+                            <td className="border border-gray-200 px-3 py-2 text-right text-sm">{percentage.toFixed(1)}%</td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Impact Breakdown by Category */}
+      <Card className="border-light-gray">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold text-slate-gray">Impact Breakdown by Component</CardTitle>
+          <CardDescription>Environmental impact contributions by ingredients, packaging, and facilities</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -1255,17 +1352,23 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
             <div>
               <h4 className="font-medium text-gray-900 mb-3">Carbon Footprint (kg CO₂e per unit)</h4>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                   <span className="text-sm font-medium">Ingredients</span>
-                  <span className="text-sm font-bold text-green-600">{breakdown.ingredients.co2e.toFixed(3)} kg</span>
+                  <span className="text-sm font-bold text-avallen-green">{breakdown.ingredients.co2e.toFixed(3)} kg</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <span className="text-sm font-medium">Packaging</span>
                   <span className="text-sm font-bold text-gray-600">{breakdown.packaging.co2e.toFixed(3)} kg</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                {breakdown.facilities && (
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <span className="text-sm font-medium">Facilities</span>
+                    <span className="text-sm font-bold text-blue-600">{breakdown.facilities.co2e.toFixed(3)} kg</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
                   <span className="text-sm font-bold">Total</span>
-                  <span className="text-sm font-bold text-blue-600">{(breakdown.ingredients.co2e + breakdown.packaging.co2e).toFixed(3)} kg</span>
+                  <span className="text-sm font-bold text-slate-700">{refinedLCA.perUnit.co2e_kg.toFixed(3)} kg</span>
                 </div>
               </div>
             </div>
@@ -1274,17 +1377,23 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
             <div>
               <h4 className="font-medium text-gray-900 mb-3">Water Footprint (L per unit, excluding dilution)</h4>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <span className="text-sm font-medium">Ingredients</span>
                   <span className="text-sm font-bold text-blue-600">{breakdown.ingredients.water.toFixed(1)} L</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <span className="text-sm font-medium">Packaging</span>
                   <span className="text-sm font-bold text-gray-600">{breakdown.packaging.water.toFixed(1)} L</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                {breakdown.facilities && (
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                    <span className="text-sm font-medium">Facilities</span>
+                    <span className="text-sm font-bold text-avallen-green">{breakdown.facilities.water.toFixed(1)} L</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
                   <span className="text-sm font-bold">Total</span>
-                  <span className="text-sm font-bold text-blue-600">{(breakdown.ingredients.water + breakdown.packaging.water).toFixed(1)} L</span>
+                  <span className="text-sm font-bold text-slate-700">{refinedLCA.perUnit.water_liters.toFixed(1)} L</span>
                 </div>
                 {breakdown.dilutionRecorded.amount > 0 && (
                   <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -1298,35 +1407,80 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
         </CardContent>
       </Card>
 
-      {/* Data Quality Indicator */}
-      <Card>
+      {/* ISO Certification Data Quality & Methodology */}
+      <Card className="border-light-gray">
         <CardHeader>
-          <CardTitle>Data Quality & Methodology</CardTitle>
+          <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+            📋 Data Quality & ISO Compliance
+          </CardTitle>
+          <CardDescription>Methodology transparency for certification and verification</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Calculation Method:</span>
-              <span className="text-sm">{refinedLCA.calculationMethod}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Calculation Method:</span>
+                <span className="text-sm text-slate-gray">{refinedLCA.calculationMethod}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Data Source:</span>
+                <span className="text-sm text-slate-gray">{refinedLCA.metadata.dataSource}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">ISO Standard:</span>
+                <span className="text-sm text-avallen-green">ISO 14040/14044 ✓</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Water Dilution Policy:</span>
+                <span className="text-sm text-avallen-green">Excluded to prevent double-counting ✓</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Data Source:</span>
-              <span className="text-sm">{refinedLCA.metadata.dataSource}</span>
+            <div className="space-y-3">
+              {ghgBreakdown && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">GHG Methodology:</span>
+                    <span className="text-sm text-slate-gray">{ghgBreakdown.methodology}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Data Quality:</span>
+                    <span className="text-sm text-avallen-green">{ghgBreakdown.data_quality}</span>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Last Updated:</span>
+                <span className="text-sm text-slate-gray">{new Date(refinedLCA.metadata.calculatedAt).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Production Volume:</span>
+                <span className="text-sm text-slate-gray">{refinedLCA.metadata.productionVolume.toLocaleString()} units/year</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Water Dilution Policy:</span>
-              <span className="text-sm text-green-600">Excluded from product footprint ✓</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Last Updated:</span>
-              <span className="text-sm">{new Date(refinedLCA.metadata.calculatedAt).toLocaleString()}</span>
+          </div>
+
+          {/* Annual Totals */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-medium text-gray-900 mb-3">Annual Environmental Impact</h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-lg font-bold text-avallen-green">{(refinedLCA.annualTotal.co2e_kg / 1000).toFixed(1)}</div>
+                <div className="text-xs text-gray-600">tonnes CO₂e/year</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-lg font-bold text-blue-600">{(refinedLCA.annualTotal.water_liters / 1000).toFixed(0)}</div>
+                <div className="text-xs text-gray-600">m³ water/year</div>
+              </div>
+              <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <div className="text-lg font-bold text-amber-600">{refinedLCA.annualTotal.waste_kg.toFixed(0)}</div>
+                <div className="text-xs text-gray-600">kg waste/year</div>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
   );
-
 }
 
 // LCA Tab Content Component

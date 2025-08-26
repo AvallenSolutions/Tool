@@ -1,5 +1,37 @@
 import { useQuery } from '@tanstack/react-query';
 
+interface GHGGas {
+  gas_formula: string;
+  total_mass_kg: number;
+  gwp_factor: number;
+  total_co2e: number;
+  sources: Array<{
+    ingredient: string;
+    mass_kg: number;
+    co2e: number;
+  }>;
+}
+
+interface GHGBreakdown {
+  individual_gases: GHGGas[];
+  total_co2e_from_ghg: number;
+  ingredients_detail: Array<{
+    ingredient: string;
+    amount: number;
+    unit: string;
+    ghg_emissions: Array<{
+      gas_name: string;
+      mass_kg: number;
+      gwp_factor: number;
+      co2e: number;
+    }>;
+    total_co2e: number;
+  }>;
+  methodology: string;
+  data_quality: string;
+  calculation_standard: string;
+}
+
 interface RefinedLCAData {
   productId: number;
   productName: string;
@@ -17,13 +49,17 @@ interface RefinedLCAData {
   breakdown: {
     ingredients: { co2e: number; water: number; waste: number };
     packaging: { co2e: number; water: number; waste: number };
+    facilities?: { co2e: number; water: number; waste: number };
     dilutionRecorded: { amount: number; unit: string; excluded: boolean };
   };
+  ghgBreakdown?: GHGBreakdown;
   metadata: {
     calculatedAt: string;
     waterDilutionExcluded: boolean;
     dataSource: string;
     productionVolume: number;
+    isoCompliant?: boolean;
+    ghgAnalysisAvailable?: boolean;
   };
 }
 
