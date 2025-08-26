@@ -1959,6 +1959,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       let facilityImpacts = { co2e: 0, water: 0, waste: 0 }; // Only co2e and water used per requirements
       
+      // PHASE 2: Add production waste carbon footprint from facility disposal routes
+      let productionWasteFootprint = 0;
+      
       if (facilities.length > 0) {
         for (const facility of facilities) {
           // Calculate per-unit facility impacts based on annual production volume
@@ -1992,6 +1995,19 @@ Be precise and quote actual text from the content, not generic terms.`;
             console.log(`💧 Facility water: ${totalFacilityWater.toFixed(0)}L/year = ${waterPerUnit.toFixed(1)}L per unit`);
           }
           
+          // PHASE 2: Calculate production waste carbon footprint from disposal routes
+          try {
+            const wasteFootprint = await WasteIntensityCalculationService.calculateProductionWasteFootprint(facility.id, 'United Kingdom');
+            productionWasteFootprint += wasteFootprint.totalWasteCarbonFootprint;
+            
+            console.log(`🗑️ Production waste carbon footprint: ${wasteFootprint.totalWasteCarbonFootprint.toFixed(6)} kg CO2e per unit`);
+            console.log(`   Breakdown: Landfill=${wasteFootprint.landfillEmissions.toFixed(6)}, Recycling=${wasteFootprint.recyclingEmissions.toFixed(6)}, Composting=${wasteFootprint.compostingEmissions.toFixed(6)}, Transport=${wasteFootprint.transportEmissions.toFixed(6)} kg CO2e per unit`);
+            
+          } catch (error) {
+            console.warn('⚠️ Production waste footprint calculation failed:', error);
+            productionWasteFootprint = 0; // No additional emissions if calculation fails
+          }
+          
           // Note: Facility waste data excluded from product LCA per user requirements
           // Only CO2e and water impacts from facilities are included in product calculations
         }
@@ -2020,8 +2036,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // 5. Calculate final totals including facility impacts (CO2e and water only)
-      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + facilityImpacts.co2e;
+      // 5. Calculate final totals including facility impacts and production waste footprint
+      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + facilityImpacts.co2e + productionWasteFootprint;
       totalWater = breakdown.ingredients.water + breakdown.packaging.water + facilityImpacts.water; // Excludes dilution
       totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste; // Facility waste excluded per requirements
       

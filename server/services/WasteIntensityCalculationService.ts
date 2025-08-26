@@ -22,6 +22,26 @@ export interface WasteIntensityData {
   wasteToEnergyRecoveryIntensity: number;
 }
 
+export interface ProductionWasteFootprint {
+  // Carbon footprint from production waste (kg CO2e per unit)
+  totalWasteCarbonFootprint: number;
+  
+  // Breakdown by disposal route (kg CO2e per unit)
+  landfillEmissions: number;
+  recyclingEmissions: number;
+  compostingEmissions: number;
+  incinerationEmissions: number;
+  energyRecoveryEmissions: number;
+  
+  // Waste transport emissions (kg CO2e per unit)
+  transportEmissions: number;
+  
+  // Methodology metadata
+  country: string;
+  facilityName: string;
+  dataSource: string;
+}
+
 export interface EndOfLifeWasteData {
   // End-of-life waste footprint (kg CO2e per kg packaging)
   glassBottleEolFootprint: number;
@@ -111,6 +131,116 @@ export class WasteIntensityCalculationService {
       wasteToCompostingIntensity,
       wasteToIncinerationIntensity,
       wasteToEnergyRecoveryIntensity,
+    };
+  }
+
+  /**
+   * PHASE 2: Calculate production waste footprint using facility disposal route data
+   * Formula: Waste Amount × Disposal Route Emission Factor = Carbon Footprint
+   */
+  static async calculateProductionWasteFootprint(
+    facilityId: number,
+    country: string = 'United Kingdom'
+  ): Promise<ProductionWasteFootprint> {
+    
+    // Get facility waste data
+    const [facility] = await db
+      .select()
+      .from(productionFacilities)
+      .where(eq(productionFacilities.id, facilityId));
+      
+    if (!facility) {
+      throw new Error(`Facility with ID ${facilityId} not found`);
+    }
+
+    // Get regional emission factors
+    const regionalStats = await db
+      .select()
+      .from(regionalWasteStatistics)
+      .where(eq(regionalWasteStatistics.country, country))
+      .orderBy(regionalWasteStatistics.dataYear)
+      .limit(1);
+
+    let emissionFactors = {
+      landfill: 0.4892, // kg CO2e per kg waste (DEFRA 2024)
+      recycling: 0.0892, // Processing emissions
+      composting: 0.0156, // Composting emissions
+      incineration: 0.3021, // Incineration with energy recovery
+      energyRecovery: 0.3021, // Same as incineration with energy recovery
+      transport: 0.0875, // kg CO2e per tonne-km
+      avgTransportDistance: 42.5 // km average in UK
+    };
+
+    if (regionalStats.length > 0) {
+      const stats = regionalStats[0];
+      emissionFactors = {
+        landfill: parseFloat(stats.landfillEmissionFactor?.toString() || '0.4892'),
+        recycling: parseFloat(stats.recyclingProcessingFactor?.toString() || '0.0892'),
+        composting: parseFloat(stats.compostingEmissionFactor?.toString() || '0.0156'),
+        incineration: parseFloat(stats.incinerationEmissionFactor?.toString() || '0.3021'),
+        energyRecovery: parseFloat(stats.incinerationEmissionFactor?.toString() || '0.3021'),
+        transport: parseFloat(stats.wasteTransportEmissionFactor?.toString() || '0.0875'),
+        avgTransportDistance: parseFloat(stats.averageTransportDistanceKm?.toString() || '42.5')
+      };
+    }
+
+    // Get facility waste quantities per year
+    const wasteToLandfill = parseFloat(facility.wasteToLandfillKgPerYear?.toString() || '0');
+    const wasteToRecycling = parseFloat(facility.wasteToRecyclingKgPerYear?.toString() || '0');
+    const wasteToComposting = parseFloat(facility.wasteToCompostingKgPerYear?.toString() || '0');
+    const wasteToIncineration = parseFloat(facility.wasteToIncinerationKgPerYear?.toString() || '0');
+    const wasteToEnergyRecovery = parseFloat(facility.wasteToEnergyRecoveryKgPerYear?.toString() || '0');
+    
+    const totalFacilityProductionVolumePerYear = parseFloat(facility.annualCapacityVolume?.toString() || '0');
+    
+    if (totalFacilityProductionVolumePerYear === 0) {
+      throw new Error('Facility annual production volume cannot be zero for waste footprint calculation');
+    }
+
+    // Calculate carbon emissions by disposal route (kg CO2e per year)
+    const landfillEmissionsPerYear = wasteToLandfill * emissionFactors.landfill;
+    const recyclingEmissionsPerYear = wasteToRecycling * emissionFactors.recycling;
+    const compostingEmissionsPerYear = wasteToComposting * emissionFactors.composting;
+    const incinerationEmissionsPerYear = wasteToIncineration * emissionFactors.incineration;
+    const energyRecoveryEmissionsPerYear = wasteToEnergyRecovery * emissionFactors.energyRecovery;
+
+    // Calculate transport emissions (waste collection and transport to disposal facilities)
+    const totalWasteKgPerYear = wasteToLandfill + wasteToRecycling + wasteToComposting + wasteToIncineration + wasteToEnergyRecovery;
+    const totalWasteTonnesPerYear = totalWasteKgPerYear / 1000;
+    const transportEmissionsPerYear = totalWasteTonnesPerYear * emissionFactors.avgTransportDistance * emissionFactors.transport;
+
+    // Calculate total waste carbon footprint per year
+    const totalWasteCarbonFootprintPerYear = landfillEmissionsPerYear + recyclingEmissionsPerYear + 
+                                           compostingEmissionsPerYear + incinerationEmissionsPerYear + 
+                                           energyRecoveryEmissionsPerYear + transportEmissionsPerYear;
+
+    // Convert to per-unit emissions (kg CO2e per unit produced)
+    const totalWasteCarbonFootprint = totalWasteCarbonFootprintPerYear / totalFacilityProductionVolumePerYear;
+    const landfillEmissions = landfillEmissionsPerYear / totalFacilityProductionVolumePerYear;
+    const recyclingEmissions = recyclingEmissionsPerYear / totalFacilityProductionVolumePerYear;
+    const compostingEmissions = compostingEmissionsPerYear / totalFacilityProductionVolumePerYear;
+    const incinerationEmissions = incinerationEmissionsPerYear / totalFacilityProductionVolumePerYear;
+    const energyRecoveryEmissions = energyRecoveryEmissionsPerYear / totalFacilityProductionVolumePerYear;
+    const transportEmissions = transportEmissionsPerYear / totalFacilityProductionVolumePerYear;
+
+    console.log(`🗑️ Production waste footprint for ${facility.facilityName}:`);
+    console.log(`   Total: ${totalWasteCarbonFootprint.toFixed(6)} kg CO2e per unit`);
+    console.log(`   Landfill: ${landfillEmissions.toFixed(6)} kg CO2e/unit (${wasteToLandfill}kg/year)`);
+    console.log(`   Recycling: ${recyclingEmissions.toFixed(6)} kg CO2e/unit (${wasteToRecycling}kg/year)`);
+    console.log(`   Composting: ${compostingEmissions.toFixed(6)} kg CO2e/unit (${wasteToComposting}kg/year)`);
+    console.log(`   Transport: ${transportEmissions.toFixed(6)} kg CO2e/unit`);
+
+    return {
+      totalWasteCarbonFootprint,
+      landfillEmissions,
+      recyclingEmissions,
+      compostingEmissions,
+      incinerationEmissions,
+      energyRecoveryEmissions,
+      transportEmissions,
+      country,
+      facilityName: facility.facilityName || 'Unknown Facility',
+      dataSource: regionalStats.length > 0 ? (regionalStats[0].dataSource || 'Regional Statistics') : 'DEFRA 2024 Default Factors'
     };
   }
   
