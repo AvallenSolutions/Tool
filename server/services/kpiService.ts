@@ -14,6 +14,8 @@ import {
   type InsertCompanyKpiGoal
 } from "@shared/schema";
 import { OpenLCAService } from "./OpenLCAService";
+import { WasteIntensityCalculationService } from "./WasteIntensityCalculationService";
+import { productionFacilities } from "@shared/schema";
 
 export interface DashboardKPIData {
   id: string;
@@ -49,6 +51,191 @@ export interface DashboardResponse {
 }
 
 export class KPICalculationService {
+
+  /**
+   * Calculate refined LCA for a single product (matches the product detail page calculation)
+   * Integrates OpenLCA ingredients, packaging, facilities, production waste, and end-of-life packaging
+   */
+  private async calculateProductRefinedLCA(product: any): Promise<{
+    totalCO2e: number;
+    totalWater: number;
+    totalWaste: number;
+    breakdown: {
+      ingredients: { co2e: number; water: number; waste: number };
+      packaging: { co2e: number; water: number; waste: number };
+      facilities: { co2e: number; water: number; waste: number };
+      dilutionRecorded: { amount: number; unit: string; excluded: boolean };
+    };
+    productionWasteFootprint: number;
+    endOfLifeFootprint: number;
+  }> {
+    const productionVolume = Number(product.annualProductionVolume) || 1;
+    let totalCO2e = 0;
+    let totalWater = 0;
+    let totalWaste = 0;
+    
+    const breakdown = {
+      ingredients: { co2e: 0, water: 0, waste: 0 },
+      packaging: { co2e: 0, water: 0, waste: 0 },
+      facilities: { co2e: 0, water: 0, waste: 0 },
+      dilutionRecorded: { amount: 0, unit: '', excluded: true }
+    };
+
+    // 1. Calculate ingredient impacts using OpenLCA
+    if (product.ingredients && Array.isArray(product.ingredients)) {
+      for (const ingredient of product.ingredients) {
+        if (ingredient.name && ingredient.amount > 0) {
+          try {
+            // Calculate ingredient impact (includes water footprint)
+            const impactData = await OpenLCAService.calculateIngredientImpact(
+              ingredient.name,
+              ingredient.amount,
+              ingredient.unit || 'kg'
+            );
+            
+            if (impactData) {
+              breakdown.ingredients.co2e += impactData.carbonFootprint;
+              breakdown.ingredients.water += impactData.waterFootprint;
+            }
+          } catch (error) {
+            console.error(`Calculation failed for ${ingredient.name}:`, error);
+          }
+        }
+      }
+    }
+
+    // 2. Calculate packaging impacts
+    if (product.bottleWeight) {
+      const bottleWeightKg = parseFloat(product.bottleWeight) / 1000;
+      const recycledContent = parseFloat(product.bottleRecycledContent || '0') / 100;
+      
+      // Glass bottle emissions
+      const virginGlassEmissionFactor = 0.7; // kg CO2e per kg
+      const recycledGlassEmissionFactor = 0.35;
+      const glassEmissions = bottleWeightKg * (
+        (1 - recycledContent) * virginGlassEmissionFactor + 
+        recycledContent * recycledGlassEmissionFactor
+      );
+      
+      breakdown.packaging.co2e += glassEmissions;
+      breakdown.packaging.water += bottleWeightKg * 10; // ~10L water per kg glass
+      
+      // Calculate production waste intensity from facility data
+      let productionWastePerUnit = 0;
+      try {
+        const wasteIntensityData = await WasteIntensityCalculationService.calculateWasteIntensity(1);
+        productionWastePerUnit = wasteIntensityData.productionWasteIntensity;
+      } catch (error) {
+        productionWastePerUnit = 0.002; // 2g fallback
+      }
+      breakdown.packaging.waste += productionWastePerUnit;
+    }
+    
+    // Add label and closure impacts if available
+    if (product.labelWeight) {
+      const labelWeightKg = parseFloat(product.labelWeight) / 1000;
+      breakdown.packaging.co2e += labelWeightKg * 1.8; // Paper label factor
+      breakdown.packaging.water += labelWeightKg * 15; // Paper production water
+    }
+    
+    if (product.closureWeight) {
+      const closureWeightKg = parseFloat(product.closureWeight) / 1000;
+      breakdown.packaging.co2e += closureWeightKg * 3.2; // Cork/plastic factor
+      breakdown.packaging.water += closureWeightKg * 8; // Closure production water
+    }
+
+    // 3. Add facility impacts (energy, water, waste) allocated per product unit
+    const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
+    
+    let productionWasteFootprint = 0;
+    let endOfLifePackagingFootprint = 0;
+    
+    if (facilities.length > 0) {
+      for (const facility of facilities) {
+        // Energy consumption -> CO2e
+        if (facility.totalElectricityKwhPerYear) {
+          const electricityKwh = parseFloat(facility.totalElectricityKwhPerYear);
+          const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
+          const gridElectricity = electricityKwh * (1 - renewablePercent);
+          const co2eFromElectricity = (gridElectricity * 0.233) / productionVolume; // UK grid factor 2024: 233g CO2e/kWh
+          breakdown.facilities.co2e += co2eFromElectricity;
+        }
+        
+        if (facility.totalGasM3PerYear) {
+          const gasM3 = parseFloat(facility.totalGasM3PerYear);
+          const co2eFromGas = (gasM3 * 1.8514) / productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
+          breakdown.facilities.co2e += co2eFromGas;
+        }
+        
+        // Water consumption
+        const totalFacilityWater = 
+          (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
+          (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
+          (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
+        
+        if (totalFacilityWater > 0) {
+          const waterPerUnit = totalFacilityWater / productionVolume;
+          breakdown.facilities.water += waterPerUnit;
+        }
+        
+        // Calculate production waste carbon footprint from disposal routes
+        try {
+          const wasteFootprint = await WasteIntensityCalculationService.calculateProductionWasteFootprint(facility.id, 'United Kingdom');
+          productionWasteFootprint += wasteFootprint.totalWasteCarbonFootprint;
+        } catch (error) {
+          productionWasteFootprint = 0;
+        }
+        
+        // Calculate end-of-life packaging waste footprint
+        try {
+          const packagingComponents = {
+            glassBottleWeightKg: product.bottleWeight ? parseFloat(product.bottleWeight) / 1000 : 0,
+            paperLabelWeightKg: product.labelWeight ? parseFloat(product.labelWeight) / 1000 : 0,
+            aluminumClosureWeightKg: product.closureWeight ? parseFloat(product.closureWeight) / 1000 : 0
+          };
+          
+          const eolFootprint = await WasteIntensityCalculationService.calculatePackagingEndOfLifeFootprint(
+            packagingComponents, 
+            'United Kingdom'
+          );
+          
+          endOfLifePackagingFootprint = eolFootprint.totalEolCarbonFootprint;
+        } catch (error) {
+          endOfLifePackagingFootprint = 0;
+        }
+      }
+    }
+
+    // 4. Record water dilution but exclude from product water footprint
+    if (product.waterDilution) {
+      try {
+        const dilutionData = typeof product.waterDilution === 'string' 
+          ? JSON.parse(product.waterDilution) 
+          : product.waterDilution;
+        
+        if (dilutionData?.amount) {
+          breakdown.dilutionRecorded.amount = Number(dilutionData.amount);
+          breakdown.dilutionRecorded.unit = dilutionData.unit || 'ml';
+        }
+      } catch (error) {
+        // Ignore parsing errors
+      }
+    }
+
+    // 5. Calculate final totals
+    totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + breakdown.facilities.co2e + productionWasteFootprint + endOfLifePackagingFootprint;
+    totalWater = breakdown.ingredients.water + breakdown.packaging.water + breakdown.facilities.water; // Excludes dilution
+    totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste; // Facility waste excluded per requirements
+
+    return {
+      totalCO2e,
+      totalWater,
+      totalWaste,
+      breakdown,
+      productionWasteFootprint,
+      endOfLifeFootprint: endOfLifePackagingFootprint
+    };
+  }
   
   /**
    * Evaluate KPI formula and calculate current value
@@ -279,8 +466,8 @@ export class KPICalculationService {
   }
 
   /**
-   * Calculate total carbon footprint for company (kg CO2e)
-   * Uses OpenLCA for ingredients plus packaging and production impacts
+   * Calculate total carbon footprint for company using Refined LCA System (kg CO2e)
+   * Integrates OpenLCA ingredients, packaging, facilities, production waste, and end-of-life packaging
    */
   async calculateTotalCarbonFootprint(companyId: number): Promise<number> {
     try {
@@ -296,83 +483,22 @@ export class KPICalculationService {
           const annualProduction = parseFloat(product.annualProductionVolume.toString());
           let productFootprintKg = 0;
           
-          // 1. Calculate OpenLCA ingredient footprint
-          if (product.ingredients) {
-            try {
-              const ingredients = Array.isArray(product.ingredients) 
-                ? product.ingredients 
-                : JSON.parse(product.ingredients as string);
-              
-              if (ingredients && ingredients.length > 0) {
-                const primaryIngredient = ingredients[0];
-                const openLcaResult = await OpenLCAService.calculateIngredientImpact(
-                  primaryIngredient.name || 'molasses',
-                  parseFloat(primaryIngredient.amount || '1.5'),
-                  primaryIngredient.unit || 'kg'
-                );
-                
-                if (openLcaResult) {
-                  productFootprintKg = openLcaResult.carbonFootprint;
-                  console.log(`🌱 OpenLCA ingredients for ${product.name}: ${productFootprintKg.toFixed(3)} kg CO₂e/bottle`);
-                }
-              }
-            } catch (error) {
-              console.error(`Error calculating OpenLCA for ${product.name}:`, error);
-            }
-          }
-          
-          // 2. Add packaging footprint (glass bottle)
-          if (product.bottleWeight && product.bottleRecycledContent) {
-            const bottleWeightG = parseFloat(product.bottleWeight.toString());
-            const recycledContent = parseFloat(product.bottleRecycledContent.toString()) / 100;
-            
-            const glassFootprintFactor = 0.487; // Virgin glass kg CO2e per kg
-            const recycledGlassFootprintFactor = 0.314; // Recycled glass
-            
-            const virginPortion = 1 - recycledContent;
-            const bottleEmissions = (bottleWeightG / 1000) * (
-              virginPortion * glassFootprintFactor + 
-              recycledContent * recycledGlassFootprintFactor
-            );
-            productFootprintKg += bottleEmissions;
-            console.log(`🍾 Glass bottle (${bottleWeightG}g, ${(recycledContent*100).toFixed(0)}% recycled): ${bottleEmissions.toFixed(3)} kg CO₂e/bottle`);
-          }
-          
-          // 3. Add label footprint  
-          if (product.labelWeight) {
-            const labelWeightKg = parseFloat(product.labelWeight.toString()) / 1000;
-            const labelEmissions = labelWeightKg * 1.1; // Paper emission factor
-            productFootprintKg += labelEmissions;
-            console.log(`🏷️ Label (${product.labelWeight}g): ${labelEmissions.toFixed(3)} kg CO₂e/bottle`);
-          }
-          
-          // 4. Add closure footprint
-          if (product.closureType && product.closureType !== 'none') {
-            const closureEmissions = 0.003 * 2.1; // 3g aluminum cap
-            productFootprintKg += closureEmissions;
-            console.log(`🔒 Closure: ${closureEmissions.toFixed(3)} kg CO₂e/bottle`);
-          }
-          
-          // Production energy and secondary packaging: Only add when actual data is available
-          // TODO: Add production energy calculation when actual energy consumption data is provided
-          // TODO: Add secondary packaging calculation when actual packaging data is provided
-          
-          // Fallback to stored value only if all calculations fail
-          if (productFootprintKg === 0 && product.carbonFootprint) {
-            productFootprintKg = parseFloat(product.carbonFootprint.toString());
-            console.log(`⚠️ Using stored carbon footprint for ${product.name}: ${productFootprintKg} kg CO₂e/bottle`);
-          }
+          // Calculate comprehensive LCA using the same refined system as product detail pages
+          const refinedLCA = await this.calculateProductRefinedLCA(product);
+          productFootprintKg = refinedLCA.totalCO2e;
           
           const productTotalKg = productFootprintKg * annualProduction;
           totalFootprintKg += productTotalKg;
-          console.log(`📊 TOTAL ${product.name}: ${productFootprintKg.toFixed(3)} kg CO₂e/bottle × ${annualProduction} bottles = ${productTotalKg.toFixed(0)} kg CO₂e`);
+          
+          console.log(`🔬 REFINED LCA ${product.name}: ${productFootprintKg.toFixed(3)} kg CO₂e/unit × ${annualProduction} units = ${productTotalKg.toFixed(0)} kg CO₂e`);
+          console.log(`   Breakdown: Ingredients=${refinedLCA.breakdown.ingredients.co2e.toFixed(3)}, Packaging=${refinedLCA.breakdown.packaging.co2e.toFixed(3)}, Facilities=${refinedLCA.breakdown.facilities.co2e.toFixed(3)}, Production Waste=${refinedLCA.productionWasteFootprint.toFixed(6)}, End-of-life=${refinedLCA.endOfLifeFootprint.toFixed(6)} kg CO₂e`);
         }
       }
 
-      console.log(`🧮 Total company carbon footprint: ${totalFootprintKg.toFixed(0)} kg CO₂e (${(totalFootprintKg/1000).toFixed(1)} tonnes)`);
+      console.log(`🧮 REFINED Total company carbon footprint: ${totalFootprintKg.toFixed(0)} kg CO₂e (${(totalFootprintKg/1000).toFixed(1)} tonnes)`);
       return totalFootprintKg;
     } catch (error) {
-      console.error('Error calculating total carbon footprint:', error);
+      console.error('Error calculating refined total carbon footprint:', error);
       return 0;
     }
   }
@@ -403,7 +529,7 @@ export class KPICalculationService {
 
   async calculateTotalWaterConsumption(companyId: number): Promise<number> {
     try {
-      // Calculate from OpenLCA data - authoritative source
+      // Calculate using Refined LCA System (excludes dilution water as per requirements)
       const companyProducts = await db
         .select()
         .from(products)
@@ -415,52 +541,22 @@ export class KPICalculationService {
         if (product.annualProductionVolume) {
           const annualProduction = parseFloat(product.annualProductionVolume.toString());
           
-          // Get OpenLCA calculation for this product
-          let waterFootprintPerBottle = 0;
+          // Calculate comprehensive water footprint using refined LCA system
+          const refinedLCA = await this.calculateProductRefinedLCA(product);
+          const waterFootprintPerUnit = refinedLCA.totalWater; // Excludes dilution water
           
-          if (product.ingredients) {
-            // Calculate using OpenLCA for primary ingredient
-            try {
-              const ingredients = Array.isArray(product.ingredients) 
-                ? product.ingredients 
-                : JSON.parse(product.ingredients as string);
-              
-              if (ingredients && ingredients.length > 0) {
-                const primaryIngredient = ingredients[0]; // Use primary ingredient for calculation
-                const openLcaResult = await OpenLCAService.calculateIngredientImpact(
-                  primaryIngredient.name || 'molasses',
-                  parseFloat(primaryIngredient.amount || '0.89'),
-                  primaryIngredient.unit || 'kg'
-                );
-                
-                if (openLcaResult) {
-                  // Add water dilution factor (0.5L) for spirits production
-                  waterFootprintPerBottle = openLcaResult.waterFootprint + 0.5;
-                  console.log(`🌱 OpenLCA water footprint for ${product.name}: ${openLcaResult.waterFootprint}L + 0.5L dilution = ${waterFootprintPerBottle}L`);
-                }
-              }
-            } catch (error) {
-              console.error(`Error calculating OpenLCA water for ${product.name}:`, error);
-            }
-          }
-          
-          // Fallback to stored value only if OpenLCA fails
-          if (waterFootprintPerBottle === 0 && product.waterFootprint) {
-            waterFootprintPerBottle = parseFloat(product.waterFootprint.toString());
-            console.log(`⚠️ Using stored water footprint for ${product.name}: ${waterFootprintPerBottle}L (OpenLCA failed)`);
-          }
-          
-          const productTotalWater = waterFootprintPerBottle * annualProduction;
+          const productTotalWater = waterFootprintPerUnit * annualProduction;
           totalWater += productTotalWater;
           
-          console.log(`💧 ${product.name}: ${waterFootprintPerBottle}L × ${annualProduction} bottles = ${productTotalWater.toFixed(0)}L`);
+          console.log(`💧 REFINED WATER ${product.name}: ${waterFootprintPerUnit.toFixed(1)}L/unit × ${annualProduction} units = ${productTotalWater.toFixed(0)}L`);
+          console.log(`   Breakdown: Ingredients=${refinedLCA.breakdown.ingredients.water.toFixed(1)}, Packaging=${refinedLCA.breakdown.packaging.water.toFixed(1)}, Facilities=${refinedLCA.breakdown.facilities.water.toFixed(1)}L (dilution=${refinedLCA.breakdown.dilutionRecorded.amount}${refinedLCA.breakdown.dilutionRecorded.unit} excluded)`);
         }
       }
 
-      console.log(`🧮 Total company water footprint: ${totalWater.toFixed(0)}L`);
+      console.log(`🧮 REFINED Total company water footprint: ${totalWater.toFixed(0)}L (excludes dilution water)`);
       return totalWater;
     } catch (error) {
-      console.error('Error calculating total water consumption:', error);
+      console.error('Error calculating refined total water consumption:', error);
       return 0;
     }
   }
@@ -566,33 +662,33 @@ export class KPICalculationService {
       for (const product of companyProducts) {
         const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
         
-        // Calculate waste from packaging (same logic as products page)
-        if (product.bottleWeight) {
-          const bottleWeightKg = parseFloat(product.bottleWeight.toString()) / 1000; // Convert grams to kg
-          const recycledContent = parseFloat(product.bottleRecycledContent?.toString() || '0') / 100;
-          
-          // Primary packaging waste (bottle)
-          let wastePerUnit = bottleWeightKg * (1 - recycledContent);
-          
-          // Add label waste if available
-          if (product.labelWeight) {
-            const labelWeightKg = parseFloat(product.labelWeight.toString()) / 1000; // Convert grams to kg
-            wastePerUnit += labelWeightKg;
-          }
-          
-          // Add closure waste estimate (average screw cap ~3g)
-          if (product.closureType && product.closureType !== 'none') {
-            wastePerUnit += 0.003; // 3g closure in kg
-          }
-          
-          totalWasteKg += wastePerUnit * annualProduction;
+        // Calculate comprehensive waste using refined LCA system and WasteIntensityCalculationService
+        const refinedLCA = await this.calculateProductRefinedLCA(product);
+        const wastePerUnit = refinedLCA.totalWaste;
+        
+        // Add production facility waste from WasteIntensityCalculationService
+        let facilityWastePerUnit = 0;
+        try {
+          const wasteIntensityData = await WasteIntensityCalculationService.calculateWasteIntensity(1); // Primary facility
+          facilityWastePerUnit = wasteIntensityData.productionWasteIntensity;
+          console.log(`🏭 Facility waste intensity: ${facilityWastePerUnit.toFixed(6)} kg waste per unit`);
+        } catch (error) {
+          console.warn('Facility waste calculation failed, using fallback:', error);
+          facilityWastePerUnit = 0.002; // 2g fallback
         }
+        
+        const totalWastePerUnit = wastePerUnit + facilityWastePerUnit;
+        const productTotalWaste = totalWastePerUnit * annualProduction;
+        totalWasteKg += productTotalWaste;
+        
+        console.log(`🗑️ REFINED WASTE ${product.name}: ${totalWastePerUnit.toFixed(6)} kg/unit × ${annualProduction} units = ${productTotalWaste.toFixed(1)} kg`);
+        console.log(`   Breakdown: Product waste=${wastePerUnit.toFixed(6)}, Facility waste=${facilityWastePerUnit.toFixed(6)} kg per unit`);
       }
 
-      console.log(`📊 Calculated total company waste: ${totalWasteKg.toFixed(1)} kg annually`);
-      return totalWasteKg; // Return annual waste in kg
+      console.log(`🧮 REFINED Total company waste: ${totalWasteKg.toFixed(1)} kg annually`);
+      return totalWasteKg;
     } catch (error) {
-      console.error('Error calculating total waste generated:', error);
+      console.error('Error calculating refined total waste generated:', error);
       return 0;
     }
   }
