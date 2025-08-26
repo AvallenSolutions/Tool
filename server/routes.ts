@@ -38,7 +38,7 @@ import { kpiCalculationService, enhancedKpiService } from "./services/kpiService
 import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { supplierIntegrityService } from "./services/SupplierIntegrityService";
-import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences } from "@shared/schema";
+import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
 
@@ -1990,6 +1990,58 @@ Be precise and quote actual text from the content, not generic terms.`;
         success: false,
         error: 'Failed to calculate refined LCA',
         message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Check if product has verified supplier impacts that should override OpenLCA data
+  app.get('/api/products/:id/verified-supplier-impacts', isAuthenticated, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ success: false, error: 'Invalid product ID' });
+      }
+
+      // Get product with its supplier product associations  
+      const [product] = await db.select().from(products).where(eq(products.id, productId));
+      if (!product) {
+        return res.status(404).json({ success: false, error: 'Product not found' });
+      }
+
+      // Check if product uses verified supplier products
+      let totalCO2e = 0;
+      let totalWater = 0; 
+      let totalWaste = 0;
+      let hasVerifiedData = false;
+
+      // Currently, the supplierProducts table exists but may not have verified CO2e data
+      // For now, return no verified data until supplier verification is implemented
+      console.log(`ℹ️ Checked for verified supplier impacts for product ${productId} - implementation in progress`);
+      
+      // Note: This endpoint is prepared for future verified supplier data
+      // The schema supports verified impacts but requires supplier collaboration workflow
+
+      if (!hasVerifiedData) {
+        return res.json({ success: false, message: 'No verified supplier data available' });
+      }
+
+      console.log(`✅ Verified supplier impacts for product ${productId}: CO2e=${totalCO2e.toFixed(3)}kg, Water=${totalWater.toFixed(1)}L, Waste=${totalWaste.toFixed(3)}kg`);
+
+      res.json({
+        success: true,
+        data: {
+          co2e_kg: totalCO2e,
+          water_liters: totalWater,
+          waste_kg: totalWaste,
+          verification_source: 'supplier_verified'
+        }
+      });
+
+    } catch (error) {
+      console.error('Error checking verified supplier impacts:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to check verified supplier impacts'
       });
     }
   });

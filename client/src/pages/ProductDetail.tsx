@@ -1075,8 +1075,8 @@ function ProductDetail() {
               </div>
             </TabsContent>
 
-            {/* Environmental Impact Tab */}
-            <TabsContent value="environmental">
+            {/* LCA Tab */}
+            <TabsContent value="lca">
               <div className="space-y-6">
                 <EnvironmentalImpactDetails productId={product.id} />
               </div>

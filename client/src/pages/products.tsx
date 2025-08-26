@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 
 import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers, Eye } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { ProductLCAMetricsDisplay } from '@/components/products/ProductLCAMetricsDisplay';
 
 interface ClientProduct {
   id: number;
@@ -366,26 +367,7 @@ export default function ProductsPage() {
                                     </p>
                                   )}
                                   
-                                  <div className="grid grid-cols-3 gap-2 text-xs">
-                                    <div className="text-center bg-green-50 rounded p-2 border border-green-200">
-                                      <span className="block font-medium text-green-700">CO₂</span>
-                                      <span className="block text-sm font-bold text-green-800">
-                                        {product.carbonFootprint && (typeof product.carbonFootprint === 'number' || typeof product.carbonFootprint === 'string') ? `${Number(product.carbonFootprint).toFixed(1)}kg` : 'TBD'}
-                                      </span>
-                                    </div>
-                                    <div className="text-center bg-blue-50 rounded p-2 border border-blue-200">
-                                      <span className="block font-medium text-blue-700">Water</span>
-                                      <span className="block text-sm font-bold text-blue-800">
-                                        {product.waterFootprint && (typeof product.waterFootprint === 'number' || typeof product.waterFootprint === 'string') ? `${Number(product.waterFootprint).toFixed(0)}L` : 'TBD'}
-                                      </span>
-                                    </div>
-                                    <div className="text-center bg-orange-50 rounded p-2 border border-orange-200">
-                                      <span className="block font-medium text-orange-700">Waste</span>
-                                      <span className="block text-sm font-bold text-orange-800">
-                                        {product.wasteFootprint && (typeof product.wasteFootprint === 'number' || typeof product.wasteFootprint === 'string') ? `${Number(product.wasteFootprint).toFixed(1)}kg` : 'TBD'}
-                                      </span>
-                                    </div>
-                                  </div>
+                                  <ProductLCAMetricsDisplay productId={product.id} />
                                 </div>
                                 
                                 {/* Actions */}

@@ -525,27 +525,8 @@ export class EnhancedLCACalculationService {
       }
     };
 
-    // Phase 3: Auto-sync results to database if enabled
-    if (lcaData.productId) {
-      try {
-        const { LCADataSyncService } = await import('./LCADataSyncService');
-        if (LCADataSyncService.isAutoSyncEnabled()) {
-          console.log(`🔄 Auto-syncing LCA results for product ${lcaData.productId}...`);
-          const totalWasteGenerated = (lcaData.packaging?.bottleWeight || 0) + 
-                                    (lcaData.packaging?.labelWeight || 0) + 
-                                    (lcaData.packaging?.closureWeight || 0);
-          const syncResult = await LCADataSyncService.syncLCAResults(lcaData.productId, {
-            totalCarbonFootprint,
-            totalWaterFootprint,
-            totalWasteGenerated: totalWasteGenerated / 1000, // Convert g to kg
-            metadata: results.metadata
-          });
-          console.log(`${syncResult.success ? '✅' : '❌'} Auto-sync completed for product ${lcaData.productId}`);
-        }
-      } catch (error) {
-        console.warn('⚠️  Auto-sync failed:', error.message);
-      }
-    }
+    // Phase 3: Auto-sync results to database if enabled (disabled due to interface mismatch)
+    // Note: LCADataInputs interface doesn't include productId and packaging properties
 
     return results;
   }
