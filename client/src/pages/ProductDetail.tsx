@@ -1349,20 +1349,25 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
           <CardContent>
             <div className="text-center py-8">
               <div className="text-gray-500 mb-4">
-                <span className="text-2xl">🔬</span>
+                <span className="text-2xl">⚠️</span>
               </div>
-              <p className="text-gray-600 mb-2">GHG breakdown calculation in progress</p>
-              <p className="text-xs text-gray-500">Individual greenhouse gas data will appear here once OpenLCA analysis completes</p>
-              {ghgBreakdown && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200 text-left">
-                  <div className="text-sm text-gray-700">
-                    <div>Debug Info:</div>
-                    <div className="text-xs">GHG Breakdown Available: {ghgBreakdown ? 'Yes' : 'No'}</div>
-                    <div className="text-xs">Individual Gases: {ghgBreakdown?.individual_gases?.length || 0}</div>
-                    <div className="text-xs">Total CO₂e: {ghgBreakdown?.total_co2e_from_ghg?.toFixed(3) || 0} kg</div>
+              <p className="text-gray-600 mb-2 font-medium">Authentic OpenLCA Data Required</p>
+              <p className="text-sm text-gray-500 mb-4">Individual greenhouse gas analysis requires connection to authentic OpenLCA database</p>
+              <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-left max-w-md mx-auto">
+                <div className="text-sm text-gray-700">
+                  <div className="font-medium text-gray-800 mb-2">Missing Components:</div>
+                  <div className="text-xs space-y-1">
+                    <div>• Authentic LCI flows from OpenLCA ecoinvent database</div>
+                    <div>• Real greenhouse gas emission factors (CO₂, CH₄, N₂O, SF₆, NF₃, HFC-134a, CF₄)</div>
+                    <div>• ISO 14040/14044 compliant elementary flow data</div>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-yellow-300">
+                    <div className="text-xs text-gray-600">
+                      Current total CO₂e ({refinedLCA.perUnit.co2e_kg.toFixed(3)} kg) calculated from category-based factors only
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
