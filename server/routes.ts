@@ -38,7 +38,7 @@ import { kpiCalculationService, enhancedKpiService } from "./services/kpiService
 import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { supplierIntegrityService } from "./services/SupplierIntegrityService";
-import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts } from "@shared/schema";
+import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
 
@@ -1932,7 +1932,66 @@ Be precise and quote actual text from the content, not generic terms.`;
         breakdown.packaging.water += closureWeightKg * 8; // Closure production water
       }
       
-      // 3. Record water dilution but exclude from product water footprint
+      // 3. Add facility impacts (energy, water, waste) allocated per product unit
+      
+      // Get facility data for this company
+      const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
+      
+      let facilityImpacts = { co2e: 0, water: 0, waste: 0 };
+      
+      if (facilities.length > 0) {
+        for (const facility of facilities) {
+          // Calculate per-unit facility impacts based on annual production volume
+          
+          // Energy consumption -> CO2e
+          if (facility.totalElectricityKwhPerYear) {
+            const electricityKwh = parseFloat(facility.totalElectricityKwhPerYear);
+            const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
+            const gridElectricity = electricityKwh * (1 - renewablePercent);
+            const co2eFromElectricity = (gridElectricity * 0.233) / productionVolume; // UK grid factor 2024: 233g CO2e/kWh
+            facilityImpacts.co2e += co2eFromElectricity;
+            console.log(`⚡ Facility electricity: ${electricityKwh}kWh/year (${renewablePercent*100}% renewable) = ${co2eFromElectricity.toFixed(3)}kg CO2e per unit`);
+          }
+          
+          if (facility.totalGasM3PerYear) {
+            const gasM3 = parseFloat(facility.totalGasM3PerYear);
+            const co2eFromGas = (gasM3 * 1.8514) / productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
+            facilityImpacts.co2e += co2eFromGas;
+            console.log(`🔥 Facility gas: ${gasM3}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
+          }
+          
+          // Water consumption
+          const totalFacilityWater = 
+            (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
+            (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
+            (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
+          
+          if (totalFacilityWater > 0) {
+            const waterPerUnit = totalFacilityWater / productionVolume;
+            facilityImpacts.water += waterPerUnit;
+            console.log(`💧 Facility water: ${totalFacilityWater.toFixed(0)}L/year = ${waterPerUnit.toFixed(1)}L per unit`);
+          }
+          
+          // Waste generation
+          const totalFacilityWaste = 
+            (facility.totalOrganicWasteKgPerYear ? parseFloat(facility.totalOrganicWasteKgPerYear) : 0) +
+            (facility.totalPackagingWasteKgPerYear ? parseFloat(facility.totalPackagingWasteKgPerYear) : 0) +
+            (facility.totalHazardousWasteKgPerYear ? parseFloat(facility.totalHazardousWasteKgPerYear) : 0);
+          
+          if (totalFacilityWaste > 0) {
+            const wastePerUnit = totalFacilityWaste / productionVolume;
+            facilityImpacts.waste += wastePerUnit;
+            console.log(`♻️ Facility waste: ${totalFacilityWaste.toFixed(0)}kg/year = ${wastePerUnit.toFixed(3)}kg per unit`);
+          }
+        }
+      } else {
+        console.log(`ℹ️ No facility data found for company ${product.companyId} - facility impacts not included`);
+      }
+      
+      // Add facility impacts to breakdown (create facilities category)
+      breakdown.facilities = facilityImpacts;
+
+      // 4. Record water dilution but exclude from product water footprint
       if (product.waterDilution) {
         try {
           const dilutionData = typeof product.waterDilution === 'string' 
@@ -1949,10 +2008,10 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // 4. Calculate totals
-      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e;
-      totalWater = breakdown.ingredients.water + breakdown.packaging.water; // Excludes dilution
-      totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste;
+      // 5. Calculate final totals including facility impacts
+      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + facilityImpacts.co2e;
+      totalWater = breakdown.ingredients.water + breakdown.packaging.water + facilityImpacts.water; // Excludes dilution
+      totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste + facilityImpacts.waste;
       
       const refinedLCA = {
         productId: product.id,
