@@ -1,0 +1,48 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Sentry error tracking initialized
+✅ Mixpanel analytics initialized
+✓ Common agricultural ingredients initialized
+[12:14:23] INFO: UnifiedPDFService initialized
+[12:14:23] INFO: Feature routes configured successfully
+[12:14:23] INFO: HTTP server configured with feature routers {"port":"5000"}
+isAuthenticated middleware check for: /api/dashboard/metrics {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+📊 Waste intensity for facility Main Distillery: 0.0038 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 1000000 units/year
+🗑️ Production waste footprint for Main Distillery:
+   Total: 0.000413 kg CO2e per unit
+   Landfill: 0.000073 kg CO2e/unit (150kg/year)
+   Recycling: 0.000250 kg CO2e/unit (2800kg/year)
+   Composting: 0.000013 kg CO2e/unit (840kg/year)
+   Transport: 0.000015 kg CO2e/unit
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+🔬 REFINED LCA Rum Blanc: 1.818 kg CO₂e/unit × 300000 units = 545476 kg CO₂e
+   Breakdown: Ingredients=1.335, Packaging=0.268, Facilities=0.200, Production Waste=0.000413, End-of-life=0.014923 kg CO₂e
+🧮 REFINED Total company carbon footprint: 545476 kg CO₂e (545.5 tonnes)
+📊 Waste intensity for facility Main Distillery: 0.0038 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 1000000 units/year
+🗑️ Production waste footprint for Main Distillery:
+   Total: 0.000413 kg CO2e per unit
+   Landfill: 0.000073 kg CO2e/unit (150kg/year)
+   Recycling: 0.000250 kg CO2e/unit (2800kg/year)
+   Composting: 0.000013 kg CO2e/unit (840kg/year)
+   Transport: 0.000015 kg CO2e/unit
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
