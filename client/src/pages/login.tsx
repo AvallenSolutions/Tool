@@ -215,11 +215,10 @@ export default function Login() {
             <div className="order-1 lg:order-2 space-y-6">
               <div className="text-center lg:text-left">
                 <h1 className="text-4xl lg:text-5xl font-bold text-slate-gray mb-4">
-                  Pioneers Program
-                  <span className="text-avallen-green block">Lead Your Industry</span>
+                  <span className="text-avallen-green">Pioneers Program</span>
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed mb-6">
-                  The conversation around sustainability in the drinks industry is changing. With new government legislation, compliance is no longer optional. The time to get your house in order is now.
+                  The conversation around sustainability in the drinks industry is changing. With new legislation, increased reporting demands from customers, and growing supply chain pressures, compliance is no longer optional. The time to get your house in order is now.
                 </p>
                 <p className="text-lg text-gray-600 leading-relaxed">
                   We've built Avallen Solutions to help you do just that - a simple, human-in-the-loop tool ensuring you're not just compliant, but a leader in your field.
@@ -242,12 +241,12 @@ export default function Login() {
 
                 <div className="flex items-start space-x-4 p-4 bg-white/60 rounded-lg border border-light-gray">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Shield className="w-5 h-5 text-blue-600" />
+                    <BarChart3 className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-gray">DMCC Act Compliance</h3>
+                    <h3 className="font-semibold text-slate-gray">Strategic Goal Setting</h3>
                     <p className="text-sm text-gray-600">
-                      Built with the DMCC Act in mind, protecting you from scrutiny and potential fines
+                      Set and track progress against KPIs and SMART goals to measure impact and celebrate successes
                     </p>
                   </div>
                 </div>
