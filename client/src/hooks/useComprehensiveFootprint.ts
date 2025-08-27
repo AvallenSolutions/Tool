@@ -11,15 +11,18 @@ interface ComprehensiveFootprintData {
     waste_kg: number;
   };
   breakdown: {
-    productsRefinedLCA: {
-      co2e_kg: number;
-      water_liters: number;
-      waste_kg: number;
-      productCount: number;
-    };
-    manualScope1And2: {
+    scope1And2Manual: {
       co2e_kg: number;
       entryCount: number;
+    };
+    scope3ProductLCA: {
+      co2e_kg: number;
+      description: string;
+      productCount: number;
+    };
+    facilityImpactsNote: {
+      co2e_kg: number;
+      note: string;
     };
   };
   productDetails: Array<{
