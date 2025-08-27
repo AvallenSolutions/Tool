@@ -225,7 +225,7 @@ export function SMARTGoals() {
         </Card>
       </div>
 
-      {/* Goals List */}
+      {/* SMART Goals Management */}
       <Card className="bg-white border shadow">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -235,97 +235,22 @@ export function SMARTGoals() {
             </CardTitle>
             <CardDescription>Track your structured sustainability objectives</CardDescription>
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="bg-avallen-green hover:bg-avallen-green/90">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Goal
-              </Button>
-            </DialogTrigger>
-            <CreateGoalDialog 
-              onSubmit={createGoalMutation.mutate}
-              isLoading={createGoalMutation.isPending}
-            />
-          </Dialog>
+          <Button 
+            onClick={() => window.location.href = '/initiatives'} 
+            size="sm" 
+            variant="outline"
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Manage SMART Goals
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {goals.map((goal) => {
-              const statusStyle = statusConfig[goal.status as keyof typeof statusConfig] || statusConfig.draft;
-              const priorityStyle = priorityConfig[goal.priority as keyof typeof priorityConfig] || priorityConfig.low;
-              const categoryStyle = categoryConfig[goal.category as keyof typeof categoryConfig] || categoryConfig.sustainability;
-              const StatusIcon = statusStyle?.icon || Clock;
-              const isOverdue = new Date(goal.targetDate) < new Date() && goal.status !== 'completed';
-              
-              return (
-                <div
-                  key={goal.id}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50 hover:bg-white"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-gray-900">{goal.title}</h4>
-                        <Badge className={statusStyle?.color || 'bg-gray-100 text-gray-800'}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {statusStyle?.label || 'Unknown'}
-                        </Badge>
-                        <Badge variant="outline" className={priorityStyle?.color || 'bg-gray-100 text-gray-800'}>
-                          {priorityStyle?.label || 'Unknown'}
-                        </Badge>
-                        <Badge variant="outline" className={categoryStyle?.color || 'bg-gray-100 text-gray-800'}>
-                          {categoryStyle?.label || 'Unknown'}
-                        </Badge>
-                        {isOverdue && (
-                          <Badge variant="outline" className="bg-red-100 text-red-800">
-                            Overdue
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">{goal.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          Due: {new Date(goal.targetDate).toLocaleDateString()}
-                        </span>
-                        <span>
-                          Created: {new Date(goal.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress</span>
-                      <span className="font-medium">{Math.round(goal.progress)}%</span>
-                    </div>
-                    <Progress value={goal.progress} className="h-2" />
-                  </div>
-                  
-                  {/* SMART Criteria */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <h5 className="text-sm font-medium mb-2">SMART Criteria</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                      <div><strong>Specific:</strong> {goal.specific}</div>
-                      <div><strong>Measurable:</strong> {goal.measurable}</div>
-                      <div><strong>Achievable:</strong> {goal.achievable}</div>
-                      <div><strong>Relevant:</strong> {goal.relevant}</div>
-                      <div className="md:col-span-2"><strong>Time-bound:</strong> {goal.timeBound}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Overall Progress</span>
+              <span>{goals.length > 0 ? Math.round(goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length) : 0}%</span>
+            </div>
+            <Progress value={goals.length > 0 ? goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length : 0} className="h-2" />
           </div>
         </CardContent>
       </Card>
