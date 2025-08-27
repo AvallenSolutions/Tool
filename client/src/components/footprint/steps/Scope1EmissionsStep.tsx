@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Info, Flame, Car, Zap, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { Info, Flame, Car, Zap, AlertCircle, Plus, Trash2, Download, Loader2, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { FootprintData } from '../FootprintWizard';
+import { apiRequest } from '@/lib/queryClient';
 
 interface Scope1EmissionsStepProps {
   data: Record<string, any>;
@@ -135,6 +136,53 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
     value: '',
     unit: '',
     description: ''
+  });
+
+  // Import from Operations mutation
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('GET', '/api/company/footprint/scope1/automated');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.data.footprintEntries) {
+        const automatedEntries = data.data.footprintEntries.map((entry: any) => ({
+          value: entry.value,
+          description: entry.metadata.description,
+          dataType: entry.dataType
+        }));
+        
+        // Add automated entries to existing entries
+        setEntries(prevEntries => [...prevEntries, ...automatedEntries]);
+        
+        // Save each automated entry to the backend
+        data.data.footprintEntries.forEach((entry: any) => {
+          onSave({
+            dataType: entry.dataType,
+            scope: entry.scope,
+            value: entry.value,
+            unit: entry.unit,
+            metadata: {
+              ...entry.metadata,
+              imported: true,
+              importDate: new Date().toISOString()
+            }
+          });
+        });
+        
+        toast({
+          title: "Success",
+          description: `Imported ${data.data.footprintEntries.length} automated entries from production facilities`,
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
   // Delete entry mutation
@@ -314,6 +362,65 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
           This includes fuel combustion in company vehicles, heating systems, and industrial processes, as well as refrigerant leaks.
         </AlertDescription>
       </Alert>
+
+      {/* Import from Operations */}
+      <Card className="bg-green-50 border-green-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg text-green-800 flex items-center gap-2">
+            <Download className="w-5 h-5" />
+            Import from Operations
+          </CardTitle>
+          <CardDescription className="text-green-700">
+            Automatically populate Scope 1 emissions from your production facility data in the Operations tab
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-green-700">
+              <p>This will import natural gas, fuel oil, and other direct fuel consumption data from your facilities.</p>
+              <p className="text-xs mt-1 opacity-75">
+                Facility impacts are excluded from Scope 3 calculations to prevent double-counting.
+              </p>
+            </div>
+            <Button 
+              onClick={() => importMutation.mutate()}
+              disabled={importMutation.isPending || isLoading}
+              className="bg-green-600 hover:bg-green-700 text-white"
+              data-testid="button-import-operations"
+            >
+              {importMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Import Data
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {importMutation.isSuccess && (
+            <Alert className="mt-4 bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Successfully imported {importMutation.data?.data?.footprintEntries?.length || 0} entries from your production facilities.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {importMutation.error && (
+            <Alert className="mt-4 bg-red-50 border-red-200">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Failed to import data: {(importMutation.error as Error).message}
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Current Entries Summary */}
       {entries.length > 0 && (
