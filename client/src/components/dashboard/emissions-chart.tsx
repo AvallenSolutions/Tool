@@ -75,6 +75,16 @@ export default function EmissionsChart() {
   const adjustedIngredients = ingredients - packaging;
   
   const total = adjustedIngredients + packaging + facilities + transportOther + waste;
+  
+  // Debug log the calculated values
+  console.log('🔍 Emissions Breakdown Debug:', {
+    adjustedIngredients: adjustedIngredients.toFixed(3),
+    packaging: packaging.toFixed(3),
+    facilities: facilities.toFixed(3),
+    transportOther: transportOther.toFixed(3),
+    waste: waste.toFixed(3),
+    total: total.toFixed(3)
+  });
 
   const data = [
     {
