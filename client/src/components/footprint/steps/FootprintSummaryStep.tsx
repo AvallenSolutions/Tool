@@ -205,7 +205,7 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
   };
 
   const handleSetTargets = () => {
-    setLocation('/app/dashboard?tab=goals');
+    setLocation('/app/kpis');
   };
 
   const handleSubmitForValidation = () => {
