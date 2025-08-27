@@ -287,9 +287,9 @@ export function FootprintWizard() {
               </div>
               <div className="text-center p-4 bg-white/50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-900">
-                  {(comprehensiveData.data.breakdown.productsRefinedLCA.co2e_kg / 1000).toFixed(1)} tonnes
+                  {automatedData?.data?.totalEmissions ? automatedData.data.totalEmissions.toFixed(1) : '0.0'} tonnes
                 </div>
-                <p className="text-sm text-blue-700">Product LCA Only</p>
+                <p className="text-sm text-blue-700">Scope 3</p>
               </div>
               <div className="text-center p-4 bg-white/50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-900">
@@ -310,53 +310,7 @@ export function FootprintWizard() {
         </Card>
       )}
 
-      {/* Progress Overview */}
-      <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-slate-900">Overall Progress</h3>
-              <p className="text-sm text-slate-600">
-                {completedSteps} of {steps.length - 1} scopes completed
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-600">
-                  {calculateActualTotal().toLocaleString()} kg CO₂e
-                </div>
-                <p className="text-sm text-slate-600">Total Calculated Emissions</p>
-              </div>
-              
-              {existingData?.data && existingData.data.length > 0 && (
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => recalculateMutation.mutate()}
-                    disabled={recalculateMutation.isPending}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    {recalculateMutation.isPending ? 'Updating...' : 'Recalculate'}
-                  </Button>
-                  <Button
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => clearMutation.mutate()}
-                    disabled={clearMutation.isPending}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    {clearMutation.isPending ? 'Clearing...' : 'Clear All Data'}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-          <Progress value={progressPercentage} className="h-2" />
-        </CardContent>
-      </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Step Navigation Sidebar */}

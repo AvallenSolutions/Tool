@@ -20,8 +20,19 @@ export default function MetricsCards() {
     retry: false,
   });
 
-  // Calculate CO2e the same way as FootprintWizard "Overall Progress"
+  // Fetch comprehensive footprint data to match Carbon Footprint Calculator total exactly
+  const { data: comprehensiveData } = useQuery({
+    queryKey: ['/api/company/footprint/comprehensive'],
+  });
+
+  // Calculate CO2e exactly the same way as FootprintWizard calculateActualTotal()
   const calculateTotalCO2e = () => {
+    // Use comprehensive footprint total if available (matches Carbon Footprint Calculator)
+    if (comprehensiveData?.data?.totalFootprint?.co2e_tonnes) {
+      return comprehensiveData.data.totalFootprint.co2e_tonnes;
+    }
+    
+    // Fallback to manual calculation if comprehensive data not available
     if (!footprintData?.data || !automatedData?.data) return 0;
     
     // Manual Scope 1 + 2 emissions from footprint data
@@ -44,6 +55,7 @@ export default function MetricsCards() {
     metrics,
     footprintData,
     automatedData,
+    comprehensiveData,
     calculatedCO2e: calculateTotalCO2e(),
     error: error?.message
   });
