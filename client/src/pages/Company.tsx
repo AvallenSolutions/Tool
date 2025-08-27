@@ -392,7 +392,7 @@ export default function Company() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7 h-auto p-1 bg-gray-100">
+            <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-gray-100">
               <TabsTrigger 
                 value="overview" 
                 className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
@@ -441,14 +441,7 @@ export default function Company() {
                 <span className="text-sm font-medium">Governance</span>
                 <span className="text-xs text-gray-500">Ethics & Leadership</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="impact" 
-                className="flex flex-col items-center gap-2 py-4 px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-avallen-green/20"
-              >
-                <BarChart3 className="w-5 h-5" />
-                <span className="text-sm font-medium">Impact</span>
-                <span className="text-xs text-gray-500">Progress</span>
-              </TabsTrigger>
+
             </TabsList>
 
             <TabsContent value="footprint" className="space-y-6">
@@ -1333,130 +1326,7 @@ export default function Company() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="impact" className="space-y-6">
-              {/* Environmental Impact Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Environmental Impact Summary</CardTitle>
-                  <CardDescription>
-                    Overview of your company's environmental data collection progress and next steps
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Progress Overview */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Data Collection Progress</span>
-                      <span className="text-sm text-gray-600">{completionPercentage}%</span>
-                    </div>
-                    <Progress value={completionPercentage} className="w-full" />
-                  </div>
 
-                  {/* Data Categories Status */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Completed Sections:</h4>
-                      <div className="space-y-1">
-                        {sustainabilityData.certifications.length > 0 && (
-                          <div className="flex items-center text-sm text-green-600">
-                            <div className="w-2 h-2 bg-green-600 rounded-full mr-2" />
-                            Environmental Certifications
-                          </div>
-                        )}
-                        {sustainabilityData.facilitiesData.energySource && (
-                          <div className="flex items-center text-sm text-green-600">
-                            <div className="w-2 h-2 bg-green-600 rounded-full mr-2" />
-                            Energy Source Data
-                          </div>
-                        )}
-                        {sustainabilityData.goals.carbonNeutralTarget && (
-                          <div className="flex items-center text-sm text-green-600">
-                            <div className="w-2 h-2 bg-green-600 rounded-full mr-2" />
-                            Carbon Neutrality Target
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Next Steps:</h4>
-                      <div className="space-y-1">
-                        {sustainabilityData.environmentalPolicies.wasteManagement === '' && (
-                          <div className="flex items-center text-sm text-amber-600">
-                            <div className="w-2 h-2 bg-amber-600 rounded-full mr-2" />
-                            Complete Waste Management Policy
-                          </div>
-                        )}
-                        {sustainabilityData.facilitiesData.renewableEnergyPercentage === undefined && (
-                          <div className="flex items-center text-sm text-amber-600">
-                            <div className="w-2 h-2 bg-amber-600 rounded-full mr-2" />
-                            Add Renewable Energy Percentage
-                          </div>
-                        )}
-                        {sustainabilityData.goals.sustainabilityGoals === '' && (
-                          <div className="flex items-center text-sm text-amber-600">
-                            <div className="w-2 h-2 bg-amber-600 rounded-full mr-2" />
-                            Define Sustainability Goals
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-
-
-                  {/* Impact Metrics Placeholder */}
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <h4 className="font-medium text-sm mb-2">Environmental Impact Visualization</h4>
-                    <p className="text-sm text-gray-600">
-                      Once you complete data collection, this section will display:
-                    </p>
-                    <ul className="text-sm text-gray-600 mt-2 space-y-1">
-                      <li>• Energy consumption and renewable energy usage charts</li>
-                      <li>• Waste generation and recycling rate visualizations</li>
-                      <li>• Carbon footprint progress tracking</li>
-                      <li>• Water footprint breakdown and analysis</li>
-                      <li>• Sustainability goal progress indicators</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Save Button */}
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-600">
-                  {sustainabilityMutation.isPending ? (
-                    <span className="flex items-center text-blue-600">
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      Auto-saving changes...
-                    </span>
-                  ) : (backendSustainabilityData as any)?.lastUpdated ? (
-                    <span>
-                      Last updated: {new Date((backendSustainabilityData as any).lastUpdated).toLocaleString()}
-                    </span>
-                  ) : (
-                    <span>Changes are automatically saved</span>
-                  )}
-                </div>
-                <Button 
-                  onClick={handleSaveSustainabilityData}
-                  disabled={isSaving || sustainabilityMutation.isPending}
-                  className="bg-avallen-green hover:bg-avallen-green-light text-white"
-                >
-                  {(isSaving || sustainabilityMutation.isPending) ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Now
-                    </>
-                  )}
-                </Button>
-              </div>
-            </TabsContent>
           </Tabs>
         </main>
       </div>
