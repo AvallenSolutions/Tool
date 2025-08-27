@@ -4,17 +4,25 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 import { BarChart3, Loader2 } from "lucide-react";
 
 export default function EmissionsChart() {
-  // Fetch refined LCA data consistent with dashboard metrics
-  const { data: metricsData, isLoading } = useQuery({
-    queryKey: ["/api/dashboard/metrics"],
+  // Fetch comprehensive footprint data for ingredients and packaging breakdown
+  const { data: comprehensiveData, isLoading: comprehensiveLoading } = useQuery({
+    queryKey: ["/api/company/footprint/comprehensive"],
     retry: false,
   });
   
-  // Fetch individual product LCA breakdown for detailed analysis
-  const { data: productsData } = useQuery({
-    queryKey: ["/api/products"],
+  // Fetch Scope 3 automated data for waste and transport categories
+  const { data: scope3Data, isLoading: scope3Loading } = useQuery({
+    queryKey: ["/api/company/footprint/scope3/automated"],
     retry: false,
   });
+  
+  // Fetch carbon calculator total for Scope 1+2 (production facilities)
+  const { data: carbonCalculatorData, isLoading: carbonLoading } = useQuery({
+    queryKey: ["/api/carbon-calculator-total"],
+    retry: false,
+  });
+
+  const isLoading = comprehensiveLoading || scope3Loading || carbonLoading;
 
   if (isLoading) {
     return (
@@ -24,7 +32,7 @@ export default function EmissionsChart() {
             <BarChart3 className="w-5 h-5 text-green-600" />
             Emissions Breakdown
           </CardTitle>
-          <CardDescription>Company greenhouse gas emissions by scope</CardDescription>
+          <CardDescription>Company greenhouse gas emissions by category using authentic data sources</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-64">
           <div className="flex items-center gap-2 text-gray-500">
@@ -36,18 +44,33 @@ export default function EmissionsChart() {
     );
   }
 
-  // Use refined LCA total from metrics (consistent with dashboard display)
-  const totalCO2e = metricsData?.totalCO2e || 0; // Already in kg CO2e
-  const totalTonnes = totalCO2e / 1000; // Convert to tonnes
+  // Calculate emissions using real data from authentic sources
   
-  // For breakdown, we'll use the refined LCA structure
-  // Since refined LCA primarily focuses on product LCA (Scope 3), we'll break it down by components
-  const ingredients = totalTonnes * 0.73; // ~73% from ingredients (largest component)
-  const packaging = totalTonnes * 0.15;   // ~15% from packaging
-  const facilities = totalTonnes * 0.11;  // ~11% from facilities + waste
-  const otherScope3 = totalTonnes * 0.01; // ~1% other scope 3
+  // 1. Ingredients: From Scope 3 Purchased Goods & Services (OpenLCA calculations)
+  const ingredients = scope3Data?.data?.categories?.purchasedGoodsServices?.emissions || 0; // Already in tonnes
   
-  const total = totalTonnes;
+  // 2. Packaging: Extract from comprehensive data product breakdown
+  let packaging = 0;
+  if (comprehensiveData?.data?.productDetails) {
+    packaging = comprehensiveData.data.productDetails.reduce((total: number, product: any) => {
+      return total + (product.breakdown?.packaging?.co2e || 0);
+    }, 0) / 1000; // Convert kg to tonnes
+  }
+  
+  // 3. Production Facilities: Scope 1+2 from carbon calculator
+  const facilities = carbonCalculatorData?.data?.totalCO2e || 0; // Already in tonnes
+  
+  // 4. Transport & Other: Sum of business travel, commuting, and transportation from Scope 3
+  const transportOther = (
+    (scope3Data?.data?.categories?.businessTravel?.emissions || 0) +
+    (scope3Data?.data?.categories?.employeeCommuting?.emissions || 0) +
+    (scope3Data?.data?.categories?.transportation?.emissions || 0)
+  );
+  
+  // 5. Waste: New category from Scope 3 Waste Generated
+  const waste = scope3Data?.data?.categories?.wasteGenerated?.emissions || 0; // Already in tonnes
+  
+  const total = ingredients + packaging + facilities + transportOther + waste;
 
   const data = [
     {
@@ -56,6 +79,7 @@ export default function EmissionsChart() {
       percentage: total > 0 ? ((ingredients / total) * 100) : 0,
       color: "hsl(143, 69%, 38%)", // avallen-green
       description: "OpenLCA ingredient impacts from ecoinvent database",
+      source: "Scope 3 Purchased Goods & Services"
     },
     {
       name: "Packaging Materials", 
@@ -63,6 +87,7 @@ export default function EmissionsChart() {
       percentage: total > 0 ? ((packaging / total) * 100) : 0,
       color: "hsl(210, 11%, 33%)", // slate-gray
       description: "Glass bottles, labels, closures with recycled content",
+      source: "Comprehensive LCA product breakdown"
     },
     {
       name: "Production Facilities",
@@ -70,13 +95,23 @@ export default function EmissionsChart() {
       percentage: total > 0 ? ((facilities / total) * 100) : 0,
       color: "hsl(196, 100%, 47%)", // bright blue
       description: "Energy, water, waste from production facilities",
+      source: "Carbon Calculator Scope 1+2 totals"
     },
     {
       name: "Transport & Other",
-      value: otherScope3,
-      percentage: total > 0 ? ((otherScope3 / total) * 100) : 0,
+      value: transportOther,
+      percentage: total > 0 ? ((transportOther / total) * 100) : 0,
       color: "hsl(45, 93%, 47%)", // muted gold
-      description: "Waste disposal transport and other impacts",
+      description: "Business travel, employee commuting, and transportation",
+      source: "Scope 3 Travel & Transportation categories"
+    },
+    {
+      name: "Waste",
+      value: waste,
+      percentage: total > 0 ? ((waste / total) * 100) : 0,
+      color: "hsl(25, 95%, 53%)", // orange
+      description: "Waste disposal and end-of-life treatment",
+      source: "Scope 3 Waste Generated category"
     },
   ].filter(item => item.value > 0);
 
@@ -84,13 +119,16 @@ export default function EmissionsChart() {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border border-light-gray rounded-lg shadow-lg min-w-[200px]">
+        <div className="bg-white p-3 border border-light-gray rounded-lg shadow-lg min-w-[250px]">
           <p className="text-slate-gray font-medium mb-2">{data.name}</p>
           <p className="text-slate-gray font-semibold">
             {data.value.toFixed(1)} tonnes CO2e ({data.percentage.toFixed(1)}%)
           </p>
           {data.description && (
             <p className="text-xs text-gray-600 mt-2">{data.description}</p>
+          )}
+          {data.source && (
+            <p className="text-xs text-blue-600 mt-1 italic">Source: {data.source}</p>
           )}
         </div>
       );
@@ -123,7 +161,7 @@ export default function EmissionsChart() {
             <BarChart3 className="w-5 h-5 text-green-600" />
             Emissions Breakdown
           </CardTitle>
-          <CardDescription>Company greenhouse gas emissions by scope</CardDescription>
+          <CardDescription>Company greenhouse gas emissions by category using authentic data sources</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-64">
           <div className="text-center text-gray-500">
