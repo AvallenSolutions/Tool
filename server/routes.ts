@@ -3192,36 +3192,32 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Company not found' });
       }
       
-      // Get manual Scope 1 + 2 emissions from footprint data
-      const footprintData = await dbStorage.getCompanyFootprintData(company.id, undefined, undefined);
-      let manualEmissions = 0;
-      
-      for (const entry of footprintData) {
-        if (entry.scope === 1 || entry.scope === 2) {
-          const emissions = parseFloat(entry.calculatedEmissions) || 0;
-          manualEmissions += emissions;
-        }
-      }
-      
-      // Get automated Scope 3 emissions
-      const automatedScope3 = await calculateTotalScope3Emissions(company.id);
-      const automatedEmissions = automatedScope3.totalEmissions * 1000; // Convert tonnes to kg
-      
-      const totalKg = manualEmissions + automatedEmissions;
-      const totalTonnes = totalKg / 1000; // Convert back to tonnes
-      
-      console.log('🔍 Carbon Calculator API Total:', { manualEmissions, automatedEmissions, totalKg, totalTonnes });
-      
-      res.json({ 
-        success: true,
-        data: { 
-          totalCO2e: totalTonnes,
-          breakdown: {
-            manualScope1And2: manualEmissions / 1000,
-            automatedScope3: automatedScope3.totalEmissions
-          }
+      // Use the EXACT SAME comprehensive endpoint that the Carbon Footprint Calculator uses
+      const response = await fetch(`http://localhost:5000/api/company/footprint/comprehensive`, {
+        headers: {
+          'Cookie': req.get('Cookie') || '',
+          'Authorization': req.get('Authorization') || ''
         }
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get comprehensive data');
+      }
+      
+      const comprehensiveData = await response.json();
+      
+      if (comprehensiveData?.data?.totalFootprint?.co2e_tonnes) {
+        console.log('🔍 Carbon Calculator API returning exact comprehensive total:', comprehensiveData.data.totalFootprint.co2e_tonnes);
+        
+        res.json({ 
+          success: true,
+          data: { 
+            totalCO2e: comprehensiveData.data.totalFootprint.co2e_tonnes
+          }
+        });
+      } else {
+        throw new Error('No comprehensive data available');
+      }
     } catch (error) {
       console.error('Error getting carbon calculator total:', error);
       res.status(500).json({ error: 'Internal server error' });

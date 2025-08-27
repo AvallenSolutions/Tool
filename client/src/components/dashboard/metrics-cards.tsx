@@ -32,11 +32,17 @@ export default function MetricsCards() {
 
   // Simple function that copies the Carbon Calculator total directly
   const getCarbonCalculatorTotal = () => {
-    // Return the exact number from Carbon Footprint Calculator
+    // Return the exact number from Carbon Footprint Calculator comprehensive endpoint
     if (carbonCalculatorTotal?.data?.totalCO2e) {
+      console.log('✅ Using Carbon Calculator total:', carbonCalculatorTotal.data.totalCO2e);
       return carbonCalculatorTotal.data.totalCO2e;
     }
-    // Fallback to previous logic if API not available
+    // Fallback: Use the comprehensive data directly (same source as Carbon Calculator)
+    if (comprehensiveData?.data?.totalFootprint?.co2e_tonnes) {
+      console.log('✅ Using comprehensive data total:', comprehensiveData.data.totalFootprint.co2e_tonnes);
+      return comprehensiveData.data.totalFootprint.co2e_tonnes;
+    }
+    console.log('⚠️ Fallback to metrics:', metrics?.totalCO2e || 0);
     return (metrics?.totalCO2e || 0);
   };
 
