@@ -310,7 +310,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-blue-800 flex items-center space-x-2">
               <TrendingUp className="h-5 w-5" />
-              <span>Automated Calculations</span>
+              <span>Scope 3 Emissions breakdown</span>
             </CardTitle>
             <CardDescription className="text-blue-700">
               Calculated automatically from your existing data
@@ -443,88 +443,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
         </Card>
       )}
 
-      {/* Current Entries Summary - Show if there are entries OR automated data */}
-      {((entries && entries.length > 0) || (automatedData?.data?.totalEmissions > 0)) && (
-        <Card className="bg-green-50 border-green-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-green-800">Current Scope 3 Emissions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {Object.entries(SCOPE3_CATEGORIES).map(([key, category]) => {
-                // Calculate manual category emissions
-                const categoryEmissions = calculateCategoryEmissions(key);
-                const categoryEntries = entries.filter(e => 
-                  category.types.some(t => t.id === e.dataType)
-                );
-                
-                // Get automated data for this category
-                let automatedEmissions = 0;
-                let automatedLabel = 'entries';
-                
-                if ((category as any).automated && automatedData?.data?.categories) {
-                  if (key === 'purchased_goods' && automatedData.data.categories.purchasedGoodsServices) {
-                    automatedEmissions = automatedData.data.categories.purchasedGoodsServices.emissions * 1000; // Convert tonnes to kg
-                    automatedLabel = `${automatedData.data.categories.purchasedGoodsServices.productCount} products`;
-                  } else if (key === 'fuel_energy' && automatedData.data.categories.fuelEnergyRelated) {
-                    automatedEmissions = automatedData.data.categories.fuelEnergyRelated.emissions * 1000; // Convert tonnes to kg
-                    automatedLabel = 'automated';
-                  } else if (key === 'waste' && automatedData.data.categories.wasteGenerated) {
-                    automatedEmissions = automatedData.data.categories.wasteGenerated.emissions * 1000; // Convert tonnes to kg
-                    automatedLabel = 'from facilities';
-                  }
-                }
-                
-                // Add manual data calculations from automated API for non-automated categories
-                if (automatedData?.data?.categories) {
-                  if (key === 'business_travel' && automatedData.data.categories.businessTravel) {
-                    automatedEmissions = automatedData.data.categories.businessTravel.emissions * 1000; // Convert tonnes to kg
-                    automatedLabel = `${automatedData.data.categories.businessTravel.entryCount} entries`;
-                  } else if (key === 'employee_commuting' && automatedData.data.categories.employeeCommuting) {
-                    automatedEmissions = automatedData.data.categories.employeeCommuting.emissions * 1000; // Convert tonnes to kg
-                    automatedLabel = `${automatedData.data.categories.employeeCommuting.entryCount} entries`;
-                  } else if (key === 'transportation' && automatedData.data.categories.transportation) {
-                    automatedEmissions = automatedData.data.categories.transportation.emissions * 1000; // Convert tonnes to kg
-                    automatedLabel = `${automatedData.data.categories.transportation.entryCount} entries`;
-                  } else if (key === 'capital_goods' && automatedData.data.categories.capitalGoods) {
-                    automatedEmissions = automatedData.data.categories.capitalGoods.emissions * 1000; // Convert tonnes to kg
-                    automatedLabel = `${automatedData.data.categories.capitalGoods.entryCount} entries`;
-                  }
-                }
-                
-                const totalCategoryEmissions = categoryEmissions + automatedEmissions;
-                
-                return (
-                  <div key={key} className={`p-4 rounded-lg ${category.color}`}>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <category.icon className={`h-5 w-5 ${category.textColor}`} />
-                      <h3 className={`font-medium ${category.textColor}`}>{category.title}</h3>
-                      {(category as any).automated && (
-                        <Badge variant="secondary" className="text-xs">Auto</Badge>
-                      )}
-                    </div>
-                    <div className={`text-lg font-semibold ${category.textColor}`}>
-                      {totalCategoryEmissions.toLocaleString()} kg CO₂e
-                    </div>
-                    <p className="text-sm text-slate-600">
-                      {(category as any).automated ? automatedLabel : `${categoryEntries.length} entries`}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <Separator className="my-4" />
-            
-            <div className="text-right">
-              <div className="text-2xl font-bold text-green-600">
-                {calculateTotalEmissions().toLocaleString()} kg CO₂e
-              </div>
-              <p className="text-sm text-slate-600">Total Scope 3 Emissions</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Category Selection */}
       <Card>
