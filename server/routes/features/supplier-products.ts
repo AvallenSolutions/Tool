@@ -9,27 +9,8 @@ import { logger, logDatabase } from '../../config/logger';
 
 const router = Router();
 
-// GET /api/supplier-products/:id - Get specific supplier product
-router.get('/:id', isAuthenticated, async (req, res) => {
-  try {
-    const productId = parseInt(req.params.id);
-    
-    const product = await db.select()
-      .from(supplierProducts)
-      .where(eq(supplierProducts.id, productId))
-      .limit(1);
-    
-    if (!product || product.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    
-    res.json(product[0]);
-    logDatabase('SELECT', 'supplier_products', undefined, { productId });
-  } catch (error) {
-    logger.error({ error, route: '/api/supplier-products/:id', productId: req.params.id }, 'Failed to fetch supplier product');
-    res.status(500).json({ error: 'Failed to fetch product' });
-  }
-});
+// Note: Individual supplier product route handled in main server/routes.ts
+// This avoids route conflicts and ensures proper UUID handling
 
 // PUT /api/supplier-products/:id - Update supplier product
 router.put('/:id', isAuthenticated, async (req, res) => {

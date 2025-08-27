@@ -1,0 +1,48 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Sentry error tracking initialized
+✅ Mixpanel analytics initialized
+✓ Common agricultural ingredients initialized
+[18:31:08] INFO: UnifiedPDFService initialized
+[18:31:09] INFO: Feature routes configured successfully
+[18:31:09] INFO: HTTP server configured with feature routers {"port":"5000"}
+[18:31:22] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[18:31:30] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[18:31:37] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+isAuthenticated middleware check for: / {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/dashboard/metrics {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+📊 Using stored footprints for Rum Blanc: CO₂=nullkg, Water=nullL, Waste=0.25kg
+Products fetched: 1 for company 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+[18:32:01] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[18:32:02] INFO: API: GET /api/products 200 (277ms) {"method":"GET","path":"/api/pro

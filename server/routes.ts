@@ -1259,41 +1259,50 @@ Be precise and quote actual text from the content, not generic terms.`;
     
     try {
       const { id } = req.params;
+      
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(id)) {
+        return res.status(400).json({ error: 'Invalid UUID format' });
+      }
+      
+      console.log(`🔍 Fetching supplier product with ID: ${id}`);
+      
       const { verifiedSuppliers, supplierProducts } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
       
+      // First get the supplier product
       const product = await db
-        .select({
-          id: supplierProducts.id,
-          supplierId: supplierProducts.supplierId,
-          productName: supplierProducts.productName,
-          productDescription: supplierProducts.productDescription,
-          sku: supplierProducts.sku,
-          hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
-          lcaDataJson: supplierProducts.lcaDataJson,
-          productAttributes: supplierProducts.productAttributes,
-          basePrice: supplierProducts.basePrice,
-          currency: supplierProducts.currency,
-          minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
-          leadTimeDays: supplierProducts.leadTimeDays,
-          certifications: supplierProducts.certifications,
-          supplierName: verifiedSuppliers.supplierName,
-          supplierCategory: verifiedSuppliers.supplierCategory,
-          isVerified: supplierProducts.isVerified,
-          submittedBy: supplierProducts.submittedBy,
-          createdAt: supplierProducts.createdAt,
-          updatedAt: supplierProducts.updatedAt
-        })
+        .select()
         .from(supplierProducts)
-        .innerJoin(verifiedSuppliers, eq(supplierProducts.supplierId, verifiedSuppliers.id))
         .where(eq(supplierProducts.id, id))
         .limit(1);
-
+      
       if (product.length === 0) {
+        console.log(`❌ No supplier product found with ID: ${id}`);
         return res.status(404).json({ error: 'Product not found' });
       }
+      
+      // Then get the supplier info
+      const supplier = await db
+        .select({
+          supplierName: verifiedSuppliers.supplierName,
+          supplierCategory: verifiedSuppliers.supplierCategory
+        })
+        .from(verifiedSuppliers)
+        .where(eq(verifiedSuppliers.id, product[0].supplierId))
+        .limit(1);
+      
+      // Combine the results
+      const result = {
+        ...product[0],
+        supplierName: supplier.length > 0 ? supplier[0].supplierName : 'Unknown Supplier',
+        supplierCategory: supplier.length > 0 ? supplier[0].supplierCategory : 'Unknown'
+      };
 
-      res.json(product[0]);
+      console.log(`📦 Successfully fetched supplier product: ${result.productName}`);
+
+      res.json(result);
     } catch (error) {
       console.error('❌ Error fetching supplier product:', error);
       res.status(500).json({ error: 'Failed to fetch supplier product' });
