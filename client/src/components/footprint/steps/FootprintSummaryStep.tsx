@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Download, FileText, TrendingUp, Target, Award, AlertTriangle } from 'lucide-react';
+import { Download, FileText, TrendingUp, Target, Award, AlertTriangle, BarChart3 } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { FootprintData } from '../FootprintWizard';
 
 interface FootprintSummaryStepProps {
@@ -33,10 +34,16 @@ const INDUSTRY_BENCHMARKS = {
 };
 
 export function FootprintSummaryStep({ data, onDataChange, existingData, onSave, isLoading }: FootprintSummaryStepProps) {
+  const [, setLocation] = useLocation();
   
   // Fetch automated Scope 3 data
   const { data: automatedData } = useQuery({
     queryKey: ['/api/company/footprint/scope3/automated'],
+  });
+  
+  // Fetch comprehensive data for per-liter calculations
+  const { data: comprehensiveData } = useQuery({
+    queryKey: ['/api/company/footprint/comprehensive'],
   });
 
   // Calculate emissions by scope including automated Scope 3
@@ -62,24 +69,38 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
     };
   }, [existingData, automatedData]);
 
-  // Prepare chart data
+  // Prepare chart data (convert to tonnes for better readability)
   const barChartData = [
-    { name: 'Scope 1\nDirect', emissions: scopeEmissions.scope1, color: SCOPE_COLORS[1] },
-    { name: 'Scope 2\nElectricity', emissions: scopeEmissions.scope2, color: SCOPE_COLORS[2] },
-    { name: 'Scope 3\nValue Chain', emissions: scopeEmissions.scope3, color: SCOPE_COLORS[3] },
+    { name: 'Scope 1', fullName: 'Scope 1 Direct', emissions: scopeEmissions.scope1 / 1000, color: SCOPE_COLORS[1] },
+    { name: 'Scope 2', fullName: 'Scope 2 Electricity', emissions: scopeEmissions.scope2 / 1000, color: SCOPE_COLORS[2] },
+    { name: 'Scope 3', fullName: 'Scope 3 Value Chain', emissions: scopeEmissions.scope3 / 1000, color: SCOPE_COLORS[3] },
   ];
 
   const pieChartData = barChartData.filter(item => item.emissions > 0);
 
-  // Calculate key metrics
+  // Calculate key metrics including kg CO2e per litre
   const calculateIntensityMetrics = () => {
     // These would typically come from company profile data
     const estimatedEmployees = 50; // Placeholder - would come from company data
     const estimatedRevenue = 2000000; // Placeholder - would come from company data
     
+    // Calculate kg CO2e per litre from comprehensive data
+    let perLitre = 0;
+    if (comprehensiveData?.success && comprehensiveData?.data?.totalFootprint?.co2e_kg && comprehensiveData?.data?.companyId) {
+      // Get total production volume in litres from products
+      const totalProductionLitres = comprehensiveData.data.productDetails.reduce((sum, product) => {
+        return sum + (product.productionVolume * 0.75); // Assuming 750ml bottles, convert to litres
+      }, 0);
+      
+      if (totalProductionLitres > 0) {
+        perLitre = comprehensiveData.data.totalFootprint.co2e_kg / totalProductionLitres;
+      }
+    }
+    
     return {
       perEmployee: scopeEmissions.total / estimatedEmployees,
       perRevenue: (scopeEmissions.total / estimatedRevenue) * 1000000, // per £1M revenue
+      perLitre: perLitre,
     };
   };
 
@@ -179,9 +200,12 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
   const benchmarkComparison = getBenchmarkComparison();
   const reductionRecommendations = getReductionRecommendations();
 
-  const handleDownloadReport = () => {
-    // TODO: Implement PDF report generation
-    console.log('Generating PDF report...');
+  const handleGenerateReport = () => {
+    setLocation('/app/reports');
+  };
+
+  const handleSetTargets = () => {
+    setLocation('/app/dashboard?tab=goals');
   };
 
   const handleSubmitForValidation = () => {
@@ -196,18 +220,18 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
         <Card className="bg-gradient-to-br from-slate-50 to-slate-100">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-slate-900">
-              {scopeEmissions.total.toLocaleString()}
+              {(scopeEmissions.total / 1000).toFixed(1)}
             </div>
-            <p className="text-sm text-slate-600">kg CO₂e Total</p>
+            <p className="text-sm text-slate-600">tonnes CO₂e Total</p>
           </CardContent>
         </Card>
         
         <Card className="bg-gradient-to-br from-red-50 to-red-100">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-red-700">
-              {scopeEmissions.scope1.toLocaleString()}
+              {(scopeEmissions.scope1 / 1000).toFixed(1)}
             </div>
-            <p className="text-sm text-red-600">kg CO₂e Scope 1</p>
+            <p className="text-sm text-red-600">tonnes CO₂e Scope 1</p>
             <p className="text-xs text-slate-500">
               {scopeEmissions.total > 0 ? ((scopeEmissions.scope1 / scopeEmissions.total) * 100).toFixed(1) : 0}% of total
             </p>
@@ -217,9 +241,9 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
         <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-orange-700">
-              {scopeEmissions.scope2.toLocaleString()}
+              {(scopeEmissions.scope2 / 1000).toFixed(1)}
             </div>
-            <p className="text-sm text-orange-600">kg CO₂e Scope 2</p>
+            <p className="text-sm text-orange-600">tonnes CO₂e Scope 2</p>
             <p className="text-xs text-slate-500">
               {scopeEmissions.total > 0 ? ((scopeEmissions.scope2 / scopeEmissions.total) * 100).toFixed(1) : 0}% of total
             </p>
@@ -229,9 +253,9 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
         <Card className="bg-gradient-to-br from-green-50 to-green-100">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-700">
-              {scopeEmissions.scope3.toLocaleString()}
+              {(scopeEmissions.scope3 / 1000).toFixed(1)}
             </div>
-            <p className="text-sm text-green-600">kg CO₂e Scope 3</p>
+            <p className="text-sm text-green-600">tonnes CO₂e Scope 3</p>
             <p className="text-xs text-slate-500">
               {scopeEmissions.total > 0 ? ((scopeEmissions.scope3 / scopeEmissions.total) * 100).toFixed(1) : 0}% of total
             </p>
@@ -249,23 +273,28 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fontSize: 12, fill: '#64748b' }}
+                  tick={{ fontSize: 14, fill: '#374151', fontWeight: 500 }}
                   angle={0}
                   textAnchor="middle"
-                  height={60}
+                  height={40}
                 />
-                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: '#374151' }}
+                  label={{ value: 'Tonnes CO₂e', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#374151', fontSize: '12px' } }}
+                />
                 <Tooltip 
-                  formatter={(value) => [`${(value as number).toLocaleString()} kg CO₂e`, 'Emissions']}
+                  formatter={(value) => [`${(value as number).toFixed(1)} tonnes CO₂e`, 'Emissions']}
+                  labelFormatter={(label) => barChartData.find(d => d.name === label)?.fullName || label}
                   contentStyle={{ 
                     backgroundColor: 'white', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '8px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
                 <Bar dataKey="emissions" radius={[4, 4, 0, 0]}>
@@ -292,23 +321,25 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name.split('\n')[0]}\n${(percent * 100).toFixed(1)}%`}
+                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
                   outerRadius={90}
                   fill="#8884d8"
                   dataKey="emissions"
-                  fontSize={12}
+                  style={{ fontSize: '13px', fontWeight: '500', fill: '#374151' }}
                 >
                   {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value) => [`${(value as number).toLocaleString()} kg CO₂e`, 'Emissions']}
+                  formatter={(value) => [`${(value as number).toFixed(1)} tonnes CO₂e`, 'Emissions']}
+                  labelFormatter={(label) => pieChartData.find(d => d.name === label)?.fullName || label}
                   contentStyle={{ 
                     backgroundColor: 'white', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '8px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
               </PieChart>
@@ -326,10 +357,10 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
               <div className="text-xl font-semibold text-slate-900">
-                {intensityMetrics.perEmployee.toLocaleString()} kg CO₂e
+                {(intensityMetrics.perEmployee / 1000).toFixed(1)} tonnes CO₂e
               </div>
               <p className="text-sm text-slate-600">Per Employee</p>
               <div className={`text-sm font-medium ${
@@ -337,16 +368,25 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
                 benchmarkComparison.performance === 'average' ? 'text-yellow-600' :
                 'text-red-600'
               } mt-1`}>
-                {benchmarkComparison.message}
+                {benchmarkComparison.performance === 'excellent' ? 'Excellent' : 
+                 benchmarkComparison.performance === 'average' ? 'Average' : 'Needs Improvement'}
               </div>
             </div>
             
             <div>
               <div className="text-xl font-semibold text-slate-900">
-                {intensityMetrics.perRevenue.toLocaleString()} kg CO₂e
+                {intensityMetrics.perLitre > 0 ? intensityMetrics.perLitre.toFixed(3) : 'N/A'}
+              </div>
+              <p className="text-sm text-slate-600">kg CO₂e per Litre</p>
+              <p className="text-sm text-slate-500 mt-1">Production intensity</p>
+            </div>
+            
+            <div>
+              <div className="text-xl font-semibold text-slate-900">
+                {(intensityMetrics.perRevenue / 1000).toFixed(1)} tonnes CO₂e
               </div>
               <p className="text-sm text-slate-600">Per £1M Revenue</p>
-              <p className="text-sm text-slate-500 mt-1">Industry comparison coming soon</p>
+              <p className="text-sm text-slate-500 mt-1">Revenue intensity</p>
             </div>
             
             <div>
@@ -439,27 +479,27 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
 
       {/* Action Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={handleDownloadReport}>
+        <Card className="cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-200" onClick={handleGenerateReport}>
           <CardContent className="p-6 text-center">
-            <Download className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-            <h3 className="font-semibold text-slate-900 mb-2">Download Report</h3>
-            <p className="text-sm text-slate-600">Generate a comprehensive PDF report of your carbon footprint</p>
+            <BarChart3 className="h-8 w-8 mx-auto mb-3 text-blue-600" />
+            <h3 className="font-semibold text-slate-900 mb-2">Generate Report</h3>
+            <p className="text-sm text-slate-600">Create comprehensive sustainability reports with professional templates</p>
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={handleSubmitForValidation}>
+        <Card className="cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all duration-200" onClick={handleSetTargets}>
+          <CardContent className="p-6 text-center">
+            <Target className="h-8 w-8 mx-auto mb-3 text-purple-600" />
+            <h3 className="font-semibold text-slate-900 mb-2">Set Targets</h3>
+            <p className="text-sm text-slate-600">Define SMART goals and science-based reduction targets</p>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-lg hover:border-green-300 transition-all duration-200" onClick={handleSubmitForValidation}>
           <CardContent className="p-6 text-center">
             <Award className="h-8 w-8 mx-auto mb-3 text-green-600" />
             <h3 className="font-semibold text-slate-900 mb-2">Expert Validation</h3>
             <p className="text-sm text-slate-600">Submit for professional review and third-party verification</p>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-          <CardContent className="p-6 text-center">
-            <FileText className="h-8 w-8 mx-auto mb-3 text-purple-600" />
-            <h3 className="font-semibold text-slate-900 mb-2">Set Targets</h3>
-            <p className="text-sm text-slate-600">Define science-based targets and reduction goals</p>
           </CardContent>
         </Card>
       </div>
