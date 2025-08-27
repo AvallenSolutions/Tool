@@ -172,6 +172,36 @@ export function SMARTGoals() {
 
   return (
     <div className="space-y-6">
+      {/* SMART Goals Management */}
+      <Card className="bg-white border shadow">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              SMART Goals
+            </CardTitle>
+            <CardDescription>Track your structured sustainability objectives</CardDescription>
+          </div>
+          <Button 
+            onClick={() => window.location.href = '/initiatives'} 
+            size="sm" 
+            variant="outline"
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Manage SMART Goals
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Overall Progress</span>
+              <span>{goals.length > 0 ? Math.round(goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length) : 0}%</span>
+            </div>
+            <Progress value={goals.length > 0 ? goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length : 0} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-white border shadow">
@@ -224,36 +254,6 @@ export function SMARTGoals() {
           </CardContent>
         </Card>
       </div>
-
-      {/* SMART Goals Management */}
-      <Card className="bg-white border shadow">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5" />
-              SMART Goals
-            </CardTitle>
-            <CardDescription>Track your structured sustainability objectives</CardDescription>
-          </div>
-          <Button 
-            onClick={() => window.location.href = '/initiatives'} 
-            size="sm" 
-            variant="outline"
-          >
-            <Target className="w-4 h-4 mr-2" />
-            Manage SMART Goals
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Overall Progress</span>
-              <span>{goals.length > 0 ? Math.round(goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length) : 0}%</span>
-            </div>
-            <Progress value={goals.length > 0 ? goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length : 0} className="h-2" />
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
