@@ -88,14 +88,14 @@ export default function Login() {
                   <div className="flex justify-center">
                     <Badge className="bg-avallen-green/10 text-avallen-green border-avallen-green/20 px-4 py-2">
                       <Award className="w-4 h-4 mr-2" />
-                      Paid Beta Program
+                      Pioneers Program
                     </Badge>
                   </div>
                   <CardTitle className="text-3xl font-bold text-slate-gray">
-                    Join Our Beta Program
+                    Join the Pioneers Program
                   </CardTitle>
                   <CardDescription className="text-lg">
-                    Be among the first to stress test our sustainability platform with real-world data
+                    An exclusive initiative for 20 forward-thinking brands to build more sustainable and resilient businesses
                   </CardDescription>
                 </CardHeader>
                 
@@ -164,24 +164,28 @@ export default function Login() {
                   {/* Features List */}
                   <div className="border-t pt-6">
                     <p className="text-sm font-medium text-slate-gray mb-4 text-center">
-                      What you get with your account:
+                      What's Included in the Pioneers Program:
                     </p>
                     <div className="grid grid-cols-1 gap-3">
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        Complete sustainability dashboard with real-time metrics
+                        Complete sustainability mapping (Scope 1, 2, 3 emissions, water & waste)
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        Company & product-level LCA calculations and PDF reporting
+                        Centralised supply chain hub for supplier data management
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        Anti-greenwashing compliance tools and supplier collaboration
+                        Strategic goal setting with KPIs and SMART goals tracking
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
-                        Expert validation and beta program support
+                        Professional, customisable sustainability reports with real-time data
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <CheckCircle className="w-4 h-4 text-success-green mr-3 flex-shrink-0" />
+                        Anti-greenwashing assurance built with DMCC Act compliance
                       </div>
                     </div>
                   </div>
@@ -211,12 +215,14 @@ export default function Login() {
             <div className="order-1 lg:order-2 space-y-6">
               <div className="text-center lg:text-left">
                 <h1 className="text-4xl lg:text-5xl font-bold text-slate-gray mb-4">
-                  Beta Testing
-                  <span className="text-avallen-green block">Our Platform</span>
+                  Pioneers Program
+                  <span className="text-avallen-green block">Lead Your Industry</span>
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
-                  Help us perfect our comprehensive sustainability platform featuring 
-                  company & product impact measurement, anti-greenwashing tools, and more.
+                <p className="text-xl text-gray-600 leading-relaxed mb-6">
+                  The conversation around sustainability in the drinks industry is changing. With new government legislation, compliance is no longer optional. The time to get your house in order is now.
+                </p>
+                <p className="text-lg text-gray-600 leading-relaxed">
+                  We've built Avallen Solutions to help you do just that - a simple, human-in-the-loop tool ensuring you're not just compliant, but a leader in your field.
                 </p>
               </div>
 
@@ -227,9 +233,9 @@ export default function Login() {
                     <BarChart3 className="w-5 h-5 text-avallen-green" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-gray">Company & Product Impact</h3>
+                    <h3 className="font-semibold text-slate-gray">Complete Sustainability Mapping</h3>
                     <p className="text-sm text-gray-600">
-                      Measure environmental impact at both company-wide and individual product levels
+                      Get a clear picture of your entire business's environmental footprint across all scopes
                     </p>
                   </div>
                 </div>
@@ -239,44 +245,46 @@ export default function Login() {
                     <Shield className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-gray">Anti-Greenwashing Tools</h3>
+                    <h3 className="font-semibold text-slate-gray">DMCC Act Compliance</h3>
                     <p className="text-sm text-gray-600">
-                      Ensure marketing compliance and avoid greenwashing with built-in validation
+                      Built with the DMCC Act in mind, protecting you from scrutiny and potential fines
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4 p-4 bg-white/60 rounded-lg border border-light-gray">
                   <div className="p-2 bg-muted-gold/10 rounded-lg">
-                    <FileText className="w-5 h-5 text-muted-gold" />
+                    <Users className="w-5 h-5 text-muted-gold" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-gray">Professional Reports</h3>
+                    <h3 className="font-semibold text-slate-gray">Direct Development Access</h3>
                     <p className="text-sm text-gray-600">
-                      Generate stakeholder-ready PDF reports with authentic company and product data
+                      Shape future features like Biodiversity Tracker, B-Corp Tool & DRS Calculator
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Beta program info */}
+              {/* Pioneers program info */}
               <div className="bg-avallen-green/5 rounded-lg p-6 border border-avallen-green/20">
                 <div className="flex items-center space-x-2 mb-3">
                   <div className="flex -space-x-2">
                     <div className="w-8 h-8 bg-avallen-green rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">β</span>
+                      <span className="text-white text-xs font-bold">20</span>
                     </div>
                     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">1.0</span>
+                      <span className="text-white text-xs font-bold">1Y</span>
                     </div>
                   </div>
                   <div className="text-sm text-gray-600">
-                    <span className="font-semibold text-slate-gray">Early Access Beta Program</span>
+                    <span className="font-semibold text-slate-gray">Exclusive to 20 Forward-Thinking Brands</span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 italic">
-                  Join our select group of beta testers helping to shape the future of 
-                  sustainability reporting for drinks brands.
+                <p className="text-sm text-gray-600 mb-3">
+                  This isn't just a pilot; it's a partnership to help you build a more sustainable and resilient business with a full year of platform access at a discounted rate.
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  On the horizon: Biodiversity Impact Tracker • B-Corp Submission Tool • DRS and EPR Cost Calculator • Multiple Global Reporting Standards
                 </p>
               </div>
             </div>
