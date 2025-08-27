@@ -40,12 +40,6 @@ export default function MetricsCards() {
     return (metrics?.totalCO2e || 0);
   };
 
-  console.log('📊 Dashboard now displays Carbon Calculator total:', {
-    carbonCalculatorTotal: carbonCalculatorTotal?.data?.totalCO2e,
-    displayedTotal: totalCO2e,
-    fallbackMetrics: metrics?.totalCO2e
-  });
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -66,6 +60,12 @@ export default function MetricsCards() {
 
   // DIRECT COPY: Use exact same number as Carbon Footprint Calculator
   const totalCO2e = getCarbonCalculatorTotal();
+
+  console.log('📊 Dashboard now displays Carbon Calculator total:', {
+    carbonCalculatorTotal: carbonCalculatorTotal?.data?.totalCO2e,
+    displayedTotal: totalCO2e,
+    fallbackMetrics: metrics?.totalCO2e
+  });
   // Display water usage in millions of liters
   const waterUsage = metrics?.waterUsage || 11700000; // fallback to 11.7M litres
   const waterUsageInMillions = (waterUsage / 1000000).toFixed(2); // Convert to millions with 2 decimal places

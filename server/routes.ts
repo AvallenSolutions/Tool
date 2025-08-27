@@ -42,6 +42,7 @@ import { WasteIntensityCalculationService } from "./services/WasteIntensityCalcu
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities, verifiedSuppliers } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
+import { calculateTotalScope3Emissions } from "./services/AutomatedEmissionsCalculator";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-06-30.basil",
@@ -3203,7 +3204,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
       
       // Get automated Scope 3 emissions
-      const automatedScope3 = await automatedEmissionsCalculator.calculateAutomatedEmissions(company.id);
+      const automatedScope3 = await calculateTotalScope3Emissions(company.id);
       const automatedEmissions = automatedScope3.totalEmissions * 1000; // Convert tonnes to kg
       
       const totalKg = manualEmissions + automatedEmissions;
