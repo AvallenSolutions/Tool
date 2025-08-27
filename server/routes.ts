@@ -3779,7 +3779,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       // Get manual scope 1 & 2 emissions (summed, not deduplicated)
       const manualFootprintData = await dbStorage.getCompanyFootprintData(company.id);
       const scope1And2Data = manualFootprintData.filter(entry => entry.scope === 1 || entry.scope === 2);
-      const totalManualEmissions = scope1And2Data
+      const totalScope1And2Emissions = scope1And2Data
         .reduce((sum, entry) => sum + parseFloat(entry.calculatedEmissions || '0'), 0);
       
       // Calculate breakdown by scope for verification
@@ -3789,51 +3789,66 @@ Be precise and quote actual text from the content, not generic terms.`;
       const scope2Total = scope1And2Data
         .filter(entry => entry.scope === 2)
         .reduce((sum, entry) => sum + parseFloat(entry.calculatedEmissions || '0'), 0);
+
+      // Calculate total facility impacts across all products (for deduction from Scope 3)
+      let totalFacilityImpacts = 0;
+      for (const product of productBreakdown) {
+        totalFacilityImpacts += product.breakdown.facilities.co2e * parseFloat(product.productionVolume);
+      }
+
+      // Calculate Scope 3 emissions (product LCA minus facilities to avoid double-counting)
+      const scope3Emissions = totalCompanyCO2e - totalFacilityImpacts;
       
-      console.log(`🔧 Manual emissions calculation (CORRECTED - no deduplication):`, {
+      console.log(`🔧 Emissions calculation (no double-counting):`, {
         scope1Entries: scope1And2Data.filter(entry => entry.scope === 1).length,
         scope2Entries: scope1And2Data.filter(entry => entry.scope === 2).length,
         scope1Total: (scope1Total/1000).toFixed(3) + ' tonnes',
         scope2Total: (scope2Total/1000).toFixed(3) + ' tonnes',
-        totalManualEmissions: (totalManualEmissions/1000).toFixed(3) + ' tonnes'
+        totalScope1And2: (totalScope1And2Emissions/1000).toFixed(3) + ' tonnes',
+        facilityImpactsDeducted: (totalFacilityImpacts/1000).toFixed(3) + ' tonnes',
+        scope3Emissions: (scope3Emissions/1000).toFixed(3) + ' tonnes'
       });
       
       const comprehensiveFootprint = {
         companyId: company.id,
         companyName: company.companyName,
-        calculationMethod: 'Comprehensive Refined LCA',
+        calculationMethod: 'Comprehensive Scope 1+2+3 (No Double-Counting)',
         totalFootprint: {
-          co2e_kg: totalCompanyCO2e + totalManualEmissions,
-          co2e_tonnes: (totalCompanyCO2e + totalManualEmissions) / 1000,
+          co2e_kg: totalScope1And2Emissions + scope3Emissions,
+          co2e_tonnes: (totalScope1And2Emissions + scope3Emissions) / 1000,
           water_liters: totalCompanyWater,
           waste_kg: totalCompanyWaste
         },
         breakdown: {
-          productsRefinedLCA: {
-            co2e_kg: totalCompanyCO2e,
-            water_liters: totalCompanyWater,
-            waste_kg: totalCompanyWaste,
+          scope1And2Manual: {
+            co2e_kg: totalScope1And2Emissions,
+            entryCount: scope1And2Data.length
+          },
+          scope3ProductLCA: {
+            co2e_kg: scope3Emissions,
+            description: 'Product LCA excluding facility impacts (prevents double-counting with Scope 1+2)',
             productCount: products.length
           },
-          manualScope1And2: {
-            co2e_kg: totalManualEmissions,
-            entryCount: scope1And2Data.length
+          facilityImpactsNote: {
+            co2e_kg: totalFacilityImpacts,
+            note: 'Facility impacts included in Scope 1+2, excluded from Scope 3'
           }
         },
         productDetails: productBreakdown,
         metadata: {
           calculatedAt: new Date().toISOString(),
-          methodology: 'Refined LCA with OpenLCA + Material Factors + Facility Data + End-of-Life + Manual Scope 1/2',
-          dataQuality: 'High - Comprehensive calculations using authoritative sources',
+          methodology: 'Scope 1+2 (Manual) + Scope 3 (Product LCA minus facilities to prevent double-counting)',
+          dataQuality: 'High - No double-counting of facility impacts',
           standardsCompliant: true
         }
       };
       
-      console.log(`📊 COMPREHENSIVE COMPANY FOOTPRINT SUMMARY:`);
+      console.log(`📊 COMPREHENSIVE COMPANY FOOTPRINT SUMMARY (NO DOUBLE-COUNTING):`);
       console.log(`   Company: ${company.companyName} (ID: ${company.id})`);
-      console.log(`   Products LCA Total: ${(totalCompanyCO2e/1000).toFixed(1)} tonnes CO2e`);
-      console.log(`   Manual Scope 1/2: ${(totalManualEmissions/1000).toFixed(3)} tonnes CO2e`);
-      console.log(`   FINAL TOTAL: ${((totalCompanyCO2e + totalManualEmissions)/1000).toFixed(1)} tonnes CO2e`);
+      console.log(`   Scope 1+2 (Manual): ${(totalScope1And2Emissions/1000).toFixed(3)} tonnes CO2e`);
+      console.log(`   Scope 3 (Products, excl. facilities): ${(scope3Emissions/1000).toFixed(3)} tonnes CO2e`);
+      console.log(`   Facility impacts (in Scope 1+2): ${(totalFacilityImpacts/1000).toFixed(3)} tonnes CO2e`);
+      console.log(`   FINAL TOTAL (1+2+3): ${((totalScope1And2Emissions + scope3Emissions)/1000).toFixed(1)} tonnes CO2e`);
       console.log(`   Products Count: ${productBreakdown.length}`);
       console.log(`   Water: ${totalCompanyWater.toLocaleString()} liters`);
       console.log(`   Waste: ${(totalCompanyWaste/1000).toFixed(1)} tonnes`);
