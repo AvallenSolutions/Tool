@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema, products } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema, products, companyFootprintData } from "@shared/schema";
 import { eq, desc, asc, ilike, or, and, gte, gt, ne } from "drizzle-orm";
 import { db } from "./db";
 import { nanoid } from "nanoid";
@@ -3426,6 +3426,223 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   }
 
+  // Calculate Business Travel emissions from manual entries
+  async function calculateBusinessTravelEmissions(companyId: number): Promise<{
+    totalEmissions: number;
+    breakdown: Record<string, number>;
+    entryCount: number;
+  }> {
+    try {
+      const footprintData = await db
+        .select()
+        .from(companyFootprintData)
+        .where(and(
+          eq(companyFootprintData.companyId, companyId),
+          eq(companyFootprintData.scope, 3)
+        ));
+
+      // DEFRA 2024 business travel emission factors (kg CO2e per unit)
+      const businessTravelFactors = {
+        flights_domestic: 0.246,     // kg CO2e per passenger km
+        flights_international: 0.191, // kg CO2e per passenger km  
+        rail: 0.041,                 // kg CO2e per passenger km
+        hotel_nights: 29.3           // kg CO2e per room night
+      };
+
+      let totalEmissions = 0;
+      const breakdown: Record<string, number> = {};
+      let entryCount = 0;
+
+      for (const entry of footprintData) {
+        if (businessTravelFactors[entry.dataType as keyof typeof businessTravelFactors]) {
+          const factor = businessTravelFactors[entry.dataType as keyof typeof businessTravelFactors];
+          const value = parseFloat(entry.value);
+          const emissions = value * factor;
+          
+          totalEmissions += emissions;
+          breakdown[entry.dataType] = (breakdown[entry.dataType] || 0) + emissions;
+          entryCount++;
+          
+          console.log(`✈️ Business travel ${entry.dataType}: ${value} units × ${factor} = ${emissions.toFixed(2)} kg CO2e`);
+        }
+      }
+
+      console.log(`✈️ TOTAL Business Travel emissions: ${totalEmissions.toFixed(2)} kg CO2e from ${entryCount} entries`);
+      
+      return {
+        totalEmissions: totalEmissions / 1000, // Convert to tonnes
+        breakdown,
+        entryCount
+      };
+    } catch (error) {
+      console.error('Error calculating business travel emissions:', error);
+      return { totalEmissions: 0, breakdown: {}, entryCount: 0 };
+    }
+  }
+
+  // Calculate Employee Commuting emissions from manual entries
+  async function calculateEmployeeCommutingEmissions(companyId: number): Promise<{
+    totalEmissions: number;
+    breakdown: Record<string, number>;
+    entryCount: number;
+  }> {
+    try {
+      const footprintData = await db
+        .select()
+        .from(companyFootprintData)
+        .where(and(
+          eq(companyFootprintData.companyId, companyId),
+          eq(companyFootprintData.scope, 3)
+        ));
+
+      // DEFRA 2024 employee commuting emission factors (kg CO2e per passenger km)
+      const commutingFactors = {
+        car_commuting: 0.171,        // kg CO2e per passenger km
+        public_transport: 0.104,     // kg CO2e per passenger km
+        cycling: 0.0                 // Zero emissions for cycling
+      };
+
+      let totalEmissions = 0;
+      const breakdown: Record<string, number> = {};
+      let entryCount = 0;
+
+      for (const entry of footprintData) {
+        if (commutingFactors[entry.dataType as keyof typeof commutingFactors] !== undefined) {
+          const factor = commutingFactors[entry.dataType as keyof typeof commutingFactors];
+          const value = parseFloat(entry.value);
+          const emissions = value * factor;
+          
+          totalEmissions += emissions;
+          breakdown[entry.dataType] = (breakdown[entry.dataType] || 0) + emissions;
+          entryCount++;
+          
+          console.log(`🚗 Employee commuting ${entry.dataType}: ${value} passenger km × ${factor} = ${emissions.toFixed(2)} kg CO2e`);
+        }
+      }
+
+      console.log(`🚗 TOTAL Employee Commuting emissions: ${totalEmissions.toFixed(2)} kg CO2e from ${entryCount} entries`);
+      
+      return {
+        totalEmissions: totalEmissions / 1000, // Convert to tonnes
+        breakdown,
+        entryCount
+      };
+    } catch (error) {
+      console.error('Error calculating employee commuting emissions:', error);
+      return { totalEmissions: 0, breakdown: {}, entryCount: 0 };
+    }
+  }
+
+  // Calculate Transportation & Distribution emissions from manual entries
+  async function calculateTransportationEmissions(companyId: number): Promise<{
+    totalEmissions: number;
+    breakdown: Record<string, number>;
+    entryCount: number;
+  }> {
+    try {
+      const footprintData = await db
+        .select()
+        .from(companyFootprintData)
+        .where(and(
+          eq(companyFootprintData.companyId, companyId),
+          eq(companyFootprintData.scope, 3)
+        ));
+
+      // DEFRA 2024 transportation emission factors (kg CO2e per unit)
+      const transportationFactors = {
+        freight_road: 0.168,         // kg CO2e per tonne km
+        freight_rail: 0.027,         // kg CO2e per tonne km  
+        freight_air: 1.016,          // kg CO2e per tonne km
+        freight_sea: 0.014,          // kg CO2e per tonne km
+        courier_delivery: 0.389      // kg CO2e per package km
+      };
+
+      let totalEmissions = 0;
+      const breakdown: Record<string, number> = {};
+      let entryCount = 0;
+
+      for (const entry of footprintData) {
+        if (transportationFactors[entry.dataType as keyof typeof transportationFactors]) {
+          const factor = transportationFactors[entry.dataType as keyof typeof transportationFactors];
+          const value = parseFloat(entry.value);
+          const emissions = value * factor;
+          
+          totalEmissions += emissions;
+          breakdown[entry.dataType] = (breakdown[entry.dataType] || 0) + emissions;
+          entryCount++;
+          
+          console.log(`🚛 Transportation ${entry.dataType}: ${value} units × ${factor} = ${emissions.toFixed(2)} kg CO2e`);
+        }
+      }
+
+      console.log(`🚛 TOTAL Transportation emissions: ${totalEmissions.toFixed(2)} kg CO2e from ${entryCount} entries`);
+      
+      return {
+        totalEmissions: totalEmissions / 1000, // Convert to tonnes
+        breakdown,
+        entryCount
+      };
+    } catch (error) {
+      console.error('Error calculating transportation emissions:', error);
+      return { totalEmissions: 0, breakdown: {}, entryCount: 0 };
+    }
+  }
+
+  // Calculate Capital Goods emissions from manual entries
+  async function calculateCapitalGoodsEmissions(companyId: number): Promise<{
+    totalEmissions: number;
+    breakdown: Record<string, number>;
+    entryCount: number;
+  }> {
+    try {
+      const footprintData = await db
+        .select()
+        .from(companyFootprintData)
+        .where(and(
+          eq(companyFootprintData.companyId, companyId),
+          eq(companyFootprintData.scope, 3)
+        ));
+
+      // DEFRA 2024 capital goods emission factors (kg CO2e per £)
+      const capitalGoodsFactors = {
+        machinery_equipment: 0.345,   // kg CO2e per £ spent
+        vehicles: 0.298,             // kg CO2e per £ spent
+        it_equipment: 0.421,         // kg CO2e per £ spent
+        buildings_infrastructure: 0.287, // kg CO2e per £ spent
+        furniture_fixtures: 0.356    // kg CO2e per £ spent
+      };
+
+      let totalEmissions = 0;
+      const breakdown: Record<string, number> = {};
+      let entryCount = 0;
+
+      for (const entry of footprintData) {
+        if (capitalGoodsFactors[entry.dataType as keyof typeof capitalGoodsFactors]) {
+          const factor = capitalGoodsFactors[entry.dataType as keyof typeof capitalGoodsFactors];
+          const value = parseFloat(entry.value);
+          const emissions = value * factor;
+          
+          totalEmissions += emissions;
+          breakdown[entry.dataType] = (breakdown[entry.dataType] || 0) + emissions;
+          entryCount++;
+          
+          console.log(`🏭 Capital goods ${entry.dataType}: £${value} × ${factor} = ${emissions.toFixed(2)} kg CO2e`);
+        }
+      }
+
+      console.log(`🏭 TOTAL Capital Goods emissions: ${totalEmissions.toFixed(2)} kg CO2e from ${entryCount} entries`);
+      
+      return {
+        totalEmissions: totalEmissions / 1000, // Convert to tonnes
+        breakdown,
+        entryCount
+      };
+    } catch (error) {
+      console.error('Error calculating capital goods emissions:', error);
+      return { totalEmissions: 0, breakdown: {}, entryCount: 0 };
+    }
+  }
+
   // Calculate Waste Generated emissions from production facilities AND end-of-life product waste
   async function calculateWasteGeneratedEmissions(companyId: number): Promise<{
     totalEmissions: number;
@@ -3593,19 +3810,27 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       console.log(`🏢 Using company ID ${company.id} for refined LCA-based automated calculations`);
       
-      // Calculate using refined LCA methodology with ALL three Scope 3 components
-      const [purchasedGoods, fuelEnergyUpstream, wasteGenerated] = await Promise.all([
+      // Calculate using refined LCA methodology with ALL Scope 3 components
+      const [purchasedGoods, fuelEnergyUpstream, wasteGenerated, businessTravel, employeeCommuting, transportation, capitalGoods] = await Promise.all([
         calculatePurchasedGoodsEmissions(company.id),
         calculateFuelEnergyUpstreamEmissions(company.id),
-        calculateWasteGeneratedEmissions(company.id)
+        calculateWasteGeneratedEmissions(company.id),
+        calculateBusinessTravelEmissions(company.id),
+        calculateEmployeeCommutingEmissions(company.id),
+        calculateTransportationEmissions(company.id),
+        calculateCapitalGoodsEmissions(company.id)
       ]);
       
-      const totalAutomatedEmissions = purchasedGoods.totalEmissions + fuelEnergyUpstream.totalEmissions + wasteGenerated.totalEmissions;
+      const totalAutomatedEmissions = purchasedGoods.totalEmissions + fuelEnergyUpstream.totalEmissions + wasteGenerated.totalEmissions + businessTravel.totalEmissions + employeeCommuting.totalEmissions + transportation.totalEmissions + capitalGoods.totalEmissions;
       
-      console.log(`🔧 CORRECTED Scope 3 calculation:`);
+      console.log(`🔧 COMPREHENSIVE Scope 3 calculation:`);
       console.log(`   Purchased Goods & Services: ${purchasedGoods.totalEmissions.toFixed(3)} tonnes`);
       console.log(`   Fuel & Energy Related: ${fuelEnergyUpstream.totalEmissions.toFixed(3)} tonnes`);
       console.log(`   Waste Generated: ${wasteGenerated.totalEmissions.toFixed(3)} tonnes`);
+      console.log(`   Business Travel: ${businessTravel.totalEmissions.toFixed(3)} tonnes (${businessTravel.entryCount} entries)`);
+      console.log(`   Employee Commuting: ${employeeCommuting.totalEmissions.toFixed(3)} tonnes (${employeeCommuting.entryCount} entries)`);
+      console.log(`   Transportation: ${transportation.totalEmissions.toFixed(3)} tonnes (${transportation.entryCount} entries)`);
+      console.log(`   Capital Goods: ${capitalGoods.totalEmissions.toFixed(3)} tonnes (${capitalGoods.entryCount} entries)`);
       console.log(`   TOTAL Scope 3: ${totalAutomatedEmissions.toFixed(3)} tonnes`);
       
       res.json({
@@ -3628,10 +3853,34 @@ Be precise and quote actual text from the content, not generic terms.`;
               emissions: wasteGenerated.totalEmissions,
               breakdown: wasteGenerated.breakdown,
               source: 'DEFRA 2024 waste disposal emission factors applied to facility waste data'
+            },
+            businessTravel: {
+              emissions: businessTravel.totalEmissions,
+              breakdown: businessTravel.breakdown,
+              entryCount: businessTravel.entryCount,
+              source: 'DEFRA 2024 business travel emission factors applied to manual entries'
+            },
+            employeeCommuting: {
+              emissions: employeeCommuting.totalEmissions,
+              breakdown: employeeCommuting.breakdown,
+              entryCount: employeeCommuting.entryCount,
+              source: 'DEFRA 2024 commuting emission factors applied to manual entries'
+            },
+            transportation: {
+              emissions: transportation.totalEmissions,
+              breakdown: transportation.breakdown,
+              entryCount: transportation.entryCount,
+              source: 'DEFRA 2024 transportation emission factors applied to manual entries'
+            },
+            capitalGoods: {
+              emissions: capitalGoods.totalEmissions,
+              breakdown: capitalGoods.breakdown,
+              entryCount: capitalGoods.entryCount,
+              source: 'DEFRA 2024 capital goods emission factors applied to manual entries'
             }
           },
           lastCalculated: new Date().toISOString(),
-          methodology: 'Enhanced LCA with OpenLCA integration, upstream factors, and waste disposal emissions'
+          methodology: 'Comprehensive Scope 3 with OpenLCA integration, upstream factors, waste disposal, travel, commuting, transportation, and capital goods'
         }
       });
     } catch (error) {

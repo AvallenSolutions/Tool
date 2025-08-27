@@ -365,6 +365,70 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                   </p>
                 </div>
               )}
+              
+              {/* Employee Commuting */}
+              {automatedData.data.categories.employeeCommuting && automatedData.data.categories.employeeCommuting.emissions > 0 && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Car className="h-4 w-4 text-purple-600" />
+                    <h4 className="font-medium text-slate-900">Employee Commuting</h4>
+                  </div>
+                  <div className="text-xl font-bold text-purple-600 mb-1">
+                    {(automatedData.data.categories.employeeCommuting.emissions * 1000).toFixed(1)} kg CO₂e
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    {automatedData.data.categories.employeeCommuting.entryCount} manual entries
+                  </p>
+                </div>
+              )}
+              
+              {/* Business Travel */}
+              {automatedData.data.categories.businessTravel && automatedData.data.categories.businessTravel.emissions > 0 && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Plane className="h-4 w-4 text-sky-600" />
+                    <h4 className="font-medium text-slate-900">Business Travel</h4>
+                  </div>
+                  <div className="text-xl font-bold text-sky-600 mb-1">
+                    {(automatedData.data.categories.businessTravel.emissions * 1000).toFixed(1)} kg CO₂e
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    {automatedData.data.categories.businessTravel.entryCount} manual entries
+                  </p>
+                </div>
+              )}
+              
+              {/* Transportation */}
+              {automatedData.data.categories.transportation && automatedData.data.categories.transportation.emissions > 0 && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Truck className="h-4 w-4 text-yellow-600" />
+                    <h4 className="font-medium text-slate-900">Transportation</h4>
+                  </div>
+                  <div className="text-xl font-bold text-yellow-600 mb-1">
+                    {(automatedData.data.categories.transportation.emissions * 1000).toFixed(1)} kg CO₂e
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    {automatedData.data.categories.transportation.entryCount} manual entries
+                  </p>
+                </div>
+              )}
+              
+              {/* Capital Goods */}
+              {automatedData.data.categories.capitalGoods && automatedData.data.categories.capitalGoods.emissions > 0 && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Building2 className="h-4 w-4 text-gray-600" />
+                    <h4 className="font-medium text-slate-900">Capital Goods</h4>
+                  </div>
+                  <div className="text-xl font-bold text-gray-600 mb-1">
+                    {(automatedData.data.categories.capitalGoods.emissions * 1000).toFixed(1)} kg CO₂e
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    {automatedData.data.categories.capitalGoods.entryCount} manual entries
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="mt-6 pt-4 border-t border-blue-200">
@@ -408,6 +472,23 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                   } else if (key === 'waste' && automatedData.data.categories.wasteGenerated) {
                     automatedEmissions = automatedData.data.categories.wasteGenerated.emissions * 1000; // Convert tonnes to kg
                     automatedLabel = 'from facilities';
+                  }
+                }
+                
+                // Add manual data calculations from automated API for non-automated categories
+                if (automatedData?.data?.categories) {
+                  if (key === 'business_travel' && automatedData.data.categories.businessTravel) {
+                    automatedEmissions = automatedData.data.categories.businessTravel.emissions * 1000; // Convert tonnes to kg
+                    automatedLabel = `${automatedData.data.categories.businessTravel.entryCount} entries`;
+                  } else if (key === 'employee_commuting' && automatedData.data.categories.employeeCommuting) {
+                    automatedEmissions = automatedData.data.categories.employeeCommuting.emissions * 1000; // Convert tonnes to kg
+                    automatedLabel = `${automatedData.data.categories.employeeCommuting.entryCount} entries`;
+                  } else if (key === 'transportation' && automatedData.data.categories.transportation) {
+                    automatedEmissions = automatedData.data.categories.transportation.emissions * 1000; // Convert tonnes to kg
+                    automatedLabel = `${automatedData.data.categories.transportation.entryCount} entries`;
+                  } else if (key === 'capital_goods' && automatedData.data.categories.capitalGoods) {
+                    automatedEmissions = automatedData.data.categories.capitalGoods.emissions * 1000; // Convert tonnes to kg
+                    automatedLabel = `${automatedData.data.categories.capitalGoods.entryCount} entries`;
                   }
                 }
                 
