@@ -187,16 +187,6 @@ export function SMARTGoals() {
         <Card className="bg-white border shadow">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium">On Target</span>
-            </div>
-            <p className="text-2xl font-bold mt-1 text-blue-600">{summary?.active || 0}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-500" />
               <span className="text-sm font-medium">Achieved</span>
             </div>
@@ -207,10 +197,30 @@ export function SMARTGoals() {
         <Card className="bg-white border shadow">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">On Target</span>
+            </div>
+            <p className="text-2xl font-bold mt-1 text-blue-600">{summary?.active || 0}</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-500" />
               <span className="text-sm font-medium">Behind Target</span>
             </div>
             <p className="text-2xl font-bold mt-1 text-red-600">{summary?.overdue || 0}</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-emerald-500" />
+              <span className="text-sm font-medium">Ahead of Target</span>
+            </div>
+            <p className="text-2xl font-bold mt-1 text-emerald-600">{Math.max(0, (summary?.total || 0) - (summary?.active || 0) - (summary?.completed || 0) - (summary?.overdue || 0))}</p>
           </CardContent>
         </Card>
       </div>
