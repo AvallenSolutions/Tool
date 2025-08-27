@@ -25,46 +25,25 @@ export default function MetricsCards() {
     queryKey: ['/api/company/footprint/comprehensive'],
   });
 
-  // EXACT COPY of Carbon Footprint Calculator calculateActualTotal logic
-  const calculateTotalCO2e = () => {
-    console.log('🔍 Dashboard calculateActualTotal called', { 
-      hasExistingData: !!existingData?.data, 
-      existingDataLength: existingData?.data?.length || 0,
-      hasAutomatedData: !!automatedData?.data,
-      automatedEmissions: automatedData?.data?.totalEmissions || 0
-    });
-    
-    // Calculate manual Scope 1 + 2 emissions from footprint data
-    let manualEmissions = 0;
-    if (existingData?.data) {
-      for (const entry of existingData.data) {
-        if (entry.scope === 1 || entry.scope === 2) {
-          const emissions = parseFloat(entry.calculatedEmissions) || 0;
-          manualEmissions += emissions;
-          console.log(`🔍 Dashboard Adding ${entry.dataType} (scope ${entry.scope}): ${emissions} kg`);
-        }
-      }
+  // Fetch the exact Carbon Footprint Calculator total via API endpoint
+  const { data: carbonCalculatorTotal } = useQuery({
+    queryKey: ['/api/carbon-calculator-total'],
+  });
+
+  // Simple function that copies the Carbon Calculator total directly
+  const getCarbonCalculatorTotal = () => {
+    // Return the exact number from Carbon Footprint Calculator
+    if (carbonCalculatorTotal?.data?.totalCO2e) {
+      return carbonCalculatorTotal.data.totalCO2e;
     }
-    
-    // Add automated Scope 3 emissions (convert tonnes to kg)
-    const automatedEmissions = (automatedData?.data?.totalEmissions || 0) * 1000;
-    
-    const total = manualEmissions + automatedEmissions;
-    console.log('🔍 Dashboard Total calculated:', { manualEmissions, automatedEmissions, total });
-    
-    return total / 1000; // Convert kg back to tonnes for display
+    // Fallback to previous logic if API not available
+    return (metrics?.totalCO2e || 0);
   };
 
-  console.log('📊 MetricsCards Debug:', {
-    isLoading,
-    metrics,
-    existingData,
-    automatedData,
-    comprehensiveData,
-    calculatedCO2e: calculateTotalCO2e(),
-    comprehensiveTotal: comprehensiveData?.data?.totalFootprint?.co2e_tonnes,
-    metricsTotal: metrics?.totalCO2e,
-    error: error?.message
+  console.log('📊 Dashboard now displays Carbon Calculator total:', {
+    carbonCalculatorTotal: carbonCalculatorTotal?.data?.totalCO2e,
+    displayedTotal: totalCO2e,
+    fallbackMetrics: metrics?.totalCO2e
   });
 
   if (isLoading) {
@@ -85,8 +64,8 @@ export default function MetricsCards() {
     );
   }
 
-  // CRITICAL FIX: Use comprehensive footprint data to match Carbon Footprint Calculator exactly
-  const totalCO2e = calculateTotalCO2e();
+  // DIRECT COPY: Use exact same number as Carbon Footprint Calculator
+  const totalCO2e = getCarbonCalculatorTotal();
   // Display water usage in millions of liters
   const waterUsage = metrics?.waterUsage || 11700000; // fallback to 11.7M litres
   const waterUsageInMillions = (waterUsage / 1000000).toFixed(2); // Convert to millions with 2 decimal places

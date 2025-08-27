@@ -3175,6 +3175,57 @@ Be precise and quote actual text from the content, not generic terms.`;
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // Get exact Carbon Footprint Calculator total for Dashboard display
+  app.get('/api/carbon-calculator-total', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+      
+      // Get manual Scope 1 + 2 emissions from footprint data
+      const footprintData = await dbStorage.getCompanyFootprintData(company.id, undefined, undefined);
+      let manualEmissions = 0;
+      
+      for (const entry of footprintData) {
+        if (entry.scope === 1 || entry.scope === 2) {
+          const emissions = parseFloat(entry.calculatedEmissions) || 0;
+          manualEmissions += emissions;
+        }
+      }
+      
+      // Get automated Scope 3 emissions
+      const automatedScope3 = await automatedEmissionsCalculator.calculateAutomatedEmissions(company.id);
+      const automatedEmissions = automatedScope3.totalEmissions * 1000; // Convert tonnes to kg
+      
+      const totalKg = manualEmissions + automatedEmissions;
+      const totalTonnes = totalKg / 1000; // Convert back to tonnes
+      
+      console.log('🔍 Carbon Calculator API Total:', { manualEmissions, automatedEmissions, totalKg, totalTonnes });
+      
+      res.json({ 
+        success: true,
+        data: { 
+          totalCO2e: totalTonnes,
+          breakdown: {
+            manualScope1And2: manualEmissions / 1000,
+            automatedScope3: automatedScope3.totalEmissions
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error getting carbon calculator total:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   
   // Helper function for emission factors (simplified - in production this would be a proper database/service)
   function getEmissionsFactor(dataType: string, unit: string): number {
