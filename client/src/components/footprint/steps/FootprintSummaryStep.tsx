@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Download, FileText, TrendingUp, Target, Award, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { FootprintData } from '../FootprintWizard';
@@ -272,8 +272,8 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
             <CardDescription>Breakdown of your carbon footprint across all three scopes</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
                   dataKey="name" 
@@ -304,6 +304,21 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            
+            {/* Custom Legend for Bar Chart */}
+            <div className="flex justify-center mt-4 space-x-6">
+              {barChartData.map((entry, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: entry.color }}
+                  ></div>
+                  <span className="text-sm text-slate-700 font-medium">
+                    {entry.fullName}: {entry.emissions.toFixed(1)}t
+                  </span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -315,17 +330,15 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                 <Pie
                   data={pieChartData}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(1)}%`}
-                  outerRadius={90}
-                  fill="#8884d8"
+                  innerRadius={40}
+                  outerRadius={80}
+                  paddingAngle={2}
                   dataKey="emissions"
-                  style={{ fontSize: '13px', fontWeight: '500', fill: '#374151' }}
                 >
                   {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -344,6 +357,21 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
                 />
               </PieChart>
             </ResponsiveContainer>
+            
+            {/* Custom Legend */}
+            <div className="flex justify-center mt-4 space-x-6">
+              {pieChartData.map((entry, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: entry.color }}
+                  ></div>
+                  <span className="text-sm text-slate-700 font-medium">
+                    {entry.fullName}: {entry.emissions.toFixed(1)}t
+                  </span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
