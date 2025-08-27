@@ -279,9 +279,27 @@ export default function Login() {
                     <span className="font-semibold text-slate-gray">Exclusive to 20 Forward-Thinking Brands</span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-gray-600 mb-4">
                   This isn't just a pilot; it's a partnership to help you build a more sustainable and resilient business with a full year of platform access at a discounted rate.
                 </p>
+                
+                {/* Subscription CTA */}
+                <div className="mb-4">
+                  <Link href="/pioneers/test">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-avallen-green to-avallen-green-light hover:from-avallen-green-light hover:to-avallen-green text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                      data-testid="button-join-pioneers"
+                    >
+                      <Award className="mr-2 w-5 h-5" />
+                      Join the Pioneers Program
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                  <p className="text-center text-xs text-gray-500 mt-2">
+                    Secure payment • Annual subscription • Limited to 20 brands
+                  </p>
+                </div>
+                
                 <p className="text-xs text-gray-500 italic">
                   On the horizon: Biodiversity Impact Tracker • B-Corp Submission Tool • DRS and EPR Cost Calculator • Multiple Global Reporting Standards
                 </p>

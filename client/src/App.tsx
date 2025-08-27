@@ -52,6 +52,8 @@ import InitiativesPage from "@/pages/initiatives";
 // Initiatives functionality now integrated into Report Builder and SMART Goals
 import ReportsCreate from "@/pages/reports-create";
 import GuidedReportWizard from "@/pages/guided-report-wizard";
+import PioneersSubscription from "@/pages/pioneers-subscription";
+import PioneersPaymentTest from "@/pages/pioneers-payment-test";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 function SimpleTestComponent() {
@@ -137,6 +139,8 @@ function Router() {
     <Switch>
       <Route path="/" component={SimpleTestComponent} />
       <Route path="/login" component={Login} />
+      <Route path="/pioneers/register" component={PioneersSubscription} />
+      <Route path="/pioneers/test" component={PioneersPaymentTest} />
       <Route path="/landing" component={Landing} />
       <Route path="/app/welcome" component={Welcome} />
       <Route path="/app/greenwash-guardian" component={GreenwashGuardian} />

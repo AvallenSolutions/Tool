@@ -9856,6 +9856,189 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
+  // ============ PIONEERS PROGRAM STRIPE SUBSCRIPTION ENDPOINTS ============
+  
+  // Create subscription for Pioneers Program
+  app.post('/api/pioneers/create-subscription', async (req, res) => {
+    try {
+      const { email, captchaToken } = req.body;
+      
+      if (!email || !captchaToken) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email and CAPTCHA token are required'
+        });
+      }
+
+      // Verify CAPTCHA first
+      const captchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`,
+      });
+
+      const captchaResult = await captchaResponse.json();
+      if (!captchaResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'CAPTCHA verification failed'
+        });
+      }
+
+      // Create Stripe customer
+      const customer = await stripe.customers.create({
+        email: email,
+        metadata: {
+          program: 'pioneers',
+          source: 'avallen-solutions'
+        }
+      });
+
+      // Create subscription with test price (you'll need to create this in Stripe dashboard)
+      // For now using a placeholder - you'll need to replace with actual Pioneers Program price ID
+      const subscription = await stripe.subscriptions.create({
+        customer: customer.id,
+        items: [{
+          price: process.env.STRIPE_PIONEERS_PRICE_ID || 'price_1234567890', // Replace with actual price ID
+        }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+      });
+
+      res.json({
+        success: true,
+        subscriptionId: subscription.id,
+        customerId: customer.id,
+        clientSecret: subscription.latest_invoice?.payment_intent?.client_secret,
+        email: email
+      });
+
+    } catch (error) {
+      console.error('Stripe subscription error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create subscription',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Handle successful payment and user creation
+  app.post('/api/pioneers/complete-registration', async (req, res) => {
+    try {
+      const { subscriptionId, email } = req.body;
+      
+      if (!subscriptionId || !email) {
+        return res.status(400).json({
+          success: false,
+          error: 'Subscription ID and email are required'
+        });
+      }
+
+      // Verify subscription was paid
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      
+      if (subscription.status !== 'active') {
+        return res.status(400).json({
+          success: false,
+          error: 'Subscription is not active'
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      
+      let user;
+      if (existingUser.length > 0) {
+        // Update existing user with Stripe info
+        [user] = await db
+          .update(users)
+          .set({
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            role: 'user',
+            updatedAt: new Date()
+          })
+          .where(eq(users.email, email))
+          .returning();
+      } else {
+        // Create new user
+        [user] = await db
+          .insert(users)
+          .values({
+            id: nanoid(), // Generate unique ID
+            email: email,
+            stripeCustomerId: subscription.customer as string,
+            stripeSubscriptionId: subscription.id,
+            role: 'user',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+      }
+
+      // Track registration in analytics
+      try {
+        trackUser(user.id, {
+          email: user.email,
+          subscription_plan: 'pioneers',
+          subscription_status: 'active'
+        });
+        
+        trackEvent(user.id, 'Pioneers Program Registration', {
+          subscription_id: subscriptionId,
+          customer_id: subscription.customer,
+          email: email
+        });
+      } catch (analyticsError) {
+        console.warn('Analytics tracking failed:', analyticsError);
+      }
+
+      res.json({
+        success: true,
+        message: 'Registration completed successfully',
+        userId: user.id,
+        subscriptionStatus: subscription.status
+      });
+
+    } catch (error) {
+      console.error('Registration completion error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to complete registration',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Check subscription status
+  app.get('/api/pioneers/subscription-status/:subscriptionId', async (req, res) => {
+    try {
+      const { subscriptionId } = req.params;
+      
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      
+      res.json({
+        success: true,
+        status: subscription.status,
+        currentPeriodEnd: subscription.current_period_end,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end
+      });
+
+    } catch (error) {
+      console.error('Subscription status error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve subscription status'
+      });
+    }
+  });
+
+  // ============ END PIONEERS PROGRAM ENDPOINTS ============
+
   const server = createServer(app);
   
   // Initialize WebSocket service
