@@ -297,7 +297,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                 {calculateTotalEmissions().toLocaleString()} kg CO₂e
               </div>
               <div className="text-lg text-slate-600">
-                {(calculateTotalEmissions() / 1000).toFixed(3)} tonnes CO₂e
+                {(calculateTotalEmissions() / 1000).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} tonnes CO₂e
               </div>
             </div>
           </div>
@@ -326,7 +326,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                     <h4 className="font-medium text-slate-900">Purchased Goods</h4>
                   </div>
                   <div className="text-xl font-bold text-green-600 mb-1">
-                    {(automatedData.data.categories.purchasedGoodsServices.emissions * 1000).toFixed(0)} kg CO₂e
+                    {(automatedData.data.categories.purchasedGoodsServices.emissions * 1000).toLocaleString()} kg CO₂e
                   </div>
                   <p className="text-xs text-slate-600">
                     {automatedData.data.categories.purchasedGoodsServices.productCount} products
@@ -342,7 +342,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                     <h4 className="font-medium text-slate-900">Fuel & Energy</h4>
                   </div>
                   <div className="text-xl font-bold text-indigo-600 mb-1">
-                    {(automatedData.data.categories.fuelEnergyRelated.emissions * 1000).toFixed(0)} kg CO₂e
+                    {(automatedData.data.categories.fuelEnergyRelated.emissions * 1000).toLocaleString()} kg CO₂e
                   </div>
                   <p className="text-xs text-slate-600">
                     Upstream factors
@@ -435,7 +435,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
               <div className="flex justify-between items-center">
                 <span className="text-lg font-medium text-blue-800">Total Automated</span>
                 <span className="text-2xl font-bold text-blue-600">
-                  {(automatedData.data.totalEmissions * 1000).toFixed(0)} kg CO₂e
+                  {(automatedData.data.totalEmissions * 1000).toLocaleString()} kg CO₂e
                 </span>
               </div>
             </div>
@@ -527,7 +527,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                                 <div>
                                   <h4 className="font-semibold text-slate-900 mb-2">Purchased Goods & Services</h4>
                                   <div className="text-2xl font-bold text-blue-600 mb-2">
-                                    {(automatedData as any).data.categories.purchasedGoodsServices.emissions.toFixed(3)} tonnes CO₂e
+                                    {(automatedData as any).data.categories.purchasedGoodsServices.emissions.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} tonnes CO₂e
                                   </div>
                                   <p className="text-sm text-slate-600 mb-3">
                                     Calculated from {(automatedData as any).data.categories.purchasedGoodsServices.productCount} products
@@ -541,7 +541,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                                 <div>
                                   <h4 className="font-semibold text-slate-900 mb-2">Fuel & Energy-Related Activities</h4>
                                   <div className="text-2xl font-bold text-indigo-600 mb-2">
-                                    {(automatedData as any).data.categories.fuelEnergyRelated.emissions.toFixed(3)} tonnes CO₂e
+                                    {(automatedData as any).data.categories.fuelEnergyRelated.emissions.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} tonnes CO₂e
                                   </div>
                                   <p className="text-xs text-slate-500 mb-3">
                                     {(automatedData as any).data.categories.fuelEnergyRelated.source}
@@ -552,10 +552,10 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                                 <div>
                                   <h4 className="font-semibold text-slate-900 mb-2">Waste Generated</h4>
                                   <div className="text-2xl font-bold text-orange-600 mb-2">
-                                    {(automatedData as any).data.categories.wasteGenerated.emissions.toFixed(3)} tonnes CO₂e
+                                    {(automatedData as any).data.categories.wasteGenerated.emissions.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} tonnes CO₂e
                                   </div>
                                   <div className="text-lg text-slate-700 mb-2">
-                                    {((automatedData as any).data.categories.wasteGenerated.emissions * 1000).toFixed(1)} kg CO₂e
+                                    {((automatedData as any).data.categories.wasteGenerated.emissions * 1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg CO₂e
                                   </div>
                                   <p className="text-xs text-slate-500 mb-3">
                                     {(automatedData as any).data.categories.wasteGenerated.source}
