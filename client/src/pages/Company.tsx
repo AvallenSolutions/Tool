@@ -86,7 +86,7 @@ const transportationOptions = [
 ];
 
 export default function Company() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("footprint");
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
