@@ -3776,21 +3776,26 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
 
       
-      // Get manual scope 1 & 2 emissions (deduplicated and scope-filtered)
+      // Get manual scope 1 & 2 emissions (summed, not deduplicated)
       const manualFootprintData = await dbStorage.getCompanyFootprintData(company.id);
-      const manualEmissions = manualFootprintData
-        .filter(entry => entry.scope === 1 || entry.scope === 2) // Only Scope 1 & 2
-        .reduce((scopeMap, entry) => {
-          const key = `${entry.scope}-${entry.dataType}`;
-          scopeMap[key] = parseFloat(entry.calculatedEmissions || '0'); // Deduplicate by scope+type
-          return scopeMap;
-        }, {} as Record<string, number>);
-      const totalManualEmissions = Object.values(manualEmissions).reduce((sum, val) => sum + val, 0);
+      const scope1And2Data = manualFootprintData.filter(entry => entry.scope === 1 || entry.scope === 2);
+      const totalManualEmissions = scope1And2Data
+        .reduce((sum, entry) => sum + parseFloat(entry.calculatedEmissions || '0'), 0);
       
-      console.log(`🔧 Manual emissions calculation (deduplicated):`, {
-        filteredEntries: manualFootprintData.filter(entry => entry.scope === 1 || entry.scope === 2).length,
-        deduplicatedKeys: Object.keys(manualEmissions),
-        totalManualEmissions: (totalManualEmissions/1000).toFixed(1) + ' tonnes'
+      // Calculate breakdown by scope for verification
+      const scope1Total = scope1And2Data
+        .filter(entry => entry.scope === 1)
+        .reduce((sum, entry) => sum + parseFloat(entry.calculatedEmissions || '0'), 0);
+      const scope2Total = scope1And2Data
+        .filter(entry => entry.scope === 2)
+        .reduce((sum, entry) => sum + parseFloat(entry.calculatedEmissions || '0'), 0);
+      
+      console.log(`🔧 Manual emissions calculation (CORRECTED - no deduplication):`, {
+        scope1Entries: scope1And2Data.filter(entry => entry.scope === 1).length,
+        scope2Entries: scope1And2Data.filter(entry => entry.scope === 2).length,
+        scope1Total: (scope1Total/1000).toFixed(3) + ' tonnes',
+        scope2Total: (scope2Total/1000).toFixed(3) + ' tonnes',
+        totalManualEmissions: (totalManualEmissions/1000).toFixed(3) + ' tonnes'
       });
       
       const comprehensiveFootprint = {
@@ -3812,7 +3817,7 @@ Be precise and quote actual text from the content, not generic terms.`;
           },
           manualScope1And2: {
             co2e_kg: totalManualEmissions,
-            entryCount: Object.keys(manualEmissions).length
+            entryCount: scope1And2Data.length
           }
         },
         productDetails: productBreakdown,
@@ -3827,8 +3832,8 @@ Be precise and quote actual text from the content, not generic terms.`;
       console.log(`📊 COMPREHENSIVE COMPANY FOOTPRINT SUMMARY:`);
       console.log(`   Company: ${company.companyName} (ID: ${company.id})`);
       console.log(`   Products LCA Total: ${(totalCompanyCO2e/1000).toFixed(1)} tonnes CO2e`);
-      console.log(`   Manual Scope 1/2 (CORRECTED): ${(totalManualEmissions/1000).toFixed(1)} tonnes CO2e`);
-      console.log(`   FINAL TOTAL (CORRECTED): ${((totalCompanyCO2e + totalManualEmissions)/1000).toFixed(1)} tonnes CO2e`);
+      console.log(`   Manual Scope 1/2: ${(totalManualEmissions/1000).toFixed(3)} tonnes CO2e`);
+      console.log(`   FINAL TOTAL: ${((totalCompanyCO2e + totalManualEmissions)/1000).toFixed(1)} tonnes CO2e`);
       console.log(`   Products Count: ${productBreakdown.length}`);
       console.log(`   Water: ${totalCompanyWater.toLocaleString()} liters`);
       console.log(`   Waste: ${(totalCompanyWaste/1000).toFixed(1)} tonnes`);
