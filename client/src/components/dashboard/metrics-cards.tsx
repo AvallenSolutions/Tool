@@ -74,7 +74,7 @@ export default function MetricsCards() {
   });
   // Display water usage in millions of liters
   const waterUsage = metrics?.waterUsage || 11700000; // fallback to 11.7M litres
-  const waterUsageInMillions = (waterUsage / 1000000).toFixed(2); // Convert to millions with 2 decimal places
+  const waterUsageInMillions = (waterUsage / 1000000).toFixed(1); // Convert to millions with 1 decimal place
   const wasteGenerated = metrics?.wasteGenerated || 0.1; // fallback to 0.1 tonnes
 
   return (
@@ -90,7 +90,7 @@ export default function MetricsCards() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-slate-gray mb-2">
-            {totalCO2e.toLocaleString()}
+            {totalCO2e.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
           </div>
           <div className="text-sm text-gray-500 mb-4">tonnes CO2e</div>
         </CardContent>
@@ -124,7 +124,7 @@ export default function MetricsCards() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-slate-gray mb-2">
-            {wasteGenerated.toLocaleString()}
+            {wasteGenerated.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
           </div>
           <div className="text-sm text-gray-500 mb-4">tonnes</div>
         </CardContent>
