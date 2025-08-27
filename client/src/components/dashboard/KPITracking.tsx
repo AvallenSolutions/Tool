@@ -317,37 +317,18 @@ export function KPITracking() {
               <CardDescription>Track your sustainability goals and metrics</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => setShowNewKPIDialog(true)} size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add KPI
-              </Button>
-              <Button onClick={() => setShowProjectGoalDialog(true)} variant="outline" size="sm">
-                <Target className="w-4 h-4 mr-2" />
-                Add Goal
+              <Button 
+                onClick={() => window.location.href = '/kpis'} 
+                size="sm"
+                variant="outline"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Manage KPIs & Goals
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{summary.achieved}</div>
-              <div className="text-sm text-gray-600">Achieved</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{summary.onTrack}</div>
-              <div className="text-sm text-gray-600">On Track</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">{summary.atRisk}</div>
-              <div className="text-sm text-gray-600">At Risk</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{summary.total - summary.achieved - summary.onTrack - summary.atRisk}</div>
-              <div className="text-sm text-gray-600">Behind</div>
-            </div>
-          </div>
-          
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Overall Progress</span>
@@ -358,67 +339,7 @@ export function KPITracking() {
         </CardContent>
       </Card>
 
-      {/* KPIs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.id} className="bg-white border shadow hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedKPI(kpi)}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">{kpi.name}</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={categoryConfig[kpi.category]?.color}>
-                    {categoryConfig[kpi.category]?.label}
-                  </Badge>
-                  {kpi.isCustom && (
-                    <Badge variant="secondary" className="text-xs">Custom</Badge>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-2xl font-bold">{kpi.current.toFixed(2)}</div>
-                    <div className="text-sm text-gray-600">of {kpi.target} {kpi.unit}</div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className={statusConfig[kpi.status]?.color}>
-                      {statusConfig[kpi.status]?.label}
-                    </Badge>
-                    <div className="flex items-center text-sm mt-1">
-                      {kpi.trend === 'up' ? (
-                        <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                      ) : kpi.trend === 'down' ? (
-                        <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
-                      ) : null}
-                      <span className={`${kpi.trend === 'up' ? 'text-green-600' : kpi.trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}>
-                        {kpi.trendValue > 0 ? '+' : ''}{kpi.trendValue}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Progress</span>
-                    <span>{Math.min((kpi.current / kpi.target) * 100, 100).toFixed(1)}%</span>
-                  </div>
-                  <Progress value={Math.min((kpi.current / kpi.target) * 100, 100)} className="h-2" />
-                </div>
-                
-                {kpi.deadline && (
-                  <div className="flex items-center text-xs text-gray-500">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    Due: {new Date(kpi.deadline).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
 
       {/* Project Goals */}
       {projectGoals.length > 0 && (

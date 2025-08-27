@@ -153,18 +153,13 @@ export function SMARTGoals() {
             <Target className="w-12 h-12 text-blue-400 mx-auto mb-3" />
             <p className="text-gray-700 font-medium">No goals set yet</p>
             <p className="text-sm text-gray-500 mb-4">Create your first SMART goal to start tracking meaningful progress</p>
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-avallen-green hover:bg-avallen-green/90">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create SMART Goal
-                </Button>
-              </DialogTrigger>
-              <CreateGoalDialog 
-                onSubmit={createGoalMutation.mutate}
-                isLoading={createGoalMutation.isPending}
-              />
-            </Dialog>
+            <Button 
+              onClick={() => window.location.href = '/initiatives'} 
+              className="bg-avallen-green hover:bg-avallen-green/90"
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Manage Goals & Initiatives
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -177,48 +172,7 @@ export function SMARTGoals() {
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-white border shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium">Total Goals</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{summary?.total || 0}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium">Active</span>
-            </div>
-            <p className="text-2xl font-bold mt-1 text-blue-600">{summary?.active || 0}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium">Completed</span>
-            </div>
-            <p className="text-2xl font-bold mt-1 text-green-600">{summary?.completed || 0}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-medium">Overdue</span>
-            </div>
-            <p className="text-2xl font-bold mt-1 text-red-600">{summary?.overdue || 0}</p>
-          </CardContent>
-        </Card>
-      </div>
+
 
       {/* Goals List */}
       <Card className="bg-white border shadow">
