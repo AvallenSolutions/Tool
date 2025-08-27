@@ -18,7 +18,19 @@ interface Product {
   status: string;
 }
 
-export function usePortfolioMetrics(products: Product[]): PortfolioMetrics {
+export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
+  if (!products || !Array.isArray(products)) {
+    return {
+      totalCO2e: 0,
+      totalWater: 0,
+      totalWaste: 0,
+      productCount: 0,
+      activeCount: 0,
+      withLCADataCount: 0,
+      isLoading: false,
+      error: false
+    };
+  }
   // Get LCA data for all products
   const lcaQueries = products.map(product => 
     useRefinedLCA(product.id)

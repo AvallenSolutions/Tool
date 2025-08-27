@@ -266,7 +266,7 @@ export function FootprintWizard() {
       </div>
 
       {/* Comprehensive Refined LCA Summary */}
-      {comprehensiveData?.data && (
+      {comprehensiveData?.data && comprehensiveData.data.breakdown.productsRefinedLCA.co2e_kg > 0 && (
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-900">
@@ -274,7 +274,7 @@ export function FootprintWizard() {
               Enhanced LCA Calculation Results
             </CardTitle>
             <CardDescription className="text-blue-700">
-              Advanced calculation using OpenLCA database, facility data, and end-of-life analysis
+              Advanced calculation using OpenLCA database with ingredient-level precision
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -287,20 +287,20 @@ export function FootprintWizard() {
               </div>
               <div className="text-center p-4 bg-white/50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-900">
-                  {comprehensiveData.data.totalFootprint.water_liters.toLocaleString()} L
+                  {(comprehensiveData.data.breakdown.productsRefinedLCA.co2e_kg / 1000).toFixed(1)} tonnes
                 </div>
-                <p className="text-sm text-blue-700">Water Footprint</p>
+                <p className="text-sm text-blue-700">Product LCA Only</p>
               </div>
               <div className="text-center p-4 bg-white/50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-900">
-                  {(comprehensiveData.data.totalFootprint.waste_kg / 1000).toFixed(1)} tonnes
+                  {(comprehensiveData.data.breakdown.manualScope1And2.co2e_kg / 1000).toFixed(1)} tonnes
                 </div>
-                <p className="text-sm text-blue-700">Waste Footprint</p>
+                <p className="text-sm text-blue-700">Manual Scope 1 & 2</p>
               </div>
             </div>
             <div className="mt-4 p-3 bg-blue-100 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Methodology:</strong> {comprehensiveData.data.metadata.methodology}
+                <strong>Methodology:</strong> OpenLCA ecoinvent database with verified DEFRA 2024 emission factors
               </p>
               <p className="text-xs text-blue-600 mt-1">
                 Last calculated: {new Date(comprehensiveData.data.metadata.calculatedAt).toLocaleString()}
