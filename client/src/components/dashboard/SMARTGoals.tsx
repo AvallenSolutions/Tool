@@ -172,7 +172,48 @@ export function SMARTGoals() {
 
   return (
     <div className="space-y-6">
-
+      {/* Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-white border shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">Total Goals</span>
+            </div>
+            <p className="text-2xl font-bold mt-1">{summary?.total || 0}</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium">On Target</span>
+            </div>
+            <p className="text-2xl font-bold mt-1 text-blue-600">{summary?.active || 0}</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="text-sm font-medium">Achieved</span>
+            </div>
+            <p className="text-2xl font-bold mt-1 text-green-600">{summary?.completed || 0}</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <span className="text-sm font-medium">Behind Target</span>
+            </div>
+            <p className="text-2xl font-bold mt-1 text-red-600">{summary?.overdue || 0}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Goals List */}
       <Card className="bg-white border shadow">

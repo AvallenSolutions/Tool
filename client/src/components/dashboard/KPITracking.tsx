@@ -329,6 +329,25 @@ export function KPITracking() {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{summary.achieved}</div>
+              <div className="text-sm text-gray-600">Achieved</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{summary.onTrack}</div>
+              <div className="text-sm text-gray-600">On Target</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">{summary.atRisk}</div>
+              <div className="text-sm text-gray-600">Behind Target</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-emerald-600">{summary.total - summary.achieved - summary.onTrack - summary.atRisk}</div>
+              <div className="text-sm text-gray-600">Ahead of Target</div>
+            </div>
+          </div>
+          
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Overall Progress</span>
