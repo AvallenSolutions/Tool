@@ -2137,14 +2137,14 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
       
       // Store facility impacts for reference but exclude from CO2e calculation to prevent double-counting with Scope 2
-      // This aligns with the corrected carbon calculator that excludes facility impacts from Scope 3
+      // Include facility impacts in product calculations per user requirements
       breakdown.facilities = { 
-        co2e: 0, // Excluded to prevent double-counting with Scope 2 emissions
-        water: facilityImpacts.water, // Water still included for completeness
+        co2e: facilityImpacts.co2e, // Included for product-level footprint display
+        water: facilityImpacts.water, // Water included for completeness
         waste: 0 // Waste excluded per requirements
       };
       
-      console.log(`⚡ Facility impacts: ${facilityImpacts.co2e.toFixed(6)}kg CO2e per unit (excluded to prevent Scope 2 double-counting)`);
+      console.log(`⚡ Facility impacts: ${facilityImpacts.co2e.toFixed(6)}kg CO2e per unit (INCLUDED in product footprint)`);
 
       // 4. Record water dilution but exclude from product water footprint
       if (product.waterDilution) {
@@ -2163,12 +2163,12 @@ Be precise and quote actual text from the content, not generic terms.`;
         }
       }
       
-      // 5. Calculate final totals EXCLUDING facility impacts (to prevent Scope 2 double-counting), including production waste, and end-of-life packaging footprint
-      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + productionWasteFootprint + endOfLifePackagingFootprint;
+      // 5. Calculate final totals INCLUDING facility impacts per user requirements
+      totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + facilityImpacts.co2e + productionWasteFootprint + endOfLifePackagingFootprint;
       totalWater = breakdown.ingredients.water + breakdown.packaging.water + facilityImpacts.water; // Excludes dilution, includes facility water
       totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste; // Facility waste excluded per requirements
       
-      console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (excludes facility impacts to prevent Scope 2 double-counting), Water=${totalWater.toFixed(1)}L (excludes dilution, includes facilities), Waste=${totalWaste.toFixed(3)}kg (facilities excluded per requirements)`);
+      console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (includes facility impacts), Water=${totalWater.toFixed(1)}L (excludes dilution, includes facilities), Waste=${totalWaste.toFixed(3)}kg (facilities excluded per requirements)`);
       
       // Calculate comprehensive greenhouse gas breakdown using OpenLCA
       let ghgBreakdown = null;
