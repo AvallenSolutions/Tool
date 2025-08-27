@@ -12,8 +12,16 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import { useToast } from '@/hooks/use-toast';
 import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
-// Load Stripe with error handling
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// Lazy load Stripe to prevent blocking errors
+const stripePromise = (async () => {
+  try {
+    const { loadStripe } = await import('@stripe/stripe-js');
+    return loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+  } catch (error) {
+    console.error('Failed to load Stripe:', error);
+    return null;
+  }
+})();
 
 // Payment form component
 function PaymentForm({ clientSecret, email, onSuccess }: { 

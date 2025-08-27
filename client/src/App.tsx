@@ -52,8 +52,9 @@ import InitiativesPage from "@/pages/initiatives";
 // Initiatives functionality now integrated into Report Builder and SMART Goals
 import ReportsCreate from "@/pages/reports-create";
 import GuidedReportWizard from "@/pages/guided-report-wizard";
-import PioneersSubscription from "@/pages/pioneers-subscription";
+// import PioneersSubscription from "@/pages/pioneers-subscription"; // Disabled due to Stripe loading issues
 import PioneersSubscriptionSimple from "@/pages/pioneers-subscription-simple";
+import PioneersNoStripe from "@/pages/pioneers-no-stripe";
 import PioneersPaymentTest from "@/pages/pioneers-payment-test";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
 
@@ -140,8 +141,9 @@ function Router() {
     <Switch>
       <Route path="/" component={SimpleTestComponent} />
       <Route path="/login" component={Login} />
-      <Route path="/pioneers/register" component={PioneersSubscription} />
+      <Route path="/pioneers/register" component={PioneersNoStripe} />
       <Route path="/pioneers/simple" component={PioneersSubscriptionSimple} />
+      {/* <Route path="/pioneers/stripe" component={PioneersSubscription} /> */}
       <Route path="/pioneers/test" component={PioneersPaymentTest} />
       <Route path="/landing" component={Landing} />
       <Route path="/app/welcome" component={Welcome} />

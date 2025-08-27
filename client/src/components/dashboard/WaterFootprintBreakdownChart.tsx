@@ -186,24 +186,24 @@ export default function WaterFootprintBreakdownChart() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-4 border-t">
           <div className="text-center">
             <div className="text-2xl font-bold text-emerald-600">
-              {data.agricultural_water_m3.toFixed(1)}
+              {ingredients.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">m³ Agricultural</div>
+            <div className="text-sm text-gray-600">m³ Ingredients</div>
             <div className="text-xs text-gray-500">Off-site ingredient production</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {data.processing_and_dilution_water_m3.toFixed(1)}
+              {packaging.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">m³ Processing</div>
-            <div className="text-xs text-gray-500">Water in your products</div>
+            <div className="text-sm text-gray-600">m³ Packaging</div>
+            <div className="text-xs text-gray-500">Packaging material production</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {data.net_operational_water_m3.toFixed(1)}
+              {facilities.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">m³ Operational</div>
-            <div className="text-xs text-gray-500">Cleaning & cooling</div>
+            <div className="text-sm text-gray-600">m³ Facilities</div>
+            <div className="text-xs text-gray-500">Cleaning & cooling operations</div>
           </div>
         </div>
       </CardContent>
