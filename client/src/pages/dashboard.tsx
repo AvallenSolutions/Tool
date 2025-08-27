@@ -167,9 +167,6 @@ export default function Dashboard() {
             <div id="kpi-tracking-section">
               <KPITracking />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 mb-8">
             <div id="smart-goals-section">
               <SMARTGoals />
             </div>
