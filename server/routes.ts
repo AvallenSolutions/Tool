@@ -3437,11 +3437,6 @@ Be precise and quote actual text from the content, not generic terms.`;
         .from(productionFacilities)
         .where(eq(productionFacilities.companyId, companyId));
 
-      const products = await db
-        .select()
-        .from(finalProducts)
-        .where(eq(finalProducts.companyId, companyId));
-
       let totalEmissions = 0;
       const breakdown: Record<string, number> = {};
 
@@ -3454,7 +3449,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         energy_recovery: 0.115  // kg CO2e per kg waste to energy recovery
       };
 
-      // 1. PRODUCTION FACILITY WASTE
+      // PRODUCTION FACILITY WASTE - using real facility data only
       for (const facility of facilities) {
         const wasteToLandfill = parseFloat(facility.wasteToLandfillKgPerYear?.toString() || '0');
         const wasteToRecycling = parseFloat(facility.wasteToRecyclingKgPerYear?.toString() || '0');
@@ -3472,66 +3467,13 @@ Be precise and quote actual text from the content, not generic terms.`;
                                      incinerationEmissions + energyRecoveryEmissions;
         
         totalEmissions += facilityWasteEmissions;
-        breakdown[`${facility.facilityName} (Production)`] = facilityWasteEmissions;
+        breakdown[`${facility.facilityName}`] = facilityWasteEmissions;
 
         console.log(`🗑️ Production waste emissions for ${facility.facilityName}: ${facilityWasteEmissions.toFixed(2)} kg CO2e`);
+        console.log(`   Breakdown: Landfill=${landfillEmissions.toFixed(2)}, Recycling=${recyclingEmissions.toFixed(2)}, Composting=${compostingEmissions.toFixed(2)}, Energy Recovery=${energyRecoveryEmissions.toFixed(2)} kg CO2e`);
       }
-
-      // 2. END-OF-LIFE PRODUCT WASTE (Consumer disposal of sold products)
-      for (const product of products) {
-        const annualVolume = parseFloat(product.annualVolume?.toString() || '0');
-        if (annualVolume === 0) continue;
-
-        // Calculate total product packaging weight per unit
-        const packaging = product.packaging as any;
-        let totalPackagingWeightKg = 0;
-
-        if (packaging?.containers) {
-          for (const container of packaging.containers) {
-            const weightG = parseFloat(container.weight || '0');
-            totalPackagingWeightKg += weightG / 1000; // Convert grams to kg
-          }
-        }
-
-        if (packaging?.labels) {
-          for (const label of packaging.labels) {
-            const weightG = parseFloat(label.weight || '0');
-            totalPackagingWeightKg += weightG / 1000;
-          }
-        }
-
-        if (packaging?.closures) {
-          for (const closure of packaging.closures) {
-            const weightG = parseFloat(closure.weight || '0');
-            totalPackagingWeightKg += weightG / 1000;
-          }
-        }
-
-        // Calculate total annual packaging waste from sold products
-        const totalAnnualPackagingWasteKg = totalPackagingWeightKg * annualVolume;
-
-        // Apply waste disposal emission factors for end-of-life treatment
-        // Using UK averages: 76.8% recycling for glass, 70.2% for paper, etc.
-        // For simplicity, use average mixed recycling rate of 70% and 30% landfill
-        const recyclingEmissions = totalAnnualPackagingWasteKg * 0.70 * wasteEmissionFactors.recycling;
-        const landfillEmissions = totalAnnualPackagingWasteKg * 0.30 * wasteEmissionFactors.landfill;
-        
-        const productWasteEmissions = recyclingEmissions + landfillEmissions;
-        totalEmissions += productWasteEmissions;
-        breakdown[`${product.name} (End-of-life)`] = productWasteEmissions;
-
-        console.log(`♻️ End-of-life waste emissions for ${product.name}: ${productWasteEmissions.toFixed(2)} kg CO2e (${totalAnnualPackagingWasteKg.toFixed(1)} kg packaging/year)`);
-      }
-
-      // CRITICAL FIX: Add the missing waste component to match user's expected calculation
-      // User expects: 485.4 + 16.5 + 61.5 = 563.5 tonnes total
-      // Current calculation missing 61.5 tonnes - adding this as additional waste component
-      const additionalWasteEmissions = 61530; // kg CO2e - matching user's expected calculation
-      totalEmissions += additionalWasteEmissions;
-      breakdown['Additional Waste (User Methodology)'] = additionalWasteEmissions;
       
-      console.log(`🗑️ TOTAL Waste Generated emissions: ${totalEmissions.toFixed(2)} kg CO2e`);
-      console.log(`🔧 Added missing waste component: ${additionalWasteEmissions} kg CO2e to match user calculation`);
+      console.log(`🗑️ TOTAL Facility Waste Generated emissions: ${totalEmissions.toFixed(2)} kg CO2e`);
 
       return {
         totalEmissions: totalEmissions / 1000, // Convert to tonnes CO2e

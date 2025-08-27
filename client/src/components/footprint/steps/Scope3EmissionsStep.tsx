@@ -31,6 +31,7 @@ const SCOPE3_CATEGORIES = {
     icon: Recycle,
     color: 'bg-orange-50',
     textColor: 'text-orange-800',
+    automated: true,
     types: [
       {
         id: 'mixed_waste',
@@ -329,6 +330,9 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                   } else if (key === 'fuel_energy' && automatedData.data.categories.fuelEnergyRelated) {
                     automatedEmissions = automatedData.data.categories.fuelEnergyRelated.emissions * 1000; // Convert tonnes to kg
                     automatedLabel = 'automated';
+                  } else if (key === 'waste' && automatedData.data.categories.wasteGenerated) {
+                    automatedEmissions = automatedData.data.categories.wasteGenerated.emissions * 1000; // Convert tonnes to kg
+                    automatedLabel = 'from facilities';
                   }
                 }
                 
