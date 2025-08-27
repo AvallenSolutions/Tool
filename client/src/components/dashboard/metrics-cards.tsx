@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, Droplets, Trash2 } from "lucide-react";
 
 export default function MetricsCards() {
-  // Fetch company carbon footprint data (same as FootprintWizard "Overall Progress")
-  const { data: footprintData } = useQuery({
+  // Fetch company carbon footprint data (same as FootprintWizard existingData)
+  const { data: existingData } = useQuery({
     queryKey: ['/api/company/footprint'],
     staleTime: 0,
   });
@@ -25,41 +25,45 @@ export default function MetricsCards() {
     queryKey: ['/api/company/footprint/comprehensive'],
   });
 
-  // Calculate CO2e exactly the same way as FootprintWizard calculateActualTotal()
+  // EXACT COPY of Carbon Footprint Calculator calculateActualTotal logic
   const calculateTotalCO2e = () => {
-    // Use comprehensive footprint total if available (matches Carbon Footprint Calculator)
-    if (comprehensiveData?.data?.totalFootprint?.co2e_tonnes) {
-      return comprehensiveData.data.totalFootprint.co2e_tonnes;
-    }
+    console.log('🔍 Dashboard calculateActualTotal called', { 
+      hasExistingData: !!existingData?.data, 
+      existingDataLength: existingData?.data?.length || 0,
+      hasAutomatedData: !!automatedData?.data,
+      automatedEmissions: automatedData?.data?.totalEmissions || 0
+    });
     
-    // Fallback to manual calculation if comprehensive data not available
-    if (!footprintData?.data || !automatedData?.data) return 0;
-    
-    // Manual Scope 1 + 2 emissions from footprint data
+    // Calculate manual Scope 1 + 2 emissions from footprint data
     let manualEmissions = 0;
-    for (const entry of footprintData.data) {
-      if (entry.scope === 1 || entry.scope === 2) {
-        manualEmissions += parseFloat(entry.calculatedEmissions) || 0;
+    if (existingData?.data) {
+      for (const entry of existingData.data) {
+        if (entry.scope === 1 || entry.scope === 2) {
+          const emissions = parseFloat(entry.calculatedEmissions) || 0;
+          manualEmissions += emissions;
+          console.log(`🔍 Dashboard Adding ${entry.dataType} (scope ${entry.scope}): ${emissions} kg`);
+        }
       }
     }
     
-    // Automated Scope 3 emissions
-    const automatedEmissions = automatedData.data.totalEmissions * 1000 || 0; // Convert tonnes to kg
+    // Add automated Scope 3 emissions (convert tonnes to kg)
+    const automatedEmissions = (automatedData?.data?.totalEmissions || 0) * 1000;
     
-    const totalKg = manualEmissions + automatedEmissions;
-    return totalKg / 1000; // Convert back to tonnes for display
+    const total = manualEmissions + automatedEmissions;
+    console.log('🔍 Dashboard Total calculated:', { manualEmissions, automatedEmissions, total });
+    
+    return total / 1000; // Convert kg back to tonnes for display
   };
 
   console.log('📊 MetricsCards Debug:', {
     isLoading,
     metrics,
-    footprintData,
+    existingData,
     automatedData,
     comprehensiveData,
     calculatedCO2e: calculateTotalCO2e(),
     comprehensiveTotal: comprehensiveData?.data?.totalFootprint?.co2e_tonnes,
     metricsTotal: metrics?.totalCO2e,
-    usingComprehensive: !!comprehensiveData?.data?.totalFootprint?.co2e_tonnes,
     error: error?.message
   });
 
