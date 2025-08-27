@@ -10,7 +10,8 @@ import { Info, Zap, Building, Plus, Trash2, Lightbulb, Download, CheckCircle, Lo
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FootprintData } from '../FootprintWizard';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface Scope2EmissionsStepProps {
   data: Record<string, any>;
@@ -21,6 +22,7 @@ interface Scope2EmissionsStepProps {
 }
 
 interface ElectricityEntry {
+  id?: number;
   value: string;
   description?: string;
   isRenewable?: boolean;
@@ -45,6 +47,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     description: '',
     isRenewable: false
   });
+  const { toast } = useToast();
 
   // Fetch automated Scope 2 data from production facilities
   const { data: automatedScope2Data, isLoading: automatedLoading, refetch: refetchAutomated } = useQuery({
@@ -92,6 +95,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     const scope2Data = existingData.filter(item => item.scope === 2);
     if (scope2Data.length > 0) {
       const loadedEntries = scope2Data.map(item => ({
+        id: item.id,
         value: item.value,
         description: item.metadata?.description || '',
         isRenewable: item.metadata?.isRenewable || false
@@ -184,11 +188,41 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     }
   };
 
-  // Remove entry
+  // Delete entry mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (entryId: string) => {
+      const response = await fetch(`/api/company/footprint/${entryId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete entry');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/company/footprint'] });
+      toast({
+        title: "Entry Deleted",
+        description: "Footprint entry has been deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete entry: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Remove entry - now properly deletes from backend
   const removeEntry = (index: number) => {
+    const entry = entries[index];
+    if (entry.id) {
+      // Delete from backend if entry has an ID
+      deleteMutation.mutate(entry.id.toString());
+    }
+    // Also remove from local state immediately for better UX
     const updatedEntries = entries.filter((_, i) => i !== index);
     setEntries(updatedEntries);
-    // TODO: Delete from backend when delete API is implemented
   };
 
   const totalConsumption = calculateTotalConsumption();
@@ -309,9 +343,15 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
                         variant="outline"
                         size="sm"
                         onClick={() => removeEntry(index)}
+                        disabled={deleteMutation.isPending}
                         className="text-red-600 hover:text-red-800"
+                        data-testid={`button-delete-entry-${index}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {deleteMutation.isPending && deleteMutation.variables === entry.id?.toString() ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
