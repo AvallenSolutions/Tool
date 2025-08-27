@@ -304,6 +304,81 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
         </CardContent>
       </Card>
 
+      {/* Automated Calculations Summary */}
+      {automatedData?.data?.totalEmissions > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-blue-800 flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5" />
+              <span>Automated Calculations</span>
+            </CardTitle>
+            <CardDescription className="text-blue-700">
+              Calculated automatically from your existing data
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Purchased Goods & Services */}
+              {automatedData.data.categories.purchasedGoodsServices && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Package className="h-4 w-4 text-green-600" />
+                    <h4 className="font-medium text-slate-900">Purchased Goods</h4>
+                  </div>
+                  <div className="text-xl font-bold text-green-600 mb-1">
+                    {(automatedData.data.categories.purchasedGoodsServices.emissions * 1000).toFixed(0)} kg CO₂e
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    {automatedData.data.categories.purchasedGoodsServices.productCount} products
+                  </p>
+                </div>
+              )}
+              
+              {/* Fuel & Energy Related */}
+              {automatedData.data.categories.fuelEnergyRelated && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Building2 className="h-4 w-4 text-indigo-600" />
+                    <h4 className="font-medium text-slate-900">Fuel & Energy</h4>
+                  </div>
+                  <div className="text-xl font-bold text-indigo-600 mb-1">
+                    {(automatedData.data.categories.fuelEnergyRelated.emissions * 1000).toFixed(0)} kg CO₂e
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    Upstream factors
+                  </p>
+                </div>
+              )}
+              
+              {/* Waste Generated */}
+              {automatedData.data.categories.wasteGenerated && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Recycle className="h-4 w-4 text-orange-600" />
+                    <h4 className="font-medium text-slate-900">Waste Generated</h4>
+                  </div>
+                  <div className="text-xl font-bold text-orange-600 mb-1">
+                    {(automatedData.data.categories.wasteGenerated.emissions * 1000).toFixed(1)} kg CO₂e
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    From production facilities
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-blue-200">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-medium text-blue-800">Total Automated</span>
+                <span className="text-2xl font-bold text-blue-600">
+                  {(automatedData.data.totalEmissions * 1000).toFixed(0)} kg CO₂e
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Entries Summary - Show if there are entries OR automated data */}
       {((entries && entries.length > 0) || (automatedData?.data?.totalEmissions > 0)) && (
         <Card className="bg-green-50 border-green-200">
@@ -471,6 +546,31 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
                                   <p className="text-xs text-slate-500 mb-3">
                                     {(automatedData as any).data.categories.fuelEnergyRelated.source}
                                   </p>
+                                </div>
+                              )}
+                              {key === 'waste' && (automatedData as any).data.categories.wasteGenerated && (
+                                <div>
+                                  <h4 className="font-semibold text-slate-900 mb-2">Waste Generated</h4>
+                                  <div className="text-2xl font-bold text-orange-600 mb-2">
+                                    {(automatedData as any).data.categories.wasteGenerated.emissions.toFixed(3)} tonnes CO₂e
+                                  </div>
+                                  <div className="text-lg text-slate-700 mb-2">
+                                    {((automatedData as any).data.categories.wasteGenerated.emissions * 1000).toFixed(1)} kg CO₂e
+                                  </div>
+                                  <p className="text-xs text-slate-500 mb-3">
+                                    {(automatedData as any).data.categories.wasteGenerated.source}
+                                  </p>
+                                  {(automatedData as any).data.categories.wasteGenerated.breakdown && Object.keys((automatedData as any).data.categories.wasteGenerated.breakdown).length > 0 && (
+                                    <div className="mt-3 p-3 bg-slate-50 rounded">
+                                      <p className="text-xs text-slate-600 mb-2 font-medium">Facility Breakdown:</p>
+                                      {Object.entries((automatedData as any).data.categories.wasteGenerated.breakdown).map(([facility, emissions]) => (
+                                        <div key={facility} className="flex justify-between text-xs text-slate-600">
+                                          <span>{facility}:</span>
+                                          <span>{(emissions as number).toFixed(1)} kg CO₂e</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
