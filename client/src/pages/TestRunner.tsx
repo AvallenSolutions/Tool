@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Play, CheckCircle, XCircle, Database, TestTube } from 'lucide-react';
+import { Loader2, Play, CheckCircle, XCircle, Database, TestTube, LogIn } from 'lucide-react';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { apiRequest } from '@/lib/queryClient';
+import { Link } from 'wouter';
 
 interface TestResult {
   phase: string;
@@ -101,7 +102,7 @@ export default function TestRunner() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-wrap">
                   <Button 
                     onClick={seedTestData} 
                     disabled={isSeeding}
@@ -120,6 +121,17 @@ export default function TestRunner() {
                     {isRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                     {isRunning ? 'Running Tests...' : 'Run E2E Tests'}
                   </Button>
+                  
+                  <Link href="/login">
+                    <Button 
+                      variant="secondary"
+                      className="flex items-center gap-2 bg-avallen-green/10 text-avallen-green hover:bg-avallen-green/20 border-avallen-green/30"
+                      data-testid="button-view-login"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      View Login Page
+                    </Button>
+                  </Link>
                 </div>
 
                 {error && (
