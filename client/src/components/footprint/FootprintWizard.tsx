@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, ArrowLeft, ArrowRight, Save, Calculator, Trash2, Zap } from 'lucide-react';
+import { CheckCircle, Circle, ArrowLeft, ArrowRight, Save, Calculator, Trash2, Zap, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useComprehensiveFootprint, transformComprehensiveFootprintToSummary } from '@/hooks/useComprehensiveFootprint';
 import { Scope1EmissionsStep } from './steps/Scope1EmissionsStep';
 import { Scope2EmissionsStep } from './steps/Scope2EmissionsStep';
 import { Scope3EmissionsStep } from './steps/Scope3EmissionsStep';
@@ -51,6 +52,9 @@ export function FootprintWizard() {
   const { data: automatedData } = useQuery({
     queryKey: ['/api/company/footprint/scope3/automated'],
   });
+
+  // Fetch comprehensive refined LCA footprint data
+  const { data: comprehensiveData, isLoading: comprehensiveLoading } = useComprehensiveFootprint();
 
   // Save footprint data mutation
   const saveMutation = useMutation({
@@ -260,6 +264,51 @@ export function FootprintWizard() {
           Your data is automatically saved as you progress.
         </p>
       </div>
+
+      {/* Comprehensive Refined LCA Summary */}
+      {comprehensiveData?.data && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-900">
+              <Sparkles className="w-5 h-5" />
+              Enhanced LCA Calculation Results
+            </CardTitle>
+            <CardDescription className="text-blue-700">
+              Advanced calculation using OpenLCA database, facility data, and end-of-life analysis
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-white/50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-900">
+                  {comprehensiveData.data.totalFootprint.co2e_tonnes.toFixed(1)} tonnes
+                </div>
+                <p className="text-sm text-blue-700">Total CO₂e (Enhanced LCA)</p>
+              </div>
+              <div className="text-center p-4 bg-white/50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-900">
+                  {comprehensiveData.data.totalFootprint.water_liters.toLocaleString()} L
+                </div>
+                <p className="text-sm text-blue-700">Water Footprint</p>
+              </div>
+              <div className="text-center p-4 bg-white/50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-900">
+                  {(comprehensiveData.data.totalFootprint.waste_kg / 1000).toFixed(1)} tonnes
+                </div>
+                <p className="text-sm text-blue-700">Waste Footprint</p>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Methodology:</strong> {comprehensiveData.data.metadata.methodology}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Last calculated: {new Date(comprehensiveData.data.metadata.calculatedAt).toLocaleString()}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Progress Overview */}
       <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
