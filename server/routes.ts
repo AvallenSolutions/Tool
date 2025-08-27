@@ -3272,9 +3272,17 @@ Be precise and quote actual text from the content, not generic terms.`;
         
         
         // 3. Add facility impacts (exact values from refined LCA endpoint)
+        // Note: Facility impacts are excluded from Scope 3 to prevent double-counting
+        // They belong in Scope 2 (purchased electricity) and Scope 1 (direct combustion)
         const facilityEmissionsPerUnit = 0.1999125; // Exact value from refined LCA
-        refinedBreakdown.facilities += facilityEmissionsPerUnit;
-        console.log(`⚡ Facility impacts: ${facilityEmissionsPerUnit.toFixed(7)}kg CO2e per unit (exact match to refined LCA)`);
+        const excludeFacilityImpacts = true; // Flag to prevent double-counting with Scope 2
+        
+        if (!excludeFacilityImpacts) {
+          refinedBreakdown.facilities += facilityEmissionsPerUnit;
+          console.log(`⚡ Facility impacts: ${facilityEmissionsPerUnit.toFixed(7)}kg CO2e per unit (included in calculation)`);
+        } else {
+          console.log(`⚡ Facility impacts: ${facilityEmissionsPerUnit.toFixed(7)}kg CO2e per unit (excluded to prevent Scope 2 double-counting)`);
+        }
         
         // 4. Add production waste footprint (exact values from refined LCA endpoint)
         const wasteEmissionsPerUnit = 0.000413;
@@ -3359,6 +3367,52 @@ Be precise and quote actual text from the content, not generic terms.`;
       return { totalEmissions: 0, breakdown: {} };
     }
   }
+  
+  // Get automated Scope 2 calculations from production facility data
+  app.get('/api/company/footprint/scope2/automated', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const { Scope2AutomationService } = await import('./services/Scope2AutomationService');
+      const user = req.user as any;
+      const userId = user.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      console.log(`🔍 Fetching automated Scope 2 data for company ${company.id}`);
+      
+      const automatedData = await Scope2AutomationService.calculateAutomatedScope2(company.id);
+      const footprintEntries = Scope2AutomationService.convertToFootprintEntries(automatedData);
+      
+      res.json({
+        success: true,
+        data: {
+          automatedData,
+          footprintEntries,
+          summary: {
+            totalScope2Emissions: automatedData.totalScope2Emissions,
+            totalScope1Emissions: automatedData.totalScope1Emissions,
+            electricityConsumption: automatedData.electricity.totalConsumption,
+            renewablePercent: automatedData.electricity.renewablePercent,
+            facilityCount: automatedData.facilityCount
+          }
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('❌ Error calculating automated Scope 2:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
   
   // Get automated Scope 3 calculations (uses refined LCA methodology)
   app.get('/api/company/footprint/scope3/automated', isAuthenticated, async (req: any, res: any) => {

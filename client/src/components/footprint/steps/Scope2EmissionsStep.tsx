@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Info, Zap, Building, Plus, Trash2, Lightbulb } from 'lucide-react';
+import { Info, Zap, Building, Plus, Trash2, Lightbulb, Download, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FootprintData } from '../FootprintWizard';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface Scope2EmissionsStepProps {
   data: Record<string, any>;
@@ -42,6 +44,47 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     value: '',
     description: '',
     isRenewable: false
+  });
+
+  // Fetch automated Scope 2 data from production facilities
+  const { data: automatedScope2Data, isLoading: automatedLoading, refetch: refetchAutomated } = useQuery({
+    queryKey: ['/api/company/footprint/scope2/automated'],
+    enabled: false, // Only fetch when user clicks "Import from Operations"
+  });
+
+  // Import from Operations mutation
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('GET', '/api/company/footprint/scope2/automated');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.data.footprintEntries) {
+        const automatedEntries = data.data.footprintEntries.map((entry: any) => ({
+          value: entry.value,
+          description: entry.metadata.description,
+          isRenewable: entry.metadata.isRenewable || false
+        }));
+        
+        // Add automated entries to existing entries
+        setEntries(prevEntries => [...prevEntries, ...automatedEntries]);
+        
+        // Save each automated entry to the backend
+        data.data.footprintEntries.forEach((entry: any) => {
+          onSave({
+            dataType: entry.dataType,
+            scope: entry.scope,
+            value: entry.value,
+            unit: entry.unit,
+            metadata: {
+              ...entry.metadata,
+              imported: true,
+              importDate: new Date().toISOString()
+            }
+          });
+        });
+      }
+    }
   });
 
   // Load existing Scope 2 data
@@ -164,6 +207,65 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
           These are emissions that occur at the facility where energy is generated, but your company purchases and uses the energy.
         </AlertDescription>
       </Alert>
+
+      {/* Import from Operations */}
+      <Card className="bg-green-50 border-green-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg text-green-800 flex items-center gap-2">
+            <Download className="w-5 h-5" />
+            Import from Operations
+          </CardTitle>
+          <CardDescription className="text-green-700">
+            Automatically populate Scope 2 emissions from your production facility data in the Operations tab
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-green-700">
+              <p>This will import electricity, steam, and other purchased energy data from your facilities.</p>
+              <p className="text-xs mt-1 opacity-75">
+                Facility impacts are excluded from Scope 3 calculations to prevent double-counting.
+              </p>
+            </div>
+            <Button 
+              onClick={() => importMutation.mutate()}
+              disabled={importMutation.isPending || isLoading}
+              className="bg-green-600 hover:bg-green-700 text-white"
+              data-testid="button-import-operations"
+            >
+              {importMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Import Data
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {importMutation.isSuccess && (
+            <Alert className="mt-4 bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Successfully imported {importMutation.data?.data?.footprintEntries?.length || 0} entries from your production facilities.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {importMutation.error && (
+            <Alert className="mt-4 bg-red-50 border-red-200">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Failed to import data: {(importMutation.error as Error).message}
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Current Entries Summary */}
       {entries.length > 0 && (
