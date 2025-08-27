@@ -57,6 +57,9 @@ export default function MetricsCards() {
     automatedData,
     comprehensiveData,
     calculatedCO2e: calculateTotalCO2e(),
+    comprehensiveTotal: comprehensiveData?.data?.totalFootprint?.co2e_tonnes,
+    metricsTotal: metrics?.totalCO2e,
+    usingComprehensive: !!comprehensiveData?.data?.totalFootprint?.co2e_tonnes,
     error: error?.message
   });
 
@@ -78,8 +81,8 @@ export default function MetricsCards() {
     );
   }
 
-  // Use refined LCA CO2e calculation from dashboard metrics (consistent with product detail pages)
-  const totalCO2e = metrics?.totalCO2e || calculateTotalCO2e();
+  // CRITICAL FIX: Use comprehensive footprint data to match Carbon Footprint Calculator exactly
+  const totalCO2e = calculateTotalCO2e();
   // Display water usage in millions of liters
   const waterUsage = metrics?.waterUsage || 11700000; // fallback to 11.7M litres
   const waterUsageInMillions = (waterUsage / 1000000).toFixed(2); // Convert to millions with 2 decimal places
