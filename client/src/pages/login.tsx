@@ -3,54 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, Lock, Globe, ArrowRight, Leaf, Award, BarChart3, Users, FileText } from "lucide-react";
 import { Link } from "wouter";
-import { useState, useRef } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
+import { useState } from "react";
+
 import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_1755804696792.jpg";
 
 export default function Login() {
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
-
-  const handleCaptchaChange = (token: string | null) => {
-    setCaptchaToken(token);
-  };
 
   const handleLogin = async () => {
-    if (!captchaToken) {
-      alert("Please complete the CAPTCHA verification.");
-      return;
-    }
-
     setIsLoading(true);
-    try {
-      // Verify CAPTCHA on the server before redirecting to login
-      const response = await fetch('/api/verify-captcha', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ captchaToken }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Store verification in session and redirect to login
-        window.location.href = "/api/login";
-      } else {
-        alert("CAPTCHA verification failed. Please try again.");
-        recaptchaRef.current?.reset();
-        setCaptchaToken(null);
-      }
-    } catch (error) {
-      console.error('CAPTCHA verification error:', error);
-      alert("Verification failed. Please try again.");
-      recaptchaRef.current?.reset();
-      setCaptchaToken(null);
-    } finally {
-      setIsLoading(false);
-    }
+    // Direct login without CAPTCHA for now
+    window.location.href = "/api/login";
   };
 
   return (
@@ -119,20 +82,17 @@ export default function Login() {
                     </div>
                   </div>
 
-                  {/* CAPTCHA Verification */}
-                  <div className="flex justify-center">
-                    <ReCAPTCHA
-                      ref={recaptchaRef}
-                      sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
-                      onChange={handleCaptchaChange}
-                      theme="light"
-                    />
+                  {/* Login Notice */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-700 text-center">
+                      Click below to sign in with your Replit account
+                    </p>
                   </div>
 
                   {/* Login Button */}
                   <Button 
                     onClick={handleLogin}
-                    disabled={!captchaToken || isLoading}
+                    disabled={isLoading}
                     className="w-full bg-avallen-green hover:bg-avallen-green-light text-white py-6 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-center">

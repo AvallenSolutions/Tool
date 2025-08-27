@@ -53,6 +53,7 @@ import InitiativesPage from "@/pages/initiatives";
 import ReportsCreate from "@/pages/reports-create";
 import GuidedReportWizard from "@/pages/guided-report-wizard";
 import PioneersSubscription from "@/pages/pioneers-subscription";
+import PioneersSubscriptionSimple from "@/pages/pioneers-subscription-simple";
 import PioneersPaymentTest from "@/pages/pioneers-payment-test";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
 
@@ -140,6 +141,7 @@ function Router() {
       <Route path="/" component={SimpleTestComponent} />
       <Route path="/login" component={Login} />
       <Route path="/pioneers/register" component={PioneersSubscription} />
+      <Route path="/pioneers/simple" component={PioneersSubscriptionSimple} />
       <Route path="/pioneers/test" component={PioneersPaymentTest} />
       <Route path="/landing" component={Landing} />
       <Route path="/app/welcome" component={Welcome} />
