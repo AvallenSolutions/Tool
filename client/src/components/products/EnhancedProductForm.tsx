@@ -66,7 +66,7 @@ const enhancedProductSchema = z.object({
   // Packaging Tab - User-friendly input that auto-syncs to LCA Data
   packaging: z.object({
     primaryContainer: z.object({
-      material: z.string().optional(),
+      material: z.string().min(1, "Container material is required"),
       weight: z.coerce.number().min(0, "Weight must be positive"),
       recycledContent: z.coerce.number().min(0).max(100).optional(),
       recyclability: z.string().optional(),
@@ -1115,13 +1115,7 @@ export default function EnhancedProductForm({
   return (
     <TourProvider>
       <Form {...form}>
-        <form onSubmit={(e) => {
-          console.log('📝 Form onSubmit event triggered');
-          form.handleSubmit((data) => {
-            console.log('✅ Form validation passed, calling handleSubmit');
-            handleSubmit(data);
-          })(e);
-        }} className="w-full" onKeyDown={(e) => {
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="w-full" onKeyDown={(e) => {
           // Prevent form submission on Enter key unless we're on the last tab
           if (e.key === 'Enter' && activeTab !== 'lcadata') {
             e.preventDefault();
@@ -2936,11 +2930,51 @@ export default function EnhancedProductForm({
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            onClick={(e) => {
-              console.log('🔥 Save Product button clicked');
-              console.log('🔍 Form errors:', form.formState.errors);
-              console.log('🔍 Form values:', form.getValues());
-              // Let the form handle submission naturally
+            onClick={async (e) => {
+              e.preventDefault();
+              
+              // Trigger validation
+              const isValid = await form.trigger();
+              
+              if (!isValid) {
+                // Create error summary with tab guidance
+                const errors = form.formState.errors;
+                const errorSummary = [];
+                
+                // Check each tab for errors
+                if (errors.name || errors.sku || errors.type || errors.volume) {
+                  errorSummary.push("• Basic Info tab: Complete required product details");
+                }
+                if (errors.packaging?.primaryContainer?.material) {
+                  errorSummary.push("• Packaging tab: Select container material");
+                }
+                if (errors.lcaData) {
+                  errorSummary.push("• LCA Data tab: Complete required environmental data fields");
+                }
+                
+                if (errorSummary.length > 0) {
+                  toast({
+                    title: "Required Fields Missing",
+                    description: `Please complete the following:\n${errorSummary.join('\n')}`,
+                    variant: "destructive",
+                  });
+                  
+                  // Navigate to first tab with errors
+                  if (errors.name || errors.sku || errors.type || errors.volume) {
+                    setActiveTab('basic');
+                  } else if (errors.packaging) {
+                    setActiveTab('packaging');
+                  } else if (errors.lcaData) {
+                    setActiveTab('lcadata');
+                  }
+                }
+                
+                return;
+              }
+              
+              // If validation passes, submit the form
+              const data = form.getValues();
+              handleSubmit(data);
             }}
           >
             {isSubmitting ? (
