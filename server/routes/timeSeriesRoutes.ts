@@ -1,0 +1,351 @@
+import { Router } from "express";
+import { z } from "zod";
+import { db } from "../db";
+import { eq, and, gte, lte, desc, asc } from "drizzle-orm";
+import { 
+  monthlyFacilityData,
+  productVersions,
+  kpiSnapshots,
+  products,
+  insertMonthlyFacilityDataSchema,
+  insertProductVersionSchema,
+  type InsertMonthlyFacilityData,
+  type InsertProductVersion,
+} from "@shared/schema";
+import { timeSeriesEngine } from "../services/TimeSeriesEngine";
+import { kpiSnapshotService } from "../services/KPISnapshotService";
+
+const router = Router();
+
+// Monthly Facility Data Routes
+
+// Get monthly facility data for a company
+router.get("/monthly-facility/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    const { startDate, endDate, limit = "12" } = req.query;
+
+    let query = db
+      .select()
+      .from(monthlyFacilityData)
+      .where(eq(monthlyFacilityData.companyId, companyId))
+      .orderBy(desc(monthlyFacilityData.month));
+
+    // Add date filtering if provided
+    if (startDate && endDate) {
+      query = query.where(
+        and(
+          eq(monthlyFacilityData.companyId, companyId),
+          gte(monthlyFacilityData.month, startDate as string),
+          lte(monthlyFacilityData.month, endDate as string)
+        )
+      );
+    }
+
+    const data = await query.limit(parseInt(limit as string));
+    
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching monthly facility data:", error);
+    res.status(500).json({ error: "Failed to fetch monthly facility data" });
+  }
+});
+
+// Add or update monthly facility data
+router.post("/monthly-facility", async (req, res) => {
+  try {
+    const facilityData = insertMonthlyFacilityDataSchema.parse(req.body);
+
+    // Check if data already exists for this company and month
+    const existing = await db
+      .select()
+      .from(monthlyFacilityData)
+      .where(
+        and(
+          eq(monthlyFacilityData.companyId, facilityData.companyId),
+          eq(monthlyFacilityData.month, facilityData.month)
+        )
+      );
+
+    let result;
+    if (existing.length > 0) {
+      // Update existing record
+      [result] = await db
+        .update(monthlyFacilityData)
+        .set({ ...facilityData, updatedAt: new Date() })
+        .where(
+          and(
+            eq(monthlyFacilityData.companyId, facilityData.companyId),
+            eq(monthlyFacilityData.month, facilityData.month)
+          )
+        )
+        .returning();
+    } else {
+      // Create new record
+      [result] = await db
+        .insert(monthlyFacilityData)
+        .values(facilityData)
+        .returning();
+    }
+
+    // Optionally trigger KPI recalculation for this month
+    // This could be done asynchronously
+    console.log(`📊 Monthly facility data saved for company ${facilityData.companyId}, month ${facilityData.month}`);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error saving monthly facility data:", error);
+    res.status(500).json({ error: "Failed to save monthly facility data" });
+  }
+});
+
+// Product Version Routes
+
+// Get product versions for a company
+router.get("/product-versions/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    const { productId, activeOnly = "false" } = req.query;
+
+    let query = db
+      .select({
+        id: productVersions.id,
+        productId: productVersions.productId,
+        versionNumber: productVersions.versionNumber,
+        effectiveDate: productVersions.effectiveDate,
+        lcaQuestionnaireId: productVersions.lcaQuestionnaireId,
+        changeDescription: productVersions.changeDescription,
+        isActive: productVersions.isActive,
+        createdAt: productVersions.createdAt,
+      })
+      .from(productVersions)
+      .innerJoin(db.select().from(products).where(eq(products.companyId, companyId)), 
+                 eq(productVersions.productId, products.id))
+      .orderBy(asc(productVersions.productId), desc(productVersions.versionNumber));
+
+    // Filter by product ID if specified
+    if (productId) {
+      query = query.where(eq(productVersions.productId, parseInt(productId as string)));
+    }
+
+    // Filter to active versions only if specified
+    if (activeOnly === "true") {
+      query = query.where(eq(productVersions.isActive, true));
+    }
+
+    const versions = await query;
+    res.json(versions);
+  } catch (error) {
+    console.error("Error fetching product versions:", error);
+    res.status(500).json({ error: "Failed to fetch product versions" });
+  }
+});
+
+// Create a new product version
+router.post("/product-versions", async (req, res) => {
+  try {
+    const versionData = insertProductVersionSchema.parse(req.body);
+
+    // Validate that the product exists and user has access
+    const product = await db.select().from(products).where(eq(products.id, versionData.productId));
+    if (!product.length) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Create the new version
+    const [newVersion] = await db
+      .insert(productVersions)
+      .values(versionData)
+      .returning();
+
+    console.log(`📦 Created product version ${newVersion.versionNumber} for product ${newVersion.productId}`);
+
+    res.json(newVersion);
+  } catch (error) {
+    console.error("Error creating product version:", error);
+    res.status(500).json({ error: "Failed to create product version" });
+  }
+});
+
+// Get product version for a specific date
+router.get("/product-versions/:productId/for-date/:date", async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId);
+    const targetDate = new Date(req.params.date);
+
+    const version = await timeSeriesEngine.getProductVersionForDate(productId, targetDate);
+    
+    if (!version) {
+      return res.status(404).json({ error: "No product version found for the specified date" });
+    }
+
+    res.json(version);
+  } catch (error) {
+    console.error("Error fetching product version for date:", error);
+    res.status(500).json({ error: "Failed to fetch product version for date" });
+  }
+});
+
+// KPI Snapshot Routes
+
+// Get KPI snapshots for a company
+router.get("/kpi-snapshots/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    const { kpiDefinitionId, monthsBack = "12", startDate, endDate } = req.query;
+
+    if (kpiDefinitionId) {
+      let snapshots;
+      
+      if (startDate && endDate) {
+        snapshots = await timeSeriesEngine.getKPIHistoryForDateRange(
+          kpiDefinitionId as string,
+          companyId,
+          new Date(startDate as string),
+          new Date(endDate as string)
+        );
+      } else {
+        snapshots = await timeSeriesEngine.getKPIHistory(
+          kpiDefinitionId as string,
+          companyId,
+          parseInt(monthsBack as string)
+        );
+      }
+      
+      res.json(snapshots);
+    } else {
+      // Get all KPI snapshots for the company
+      const snapshots = await db
+        .select()
+        .from(kpiSnapshots)
+        .where(eq(kpiSnapshots.companyId, companyId))
+        .orderBy(asc(kpiSnapshots.snapshotDate));
+      
+      res.json(snapshots);
+    }
+  } catch (error) {
+    console.error("Error fetching KPI snapshots:", error);
+    res.status(500).json({ error: "Failed to fetch KPI snapshots" });
+  }
+});
+
+// Generate KPI snapshot for current month
+router.post("/kpi-snapshots/generate", async (req, res) => {
+  try {
+    const { companyId, kpiDefinitionId } = req.body;
+
+    if (!companyId || !kpiDefinitionId) {
+      return res.status(400).json({ error: "Company ID and KPI Definition ID are required" });
+    }
+
+    await kpiSnapshotService.generateCurrentMonthSnapshot(companyId, kpiDefinitionId);
+
+    res.json({ message: "KPI snapshot generated successfully" });
+  } catch (error) {
+    console.error("Error generating KPI snapshot:", error);
+    res.status(500).json({ error: "Failed to generate KPI snapshot" });
+  }
+});
+
+// Bulk generate snapshots for a company (initialize historical data)
+router.post("/kpi-snapshots/initialize/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    const { monthsBack = 12 } = req.body;
+
+    await kpiSnapshotService.initializeSnapshotsForCompany(companyId, monthsBack);
+
+    res.json({ 
+      message: `Initialized KPI snapshots for company ${companyId}`,
+      monthsBack 
+    });
+  } catch (error) {
+    console.error("Error initializing KPI snapshots:", error);
+    res.status(500).json({ error: "Failed to initialize KPI snapshots" });
+  }
+});
+
+// Calculate KPI for a specific month
+router.post("/kpi-calculate-month", async (req, res) => {
+  try {
+    const { kpiDefinitionId, companyId, targetMonth } = req.body;
+
+    if (!kpiDefinitionId || !companyId || !targetMonth) {
+      return res.status(400).json({ 
+        error: "KPI Definition ID, Company ID, and target month are required" 
+      });
+    }
+
+    const value = await timeSeriesEngine.calculateKPIForMonth(
+      kpiDefinitionId,
+      companyId,
+      new Date(targetMonth)
+    );
+
+    res.json({ 
+      kpiDefinitionId,
+      companyId,
+      targetMonth,
+      value 
+    });
+  } catch (error) {
+    console.error("Error calculating KPI for month:", error);
+    res.status(500).json({ error: "Failed to calculate KPI for month" });
+  }
+});
+
+// Time-series analytics endpoint
+router.get("/analytics/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    const { kpiDefinitionId, monthsBack = "12" } = req.query;
+
+    if (!kpiDefinitionId) {
+      return res.status(400).json({ error: "KPI Definition ID is required" });
+    }
+
+    // Get historical snapshots
+    const snapshots = await timeSeriesEngine.getKPIHistory(
+      kpiDefinitionId as string,
+      companyId,
+      parseInt(monthsBack as string)
+    );
+
+    // Calculate trend analytics
+    const values = snapshots.map(s => parseFloat(s.value));
+    const dates = snapshots.map(s => s.snapshotDate);
+
+    let trend = "stable";
+    let changePercentage = 0;
+
+    if (values.length >= 2) {
+      const firstValue = values[0];
+      const lastValue = values[values.length - 1];
+      changePercentage = ((lastValue - firstValue) / firstValue) * 100;
+      
+      if (changePercentage > 5) trend = "increasing";
+      else if (changePercentage < -5) trend = "decreasing";
+    }
+
+    res.json({
+      snapshots,
+      analytics: {
+        trend,
+        changePercentage: parseFloat(changePercentage.toFixed(2)),
+        averageValue: values.length > 0 ? parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(4)) : 0,
+        minValue: Math.min(...values),
+        maxValue: Math.max(...values),
+        dataPoints: values.length,
+        dateRange: {
+          start: dates[0],
+          end: dates[dates.length - 1]
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
+    res.status(500).json({ error: "Failed to fetch analytics" });
+  }
+});
+
+export default router;

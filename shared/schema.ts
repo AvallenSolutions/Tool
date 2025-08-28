@@ -2263,3 +2263,5 @@ export const insertRegionalWasteStatisticsSchema = createInsertSchema(regionalWa
   createdAt: true,
   updatedAt: true,
 });
+
+

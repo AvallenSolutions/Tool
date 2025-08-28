@@ -30,6 +30,7 @@ import {
 } from "./middleware/validation";
 import { adminRouter } from "./routes/admin";
 import objectStorageRouter from "./routes/objectStorage";
+import timeSeriesRouter from "./routes/timeSeriesRoutes";
 import { SupplierProductService } from "./services/SupplierProductService";
 import { BulkImportService } from "./services/BulkImportService";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -99,6 +100,9 @@ export function registerRoutes(app: Express): Server {
 
   // Admin routes  
   app.use('/api/admin', adminRouter);
+
+  // Time-series routes for monthly facility data and KPI snapshots
+  app.use('/api/time-series', timeSeriesRouter);
 
   // Enhanced export for guided reports - supports multiple formats
   app.post('/api/reports/guided/:reportId/export', isAuthenticated, async (req: any, res: any) => {
