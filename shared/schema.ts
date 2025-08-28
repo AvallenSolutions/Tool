@@ -1791,6 +1791,133 @@ export const insertSmartGoalSchema = createInsertSchema(smartGoals).omit({
   updatedAt: true,
 });
 
+// ==== MONTHLY FACILITY UPDATES & PRODUCT VERSIONING SYSTEM ====
+
+// Monthly Facility Data table - stores operational data on a monthly basis
+export const monthlyFacilityData = pgTable("monthly_facility_data", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  month: date("month").notNull(), // First day of the month this data applies to
+  electricityKwh: numeric("electricity_kwh", { precision: 12, scale: 2 }),
+  naturalGasM3: numeric("natural_gas_m3", { precision: 12, scale: 2 }),
+  waterM3: numeric("water_m3", { precision: 12, scale: 2 }),
+  productionVolume: numeric("production_volume", { precision: 12, scale: 2 }),
+  utilityBillUrl: varchar("utility_bill_url", { length: 255 }), // Link to uploaded verification document
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Product Versions table - stores different versions of products over time
+export const productVersions = pgTable("product_versions", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id),
+  versionNumber: integer("version_number").notNull(),
+  effectiveDate: date("effective_date").notNull(), // Date from which this version is active
+  lcaQuestionnaireId: uuid("lca_questionnaire_id").references(() => lcaQuestionnaires.id),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// KPI Snapshots table - stores calculated KPI values at specific points in time
+export const kpiSnapshots = pgTable("kpi_snapshots", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  kpiDefinitionId: text("kpi_definition_id").notNull().references(() => kpiDefinitions.id),
+  snapshotDate: date("snapshot_date").notNull(), // Date of the snapshot (e.g., end of month)
+  value: numeric("value", { precision: 15, scale: 4 }).notNull(), // Calculated KPI value
+  metadata: jsonb("metadata").$type<{
+    calculationMethod?: string;
+    dataSource?: string;
+    facilityDataMonth?: string;
+    productVersionsUsed?: Array<{ productId: number; versionId: string; versionNumber: number }>;
+    notes?: string;
+  }>(), // Additional context about the calculation
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Relations for Monthly Facility Data
+export const monthlyFacilityDataRelations = relations(monthlyFacilityData, ({ one }) => ({
+  company: one(companies, {
+    fields: [monthlyFacilityData.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Relations for Product Versions
+export const productVersionsRelations = relations(productVersions, ({ one }) => ({
+  product: one(products, {
+    fields: [productVersions.productId],
+    references: [products.id],
+  }),
+  lcaQuestionnaire: one(lcaQuestionnaires, {
+    fields: [productVersions.lcaQuestionnaireId],
+    references: [lcaQuestionnaires.id],
+  }),
+}));
+
+// Relations for KPI Snapshots
+export const kpiSnapshotsRelations = relations(kpiSnapshots, ({ one }) => ({
+  company: one(companies, {
+    fields: [kpiSnapshots.companyId],
+    references: [companies.id],
+  }),
+  kpiDefinition: one(kpiDefinitions, {
+    fields: [kpiSnapshots.kpiDefinitionId],
+    references: [kpiDefinitions.id],
+  }),
+}));
+
+// Type exports for Monthly Facility Data
+export type MonthlyFacilityData = typeof monthlyFacilityData.$inferSelect;
+export type InsertMonthlyFacilityData = typeof monthlyFacilityData.$inferInsert;
+export const insertMonthlyFacilityDataSchema = createInsertSchema(monthlyFacilityData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports for Product Versions
+export type ProductVersion = typeof productVersions.$inferSelect;
+export type InsertProductVersion = typeof productVersions.$inferInsert;
+export const insertProductVersionSchema = createInsertSchema(productVersions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports for KPI Snapshots
+export type KpiSnapshot = typeof kpiSnapshots.$inferSelect;
+export type InsertKpiSnapshot = typeof kpiSnapshots.$inferInsert;
+export const insertKpiSnapshotSchema = createInsertSchema(kpiSnapshots).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Update product relations to include versions
+export const enhancedProductRelations = relations(products, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [products.companyId],
+    references: [companies.id],
+  }),
+  inputs: many(productInputs),
+  contractManufacturer: one(suppliers, {
+    fields: [products.contractManufacturerId],
+    references: [suppliers.id],
+  }),
+  versions: many(productVersions),
+}));
+
+// Update LCA questionnaire relations to include product versions
+export const enhancedLcaQuestionnaireRelations = relations(lcaQuestionnaires, ({ one, many }) => ({
+  product: one(products, {
+    fields: [lcaQuestionnaires.productId],
+    references: [products.id],
+  }),
+  uploadedLcas: many(uploadedSupplierLcas),
+  productVersions: many(productVersions),
+}));
+
 // Relations for Internal Messages and Document Reviews
 export const internalMessagesRelations = relations(internalMessages, ({ one }) => ({
   fromUser: one(users, {
