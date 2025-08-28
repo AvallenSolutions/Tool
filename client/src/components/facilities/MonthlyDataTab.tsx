@@ -82,14 +82,7 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
     productionVolume: '',
   });
 
-  // Edit state for historical data
-  const [editingRecord, setEditingRecord] = useState<string | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    electricityKwh: '',
-    naturalGasM3: '',
-    waterM3: '',
-    productionVolume: '',
-  });
+
 
   // Facility-specific query URLs
   const facilityQueryUrl = facilityId 
@@ -150,30 +143,7 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
     },
   });
 
-  // Update facility data mutation for editing existing records
-  const updateFacilityData = useMutation({
-    mutationFn: async ({ recordId, data }: { recordId: string, data: any }) => {
-      const facilitySpecificData = facilityId ? { ...data, facilityId } : data;
-      const response = await apiRequest('PUT', `/api/time-series/monthly-facility/${recordId}`, facilitySpecificData);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: `Monthly data updated for ${facilityName || 'facility'}`,
-      });
-      queryClient.invalidateQueries({ queryKey: [facilityQueryUrl] });
-      queryClient.invalidateQueries({ queryKey: [analyticsQueryUrl] });
-      setEditingRecord(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update facility data",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   // Initialize KPI snapshots mutation
   const initializeSnapshots = useMutation({
@@ -244,39 +214,7 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
     return `${parseFloat(value).toLocaleString()} ${unit}`;
   };
 
-  const startEdit = (record: MonthlyFacilityData) => {
-    setEditingRecord(record.id);
-    setEditFormData({
-      electricityKwh: record.electricityKwh || '',
-      naturalGasM3: record.naturalGasM3 || '',
-      waterM3: record.waterM3 || '',
-      productionVolume: record.productionVolume || '',
-    });
-  };
 
-  const cancelEdit = () => {
-    setEditingRecord(null);
-    setEditFormData({
-      electricityKwh: '',
-      naturalGasM3: '',
-      waterM3: '',
-      productionVolume: '',
-    });
-  };
-
-  const saveEdit = () => {
-    if (!editingRecord) return;
-    
-    const payload = {
-      companyId: 1,
-      electricityKwh: editFormData.electricityKwh || null,
-      naturalGasM3: editFormData.naturalGasM3 || null,
-      waterM3: editFormData.waterM3 || null,
-      productionVolume: editFormData.productionVolume || null,
-    };
-
-    updateFacilityData.mutate({ recordId: editingRecord, data: payload });
-  };
 
   const formatChartData = (snapshots: KpiSnapshot[]) => {
     return snapshots.map(snapshot => ({
@@ -324,13 +262,8 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
       </div>
 
       <Tabs defaultValue="entry" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="entry" data-testid="tab-data-entry">Data Entry</TabsTrigger>
-          <TabsTrigger value="history" data-testid="tab-history">Historical Data</TabsTrigger>
-          <TabsTrigger value="analytics" data-testid="tab-analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="trends" data-testid="tab-trends">Trends</TabsTrigger>
-          <TabsTrigger value="migration" data-testid="tab-migration">Migration</TabsTrigger>
-          <TabsTrigger value="testing" data-testid="tab-testing">Testing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="entry" className="space-y-6">
@@ -445,287 +378,7 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Historical Monthly Data</CardTitle>
-              <CardDescription>
-                Review past monthly entries for data consistency and trend analysis
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {facilityLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {facilityData.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No historical data available yet.</p>
-                      <p className="text-sm">Start by entering your first monthly data entry.</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4">
-                      {facilityData.slice(0, 12).map((data: MonthlyFacilityData) => (
-                        <Card key={data.id} className="border-l-4 border-l-green-500">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-lg">{formatMonth(data.month)}</CardTitle>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {new Date(data.updatedAt).toLocaleDateString()}
-                                </Badge>
-                                {editingRecord === data.id ? (
-                                  <div className="flex gap-1">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={saveEdit}
-                                      disabled={updateFacilityData.isPending}
-                                      data-testid={`button-save-${data.id}`}
-                                    >
-                                      <Save className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={cancelEdit}
-                                      data-testid={`button-cancel-${data.id}`}
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => startEdit(data)}
-                                    data-testid={`button-edit-${data.id}`}
-                                  >
-                                    <Edit className="w-3 h-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            {editingRecord === data.id ? (
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-xs font-medium text-gray-700">Electricity (kWh)</Label>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="15000"
-                                    value={editFormData.electricityKwh}
-                                    onChange={(e) => setEditFormData(prev => ({ ...prev, electricityKwh: e.target.value }))}
-                                    data-testid={`input-edit-electricity-${data.id}`}
-                                    className="text-sm"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs font-medium text-gray-700">Natural Gas (m³)</Label>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="2500"
-                                    value={editFormData.naturalGasM3}
-                                    onChange={(e) => setEditFormData(prev => ({ ...prev, naturalGasM3: e.target.value }))}
-                                    data-testid={`input-edit-gas-${data.id}`}
-                                    className="text-sm"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs font-medium text-gray-700">Water (m³)</Label>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="1200"
-                                    value={editFormData.waterM3}
-                                    onChange={(e) => setEditFormData(prev => ({ ...prev, waterM3: e.target.value }))}
-                                    data-testid={`input-edit-water-${data.id}`}
-                                    className="text-sm"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-xs font-medium text-gray-700">Production (units)</Label>
-                                  <Input
-                                    type="number"
-                                    step="1"
-                                    placeholder="25000"
-                                    value={editFormData.productionVolume}
-                                    onChange={(e) => setEditFormData(prev => ({ ...prev, productionVolume: e.target.value }))}
-                                    data-testid={`input-edit-production-${data.id}`}
-                                    className="text-sm"
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                  <div className="font-medium text-gray-700">Electricity</div>
-                                  <div className="text-gray-900">{formatValue(data.electricityKwh, 'kWh')}</div>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-700">Natural Gas</div>
-                                  <div className="text-gray-900">{formatValue(data.naturalGasM3, 'm³')}</div>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-700">Water</div>
-                                  <div className="text-gray-900">{formatValue(data.waterM3, 'm³')}</div>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-700">Production</div>
-                                  <div className="text-gray-900">{formatValue(data.productionVolume, 'units')}</div>
-                                </div>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                KPI Analytics & Trends
-              </CardTitle>
-              <CardDescription>
-                Analyze performance trends based on monthly facility data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Select KPI for Analysis</Label>
-                  <Select value={selectedKpiForAnalytics} onValueChange={setSelectedKpiForAnalytics}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="170a5cca-9363-4a0a-88ec-ff1b046fe2d7">Carbon Intensity per Bottle</SelectItem>
-                      <SelectItem value="another-kpi-id">Energy Efficiency</SelectItem>
-                      <SelectItem value="water-kpi-id">Water Usage per Unit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {analyticsLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                  </div>
-                ) : analyticsData?.analytics ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="text-2xl font-bold">{analyticsData.analytics.averageValue.toFixed(3)}</div>
-                          <div className="text-sm text-gray-600">Average Value</div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className={`text-2xl font-bold ${getTrendColor(analyticsData.analytics.trend)}`}>
-                            {getTrendIcon(analyticsData.analytics.trend)} {Math.abs(analyticsData.analytics.changePercentage).toFixed(1)}%
-                          </div>
-                          <div className="text-sm text-gray-600">Trend</div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="text-2xl font-bold">{analyticsData.analytics.dataPoints}</div>
-                          <div className="text-sm text-gray-600">Data Points</div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {analyticsData.snapshots?.length > 0 && (
-                      <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={formatChartData(analyticsData.snapshots)}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No analytics data available.</p>
-                    <p className="text-sm">Initialize KPI snapshots to begin tracking trends.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Trends</CardTitle>
-              <CardDescription>
-                Long-term trend analysis and performance indicators
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Trend analysis available with 3+ months of data</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="migration" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Migration</CardTitle>
-              <CardDescription>
-                Migrate historical data and validate system consistency
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Migration tools available for system administrators</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="testing" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Testing</CardTitle>
-              <CardDescription>
-                Validate data integrity and system performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <TestTube className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Testing utilities for system validation</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );

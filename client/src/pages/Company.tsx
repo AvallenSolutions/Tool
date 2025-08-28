@@ -22,6 +22,7 @@ import Header from "@/components/layout/header";
 import CompanyStorySection from "@/components/company/CompanyStorySection";
 import ProductionFacilitiesList from "@/components/facilities/ProductionFacilitiesList";
 import MonthlyDataSummaryCard from "@/components/facilities/MonthlyDataSummaryCard";
+import MonthlyFacilityDataSection from "@/components/facilities/MonthlyFacilityDataSection";
 
 // Sustainability data constants extracted from Settings
 const certificationOptions = [
@@ -736,6 +737,9 @@ export default function Company() {
             <TabsContent value="operations" className="space-y-6">
               {/* Monthly Data Collection - Primary Method */}
               <MonthlyDataSummaryCard />
+
+              {/* Monthly Facility Data Management */}
+              <MonthlyFacilityDataSection />
 
               {/* Production Facilities Management - Legacy/Reference */}
               <Card className="border-l-4 border-l-blue-500">

@@ -112,7 +112,7 @@ export default function MonthlyDataSummaryCard() {
             }`}>
               {getRecommendationIcon(summary.recommendation)}
             </div>
-            Monthly Facility Data Status
+            Monthly Facility Data
           </div>
           <Button
             variant="outline"
