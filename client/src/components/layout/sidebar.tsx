@@ -29,7 +29,7 @@ export default function Sidebar() {
 
   // Auto-expand KPI & Goals section when on any KPI/Goals-related page
   useEffect(() => {
-    if (location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')) {
+    if (location.startsWith('/app/kpis') || location.startsWith('/app/initiatives') || location.startsWith('/app/facility-updates')) {
       setKpiGoalsExpanded(true);
     }
   }, [location]);
@@ -57,6 +57,7 @@ export default function Sidebar() {
   const kpiGoalsSubItems = [
     { path: "/app/kpis", label: "KPIs", icon: BarChart3 },
     { path: "/app/initiatives", label: "SMART Goals", icon: Flag },
+    { path: "/app/facility-updates", label: "Facility Updates", icon: Activity },
   ];
 
   const adminSubItems = [
@@ -204,7 +205,7 @@ export default function Sidebar() {
             <Button
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
-                location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')
+                location.startsWith('/app/kpis') || location.startsWith('/app/initiatives') || location.startsWith('/app/facility-updates')
                   ? "bg-white text-[#209d50] hover:bg-gray-100"
                   : "text-white hover:bg-green-600"
               }`}
