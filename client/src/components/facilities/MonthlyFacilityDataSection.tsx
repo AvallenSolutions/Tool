@@ -85,10 +85,11 @@ export default function MonthlyFacilityDataSection() {
       queryClient.invalidateQueries({ queryKey: [analyticsQueryUrl] });
       setEditingRecord(null);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Update error:', error);
       toast({
         title: "Error",
-        description: "Failed to update facility data",
+        description: error?.message || "Failed to update facility data",
         variant: "destructive",
       });
     },

@@ -116,6 +116,34 @@ router.post("/monthly-facility", async (req, res) => {
   }
 });
 
+// Update existing monthly facility data by ID
+router.put("/monthly-facility/:recordId", async (req, res) => {
+  try {
+    const recordId = req.params.recordId;
+    const updateData = req.body;
+
+    // Update the specific record
+    const [result] = await db
+      .update(monthlyFacilityData)
+      .set({ 
+        ...updateData, 
+        updatedAt: new Date() 
+      })
+      .where(eq(monthlyFacilityData.id, recordId))
+      .returning();
+
+    if (!result) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+
+    console.log(`📊 Monthly facility data updated for record ${recordId}`);
+    res.json(result);
+  } catch (error) {
+    console.error("Error updating monthly facility data:", error);
+    res.status(500).json({ error: "Failed to update monthly facility data" });
+  }
+});
+
 // Product Version Routes
 
 // Get product versions for a company
