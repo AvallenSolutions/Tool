@@ -66,7 +66,7 @@ const enhancedProductSchema = z.object({
   // Packaging Tab - User-friendly input that auto-syncs to LCA Data
   packaging: z.object({
     primaryContainer: z.object({
-      material: z.string().min(1, "Container material is required"),
+      material: z.string().optional(),
       weight: z.coerce.number().min(0, "Weight must be positive"),
       recycledContent: z.coerce.number().min(0).max(100).optional(),
       recyclability: z.string().optional(),
@@ -272,12 +272,12 @@ const enhancedProductSchema = z.object({
     
     // Section 2: Inbound Transport
     inboundTransport: z.object({
-      distanceKm: z.number().positive().optional(),
+      distanceKm: z.number().nonnegative().optional(),
       mode: z.enum(['truck', 'rail', 'ship', 'air', 'multimodal']).optional(),
-      fuelEfficiencyLper100km: z.number().positive().optional(),
+      fuelEfficiencyLper100km: z.number().nonnegative().optional(),
       loadFactor: z.number().min(0).max(100).optional(),
       refrigerationRequired: z.boolean().default(false),
-    }),
+    }).optional(),
     
     // Section 3: Processing & Production
     processing: z.object({
@@ -288,13 +288,13 @@ const enhancedProductSchema = z.object({
       angelsSharePercentage: z.number().min(0).max(100).optional(),
       renewableEnergyPercent: z.number().min(0).max(100).optional(),
       fermentation: z.object({
-        fermentationTime: z.number().positive().optional(), // days
+        fermentationTime: z.number().nonnegative().optional(), // days
         temperatureControl: z.boolean().default(false),
         yeastType: z.string().optional(),
         sugarAddedKg: z.number().nonnegative().optional(),
       }).optional(),
       distillation: z.object({
-        distillationRounds: z.number().positive().optional(),
+        distillationRounds: z.number().nonnegative().optional(),
         energySourceType: z.enum(['electric', 'gas', 'biomass', 'steam']).optional(),
         heatRecoverySystem: z.boolean().default(false),
         copperUsageKg: z.number().nonnegative().optional(),
@@ -323,8 +323,8 @@ const enhancedProductSchema = z.object({
       }),
       label: z.object({
         materialType: z.enum(['paper', 'plastic', 'foil', 'biodegradable']).optional(),
-        weightGrams: z.number().positive().optional(),
-        inkType: z.enum(['conventional', 'eco_friendly', 'soy_based']).optional(),
+        weightGrams: z.number().nonnegative().optional(),
+        inkType: z.enum(['conventional', 'eco_friendly', 'soy_based', 'solvent_based']).optional(),
         adhesiveType: z.enum(['water_based', 'solvent_based', 'hot_melt']).optional(),
         // Additional fields from original packaging tab
         printingMethod: z.string().optional(),
@@ -332,14 +332,14 @@ const enhancedProductSchema = z.object({
       }).optional(),
       closure: z.object({
         materialType: z.enum(['cork', 'synthetic_cork', 'screw_cap', 'crown_cap', 'aluminum']).optional(),
-        weightGrams: z.number().positive().optional(),
+        weightGrams: z.number().nonnegative().optional(),
         hasLiner: z.boolean().default(false),
         linerMaterial: z.string().optional(),
       }).optional(),
       secondaryPackaging: z.object({
         hasBox: z.boolean().default(false),
         boxMaterial: z.enum(['cardboard', 'wood', 'plastic', 'metal']).optional(),
-        boxWeightGrams: z.number().positive().optional(),
+        boxWeightGrams: z.number().nonnegative().optional(),
         protectiveMaterial: z.string().optional(),
         protectiveMaterialWeightGrams: z.number().nonnegative().optional(),
         // Additional fields from original packaging tab
@@ -350,7 +350,7 @@ const enhancedProductSchema = z.object({
     
     // Section 5: Distribution & Transport
     distribution: z.object({
-      avgDistanceToDcKm: z.number().positive().optional(),
+      avgDistanceToDcKm: z.number().nonnegative().optional(),
       primaryTransportMode: z.enum(['truck', 'rail', 'ship', 'air']).optional(),
       palletizationEfficiency: z.number().min(0).max(100).optional(),
       coldChainRequirement: z.boolean().default(false),
@@ -363,7 +363,7 @@ const enhancedProductSchema = z.object({
         distanceFromProducerKm: z.number().nonnegative(),
         energySource: z.enum(['grid', 'renewable', 'mixed']).optional(),
       })).optional(),
-    }),
+    }).optional(),
     
     // Section 6: End of Life (Enhanced)
     endOfLifeDetailed: z.object({
