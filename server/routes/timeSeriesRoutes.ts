@@ -32,6 +32,15 @@ router.get("/monthly-facility/:companyId", async (req, res) => {
   try {
     const companyId = parseInt(req.params.companyId);
     const { startDate, endDate, limit = "12" } = req.query;
+    
+    // Validate companyId
+    if (isNaN(companyId)) {
+      return res.status(400).json({ error: "Invalid company ID" });
+    }
+
+    // Parse and validate limit
+    const limitValue = parseInt(limit as string);
+    const validLimit = isNaN(limitValue) ? 12 : Math.min(limitValue, 100);
 
     let query = db
       .select()
@@ -50,7 +59,7 @@ router.get("/monthly-facility/:companyId", async (req, res) => {
       );
     }
 
-    const data = await query.limit(parseInt(limit as string));
+    const data = await query.limit(validLimit);
     
     res.json(data);
   } catch (error) {

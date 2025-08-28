@@ -46,19 +46,26 @@ export default function MonthlyFacilityDataSection() {
     productionVolume: '',
   });
 
-  // Query for facility data across all facilities
-  const facilityQueryUrl = `/api/time-series/monthly-facility`;
-  const { data: allFacilityData, isLoading: isFacilityLoading } = useQuery({
+  // Query for facility data across all facilities (using company ID 1)
+  const facilityQueryUrl = `/api/time-series/monthly-facility/1`;
+  const { data: allFacilityData, isLoading: isFacilityLoading, error: facilityError } = useQuery({
     queryKey: [facilityQueryUrl],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `${facilityQueryUrl}?limit=12`);
+      return response.json();
+    },
     retry: false,
     refetchOnMount: 'always',
-    select: (data: any) => data?.data || [],
   });
 
-  // Query for analytics data
-  const analyticsQueryUrl = `/api/time-series/kpi-snapshots/${selectedKpiForAnalytics}`;
+  // Query for analytics data 
+  const analyticsQueryUrl = `/api/time-series/analytics/1`;
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({
     queryKey: [analyticsQueryUrl, selectedKpiForAnalytics],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `${analyticsQueryUrl}?kpiDefinitionId=${selectedKpiForAnalytics}&monthsBack=12`);
+      return response.json();
+    },
     retry: false,
     enabled: !!selectedKpiForAnalytics,
   });
@@ -195,11 +202,11 @@ export default function MonthlyFacilityDataSection() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Historical Monthly Data</h3>
                   <Badge variant="outline">
-                    {allFacilityData?.length || 0} records
+                    {Array.isArray(allFacilityData) ? allFacilityData.length : 0} records
                   </Badge>
                 </div>
 
-                {!allFacilityData || allFacilityData.length === 0 ? (
+                {!allFacilityData || (Array.isArray(allFacilityData) && allFacilityData.length === 0) ? (
                   <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Monthly Data Available</h3>
@@ -207,7 +214,7 @@ export default function MonthlyFacilityDataSection() {
                   </div>
                 ) : (
                   <div className="grid gap-4">
-                    {allFacilityData.slice(0, 12).map((data: MonthlyFacilityData) => (
+                    {(Array.isArray(allFacilityData) ? allFacilityData : []).slice(0, 12).map((data: MonthlyFacilityData) => (
                       <Card key={data.id} className="border-l-4 border-l-blue-500">
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
