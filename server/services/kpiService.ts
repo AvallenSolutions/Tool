@@ -16,6 +16,7 @@ import {
 import { OpenLCAService } from "./OpenLCAService";
 import { WasteIntensityCalculationService } from "./WasteIntensityCalculationService";
 import { productionFacilities } from "@shared/schema";
+import { MonthlyDataAggregationService } from './MonthlyDataAggregationService';
 
 export interface DashboardKPIData {
   id: string;
@@ -152,17 +153,22 @@ export class KPICalculationService {
     
     if (facilities.length > 0) {
       for (const facility of facilities) {
-        // Energy consumption -> CO2e
-        if (facility.totalElectricityKwhPerYear) {
-          const electricityKwh = parseFloat(facility.totalElectricityKwhPerYear);
-          const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
+        // Energy consumption -> CO2e (using monthly aggregated data)
+        // Get aggregated monthly data for this company
+        const monthlyDataService = new MonthlyDataAggregationService();
+        const annualEquivalents = await monthlyDataService.getAnnualEquivalents(facility.companyId);
+        
+        if (annualEquivalents.totalElectricityKwhPerYear > 0) {
+          const electricityKwh = annualEquivalents.totalElectricityKwhPerYear;
+          // TODO: Add renewable percentage to monthly data - for now assume 0%
+          const renewablePercent = 0;
           const gridElectricity = electricityKwh * (1 - renewablePercent);
           const co2eFromElectricity = (gridElectricity * 0.233) / productionVolume; // UK grid factor 2024: 233g CO2e/kWh
           breakdown.facilities.co2e += co2eFromElectricity;
         }
         
-        if (facility.totalGasM3PerYear) {
-          const gasM3 = parseFloat(facility.totalGasM3PerYear);
+        if (annualEquivalents.totalGasM3PerYear > 0) {
+          const gasM3 = annualEquivalents.totalGasM3PerYear;
           const co2eFromGas = (gasM3 * 1.8514) / productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
           breakdown.facilities.co2e += co2eFromGas;
         }

@@ -53,57 +53,32 @@ export class Scope1AutomationService {
   static async calculateAutomatedScope1(companyId: number): Promise<AutomatedScope1Data> {
     console.log(`🔥 Calculating automated Scope 1 emissions for company ${companyId}`);
     
-    // Fetch all production facilities for the company
-    const facilities = await db
-      .select()
-      .from(productionFacilities)
-      .where(eq(productionFacilities.companyId, companyId));
+    // Get aggregated monthly data converted to annual equivalents
+    const monthlyDataService = new MonthlyDataAggregationService();
+    const annualEquivalents = await monthlyDataService.getAnnualEquivalents(companyId);
     
-    if (facilities.length === 0) {
-      throw new Error('No production facilities found for this company. Please add facility data in the Operations tab first.');
+    if (annualEquivalents.totalGasM3PerYear === 0) {
+      throw new Error('No monthly facility data found for this company. Please add monthly operational data in Operations → Facility Updates first.');
     }
     
-    console.log(`📊 Found ${facilities.length} production facilities for automated Scope 1 calculation`);
+    console.log(`📊 Using aggregated monthly data (${annualEquivalents.dataSource}, ${annualEquivalents.confidence} confidence) for automated Scope 1 calculation`);
     
-    let totalGasM3 = 0;
-    let totalFuelLiters = 0;
-    const gasFacilityBreakdown = [];
-    const fuelFacilityBreakdown = [];
+    // Use aggregated annual equivalents from monthly data
+    const totalGasM3 = annualEquivalents.totalGasM3PerYear;
     
-    // Aggregate consumption across all facilities
-    for (const facility of facilities) {
-      console.log(`🏭 Processing facility: ${facility.facilityName}`);
-      
-      // Natural gas consumption (Scope 1 - direct combustion)
-      if (facility.totalGasM3PerYear) {
-        const gasM3 = parseFloat(facility.totalGasM3PerYear.toString());
-        const gasEmissions = gasM3 * UK_EMISSION_FACTORS.NATURAL_GAS;
-        
-        totalGasM3 += gasM3;
-        gasFacilityBreakdown.push({
-          facilityName: facility.facilityName,
-          consumption: gasM3,
-          emissions: gasEmissions
-        });
-        
-        console.log(`  🔥 Natural Gas: ${gasM3.toLocaleString()} m³/year = ${(gasEmissions/1000).toFixed(2)} tonnes CO2e`);
-      }
-      
-      // Fuel consumption (Scope 1 - direct combustion)
-      if (facility.totalFuelLitersPerYear) {
-        const fuelLiters = parseFloat(facility.totalFuelLitersPerYear.toString());
-        const fuelEmissions = fuelLiters * UK_EMISSION_FACTORS.DIESEL; // Assume diesel for now
-        
-        totalFuelLiters += fuelLiters;
-        fuelFacilityBreakdown.push({
-          facilityName: facility.facilityName,
-          consumption: fuelLiters,
-          emissions: fuelEmissions
-        });
-        
-        console.log(`  ⛽ Fuel: ${fuelLiters.toLocaleString()} liters/year = ${(fuelEmissions/1000).toFixed(2)} tonnes CO2e`);
-      }
-    }
+    // TODO: Fuel data will need to be added to monthly data collection
+    const totalFuelLiters = 0; // Currently not tracked in monthly data
+    
+    const gasFacilityBreakdown = [{
+      facilityName: 'Aggregated from Monthly Data',
+      consumption: totalGasM3,
+      emissions: totalGasM3 * UK_EMISSION_FACTORS.NATURAL_GAS
+    }];
+    
+    const fuelFacilityBreakdown = []; // Empty until fuel tracking is added to monthly data
+    
+    console.log(`🔥 Aggregated natural gas: ${totalGasM3.toLocaleString()} m³/year`);
+    console.log(`📊 Data source: ${annualEquivalents.dataSource} (${annualEquivalents.confidence} confidence)`);
     
     // Calculate total Scope 1 emissions
     const totalGasEmissions = totalGasM3 * UK_EMISSION_FACTORS.NATURAL_GAS;
@@ -128,12 +103,12 @@ export class Scope1AutomationService {
         facilityBreakdown: fuelFacilityBreakdown
       },
       totalScope1Emissions,
-      facilityCount: facilities.length,
+      facilityCount: 1, // Aggregated from multiple facilities via monthly data
       calculationMetadata: {
         method: 'Automated Scope 1 Calculation',
         emissionFactors: UK_EMISSION_FACTORS,
         calculationDate: new Date(),
-        dataSource: 'Production Facilities Database (automated import)'
+        dataSource: `Monthly Aggregated Data (${annualEquivalents.dataSource})`
       }
     };
   }

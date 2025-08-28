@@ -98,7 +98,7 @@ export class WasteIntensityCalculationService {
    * Formula: Total Facility Waste (kg/year) ÷ Total Production Volume (units/year) = Waste Intensity (kg/unit)
    */
   static async calculateWasteIntensity(facilityId: number): Promise<WasteIntensityData> {
-    // Get facility waste data
+    // Get facility data to determine company
     const [facility] = await db
       .select()
       .from(productionFacilities)
@@ -108,18 +108,23 @@ export class WasteIntensityCalculationService {
       throw new Error(`Facility with ID ${facilityId} not found`);
     }
     
-    // Calculate total facility waste and production volume
+    // Get aggregated monthly data for the company
+    const monthlyDataService = new MonthlyDataAggregationService();
+    const annualEquivalents = await monthlyDataService.getAnnualEquivalents(facility.companyId);
+    
+    if (annualEquivalents.annualCapacityVolume === 0) {
+      throw new Error('No monthly production data found for this company. Please add monthly operational data in Operations → Facility Updates first.');
+    }
+    
+    // TODO: Need to add waste data fields to monthly data collection
+    // For now, using facility-level annual waste data as fallback
     const totalOrganicWaste = parseFloat(facility.totalOrganicWasteKgPerYear?.toString() || '0');
     const totalPackagingWaste = parseFloat(facility.totalPackagingWasteKgPerYear?.toString() || '0');
     const totalHazardousWaste = parseFloat(facility.totalHazardousWasteKgPerYear?.toString() || '0');
     const totalGeneralWaste = parseFloat(facility.totalGeneralWasteKgPerYear?.toString() || '0');
     
     const totalFacilityWasteKgPerYear = totalOrganicWaste + totalPackagingWaste + totalHazardousWaste + totalGeneralWaste;
-    const totalFacilityProductionVolumePerYear = parseFloat(facility.annualCapacityVolume?.toString() || '0');
-    
-    if (totalFacilityProductionVolumePerYear === 0) {
-      throw new Error('Facility annual production volume cannot be zero for waste intensity calculation');
-    }
+    const totalFacilityProductionVolumePerYear = annualEquivalents.annualCapacityVolume; // Using monthly aggregated production data
     
     // Calculate waste intensity (kg waste per unit production)
     const productionWasteIntensity = totalFacilityWasteKgPerYear / totalFacilityProductionVolumePerYear;
