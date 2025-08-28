@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, TrendingUp, Database, AlertCircle, BarChart3, TestTube } from 'lucide-react';
+import { Calendar, TrendingUp, Database, AlertCircle, BarChart3, TestTube, Edit, Save, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -82,6 +82,15 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
     productionVolume: '',
   });
 
+  // Edit state for historical data
+  const [editingRecord, setEditingRecord] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    electricityKwh: '',
+    naturalGasM3: '',
+    waterM3: '',
+    productionVolume: '',
+  });
+
   // Facility-specific query URLs
   const facilityQueryUrl = facilityId 
     ? `/api/time-series/monthly-facility/${facilityId}`
@@ -136,6 +145,31 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
       toast({
         title: "Error",
         description: "Failed to save facility data",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update facility data mutation for editing existing records
+  const updateFacilityData = useMutation({
+    mutationFn: async ({ recordId, data }: { recordId: string, data: any }) => {
+      const facilitySpecificData = facilityId ? { ...data, facilityId } : data;
+      const response = await apiRequest('PUT', `/api/time-series/monthly-facility/${recordId}`, facilitySpecificData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `Monthly data updated for ${facilityName || 'facility'}`,
+      });
+      queryClient.invalidateQueries({ queryKey: [facilityQueryUrl] });
+      queryClient.invalidateQueries({ queryKey: [analyticsQueryUrl] });
+      setEditingRecord(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update facility data",
         variant: "destructive",
       });
     },
@@ -208,6 +242,40 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
   const formatValue = (value: string | null, unit: string) => {
     if (!value) return 'Not recorded';
     return `${parseFloat(value).toLocaleString()} ${unit}`;
+  };
+
+  const startEdit = (record: MonthlyFacilityData) => {
+    setEditingRecord(record.id);
+    setEditFormData({
+      electricityKwh: record.electricityKwh || '',
+      naturalGasM3: record.naturalGasM3 || '',
+      waterM3: record.waterM3 || '',
+      productionVolume: record.productionVolume || '',
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingRecord(null);
+    setEditFormData({
+      electricityKwh: '',
+      naturalGasM3: '',
+      waterM3: '',
+      productionVolume: '',
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editingRecord) return;
+    
+    const payload = {
+      companyId: 1,
+      electricityKwh: editFormData.electricityKwh || null,
+      naturalGasM3: editFormData.naturalGasM3 || null,
+      waterM3: editFormData.waterM3 || null,
+      productionVolume: editFormData.productionVolume || null,
+    };
+
+    updateFacilityData.mutate({ recordId: editingRecord, data: payload });
   };
 
   const formatChartData = (snapshots: KpiSnapshot[]) => {
@@ -405,30 +473,115 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                               <CardTitle className="text-lg">{formatMonth(data.month)}</CardTitle>
-                              <Badge variant="outline" className="text-xs">
-                                {new Date(data.updatedAt).toLocaleDateString()}
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {new Date(data.updatedAt).toLocaleDateString()}
+                                </Badge>
+                                {editingRecord === data.id ? (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={saveEdit}
+                                      disabled={updateFacilityData.isPending}
+                                      data-testid={`button-save-${data.id}`}
+                                    >
+                                      <Save className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={cancelEdit}
+                                      data-testid={`button-cancel-${data.id}`}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => startEdit(data)}
+                                    data-testid={`button-edit-${data.id}`}
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </CardHeader>
                           <CardContent>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <div className="font-medium text-gray-700">Electricity</div>
-                                <div className="text-gray-900">{formatValue(data.electricityKwh, 'kWh')}</div>
+                            {editingRecord === data.id ? (
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-medium text-gray-700">Electricity (kWh)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="15000"
+                                    value={editFormData.electricityKwh}
+                                    onChange={(e) => setEditFormData(prev => ({ ...prev, electricityKwh: e.target.value }))}
+                                    data-testid={`input-edit-electricity-${data.id}`}
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-medium text-gray-700">Natural Gas (m³)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="2500"
+                                    value={editFormData.naturalGasM3}
+                                    onChange={(e) => setEditFormData(prev => ({ ...prev, naturalGasM3: e.target.value }))}
+                                    data-testid={`input-edit-gas-${data.id}`}
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-medium text-gray-700">Water (m³)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="1200"
+                                    value={editFormData.waterM3}
+                                    onChange={(e) => setEditFormData(prev => ({ ...prev, waterM3: e.target.value }))}
+                                    data-testid={`input-edit-water-${data.id}`}
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-medium text-gray-700">Production (units)</Label>
+                                  <Input
+                                    type="number"
+                                    step="1"
+                                    placeholder="25000"
+                                    value={editFormData.productionVolume}
+                                    onChange={(e) => setEditFormData(prev => ({ ...prev, productionVolume: e.target.value }))}
+                                    data-testid={`input-edit-production-${data.id}`}
+                                    className="text-sm"
+                                  />
+                                </div>
                               </div>
-                              <div>
-                                <div className="font-medium text-gray-700">Natural Gas</div>
-                                <div className="text-gray-900">{formatValue(data.naturalGasM3, 'm³')}</div>
+                            ) : (
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <div className="font-medium text-gray-700">Electricity</div>
+                                  <div className="text-gray-900">{formatValue(data.electricityKwh, 'kWh')}</div>
+                                </div>
+                                <div>
+                                  <div className="font-medium text-gray-700">Natural Gas</div>
+                                  <div className="text-gray-900">{formatValue(data.naturalGasM3, 'm³')}</div>
+                                </div>
+                                <div>
+                                  <div className="font-medium text-gray-700">Water</div>
+                                  <div className="text-gray-900">{formatValue(data.waterM3, 'm³')}</div>
+                                </div>
+                                <div>
+                                  <div className="font-medium text-gray-700">Production</div>
+                                  <div className="text-gray-900">{formatValue(data.productionVolume, 'units')}</div>
+                                </div>
                               </div>
-                              <div>
-                                <div className="font-medium text-gray-700">Water</div>
-                                <div className="text-gray-900">{formatValue(data.waterM3, 'm³')}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-700">Production</div>
-                                <div className="text-gray-900">{formatValue(data.productionVolume, 'units')}</div>
-                              </div>
-                            </div>
+                            )}
                           </CardContent>
                         </Card>
                       ))}
