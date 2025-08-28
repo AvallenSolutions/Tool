@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { productionFacilities } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { MonthlyDataAggregationService } from './MonthlyDataAggregationService';
 
 // VERIFIED DEFRA 2024 UK EMISSION FACTORS  
 // Source: UK Government GHG Conversion Factors 2024 (Published July 8, 2024, Updated October 30, 2024)

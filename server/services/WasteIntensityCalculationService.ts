@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { productionFacilities, regionalWasteStatistics } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
+import { MonthlyDataAggregationService } from './MonthlyDataAggregationService';
 
 export interface WasteIntensityData {
   // Production waste intensity (kg waste per unit production)

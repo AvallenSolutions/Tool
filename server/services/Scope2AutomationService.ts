@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { productionFacilities } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { MonthlyDataAggregationService } from './MonthlyDataAggregationService';
 
 // VERIFIED DEFRA 2024 UK GRID ELECTRICITY EMISSION FACTORS
 // Source: UK Government GHG Conversion Factors 2024 (Published July 8, 2024, Updated October 30, 2024)
@@ -60,61 +61,30 @@ export class Scope2AutomationService {
   static async calculateAutomatedScope2(companyId: number): Promise<AutomatedScope2Data> {
     console.log(`🔍 Calculating automated Scope 2 emissions for company ${companyId}`);
     
-    // Fetch all production facilities for the company
-    const facilities = await db
-      .select()
-      .from(productionFacilities)
-      .where(eq(productionFacilities.companyId, companyId));
+    // Get aggregated monthly data converted to annual equivalents
+    const monthlyDataService = new MonthlyDataAggregationService();
+    const annualEquivalents = await monthlyDataService.getAnnualEquivalents(companyId);
     
-    if (facilities.length === 0) {
-      throw new Error('No production facilities found for this company. Please add facility data in the Operations tab first.');
+    if (annualEquivalents.totalElectricityKwhPerYear === 0 && annualEquivalents.totalGasM3PerYear === 0) {
+      throw new Error('No monthly facility data found for this company. Please add monthly operational data in Operations → Facility Updates first.');
     }
     
-    console.log(`📊 Found ${facilities.length} production facilities for automated calculation`);
+    console.log(`📊 Using aggregated monthly data (${annualEquivalents.dataSource}, ${annualEquivalents.confidence} confidence) for automated calculation`);
     
-    let totalElectricityKwh = 0;
-    let totalRenewableKwh = 0;
-    let totalGasM3 = 0;
-    let totalSteamKg = 0;
-    let totalFuelLiters = 0;
+    // Use aggregated annual equivalents from monthly data
+    const totalElectricityKwh = annualEquivalents.totalElectricityKwhPerYear;
+    const totalGasM3 = annualEquivalents.totalGasM3PerYear;
     
-    // Aggregate consumption across all facilities
-    for (const facility of facilities) {
-      console.log(`🏭 Processing facility: ${facility.facilityName}`);
-      
-      // Electricity consumption
-      if (facility.totalElectricityKwhPerYear) {
-        const electricityKwh = parseFloat(facility.totalElectricityKwhPerYear.toString());
-        const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent.toString()) / 100 : 0;
-        const renewableKwh = electricityKwh * renewablePercent;
-        
-        totalElectricityKwh += electricityKwh;
-        totalRenewableKwh += renewableKwh;
-        
-        console.log(`  ⚡ Electricity: ${electricityKwh.toLocaleString()} kWh/year (${(renewablePercent*100).toFixed(1)}% renewable)`);
-      }
-      
-      // Gas consumption (typically Scope 1 for direct combustion)
-      if (facility.totalGasM3PerYear) {
-        const gasM3 = parseFloat(facility.totalGasM3PerYear.toString());
-        totalGasM3 += gasM3;
-        console.log(`  🔥 Natural Gas: ${gasM3.toLocaleString()} m³/year`);
-      }
-      
-      // Steam consumption (typically Scope 2 if purchased)
-      if (facility.totalSteamKgPerYear) {
-        const steamKg = parseFloat(facility.totalSteamKgPerYear.toString());
-        totalSteamKg += steamKg;
-        console.log(`  🌫️ Steam: ${steamKg.toLocaleString()} kg/year`);
-      }
-      
-      // Fuel consumption (typically Scope 1)
-      if (facility.totalFuelLitersPerYear) {
-        const fuelLiters = parseFloat(facility.totalFuelLitersPerYear.toString());
-        totalFuelLiters += fuelLiters;
-        console.log(`  ⛽ Fuel: ${fuelLiters.toLocaleString()} liters/year`);
-      }
-    }
+    // Calculate renewable energy (assuming 0% renewable for now - this will need to be added to monthly data schema)
+    const totalRenewableKwh = 0; // TODO: Add renewable percentage to monthly facility data
+    
+    // TODO: Steam and fuel data will need to be added to monthly data collection
+    const totalSteamKg = 0;
+    const totalFuelLiters = 0;
+    
+    console.log(`⚡ Aggregated electricity: ${totalElectricityKwh.toLocaleString()} kWh/year`);
+    console.log(`🔥 Aggregated gas: ${totalGasM3.toLocaleString()} m³/year`);
+    console.log(`📊 Data source: ${annualEquivalents.dataSource} (${annualEquivalents.confidence} confidence)`);
     
     // Calculate emissions by scope
     const gridElectricityKwh = totalElectricityKwh - totalRenewableKwh;
@@ -164,7 +134,7 @@ export class Scope2AutomationService {
       } : undefined,
       totalScope2Emissions,
       totalScope1Emissions,
-      facilityCount: facilities.length,
+      facilityCount: 1, // Aggregated from multiple facilities via monthly data
       calculationMetadata: {
         method: 'Automated from Production Facilities - DEFRA 2024 Factors',
         emissionFactors: UK_EMISSION_FACTORS,
