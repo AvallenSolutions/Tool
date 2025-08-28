@@ -57,6 +57,27 @@ interface AnalyticsData {
   };
 }
 
+interface MigrationStatus {
+  companyId: number;
+  facilityDataRecords: number;
+  productVersions: number;
+  kpiSnapshots: number;
+  migrationComplete: boolean;
+  lastUpdated: string;
+}
+
+interface MigrationResult {
+  facilityDataBackfilled: number;
+  productVersionsCreated: number;
+  kpiSnapshotsGenerated: number;
+  migrationSummary: {
+    monthsBackfilled: number;
+    startDate: string;
+    endDate: string;
+    dataQuality: string;
+  };
+}
+
 export default function FacilityUpdates() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -143,6 +164,39 @@ export default function FacilityUpdates() {
         description: "Failed to initialize KPI snapshots",
         variant: "destructive",
       });
+    },
+  });
+
+  // Phase 4 Migration mutations
+  const executeMigration = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/time-series/migration/execute/1');
+      return response.json();
+    },
+    onSuccess: (data: MigrationResult) => {
+      toast({
+        title: "Migration Complete",
+        description: `Backfilled ${data.facilityDataBackfilled} months of facility data and generated ${data.kpiSnapshotsGenerated} KPI snapshots`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-series/monthly-facility/1'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-series/analytics/1'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-series/migration/status/1'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Migration Failed",
+        description: "Failed to execute data migration",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Migration status query
+  const { data: migrationStatus, isLoading: migrationStatusLoading } = useQuery({
+    queryKey: ['/api/time-series/migration/status/1'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/time-series/migration/status/1');
+      return response.json();
     },
   });
 
@@ -236,11 +290,12 @@ export default function FacilityUpdates() {
       </div>
 
       <Tabs defaultValue="entry" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="entry" data-testid="tab-data-entry">Data Entry</TabsTrigger>
           <TabsTrigger value="history" data-testid="tab-history">Historical Data</TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-analytics">Analytics</TabsTrigger>
           <TabsTrigger value="trends" data-testid="tab-trends">Trends</TabsTrigger>
+          <TabsTrigger value="migration" data-testid="tab-migration">Migration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="entry" className="space-y-6">
@@ -588,6 +643,137 @@ export default function FacilityUpdates() {
                   </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="migration" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="w-5 h-5" />
+                Phase 4: Data Migration & Historical Backfill
+              </CardTitle>
+              <CardDescription>
+                Migrate existing data to support time-series analytics and create historical KPI snapshots
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Migration Status */}
+                {migrationStatusLoading ? (
+                  <div className="flex items-center justify-center h-20">
+                    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                  </div>
+                ) : migrationStatus ? (
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      Migration Status
+                      {migrationStatus.migrationComplete ? (
+                        <Badge variant="default" className="bg-green-600">Complete</Badge>
+                      ) : (
+                        <Badge variant="secondary">Pending</Badge>
+                      )}
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{migrationStatus.facilityDataRecords}</div>
+                        <div className="text-sm text-blue-600">Facility Data Records</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{migrationStatus.productVersions}</div>
+                        <div className="text-sm text-green-600">Product Versions</div>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">{migrationStatus.kpiSnapshots}</div>
+                        <div className="text-sm text-purple-600">KPI Snapshots</div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-muted-foreground">
+                      Last updated: {new Date(migrationStatus.lastUpdated).toLocaleString()}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Migration Actions */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Migration Actions</h3>
+                  
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Phase 4 migration will:
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Backfill 12 months of historical facility data using intelligent estimation</li>
+                        <li>Create product versions for existing products (starting from v1.0)</li>
+                        <li>Generate historical KPI snapshots with realistic seasonal variations</li>
+                        <li>Enable month-over-month analytics and trend tracking</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={() => executeMigration.mutate()}
+                      disabled={executeMigration.isPending || (migrationStatus?.migrationComplete && migrationStatus.facilityDataRecords > 8)}
+                      className="flex-1"
+                      data-testid="button-execute-migration"
+                    >
+                      {executeMigration.isPending ? (
+                        <>
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                          Executing Migration...
+                        </>
+                      ) : (
+                        <>
+                          <Database className="w-4 h-4 mr-2" />
+                          Execute Phase 4 Migration
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/time-series/migration/status/1'] })}
+                      variant="outline"
+                      data-testid="button-refresh-status"
+                    >
+                      Refresh Status
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Migration Process Information */}
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <h4 className="font-medium mb-3">What happens during migration?</h4>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                      <div>
+                        <div className="font-medium">Historical Facility Data Backfill</div>
+                        <div className="text-muted-foreground">Creates monthly operational data for the past 12 months using intelligent estimation based on seasonal patterns and improvement trends.</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                      <div>
+                        <div className="font-medium">Product Version Creation</div>
+                        <div className="text-muted-foreground">Creates version 1.0 for all existing products to enable time-aware product tracking and change management.</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                      <div>
+                        <div className="font-medium">KPI Snapshot Generation</div>
+                        <div className="text-muted-foreground">Generates historical KPI values for 5 key metrics across 12 months, enabling trend analysis and performance tracking.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

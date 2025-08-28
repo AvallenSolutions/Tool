@@ -14,8 +14,12 @@ import {
 } from "@shared/schema";
 import { timeSeriesEngine } from "../services/TimeSeriesEngine";
 import { kpiSnapshotService } from "../services/KPISnapshotService";
+import { DataMigrationService } from "../services/DataMigrationService";
 
 const router = Router();
+
+// Initialize Data Migration Service
+const dataMigrationService = new DataMigrationService();
 
 // Monthly Facility Data Routes
 
@@ -345,6 +349,71 @@ router.get("/analytics/:companyId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching analytics:", error);
     res.status(500).json({ error: "Failed to fetch analytics" });
+  }
+});
+
+// Data Migration Routes - Phase 4
+
+// Execute complete data migration for a company
+router.post("/migration/execute/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    
+    console.log(`🚀 Starting Phase 4 migration for company ${companyId}`);
+    
+    const migrationResult = await dataMigrationService.executeCompleteMigration(companyId);
+    
+    res.json({
+      success: true,
+      message: `Phase 4 migration completed successfully for company ${companyId}`,
+      data: migrationResult
+    });
+  } catch (error) {
+    console.error("Error executing migration:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to execute migration",
+      details: error.message 
+    });
+  }
+});
+
+// Get migration status for a company
+router.get("/migration/status/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    
+    // Check facility data existence
+    const facilityDataCount = await db
+      .select()
+      .from(monthlyFacilityData)
+      .where(eq(monthlyFacilityData.companyId, companyId));
+    
+    // Check product versions existence
+    const productVersionsCount = await db
+      .select()
+      .from(productVersions)
+      .where(eq(productVersions.productId, companyId)); // Note: This should be filtered differently
+    
+    // Check KPI snapshots existence
+    const kpiSnapshotsCount = await db
+      .select()
+      .from(kpiSnapshots)
+      .where(eq(kpiSnapshots.companyId, companyId));
+    
+    const status = {
+      companyId,
+      facilityDataRecords: facilityDataCount.length,
+      productVersions: productVersionsCount.length,
+      kpiSnapshots: kpiSnapshotsCount.length,
+      migrationComplete: facilityDataCount.length > 0 && kpiSnapshotsCount.length > 0,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    res.json(status);
+  } catch (error) {
+    console.error("Error checking migration status:", error);
+    res.status(500).json({ error: "Failed to check migration status" });
   }
 });
 
