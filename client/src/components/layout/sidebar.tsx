@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag, Factory } from "lucide-react";
 import avallenLogo from "@/assets/avallen-logo.png";
 
 export default function Sidebar() {
