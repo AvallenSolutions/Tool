@@ -447,14 +447,16 @@ export default function MonthlyFacilityDataSection() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-base">Electricity Usage Trend</CardTitle>
+                          <CardTitle className="text-base">Electricity Usage (kWh)</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={200}>
-                            <LineChart data={allFacilityData.map(d => ({
-                              month: new Date(d.month).toLocaleDateString('en-US', { month: 'short' }),
-                              value: parseFloat(d.electricityKwh || '0')
-                            }))}>
+                            <LineChart data={allFacilityData
+                              .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                              .map(d => ({
+                                month: new Date(d.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                                value: parseFloat(d.electricityKwh || '0')
+                              }))}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
@@ -467,14 +469,60 @@ export default function MonthlyFacilityDataSection() {
 
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-base">Production Volume Trend</CardTitle>
+                          <CardTitle className="text-base">Natural Gas Usage (m³)</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={200}>
-                            <LineChart data={allFacilityData.map(d => ({
-                              month: new Date(d.month).toLocaleDateString('en-US', { month: 'short' }),
-                              value: parseFloat(d.productionVolume || '0')
-                            }))}>
+                            <LineChart data={allFacilityData
+                              .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                              .map(d => ({
+                                month: new Date(d.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                                value: parseFloat(d.naturalGasM3 || '0')
+                              }))}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="month" />
+                              <YAxis />
+                              <Tooltip />
+                              <Line type="monotone" dataKey="value" stroke="#f59e0b" strokeWidth={2} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Water Usage (m³)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={200}>
+                            <LineChart data={allFacilityData
+                              .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                              .map(d => ({
+                                month: new Date(d.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                                value: parseFloat(d.waterM3 || '0')
+                              }))}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="month" />
+                              <YAxis />
+                              <Tooltip />
+                              <Line type="monotone" dataKey="value" stroke="#06b6d4" strokeWidth={2} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Production Volume (units)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={200}>
+                            <LineChart data={allFacilityData
+                              .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                              .map(d => ({
+                                month: new Date(d.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                                value: parseFloat(d.productionVolume || '0')
+                              }))}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
@@ -492,25 +540,27 @@ export default function MonthlyFacilityDataSection() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
-                          {allFacilityData.map((data) => {
-                            const completeness = [
-                              data.electricityKwh, 
-                              data.naturalGasM3, 
-                              data.waterM3, 
-                              data.productionVolume
-                            ].filter(Boolean).length;
-                            const percentage = (completeness / 4) * 100;
-                            
-                            return (
-                              <div key={data.id} className="flex items-center justify-between">
-                                <span className="font-medium">{formatMonth(data.month)}</span>
-                                <div className="flex items-center space-x-3">
-                                  <Progress value={percentage} className="w-32" />
-                                  <span className="text-sm text-gray-600 w-12">{percentage.toFixed(0)}%</span>
+                          {allFacilityData
+                            .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                            .map((data) => {
+                              const completeness = [
+                                data.electricityKwh, 
+                                data.naturalGasM3, 
+                                data.waterM3, 
+                                data.productionVolume
+                              ].filter(Boolean).length;
+                              const percentage = (completeness / 4) * 100;
+                              
+                              return (
+                                <div key={data.id} className="flex items-center justify-between">
+                                  <span className="font-medium">{formatMonth(data.month)}</span>
+                                  <div className="flex items-center space-x-3">
+                                    <Progress value={percentage} className="w-32" />
+                                    <span className="text-sm text-gray-600 w-12">{percentage.toFixed(0)}%</span>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
                         </div>
                       </CardContent>
                     </Card>
