@@ -2817,6 +2817,8 @@ export default function EnhancedProductForm({
               if (!isValid) {
                 // Create error summary with tab guidance
                 const errors = form.formState.errors;
+                console.log('🚫 Form validation errors:', errors);
+                console.log('🔍 Form values:', form.getValues());
                 const errorSummary = [];
                 
                 // Check each tab for errors
