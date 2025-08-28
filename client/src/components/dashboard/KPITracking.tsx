@@ -318,12 +318,12 @@ export function KPITracking() {
             </div>
             <div className="flex gap-2">
               <Button 
-                onClick={() => window.location.href = '/kpis'} 
+                onClick={() => window.location.href = '/app/kpis'} 
                 size="sm"
                 variant="outline"
               >
                 <BarChart3 className="w-4 h-4 mr-2" />
-                Manage KPIs & Goals
+                Manage KPIs
               </Button>
             </div>
           </div>
