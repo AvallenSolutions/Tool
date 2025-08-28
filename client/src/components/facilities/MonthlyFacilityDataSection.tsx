@@ -340,7 +340,8 @@ export default function MonthlyFacilityDataSection() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="170a5cca-9363-4a0a-88ec-ff1b046fe2d7">Carbon Intensity per Bottle</SelectItem>
-                      <SelectItem value="another-kpi-id">Water Usage Efficiency</SelectItem>
+                      <SelectItem value="2bf9535d-c36a-4010-819e-61c0d8f1c555">Water Usage Efficiency</SelectItem>
+                      <SelectItem value="a1b2c3d4-5678-90ab-cdef-123456789012">Waste Generation per Unit</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
