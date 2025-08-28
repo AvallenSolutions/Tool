@@ -37,6 +37,36 @@ export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 
+  // Move mutation hook to top level to ensure stable hook order
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: number) => {
+      console.log('🗑️ Deleting product:', id);
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      console.log('✅ Product deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      toast({
+        title: "Product Deleted",
+        description: "Product has been successfully removed from your catalog.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('❌ Delete failed:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete product. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const { data: rawProducts, isLoading, error } = useQuery<ClientProduct[]>({
     queryKey: ['/api/products'],
@@ -77,36 +107,6 @@ export default function ProductsPage() {
   console.log('🔍 Current products state:', products, 'Loading:', isLoading, 'Error:', error);
   console.log('🔍 Products array length:', products.length);
   console.log('🔍 Products array contents:', JSON.stringify(products, null, 2));
-
-  const deleteProductMutation = useMutation({
-    mutationFn: async (id: number) => {
-      console.log('🗑️ Deleting product:', id);
-      const response = await fetch(`/api/products/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete product');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      console.log('✅ Product deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
-      toast({
-        title: "Product Deleted",
-        description: "Product has been successfully removed from your catalog.",
-      });
-    },
-    onError: (error: any) => {
-      console.error('❌ Delete failed:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete product. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleDelete = (id: number, name: string) => {
     if (window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
