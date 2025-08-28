@@ -117,17 +117,17 @@ export default function MonthlyDataSummaryCard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/app/facility-updates')}
+            onClick={() => navigate('/app/company')}
             className="flex items-center gap-2"
             data-testid="button-view-facility-updates"
           >
             <Calendar className="w-4 h-4" />
-            View Updates
+            Manage Facilities
             <ArrowRight className="w-4 h-4" />
           </Button>
         </CardTitle>
         <CardDescription>
-          Primary data collection through monthly facility updates
+          Primary data collection through facility monthly data entry
         </CardDescription>
       </CardHeader>
       
@@ -230,10 +230,10 @@ export default function MonthlyDataSummaryCard() {
             <Database className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Start Monthly Data Collection</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Monthly facility updates provide more accurate and timely sustainability metrics than annual estimates.
+              Monthly facility data entry provides more accurate and timely sustainability metrics than annual estimates.
             </p>
             <Button 
-              onClick={() => navigate('/app/facility-updates')}
+              onClick={() => navigate('/app/company')}
               className="flex items-center gap-2"
               data-testid="button-start-monthly-data"
             >
