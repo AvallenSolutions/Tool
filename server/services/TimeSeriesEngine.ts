@@ -264,10 +264,62 @@ export class TimeSeriesEngine {
     targetMonth: Date,
     productVersions: ProductVersion[]
   ): Promise<number> {
-    // For now, use the current calculation method
-    // In a full implementation, this would use the specific product versions
-    // and calculate based on the LCA data from that time period
-    return await this.kpiCalculationService.calculateTotalCarbonFootprint(companyId);
+    try {
+      // Get facility data for the specific month to calculate time-aware carbon footprint
+      const facilityData = await this.getFacilityDataForMonth(companyId, targetMonth);
+      
+      if (!facilityData) {
+        // If no facility data for this month, use current calculation as fallback
+        console.log(`⚠️ No facility data for ${targetMonth.toISOString()}, using current calculation`);
+        return await this.kpiCalculationService.calculateTotalCarbonFootprint(companyId);
+      }
+
+      // Calculate carbon footprint based on actual monthly facility data
+      let totalCarbonFootprint = 0;
+
+      // Get electricity consumption and convert to CO2e
+      const electricityKwh = Number(facilityData.electricityKwh) || 0;
+      const gridEmissionFactor = 0.22535; // kg CO2e per kWh (UK grid average)
+      const electricityEmissions = electricityKwh * gridEmissionFactor;
+
+      // Get natural gas consumption and convert to CO2e  
+      const gasM3 = Number(facilityData.naturalGasM3) || 0;
+      const gasEmissionFactor = 1.8514; // kg CO2e per m³ (natural gas)
+      const gasEmissions = gasM3 * gasEmissionFactor;
+
+      // Calculate facility-based emissions
+      const facilityEmissions = electricityEmissions + gasEmissions;
+
+      // Scale to annual based on production volume for this month
+      const monthlyProduction = Number(facilityData.productionVolume) || 0;
+      const annualProduction = monthlyProduction * 12; // Approximate annual from monthly
+
+      // Get product-based emissions (ingredients + packaging)
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, companyId));
+
+      let productBasedEmissions = 0;
+      for (const product of companyProducts) {
+        const productLCA = await this.kpiCalculationService.calculateProductRefinedLCA(product);
+        const ingredientsAndPackaging = productLCA.breakdown.ingredients.co2e + productLCA.breakdown.packaging.co2e;
+        productBasedEmissions += ingredientsAndPackaging * annualProduction;
+      }
+
+      // Combine facility and product emissions
+      totalCarbonFootprint = facilityEmissions * 12 + productBasedEmissions; // Annualize facility emissions
+
+      console.log(`📊 Time-aware carbon footprint for ${targetMonth.toISOString()}: ${totalCarbonFootprint.toFixed(1)} kg CO2e`);
+      console.log(`   Facility: ${(facilityEmissions * 12).toFixed(1)} kg CO2e/year, Products: ${productBasedEmissions.toFixed(1)} kg CO2e/year`);
+      
+      return totalCarbonFootprint;
+
+    } catch (error) {
+      console.error('Error calculating time-aware carbon footprint:', error);
+      // Fallback to current calculation
+      return await this.kpiCalculationService.calculateTotalCarbonFootprint(companyId);
+    }
   }
 
   /**
