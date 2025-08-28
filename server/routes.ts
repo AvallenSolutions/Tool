@@ -5189,7 +5189,45 @@ Be precise and quote actual text from the content, not generic terms.`;
       const { db } = await import('./db');
       const { OpenLCAService } = await import('./services/OpenLCAService');
       const { WaterFootprintService } = await import('./services/WaterFootprintService');
-      const companyId = (req.session as any)?.user?.companyId || 1; // Fallback for development
+      // In development mode or for admin users, get the company from the authenticated user
+      let companyId = (req.session as any)?.user?.companyId;
+      
+      // Development mode logic for admin users
+      if (process.env.NODE_ENV === 'development' && !companyId) {
+        // For admin users in development, try to get the company they should have access to
+        const { users, companies } = await import('@shared/schema');
+        const { eq } = await import('drizzle-orm');
+        
+        try {
+          // Check if there's a demo company or admin company to use
+          const adminCompanies = await db.select().from(companies).where(eq(companies.ownerId, 'tim@avallen.solutions'));
+          if (adminCompanies.length > 0) {
+            companyId = adminCompanies[0].id;
+            console.log(`Using admin company for products: ${adminCompanies[0].name} ID: ${companyId}`);
+          } else {
+            // Fallback to company with most recent products
+            const recentCompany = await db
+              .select({ companyId: products.companyId })
+              .from(products)
+              .orderBy(products.createdAt)
+              .limit(1);
+            
+            if (recentCompany.length > 0) {
+              companyId = recentCompany[0].companyId;
+              console.log(`Using company with recent products: ID ${companyId}`);
+            } else {
+              companyId = 1; // Ultimate fallback
+            }
+          }
+        } catch (error) {
+          console.warn('Error determining company for admin user:', error);
+          companyId = 1; // Fallback for development
+        }
+      }
+      
+      if (!companyId) {
+        companyId = 1; // Final fallback
+      }
       
       const results = await db.select().from(products).where(eq(products.companyId, companyId));
       

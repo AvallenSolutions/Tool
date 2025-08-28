@@ -211,7 +211,7 @@ export default function Sidebar() {
               onClick={() => setKpiGoalsExpanded(!kpiGoalsExpanded)}
             >
               <Factory className="w-5 h-5 mr-3" />
-              <span className="font-body font-medium flex-1 text-left">Operations</span>
+              <span className="font-body font-medium flex-1 text-left">KPIs & Goals</span>
               {kpiGoalsExpanded ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (
