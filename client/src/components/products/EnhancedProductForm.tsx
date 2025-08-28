@@ -2811,14 +2811,19 @@ export default function EnhancedProductForm({
             onClick={async (e) => {
               e.preventDefault();
               
+              console.log('🔄 Button clicked - starting validation');
+              console.log('🔍 Current form values:', form.getValues());
+              console.log('🔍 Current packaging material value:', form.getValues().packaging?.primaryContainer?.material);
+              
               // Trigger validation
               const isValid = await form.trigger();
+              console.log('✅ Form validation result:', isValid);
               
               if (!isValid) {
                 // Create error summary with tab guidance
                 const errors = form.formState.errors;
                 console.log('🚫 Form validation errors:', errors);
-                console.log('🔍 Form values:', form.getValues());
+                console.log('🔍 Form values after validation:', form.getValues());
                 const errorSummary = [];
                 
                 // Check each tab for errors

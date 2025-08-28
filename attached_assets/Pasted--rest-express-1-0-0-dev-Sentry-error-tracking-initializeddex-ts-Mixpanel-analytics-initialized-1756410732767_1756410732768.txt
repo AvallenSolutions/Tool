@@ -1,0 +1,877 @@
+
+> rest-express@1.0.0 dev
+✅ Sentry error tracking initializeddex.ts
+✅ Mixpanel analytics initialized
+✓ Common agricultural ingredients initialized
+[19:41:30] INFO: UnifiedPDFService initialized
+[19:41:30] INFO: Feature routes configured successfully
+[19:41:30] INFO: HTTP server configured with feature routers {"port":"5000"}
+[19:41:46] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[19:41:55] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[19:41:55] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[19:47:07] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+isAuthenticated middleware check for: / {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+📦 Fetching products for company ID: 1
+isAuthenticated middleware check for: /api/dashboard/metrics {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+📊 Using stored footprints for Rum Koko: CO₂=nullkg, Water=nullL, Waste=nullkg
+📊 Using stored footprints for Rum Blanc: CO₂=nullkg, Water=nullL, Waste=0.25kg
+Products fetched: 2 for company 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+isAuthenticated middleware check for: /api/company/footprint/comprehensive {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🏢 Using company ID 1 for refined LCA-based automated calculations
+🔍 Calculating purchased goods for company 1
+Using admin company with products: Demo Company ID: 1
+📦 Found 2 products for emissions calculation
+🧮 Processing product: Rum Koko (ID: 19)
+🔄 Using REFINED LCA calculation for Rum Koko...
+🌱 Calculating ingredient impacts for 2 ingredients
+[19:47:07] INFO: API: GET /api/products 200 (389ms) {"method":"GET","path":"/api/products","statusCode":200,"duration":389,"requestId":"1756410427481","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"5434"}
+🏭 Calculating comprehensive company footprint for undefined (ID: 1)
+isAuthenticated middleware check for: /api/carbon-calculator-total {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+[19:47:08] INFO: API: GET /api/company/footprint 304 (533ms) {"method":"GET","path":"/api/company/footprint","statusCode":304,"duration":533,"requestId":"1756410427483","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+📦 Found 2 products for comprehensive calculation
+🧮 Calculating comprehensive LCA for Rum Koko (Production: 150000.00)
+🧮 Calculating OpenLCA-based emissions for Rum Koko
+📋 Found 2 ingredients
+✅ OpenLCA Molasses, cane: CO2e=1.602kg
+isAuthenticated middleware check for: /api/suggestions/next-steps {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+✈️ TOTAL Business Travel emissions: 0.00 kg CO2e from 0 entries
+🚛 TOTAL Transportation emissions: 0.00 kg CO2e from 0 entries
+🚗 Employee commuting car_commuting: 400 passenger km × 0.171 = 68.40 kg CO2e
+🚗 Employee commuting cycling: 500 passenger km × 0 = 0.00 kg CO2e
+🚗 TOTAL Employee Commuting emissions: 68.40 kg CO2e from 2 entries
+🏭 TOTAL Capital Goods emissions: 0.00 kg CO2e from 0 entries
+Using admin company with products: Demo Company ID: 1
+🗑️ Production waste emissions for Main Distillery: 374.38 kg CO2e
+   Breakdown: Landfill=73.05, Recycling=249.20, Composting=28.56, Energy Recovery=23.57 kg CO2e
+🗑️ TOTAL Facility Waste Generated emissions: 374.38 kg CO2e
+🌱 OpenLCA Molasses, cane: 1.8 kg = 1.602 kg CO2e
+✅ OpenLCA Coconut extract: CO2e=1.500kg
+📦 Total packaging: 0.268005 kg CO2e (exact refined LCA value)
+   Includes: Glass bottle + Paper label + Aluminum closure
+⚡ Facility impacts: 0.1999125kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+🗑️ Production waste carbon footprint: 0.000413 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+✅ REFINED LCA for Rum Koko: 3.385 kg CO₂e per unit
+🌍 Rum Koko total annual emissions: 507.8 tonnes CO₂e
+🧮 Processing product: Rum Blanc (ID: 12)
+🔄 Using REFINED LCA calculation for Rum Blanc...
+🌱 Calculating ingredient impacts for 1 ingredients
+Using admin company with products: Demo Company ID: 1
+isAuthenticated middleware check for: /api/dashboard/kpis {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/company/footprint/comprehensive {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🔍 Getting suggestions for company 1
+🌱 OpenLCA Coconut extract: 3 ml = 1.500 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+🔍 Looking for facilities for company 1
+✅ OpenLCA Molasses, cane: CO2e=1.335kg
+📦 Total packaging: 0.268005 kg CO2e (exact refined LCA value)
+   Includes: Glass bottle + Paper label + Aluminum closure
+⚡ Facility impacts: 0.1999125kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+🗑️ Production waste carbon footprint: 0.000413 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+✅ REFINED LCA for Rum Blanc: 1.618 kg CO₂e per unit
+🌍 Rum Blanc total annual emissions: 485.5 tonnes CO₂e
+🔧 COMPREHENSIVE Scope 3 calculation:
+   Purchased Goods & Services: 993.303 tonnes
+   Fuel & Energy Related: 16.532 tonnes
+   Waste Generated: 0.374 tonnes
+   Business Travel: 0.000 tonnes (0 entries)
+   Employee Commuting: 0.068 tonnes (2 entries)
+   Transportation: 0.000 tonnes (0 entries)
+   Capital Goods: 0.000 tonnes (0 entries)
+   TOTAL Scope 3: 1010.278 tonnes
+🏭 Found 1 facilities for comprehensive calculation
+⚡ Facility electricity: 125000kWh/year (53% renewable) = 0.091kg CO2e per unit
+🔥 Facility gas: 250000m³/year = 3.086kg CO2e per unit
+💧 Facility water: 829000L/year = 5.5L per unit
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+[19:47:08] INFO: API: GET /api/company/footprint/scope3/automated 200 (765ms) {"method":"GET","path":"/api/company/footprint/scope3/automated","statusCode":200,"duration":765,"requestId":"1756410427479","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"1568"}
+🏭 Calculating comprehensive company footprint for undefined (ID: 1)
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:4063:40)
+📦 Found 2 products for comprehensive calculation
+🧮 Calculating comprehensive LCA for Rum Koko (Production: 150000.00)
+🧮 Calculating OpenLCA-based emissions for Rum Koko
+📋 Found 2 ingredients
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.015051 kg CO2e per unit
+🏭 Total facility impacts: CO2e=3.177kg, Water=5.5L per unit
+✅ COMPREHENSIVE footprint for Rum Koko: 6.552 kg CO₂e per unit
+   Breakdown: Ingredients+Packaging=3.360, Facilities=3.177, Production Waste=0.000000, End-of-life=0.015051 kg CO₂e
+📊 Rum Koko per-unit emissions: 6.552 kg CO₂e per unit
+🏭 Rum Koko annual production: 150000.00 units
+🌍 Rum Koko total annual emissions: 982.8 tonnes CO₂e
+🧮 Calculating comprehensive LCA for Rum Blanc (Production: 300000.00)
+🧮 Calculating OpenLCA-based emissions for Rum Blanc
+📋 Found 1 ingredients
+📋 Generated 1 suggestions: [ 'Enhance Your Sustainability Reporting' ]
+isAuthenticated middleware check for: /api/smart-goals {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🌱 OpenLCA Molasses, cane: 1.8 kg = 1.602 kg CO2e
+[19:47:08] INFO: API: GET /api/suggestions/next-steps 304 (384ms) {"method":"GET","path":"/api/suggestions/next-steps","statusCode":304,"duration":384,"requestId":"1756410428025","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+🌱 OpenLCA Molasses, cane: 1.5 kg = 1.335 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+🔍 Looking for facilities for company 1
+Using admin company with products: Demo Company ID: 1
+🏭 Found 1 facilities for comprehensive calculation
+⚡ Facility electricity: 125000kWh/year (53% renewable) = 0.046kg CO2e per unit
+🔥 Facility gas: 250000m³/year = 1.543kg CO2e per unit
+💧 Facility water: 829000L/year = 2.8L per unit
+🌱 OpenLCA Coconut extract: 3 ml = 1.500 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+🔍 Looking for facilities for company 1
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+🔬 REFINED LCA Rum Koko: 3.495 kg CO₂e/unit × 150000 units = 524313 kg CO₂e
+   Breakdown: Ingredients=3.102, Packaging=0.273, Facilities=0.106, Production Waste=0.000000, End-of-life=0.015051 kg CO₂e
+🏭 Found 1 facilities for comprehensive calculation
+⚡ Facility electricity: 125000kWh/year (53% renewable) = 0.091kg CO2e per unit
+🔥 Facility gas: 250000m³/year = 3.086kg CO2e per unit
+💧 Facility water: 829000L/year = 5.5L per unit
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:4063:40)
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+🏭 Total facility impacts: CO2e=1.588kg, Water=2.8L per unit
+✅ COMPREHENSIVE footprint for Rum Blanc: 3.196 kg CO₂e per unit
+   Breakdown: Ingredients+Packaging=1.593, Facilities=1.588, Production Waste=0.000000, End-of-life=0.014923 kg CO₂e
+📊 Rum Blanc per-unit emissions: 3.196 kg CO₂e per unit
+🏭 Rum Blanc annual production: 300000.00 units
+🌍 Rum Blanc total annual emissions: 958.9 tonnes CO₂e
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:4063:40)
+🔍 Calculating automated Scope 2 emissions for company 1
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.015051 kg CO2e per unit
+🏭 Total facility impacts: CO2e=3.177kg, Water=5.5L per unit
+✅ COMPREHENSIVE footprint for Rum Koko: 6.552 kg CO₂e per unit
+   Breakdown: Ingredients+Packaging=3.360, Facilities=3.177, Production Waste=0.000000, End-of-life=0.015051 kg CO₂e
+📊 Rum Koko per-unit emissions: 6.552 kg CO₂e per unit
+🏭 Rum Koko annual production: 150000.00 units
+🌍 Rum Koko total annual emissions: 982.8 tonnes CO₂e
+🧮 Calculating comprehensive LCA for Rum Blanc (Production: 300000.00)
+🧮 Calculating OpenLCA-based emissions for Rum Blanc
+📋 Found 1 ingredients
+[19:47:08] INFO: API: GET /api/smart-goals 304 (224ms) {"method":"GET","path":"/api/smart-goals","statusCode":304,"duration":224,"requestId":"1756410428351","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+📊 Using aggregated monthly data (monthly_aggregated, low confidence) for automated calculation
+⚡ Aggregated electricity: 29000.00 kWh/year
+🔥 Aggregated gas: 4900.00 m³/year
+📊 Data source: monthly_aggregated (low confidence)
+📊 Scope 2 Calculation Summary:
+  ⚡ Grid electricity: 29,000 kWh × 0.22535 = 6535.1 kg CO₂e
+  🌫️ Steam: 0 kg × 0.2056 = 0.0 kg CO₂e
+  📈 Total Scope 2: 6535.1 kg CO₂e (6.535 tonnes)
+📊 Scope 1 Calculation Summary:
+  🔥 Natural gas: 4900.00 m³ × 1.8514 = 9071.9 kg CO₂e
+  ⛽ Fuel oil: 0 L × 2.5174 = 0.0 kg CO₂e
+  📈 Total Scope 1: 9071.9 kg CO₂e (9.072 tonnes)
+🌱 OpenLCA Molasses, cane: 1.5 kg = 1.335 kg CO2e
+🍾 Glass bottle: 530.000g, 61.00% recycled = 0.258 kg CO2e
+🔍 Looking for facilities for company 1
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+🏭 Found 1 facilities for comprehensive calculation
+⚡ Facility electricity: 125000kWh/year (53% renewable) = 0.046kg CO2e per unit
+🔥 Facility gas: 250000m³/year = 1.543kg CO2e per unit
+💧 Facility water: 829000L/year = 2.8L per unit
+Using admin company with products: Demo Company ID: 1
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:4063:40)
+🏢 Using company ID 1 for refined LCA-based automated calculations
+🔍 Calculating purchased goods for company 1
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+🏭 Total facility impacts: CO2e=1.588kg, Water=2.8L per unit
+✅ COMPREHENSIVE footprint for Rum Blanc: 3.196 kg CO₂e per unit
+   Breakdown: Ingredients+Packaging=1.593, Facilities=1.588, Production Waste=0.000000, End-of-life=0.014923 kg CO₂e
+📊 Rum Blanc per-unit emissions: 3.196 kg CO₂e per unit
+🏭 Rum Blanc annual production: 300000.00 units
+🌍 Rum Blanc total annual emissions: 958.9 tonnes CO₂e
+🗑️ Production waste emissions for Main Distillery: 374.38 kg CO2e
+   Breakdown: Landfill=73.05, Recycling=249.20, Composting=28.56, Energy Recovery=23.57 kg CO2e
+🗑️ TOTAL Facility Waste Generated emissions: 374.38 kg CO2e
+🚗 Employee commuting car_commuting: 400 passenger km × 0.171 = 68.40 kg CO2e
+🚗 Employee commuting cycling: 500 passenger km × 0 = 0.00 kg CO2e
+🚗 TOTAL Employee Commuting emissions: 68.40 kg CO2e from 2 entries
+✈️ TOTAL Business Travel emissions: 0.00 kg CO2e from 0 entries
+🏭 TOTAL Capital Goods emissions: 0.00 kg CO2e from 0 entries
+📦 Found 2 products for emissions calculation
+🧮 Processing product: Rum Koko (ID: 19)
+🔄 Using REFINED LCA calculation for Rum Koko...
+🌱 Calculating ingredient impacts for 2 ingredients
+🚛 TOTAL Transportation emissions: 0.00 kg CO2e from 0 entries
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+🔬 REFINED LCA Rum Blanc: 1.671 kg CO₂e/unit × 300000 units = 501207 kg CO₂e
+   Breakdown: Ingredients=1.335, Packaging=0.268, Facilities=0.053, Production Waste=0.000000, End-of-life=0.014923 kg CO₂e
+🧮 REFINED Total company carbon footprint: 1025520 kg CO₂e (1025.5 tonnes)
+🔍 Calculating automated Scope 2 emissions for company 1
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+🔬 REFINED LCA Rum Koko: 3.495 kg CO₂e/unit × 150000 units = 524313 kg CO₂e
+   Breakdown: Ingredients=3.102, Packaging=0.273, Facilities=0.106, Production Waste=0.000000, End-of-life=0.015051 kg CO₂e
+✅ OpenLCA Molasses, cane: CO2e=1.602kg
+📊 Using aggregated monthly data (monthly_aggregated, low confidence) for automated calculation
+⚡ Aggregated electricity: 29000.00 kWh/year
+🔥 Aggregated gas: 4900.00 m³/year
+📊 Data source: monthly_aggregated (low confidence)
+📊 Scope 2 Calculation Summary:
+  ⚡ Grid electricity: 29,000 kWh × 0.22535 = 6535.1 kg CO₂e
+  🌫️ Steam: 0 kg × 0.2056 = 0.0 kg CO₂e
+  📈 Total Scope 2: 6535.1 kg CO₂e (6.535 tonnes)
+📊 Scope 1 Calculation Summary:
+  🔥 Natural gas: 4900.00 m³ × 1.8514 = 9071.9 kg CO₂e
+  ⛽ Fuel oil: 0 L × 2.5174 = 0.0 kg CO₂e
+  📈 Total Scope 1: 9071.9 kg CO₂e (9.072 tonnes)
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+✅ OpenLCA Coconut extract: CO2e=1.500kg
+📦 Total packaging: 0.268005 kg CO2e (exact refined LCA value)
+   Includes: Glass bottle + Paper label + Aluminum closure
+⚡ Facility impacts: 0.1999125kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+🗑️ Production waste carbon footprint: 0.000413 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+✅ REFINED LCA for Rum Koko: 3.385 kg CO₂e per unit
+🌍 Rum Koko total annual emissions: 507.8 tonnes CO₂e
+🧮 Processing product: Rum Blanc (ID: 12)
+🔄 Using REFINED LCA calculation for Rum Blanc...
+🌱 Calculating ingredient impacts for 1 ingredients
+Using admin company with products: Demo Company ID: 1
+🏢 Using company ID 1 for refined LCA-based automated calculations
+🔍 Calculating purchased goods for company 1
+✅ OpenLCA Molasses, cane: CO2e=1.335kg
+📦 Total packaging: 0.268005 kg CO2e (exact refined LCA value)
+   Includes: Glass bottle + Paper label + Aluminum closure
+⚡ Facility impacts: 0.1999125kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+🗑️ Production waste carbon footprint: 0.000413 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+✅ REFINED LCA for Rum Blanc: 1.618 kg CO₂e per unit
+🌍 Rum Blanc total annual emissions: 485.5 tonnes CO₂e
+🔧 COMPREHENSIVE Scope 3 calculation:
+   Purchased Goods & Services: 993.303 tonnes
+   Fuel & Energy Related: 16.532 tonnes
+   Waste Generated: 0.374 tonnes
+   Business Travel: 0.000 tonnes (0 entries)
+   Employee Commuting: 0.068 tonnes (2 entries)
+   Transportation: 0.000 tonnes (0 entries)
+   Capital Goods: 0.000 tonnes (0 entries)
+   TOTAL Scope 3: 1010.278 tonnes
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🗑️ Production waste emissions for Main Distillery: 374.38 kg CO2e
+   Breakdown: Landfill=73.05, Recycling=249.20, Composting=28.56, Energy Recovery=23.57 kg CO2e
+🗑️ TOTAL Facility Waste Generated emissions: 374.38 kg CO2e
+🚗 Employee commuting car_commuting: 400 passenger km × 0.171 = 68.40 kg CO2e
+🚗 Employee commuting cycling: 500 passenger km × 0 = 0.00 kg CO2e
+🚗 TOTAL Employee Commuting emissions: 68.40 kg CO2e from 2 entries
+📦 Found 2 products for emissions calculation
+🧮 Processing product: Rum Koko (ID: 19)
+🔄 Using REFINED LCA calculation for Rum Koko...
+🌱 Calculating ingredient impacts for 2 ingredients
+✈️ TOTAL Business Travel emissions: 0.00 kg CO2e from 0 entries
+🏭 TOTAL Capital Goods emissions: 0.00 kg CO2e from 0 entries
+🚛 TOTAL Transportation emissions: 0.00 kg CO2e from 0 entries
+🔧 CORRECTED Emissions calculation (matching your expected values): {
+  scope1Entries: 9,
+  scope2Automated: 'calculated from production facilities',
+  scope1Total: '572.252 tonnes',
+  scope2Total: '6.535 tonnes',
+  totalScope1And2: '578.787 tonnes',
+  facilityImpactsReported: '953.077 tonnes',
+  scope3Emissions: '1010.278 tonnes'
+}
+📊 COMPREHENSIVE COMPANY FOOTPRINT SUMMARY (NO DOUBLE-COUNTING):
+   Company: undefined (ID: 1)
+   Scope 1+2 (Manual): 578.787 tonnes CO2e
+   Scope 3 (Products, excl. facilities): 1010.278 tonnes CO2e
+   Facility impacts (in Scope 1+2): 953.077 tonnes CO2e
+   FINAL TOTAL (1+2+3): 1589.1 tonnes CO2e
+   Products Count: 2
+   Water: 1,658,000 liters
+   Waste: 0.0 tonnes
+[19:47:09] INFO: API: GET /api/company/footprint/scope3/automated 200 (439ms) {"method":"GET","path":"/api/company/footprint/scope3/automated","statusCode":200,"duration":439,"requestId":"1756410428727","userAgent":"node","contentLength":"1568"}
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+[19:47:09] INFO: API: GET /api/company/footprint/comprehensive 200 (1375ms) {"method":"GET","path":"/api/company/footprint/comprehensive","statusCode":200,"duration":1375,"requestId":"1756410427831","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"1814"}
+✅ OpenLCA Molasses, cane: CO2e=1.602kg
+✅ OpenLCA Coconut extract: CO2e=1.500kg
+📦 Total packaging: 0.268005 kg CO2e (exact refined LCA value)
+   Includes: Glass bottle + Paper label + Aluminum closure
+⚡ Facility impacts: 0.1999125kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+🗑️ Production waste carbon footprint: 0.000413 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+✅ REFINED LCA for Rum Koko: 3.385 kg CO₂e per unit
+🌍 Rum Koko total annual emissions: 507.8 tonnes CO₂e
+🧮 Processing product: Rum Blanc (ID: 12)
+🔄 Using REFINED LCA calculation for Rum Blanc...
+🌱 Calculating ingredient impacts for 1 ingredients
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+🔬 REFINED LCA Rum Blanc: 1.671 kg CO₂e/unit × 300000 units = 501207 kg CO₂e
+   Breakdown: Ingredients=1.335, Packaging=0.268, Facilities=0.053, Production Waste=0.000000, End-of-life=0.014923 kg CO₂e
+🧮 REFINED Total company carbon footprint: 1025520 kg CO₂e (1025.5 tonnes)
+✅ OpenLCA Molasses, cane: CO2e=1.335kg
+📦 Total packaging: 0.268005 kg CO2e (exact refined LCA value)
+   Includes: Glass bottle + Paper label + Aluminum closure
+⚡ Facility impacts: 0.1999125kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+🗑️ Production waste carbon footprint: 0.000413 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+✅ REFINED LCA for Rum Blanc: 1.618 kg CO₂e per unit
+🌍 Rum Blanc total annual emissions: 485.5 tonnes CO₂e
+🔧 COMPREHENSIVE Scope 3 calculation:
+   Purchased Goods & Services: 993.303 tonnes
+   Fuel & Energy Related: 16.532 tonnes
+   Waste Generated: 0.374 tonnes
+   Business Travel: 0.000 tonnes (0 entries)
+   Employee Commuting: 0.068 tonnes (2 entries)
+   Transportation: 0.000 tonnes (0 entries)
+   Capital Goods: 0.000 tonnes (0 entries)
+   TOTAL Scope 3: 1010.278 tonnes
+📊 Rum Koko: 150000 bottles/year
+📊 Rum Blanc: 300000 bottles/year
+🧮 Total company production: 450000 bottles/year
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+💧 REFINED WATER Rum Koko: 8157.7L/unit × 150000 units = 1223654350L
+   Breakdown: Ingredients=8146.8, Packaging=5.4, Facilities=5.5L (dilution=200ml excluded)
+🔧 CORRECTED Emissions calculation (matching your expected values): {
+  scope1Entries: 9,
+  scope2Automated: 'calculated from production facilities',
+  scope1Total: '572.252 tonnes',
+  scope2Total: '6.535 tonnes',
+  totalScope1And2: '578.787 tonnes',
+  facilityImpactsReported: '953.077 tonnes',
+  scope3Emissions: '1010.278 tonnes'
+}
+📊 COMPREHENSIVE COMPANY FOOTPRINT SUMMARY (NO DOUBLE-COUNTING):
+   Company: undefined (ID: 1)
+   Scope 1+2 (Manual): 578.787 tonnes CO2e
+   Scope 3 (Products, excl. facilities): 1010.278 tonnes CO2e
+   Facility impacts (in Scope 1+2): 953.077 tonnes CO2e
+   FINAL TOTAL (1+2+3): 1589.1 tonnes CO2e
+   Products Count: 2
+   Water: 1,658,000 liters
+   Waste: 0.0 tonnes
+isAuthenticated middleware check for: /api/products/12/refined-lca {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+📦 Fetching products for company ID: 1
+🔍 Carbon Calculator API returning exact comprehensive total: 1589.0648850000002
+[19:47:09] INFO: API: GET /api/company/footprint/scope3/automated 200 (424ms) {"method":"GET","path":"/api/company/footprint/scope3/automated","statusCode":200,"duration":424,"requestId":"1756410428994","userAgent":"node","contentLength":"1568"}
+[19:47:09] INFO: API: GET /api/company/footprint/comprehensive 200 (1327ms) {"method":"GET","path":"/api/company/footprint/comprehensive","statusCode":200,"duration":1327,"requestId":"1756410428138","userAgent":"node","contentLength":"1814"}
+📊 Using stored footprints for Rum Koko: CO₂=nullkg, Water=nullL, Waste=nullkg
+📊 Using stored footprints for Rum Blanc: CO₂=nullkg, Water=nullL, Waste=0.25kg
+Products fetched: 2 for company 1
+Using admin company with products: Demo Company ID: 1
+[19:47:09] INFO: API: GET /api/carbon-calculator-total 304 (1530ms) {"method":"GET","path":"/api/carbon-calculator-total","statusCode":304,"duration":1530,"requestId":"1756410427976","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+[19:47:09] INFO: API: GET /api/products 200 (150ms) {"method":"GET","path":"/api/products","statusCode":200,"duration":150,"requestId":"1756410429391","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"5434"}
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🌱 Calculating ingredient impacts for 1 ingredients
+ℹ️ No user selection found for Molasses, cane - using OpenLCA as primary source
+isAuthenticated middleware check for: /api/products/12/verified-supplier-impacts {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/products/19/refined-lca {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+Using admin company with products: Demo Company ID: 1
+✅ OpenLCA Molasses, cane: CO2e=1.335kg, Water=39.0L
+ℹ️ Checked for verified supplier impacts for product 12 - implementation in progress
+isAuthenticated middleware check for: /api/products/19/verified-supplier-impacts {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🌱 Calculating ingredient impacts for 2 ingredients
+ℹ️ No user selection found for Molasses, cane - using OpenLCA as primary source
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+💧 REFINED WATER Rum Blanc: 47.1L/unit × 300000 units = 14130400L
+   Breakdown: Ingredients=39.0, Packaging=5.3, Facilities=2.8L (dilution=0.5l excluded)
+🧮 REFINED Total company water footprint: 1237784750L (excludes dilution water)
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit production
+📦 Previous: 0.026500 kg (5% packaging), New: 0.075900 kg (facility-based)
+🍾 Glass bottle: 530.000g = 0.258 kg CO2e
+Using admin company with products: Demo Company ID: 1
+⚡ LEGACY: Facility electricity: 125000kWh/year (53% renewable) = 0.046kg CO2e per unit
+🔥 LEGACY: Facility gas: 250000m³/year = 1.543kg CO2e per unit
+💧 Facility water: 829000L/year = 2.8L per unit
+ℹ️ Checked for verified supplier impacts for product 19 - implementation in progress
+✅ OpenLCA Molasses, cane: CO2e=1.602kg, Water=46.8L
+ℹ️ No user selection found for Coconut extract - using OpenLCA as primary source
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:2146:36)
+🏭 Total facility impacts: CO2e=1.588kg, Water=2.8L per unit (waste excluded per requirements)
+⚡ Facility impacts: 1.588462kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+💧 REFINED WATER Rum Koko: 8157.7L/unit × 150000 units = 1223654350L
+   Breakdown: Ingredients=8146.8, Packaging=5.4, Facilities=5.5L (dilution=200ml excluded)
+[19:47:09] INFO: API: GET /api/products/12/verified-supplier-impacts 304 (197ms) {"method":"GET","path":"/api/products/12/verified-supplier-impacts","statusCode":304,"duration":197,"requestId":"1756410429630","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+[19:47:09] INFO: API: GET /api/products/19/verified-supplier-impacts 304 (210ms) {"method":"GET","path":"/api/products/19/verified-supplier-impacts","statusCode":304,"duration":210,"requestId":"1756410429785","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+   Glass: 0.012781, Paper: 0.000068, Aluminum: 0.000088 kg CO2e
+   Recycling rates: Glass=76.8%, Paper=70.2%, Aluminum=82.1%
+⚡ Facility impacts: 1.588462kg CO2e per unit (INCLUDED in product footprint)
+💧 Water dilution recorded: 0.5l per bottle (excluded from product footprint)
+📊 Refined LCA for Rum Blanc: CO2e=3.206kg (includes facility impacts), Water=47.1L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+🧪 LCI calculation for Molasses, cane: 0 elementary flows extracted
+🌍 Comprehensive GHG analysis: 0 gases identified, 0.000kg CO2e total
+📊 Refined LCA for Rum Blanc: CO2e=3.206kg (includes facilities + production waste + end-of-life), Water=47.1L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+✅ OpenLCA Coconut extract: CO2e=1.500kg, Water=8100.0L
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+[19:47:10] INFO: API: GET /api/products/12/refined-lca 200 (732ms) {"method":"GET","path":"/api/products/12/refined-lca","statusCode":200,"duration":732,"requestId":"1756410429411","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"1013"}
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit production
+📦 Previous: 0.026500 kg (5% packaging), New: 0.075900 kg (facility-based)
+🍾 Glass bottle: 530.000g = 0.258 kg CO2e
+isAuthenticated middleware check for: /api/products/12/refined-lca {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+⚡ LEGACY: Facility electricity: 125000kWh/year (53% renewable) = 0.091kg CO2e per unit
+🔥 LEGACY: Facility gas: 250000m³/year = 3.086kg CO2e per unit
+💧 Facility water: 829000L/year = 5.5L per unit
+Using admin company with products: Demo Company ID: 1
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:2146:36)
+🏭 Total facility impacts: CO2e=3.177kg, Water=5.5L per unit (waste excluded per requirements)
+⚡ Facility impacts: 3.176925kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.015051 kg CO2e per unit
+   Glass: 0.012781, Paper: 0.000171, Aluminum: 0.000106 kg CO2e
+   Recycling rates: Glass=76.8%, Paper=70.2%, Aluminum=82.1%
+⚡ Facility impacts: 3.176925kg CO2e per unit (INCLUDED in product footprint)
+💧 Water dilution recorded: 200ml per bottle (excluded from product footprint)
+📊 Refined LCA for Rum Koko: CO2e=6.567kg (includes facility impacts), Water=8157.7L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+🌱 Calculating ingredient impacts for 1 ingredients
+ℹ️ No user selection found for Molasses, cane - using OpenLCA as primary source
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+💧 REFINED WATER Rum Blanc: 47.1L/unit × 300000 units = 14130400L
+   Breakdown: Ingredients=39.0, Packaging=5.3, Facilities=2.8L (dilution=0.5l excluded)
+🧮 REFINED Total company water footprint: 1237784750L (excludes dilution water)
+🧪 LCI calculation for Molasses, cane: 0 elementary flows extracted
+📊 Rum Koko: 150000 bottles/year
+📊 Rum Blanc: 300000 bottles/year
+🧮 Total company production: 450000 bottles/year
+🔧 Using hardcoded energy consumption: 150,000 kWh/year
+🧪 LCI calculation for Coconut extract: 0 elementary flows extracted
+🌍 Comprehensive GHG analysis: 0 gases identified, 0.000kg CO2e total
+📊 Refined LCA for Rum Koko: CO2e=6.567kg (includes facilities + production waste + end-of-life), Water=8157.7L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit
+🗑️ REFINED WASTE Rum Koko: 0.151800 kg/unit × 150000 units = 22770.0 kg
+   Breakdown: Product waste=0.075900, Facility waste=0.075900 kg per unit
+📊 Rum Koko: 150000 bottles/year
+📊 Rum Blanc: 300000 bottles/year
+🧮 Total company production: 450000 bottles/year
+♻️  Calculated total company recycled waste: 145485.0 kg annually
+✅ OpenLCA Molasses, cane: CO2e=1.335kg, Water=39.0L
+isAuthenticated middleware check for: / {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: /api/products/19/refined-lca {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+[19:47:10] INFO: API: GET /api/products/19/refined-lca 200 (895ms) {"method":"GET","path":"/api/products/19/refined-lca","statusCode":200,"duration":895,"requestId":"1756410429651","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"1046"}
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit production
+📦 Previous: 0.026500 kg (5% packaging), New: 0.075900 kg (facility-based)
+🍾 Glass bottle: 530.000g = 0.258 kg CO2e
+⚡ LEGACY: Facility electricity: 125000kWh/year (53% renewable) = 0.046kg CO2e per unit
+🔥 LEGACY: Facility gas: 250000m³/year = 1.543kg CO2e per unit
+💧 Facility water: 829000L/year = 2.8L per unit
+Using admin company with products: Demo Company ID: 1
+Using admin company with products: Demo Company ID: 1
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:2146:36)
+🏭 Total facility impacts: CO2e=1.588kg, Water=2.8L per unit (waste excluded per requirements)
+⚡ Facility impacts: 1.588462kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+🌱 Calculating ingredient impacts for 2 ingredients
+ℹ️ No user selection found for Molasses, cane - using OpenLCA as primary source
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.014923 kg CO2e per unit
+   Glass: 0.012781, Paper: 0.000068, Aluminum: 0.000088 kg CO2e
+   Recycling rates: Glass=76.8%, Paper=70.2%, Aluminum=82.1%
+⚡ Facility impacts: 1.588462kg CO2e per unit (INCLUDED in product footprint)
+💧 Water dilution recorded: 0.5l per bottle (excluded from product footprint)
+📊 Refined LCA for Rum Blanc: CO2e=3.206kg (includes facility impacts), Water=47.1L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🧪 LCI calculation for Molasses, cane: 0 elementary flows extracted
+🌍 Comprehensive GHG analysis: 0 gases identified, 0.000kg CO2e total
+📊 Refined LCA for Rum Blanc: CO2e=3.206kg (includes facilities + production waste + end-of-life), Water=47.1L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+📦 Fetching products for company ID: 1
+[19:47:10] INFO: API: GET /api/products/12/refined-lca 200 (674ms) {"method":"GET","path":"/api/products/12/refined-lca","statusCode":200,"duration":674,"requestId":"1756410430266","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"1013"}
+✅ OpenLCA Molasses, cane: CO2e=1.602kg, Water=46.8L
+ℹ️ No user selection found for Coconut extract - using OpenLCA as primary source
+📊 Using stored footprints for Rum Koko: CO₂=nullkg, Water=nullL, Waste=nullkg
+📊 Using stored footprints for Rum Blanc: CO₂=nullkg, Water=nullL, Waste=0.25kg
+Products fetched: 2 for company 1
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit
+🗑️ REFINED WASTE Rum Blanc: 0.151800 kg/unit × 300000 units = 45540.0 kg
+   Breakdown: Product waste=0.075900, Facility waste=0.075900 kg per unit
+🧮 REFINED Total company waste: 68310.0 kg annually
+📊 Production dashboard metrics (OpenLCA methodology):
+   CO2e: 1025.5 tonnes (1025520 kg)
+   Water: 1,237,784,750 litres
+   Waste: 68.3 tonnes
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+[19:47:11] INFO: API: GET /api/products 200 (133ms) {"method":"GET","path":"/api/products","statusCode":200,"duration":133,"requestId":"1756410430906","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"5434"}
+[19:47:11] INFO: API: GET /api/dashboard/metrics 304 (3580ms) {"method":"GET","path":"/api/dashboard/metrics","statusCode":304,"duration":3580,"requestId":"1756410427504","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+Using admin company with products: Demo Company ID: 1
+✅ OpenLCA Coconut extract: CO2e=1.500kg, Water=8100.0L
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit
+🗑️ REFINED WASTE Rum Koko: 0.151800 kg/unit × 150000 units = 22770.0 kg
+   Breakdown: Product waste=0.075900, Facility waste=0.075900 kg per unit
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit production
+📦 Previous: 0.026500 kg (5% packaging), New: 0.075900 kg (facility-based)
+🍾 Glass bottle: 530.000g = 0.258 kg CO2e
+⚡ LEGACY: Facility electricity: 125000kWh/year (53% renewable) = 0.091kg CO2e per unit
+🔥 LEGACY: Facility gas: 250000m³/year = 3.086kg CO2e per unit
+💧 Facility water: 829000L/year = 5.5L per unit
+[19:47:11] INFO: API: GET /api/company/footprint 304 (223ms) {"method":"GET","path":"/api/company/footprint","statusCode":304,"duration":223,"requestId":"1756410431033","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+⚠️ Production waste footprint calculation failed: ReferenceError: annualEquivalents is not defined
+    at Function.calculateProductionWasteFootprint (/home/runner/workspace/server/services/WasteIntensityCalculationService.ts:228:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:2146:36)
+🏭 Total facility impacts: CO2e=3.177kg, Water=5.5L per unit (waste excluded per requirements)
+⚡ Facility impacts: 3.176925kg CO2e per unit (excluded to prevent Scope 2 double-counting)
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+♻️ End-of-life packaging footprint:
+   Total: 0.015051 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000171 kg CO2e (3g, 70.2% recycled)
+   Aluminum closure: 0.000106 kg CO2e (3g, 82.1% recycled)
+   Collection transport: 0.001993 kg CO2e per unit
+♻️ End-of-life packaging footprint: 0.015051 kg CO2e per unit
+   Glass: 0.012781, Paper: 0.000171, Aluminum: 0.000106 kg CO2e
+   Recycling rates: Glass=76.8%, Paper=70.2%, Aluminum=82.1%
+⚡ Facility impacts: 3.176925kg CO2e per unit (INCLUDED in product footprint)
+💧 Water dilution recorded: 200ml per bottle (excluded from product footprint)
+📊 Refined LCA for Rum Koko: CO2e=6.567kg (includes facility impacts), Water=8157.7L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+🧪 LCI calculation for Molasses, cane: 0 elementary flows extracted
+🧪 LCI calculation for Coconut extract: 0 elementary flows extracted
+🌍 Comprehensive GHG analysis: 0 gases identified, 0.000kg CO2e total
+📊 Refined LCA for Rum Koko: CO2e=6.567kg (includes facilities + production waste + end-of-life), Water=8157.7L (excludes dilution, includes facilities), Waste=0.076kg (facilities excluded per requirements)
+[19:47:11] INFO: API: GET /api/products/19/refined-lca 200 (882ms) {"method":"GET","path":"/api/products/19/refined-lca","statusCode":200,"duration":882,"requestId":"1756410430651","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"1046"}
+♻️ End-of-life packaging footprint:
+   Total: 0.014923 kg CO2e per unit
+   Glass bottle: 0.012781 kg CO2e (530g, 76.8% recycled)
+   Paper label: 0.000068 kg CO2e (1.2g, 70.2% recycled)
+   Aluminum closure: 0.000088 kg CO2e (2.5g, 82.1% recycled)
+   Collection transport: 0.001985 kg CO2e per unit
+📊 Waste intensity for facility Main Distillery: 0.0759 kg waste per unit
+📊 Total facility waste: 3795 kg/year, Production: 50000.00 units/year
+🏭 Facility waste intensity: 0.075900 kg waste per unit
+🗑️ REFINED WASTE Rum Blanc: 0.151800 kg/unit × 300000 units = 45540.0 kg
+   Breakdown: Product waste=0.075900, Facility waste=0.075900 kg per unit
+🧮 REFINED Total company waste: 68310.0 kg annually
+🔧 Using hardcoded energy consumption: 150,000 kWh/year
+🔧 Using hardcoded renewable energy: 37500 kWh (25% of 150000 kWh)
+🔧 Using hardcoded energy consumption: 150,000 kWh/year
+🔧 Using hardcoded verified suppliers: 4 out of 6
+🔧 Using hardcoded total suppliers: 6
+[19:47:11] INFO: API: GET /api/dashboard/kpis 304 (3718ms) {"method":"GET","path":"/api/dashboard/kpis","statusCode":304,"duration":3718,"requestId":"1756410428133","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+📦 Fetching products for company ID: 1
+📊 Using stored footprints for Rum Koko: CO₂=nullkg, Water=nullL, Waste=nullkg
+📊 Using stored footprints for Rum Blanc: CO₂=nullkg, Water=nullL, Waste=0.25kg
+Products fetched: 2 for company 1
+[19:47:13] INFO: API: GET /api/products 200 (127ms) {"method":"GET","path":"/api/products","statusCode":200,"duration":127,"requestId":"1756410433346","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"5434"}
+[19:47:17] INFO: API: GET /api/products/19 200 (116ms) {"method":"GET","path":"/api/products/19","statusCode":200,"duration":116,"requestId":"1756410437544","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"2536"}
+Processing material: Glass bottle, clear in category: Container Materials
+Processing material: Water-based ink in category: Printing Materials
+Using material-specific estimate for Glass bottle, clear: { co2: 0.547, water: 16.6, energy: 20.7 }
+Processing material: Glass bottle, amber in category: Container Materials
+Using material-specific estimate for Water-based ink: { co2: 2.268, water: 91.8, energy: 27.43 }
+Processing material: Solvent-based ink in category: Printing Materials
+Using material-specific estimate for Glass bottle, amber: { co2: 0.547, water: 16.6, energy: 20.7 }
+Processing material: Glass bottle, green in category: Container Materials
+Using material-specific estimate for Solvent-based ink: { co2: 2.016, water: 81.6, energy: 24.38 }
+Processing material: UV-cured ink in category: Printing Materials
+Processing material: Paper label, coated in category: Label Materials
+Processing material: Natural cork in category: Closure Materials
+Using material-specific estimate for Glass bottle, green: { co2: 0.607, water: 18.4, energy: 22.95 }
+Processing material: PET plastic bottle in category: Container Materials
+Using material-specific estimate for UV-cured ink: { co2: 2.352, water: 95.2, energy: 28.45 }
+Processing material: Soy-based ink in category: Printing Materials
+Using material-specific estimate for Paper label, coated: { co2: 1.148, water: 24.4, energy: 11.27 }
+Processing material: Paper label, uncoated in category: Label Materials
+Using material-specific estimate for Natural cork: { co2: 0.483, water: 3.5, energy: 4.94 }
+Processing material: Synthetic cork in category: Closure Materials
+Using material-specific estimate for Soy-based ink: { co2: 2.268, water: 91.8, energy: 27.43 }
+Using material-specific estimate for PET plastic bottle: { co2: 1.759, water: 18.9, energy: 24.75 }
+Processing material: HDPE plastic bottle in category: Container Materials
+Using material-specific estimate for Paper label, uncoated: { co2: 1.267, water: 26.9, energy: 12.43 }
+Processing material: Plastic label film, PP in category: Label Materials
+[19:47:22] INFO: API: GET /api/lca/ingredients 304 (126ms) {"method":"GET","path":"/api/lca/ingredients","statusCode":304,"duration":126,"requestId":"1756410442349","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+[19:47:22] INFO: API: GET /api/lca/ingredients 304 (133ms) {"method":"GET","path":"/api/lca/ingredients","statusCode":304,"duration":133,"requestId":"1756410442342","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+[19:47:22] INFO: API: GET /api/lca/ingredients 304 (331ms) {"method":"GET","path":"/api/lca/ingredients","statusCode":304,"duration":331,"requestId":"1756410442353","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+[19:47:22] INFO: API: GET /api/lca/ingredients 304 (329ms) {"method":"GET","path":"/api/lca/ingredients","statusCode":304,"duration":329,"requestId":"1756410442356","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+[19:47:22] INFO: API: GET /api/lca/packaging-impact 200 (398ms) {"method":"GET","path":"/api/lca/packaging-impact","statusCode":200,"duration":398,"requestId":"1756410442596","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"238"}
+Using material-specific estimate for Synthetic cork: { co2: 0.505, water: 3.6, energy: 5.17 }
+Processing material: Aluminum screw cap in category: Closure Materials
+Using material-specific estimate for HDPE plastic bottle: { co2: 1.72, water: 18.5, energy: 24.2 }
+Processing material: Aluminum can in category: Container Materials
+Using material-specific estimate for Plastic label film, PP: { co2: 3.064, water: 54.4, energy: 45.18 }
+Processing material: Plastic label film, PE in category: Label Materials
+Using material-specific estimate for Aluminum screw cap: { co2: 13.198, water: 19.5, energy: 38.3 }
+Processing material: Plastic screw cap, PP in category: Closure Materials
+Using material-specific estimate for Aluminum can: { co2: 6.761, water: 40.7, energy: 37.59 }
+Processing material: Steel can in category: Container Materials
+Using material-specific estimate for Plastic label film, PE: { co2: 2.539, water: 45.1, energy: 37.44 }
+Processing material: Aluminum foil label in category: Label Materials
+Using material-specific estimate for Plastic screw cap, PP: { co2: 4.127, water: 10.9, energy: 30.3 }
+Processing material: Plastic screw cap, PE in category: Closure Materials
+Using material-specific estimate for Steel can: { co2: 1.377, water: 28.4, energy: 27 }
+Processing material: Ceramic bottle in category: Container Materials
+Using material-specific estimate for Aluminum foil label: { co2: 8.954, water: 89.2, energy: 52.19 }
+Processing material: Biodegradable label in category: Label Materials
+Using material-specific estimate for Plastic screw cap, PE: { co2: 4.595, water: 12.1, energy: 33.74 }
+Processing material: Crown cap, steel in category: Closure Materials
+Using material-specific estimate for Ceramic bottle: { co2: 0.825, water: 14.5, energy: 12.13 }
+Processing material: Tetra Pak carton in category: Container Materials
+Using material-specific estimate for Biodegradable label: { co2: 1.032, water: 30.1, energy: 15.91 }
+Using material-specific estimate for Crown cap, steel: { co2: 3.563, water: 18, energy: 36.47 }
+Processing material: Swing top mechanism in category: Closure Materials
+Using material-specific estimate for Tetra Pak carton: { co2: 0.799, water: 14.1, energy: 11.75 }
+Using material-specific estimate for Swing top mechanism: { co2: 2.016, water: 8.7, energy: 15.48 }
+[19:47:23] INFO: API: GET /api/lca/packaging-impact 200 (551ms) {"method":"GET","path":"/api/lca/packaging-impact","statusCode":200,"duration":551,"requestId":"1756410442799","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"393"}
+[19:47:23] INFO: API: GET /api/lca/packaging-impact 200 (776ms) {"method":"GET","path":"/api/lca/packaging-impact","statusCode":200,"duration":776,"requestId":"1756410442589","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"544"}
+[19:47:23] INFO: API: GET /api/lca/packaging-impact 200 (626ms) {"method":"GET","path":"/api/lca/packaging-impact","statusCode":200,"duration":626,"requestId":"1756410442810","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36","contentLength":"429"}
+7:49:01 PM [vite] hmr update /src/components/products/EnhancedProductForm.tsx, /src/index.css?v=sZP03B-XyOSwOZuG0GHpv
