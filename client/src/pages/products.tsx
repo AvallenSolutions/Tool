@@ -101,8 +101,8 @@ export default function ProductsPage() {
 
   const products: ClientProduct[] = rawProducts || [];
 
-  // Get portfolio metrics with calculated LCA data
-  const portfolioMetrics = usePortfolioMetrics(products);
+  // Get portfolio metrics with calculated LCA data - ensure this hook is always called
+  const portfolioMetrics = usePortfolioMetrics(products || []);
 
   console.log('🔍 Current products state:', products, 'Loading:', isLoading, 'Error:', error);
   console.log('🔍 Products array length:', products.length);

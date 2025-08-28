@@ -22,13 +22,35 @@ export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
   // Always call hooks - use a placeholder array if products are not available
   const productList = products && Array.isArray(products) ? products : [];
   
-  // Get LCA data for all products
-  const lcaQueries = productList.map(product => 
-    useRefinedLCA(product.id)
-  );
+  // Use a stable query approach instead of dynamic hooks
+  const portfolioQuery = useQuery({
+    queryKey: ['portfolio-metrics', productList.map(p => p.id).sort().join(',')],
+    queryFn: async () => {
+      if (!productList.length) return null;
+      
+      // Fetch LCA data for all products
+      const promises = productList.map(async (product) => {
+        try {
+          const response = await fetch(`/api/products/${product.id}/refined-lca`);
+          if (!response.ok) return null;
+          return await response.json();
+        } catch (error) {
+          console.error('Error fetching LCA for product', product.id, error);
+          return null;
+        }
+      });
+      
+      const lcaResults = await Promise.all(promises);
+      return lcaResults.map((result, index) => ({
+        product: productList[index],
+        lcaData: result
+      }));
+    },
+    enabled: productList.length > 0
+  });
   
   // Return early metrics if no products
-  if (!products || !Array.isArray(products)) {
+  if (!products || !Array.isArray(products) || !productList.length) {
     return {
       totalCO2e: 0,
       totalWater: 0,
@@ -41,12 +63,13 @@ export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
     };
   }
 
-  const isLoading = lcaQueries.some(query => query.isLoading);
-  const error = lcaQueries.some(query => !!query.error);
+  const isLoading = portfolioQuery.isLoading;
+  const error = !!portfolioQuery.error;
+  const data = portfolioQuery.data;
 
-  // Calculate totals
-  const metrics = productList.reduce((acc, product, index) => {
-    const lcaData = lcaQueries[index].data;
+  // Calculate totals from the fetched data
+  const metrics = data ? data.reduce((acc, item) => {
+    const { product, lcaData } = item;
     const volume = parseFloat(product.annualProductionVolume?.toString() || '0') || 0;
     
     if (lcaData?.success && lcaData.data) {
@@ -68,7 +91,13 @@ export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
     totalWaste: 0,
     withLCADataCount: 0,
     activeCount: 0
-  });
+  }) : {
+    totalCO2e: 0,
+    totalWater: 0,
+    totalWaste: 0,
+    withLCADataCount: 0,
+    activeCount: 0
+  };
 
   return {
     ...metrics,
