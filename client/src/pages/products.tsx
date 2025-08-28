@@ -80,9 +80,18 @@ export default function ProductsPage() {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/products/${id}`);
+      console.log('🗑️ Deleting product:', id);
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+      return response.json();
     },
     onSuccess: () => {
+      console.log('✅ Product deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       toast({
         title: "Product Deleted",
@@ -90,6 +99,7 @@ export default function ProductsPage() {
       });
     },
     onError: (error: any) => {
+      console.error('❌ Delete failed:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete product. Please try again.",
