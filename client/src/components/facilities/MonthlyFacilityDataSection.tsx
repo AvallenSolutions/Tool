@@ -175,7 +175,7 @@ export default function MonthlyFacilityDataSection() {
       
       <CardContent className="p-0">
         <Tabs defaultValue="historical" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-50 m-0 rounded-none">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-50 m-0 rounded-none">
             <TabsTrigger value="historical" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Historical Data
@@ -187,14 +187,6 @@ export default function MonthlyFacilityDataSection() {
             <TabsTrigger value="trends" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Trends
-            </TabsTrigger>
-            <TabsTrigger value="migration" className="flex items-center gap-2">
-              <Database className="w-4 h-4" />
-              Migration
-            </TabsTrigger>
-            <TabsTrigger value="testing" className="flex items-center gap-2">
-              <TestTube className="w-4 h-4" />
-              Testing
             </TabsTrigger>
           </TabsList>
 
@@ -573,129 +565,6 @@ export default function MonthlyFacilityDataSection() {
                     </AlertDescription>
                   </Alert>
                 )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="migration" className="mt-0">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Data Migration Status</h3>
-                
-                <Alert>
-                  <CheckCircle className="w-4 h-4" />
-                  <AlertDescription>
-                    Migration to monthly data collection architecture completed successfully.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Migration Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Current Records:</span>
-                        <Badge variant="outline">{Array.isArray(allFacilityData) ? allFacilityData.length : 0}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Data Quality:</span>
-                        <Badge variant="secondary">85% Complete</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Architecture:</span>
-                        <Badge variant="default">Monthly-Only</Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">System Changes</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span>Monthly data collection active</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span>Unified calculation services</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span>KPI snapshot integration</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span>Product versioning system</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="testing" className="mt-0">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Data Quality & Validation</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base text-green-600">Data Integrity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-green-600">100%</div>
-                      <p className="text-sm text-gray-600">No data corruption detected</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base text-blue-600">API Health</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-blue-600">✓</div>
-                      <p className="text-sm text-gray-600">All endpoints responding</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base text-purple-600">Calculations</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-purple-600">✓</div>
-                      <p className="text-sm text-gray-600">Formulas validated</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Recent Validation Tests</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Monthly data endpoints</span>
-                        <Badge variant="default" className="bg-green-100 text-green-800">PASS</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">KPI snapshot generation</span>
-                        <Badge variant="default" className="bg-green-100 text-green-800">PASS</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Analytics data aggregation</span>
-                        <Badge variant="default" className="bg-green-100 text-green-800">PASS</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Edit functionality</span>
-                        <Badge variant="default" className="bg-green-100 text-green-800">PASS</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </TabsContent>
           </div>
