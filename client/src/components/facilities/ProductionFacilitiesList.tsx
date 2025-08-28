@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Building2, Edit, Trash2, Zap, Droplets, Leaf, MapPin, Factory, Plus, AlertCircle, CheckCircle, Calendar, BarChart3 } from "lucide-react";
 import ProductionFacilityForm from "./ProductionFacilityForm";
 
@@ -104,6 +104,8 @@ export default function ProductionFacilitiesList() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
+            <DialogTitle className="sr-only">Create New Production Facility</DialogTitle>
+            <DialogDescription className="sr-only">Create a new production facility with detailed configuration</DialogDescription>
             <ProductionFacilityForm
               onComplete={handleFormComplete}
               onCancel={() => setShowCreateForm(false)}
@@ -130,6 +132,8 @@ export default function ProductionFacilitiesList() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
+                <DialogTitle className="sr-only">Create New Production Facility</DialogTitle>
+                <DialogDescription className="sr-only">Create a new production facility with detailed configuration</DialogDescription>
                 <ProductionFacilityForm
                   onComplete={handleFormComplete}
                   onCancel={() => setShowCreateForm(false)}
@@ -247,6 +251,8 @@ export default function ProductionFacilitiesList() {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
+                      <DialogTitle className="sr-only">Edit Production Facility</DialogTitle>
+                      <DialogDescription className="sr-only">Edit facility details and configuration</DialogDescription>
                       <ProductionFacilityForm
                         facilityId={facility.id}
                         existingData={facility}
@@ -262,6 +268,8 @@ export default function ProductionFacilitiesList() {
                     onOpenChange={(open) => !open && setMonthlyDataFacility(null)}
                   >
                     <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
+                      <DialogTitle className="sr-only">Monthly Data Entry</DialogTitle>
+                      <DialogDescription className="sr-only">Enter monthly operational data for this facility</DialogDescription>
                       <ProductionFacilityForm
                         facilityId={facility.id}
                         existingData={facility}

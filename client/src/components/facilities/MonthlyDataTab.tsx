@@ -124,12 +124,13 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
       });
       queryClient.invalidateQueries({ queryKey: [facilityQueryUrl] });
       queryClient.invalidateQueries({ queryKey: [analyticsQueryUrl] });
-      setFormData({
-        electricityKwh: '',
-        naturalGasM3: '',
-        waterM3: '',
-        productionVolume: '',
-      });
+      // Don't clear form data - keep it filled for potential further edits
+      // setFormData({
+      //   electricityKwh: '',
+      //   naturalGasM3: '',
+      //   waterM3: '',
+      //   productionVolume: '',
+      // });
     },
     onError: (error) => {
       toast({
@@ -185,6 +186,7 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent parent form submission
     
     const payload = {
       companyId: 1,
@@ -275,7 +277,7 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-6">
                 <div className="grid gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="month">Month</Label>
@@ -361,7 +363,8 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
                   </Alert>
 
                   <Button 
-                    type="submit" 
+                    type="button"
+                    onClick={handleSubmit}
                     disabled={saveFacilityData.isPending}
                     className="w-full"
                     data-testid="button-save-facility-data"
@@ -369,7 +372,7 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
                     {saveFacilityData.isPending ? 'Saving...' : 'Save Monthly Data'}
                   </Button>
                 </div>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
