@@ -5185,64 +5185,21 @@ Be precise and quote actual text from the content, not generic terms.`;
     });
     try {
       const { products } = await import('@shared/schema');
-      const { eq } = await import('drizzle-orm');
+      const { eq, desc } = await import('drizzle-orm');
       const { db } = await import('./db');
       const { OpenLCAService } = await import('./services/OpenLCAService');
       const { WaterFootprintService } = await import('./services/WaterFootprintService');
-      // In development mode or for admin users, get the company from the authenticated user
-      let companyId = (req.session as any)?.user?.companyId;
-      
-      // Development mode logic for admin users - show products from the most recently active company
-      if (process.env.NODE_ENV === 'development' && !companyId) {
-        const { users, companies } = await import('@shared/schema');
-        const { eq, desc } = await import('drizzle-orm');
-        
-        try {
-          // For admin users in development mode, check for draft products first
-          const draftProducts = await db
-            .select({ 
-              companyId: products.companyId,
-              status: products.status,
-              name: products.name
-            })
-            .from(products)
-            .where(eq(products.status, 'draft'))
-            .orderBy(desc(products.createdAt))
-            .limit(1);
-          
-          if (draftProducts.length > 0) {
-            companyId = draftProducts[0].companyId;
-            console.log(`🎯 Admin mode: Found draft products, using company ID: ${companyId} (draft: ${draftProducts[0].name})`);
-          } else {
-            // Fallback to most recent products
-            const recentProductCompany = await db
-              .select({ 
-                companyId: products.companyId
-              })
-              .from(products)
-              .orderBy(desc(products.createdAt))
-              .limit(1);
-            
-            if (recentProductCompany.length > 0) {
-              companyId = recentProductCompany[0].companyId;
-              console.log(`🎯 Admin mode: Using company with most recent products: ID ${companyId}`);
-            } else {
-              companyId = 1; // Ultimate fallback
-              console.log(`⚠️ Admin mode: No products found, using fallback company ID: ${companyId}`);
-            }
-          }
-        } catch (error) {
-          console.warn('Error determining company for admin user:', error);
-          companyId = 1; // Fallback for development
-        }
+      // In development mode for admin users, show products from ALL companies
+      let results;
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🎯 Admin mode: Fetching products from ALL companies`);
+        results = await db.select().from(products).orderBy(desc(products.createdAt));
+      } else {
+        // Production mode: use session-based company filtering
+        const companyId = (req.session as any)?.user?.companyId || 1;
+        console.log(`📦 Production mode: Fetching products for company ID: ${companyId}`);
+        results = await db.select().from(products).where(eq(products.companyId, companyId));
       }
-      
-      if (!companyId) {
-        companyId = 1; // Final fallback
-      }
-      
-      console.log(`📦 Fetching products for company ID: ${companyId}`);
-      const results = await db.select().from(products).where(eq(products.companyId, companyId));
       
       // Enrich products with stored environmental footprints (for consistency)
       const enrichedProducts = await Promise.all(results.map(async (product) => {
