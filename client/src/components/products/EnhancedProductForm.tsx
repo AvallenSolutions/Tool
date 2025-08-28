@@ -535,8 +535,6 @@ export default function EnhancedProductForm({
   
   // LCA calculation state
   const [lcaJobId, setLcaJobId] = useState<string | null>(null);
-  const [lcaProgress, setLcaProgress] = useState<number>(0);
-  const [lcaStatus, setLcaStatus] = useState<'idle' | 'calculating' | 'completed' | 'failed'>('idle');
 
   // Ingredient selection now uses unified OpenLCA database search
   
@@ -862,8 +860,6 @@ export default function EnhancedProductForm({
     },
     onSuccess: (data) => {
       setLcaJobId(data.jobId);
-      setLcaStatus('calculating');
-      setLcaProgress(10);
       
       toast({
         title: "LCA Calculation Started",
@@ -874,7 +870,6 @@ export default function EnhancedProductForm({
       pollLcaStatus(data.jobId);
     },
     onError: (error: any) => {
-      setLcaStatus('failed');
       toast({
         title: "LCA Calculation Failed",
         description: error.message || "Unable to start LCA calculation",
@@ -890,10 +885,7 @@ export default function EnhancedProductForm({
         const response = await apiRequest('GET', `/api/lca/calculation/${jobId}`);
         const status = await response.json();
         
-        setLcaProgress(status.progress || 0);
-        
         if (status.status === 'completed') {
-          setLcaStatus('completed');
           clearInterval(pollInterval);
           
           toast({
@@ -905,7 +897,6 @@ export default function EnhancedProductForm({
           queryClient.invalidateQueries({ queryKey: ['/api/products'] });
           
         } else if (status.status === 'failed') {
-          setLcaStatus('failed');
           clearInterval(pollInterval);
           
           toast({
@@ -918,21 +909,17 @@ export default function EnhancedProductForm({
       } catch (error) {
         console.error('Error polling LCA status:', error);
         clearInterval(pollInterval);
-        setLcaStatus('failed');
       }
     }, 2000); // Poll every 2 seconds
     
     // Auto-cleanup after 5 minutes
     setTimeout(() => {
       clearInterval(pollInterval);
-      if (lcaStatus === 'calculating') {
-        setLcaStatus('failed');
-        toast({
-          title: "LCA Calculation Timeout",
-          description: "Calculation took longer than expected",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "LCA Calculation Timeout",
+        description: "Calculation took longer than expected",
+        variant: "destructive",
+      });
     }, 300000);
   };
 
@@ -1122,7 +1109,7 @@ export default function EnhancedProductForm({
           }
         }}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
             <TabsTrigger value="ingredients" className="text-xs">Ingredients</TabsTrigger>
             <TabsTrigger value="packaging" className="text-xs">Packaging</TabsTrigger>
@@ -1130,7 +1117,6 @@ export default function EnhancedProductForm({
             <TabsTrigger value="certifications" className="text-xs">Certifications</TabsTrigger>
             <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
             <TabsTrigger value="endoflife" className="text-xs">End of Life</TabsTrigger>
-            <TabsTrigger value="lcadata" className="text-xs">LCA Data</TabsTrigger>
           </TabsList>
 
           {/* Basic Info Tab */}
@@ -2794,114 +2780,6 @@ export default function EnhancedProductForm({
             </Card>
           </TabsContent>
 
-          {/* LCA Data Tab */}
-          <TabsContent value="lcadata" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-avallen-green" />
-                  Life Cycle Assessment Data
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Advanced LCA calculations and environmental impact data. This data is automatically populated from other tabs.
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* LCA Status Display */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Activity className="w-5 h-5 text-blue-600" />
-                    <h4 className="font-medium text-blue-800">LCA Calculation Status</h4>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Data Collection</span>
-                      <Badge variant={lcaStatus === 'completed' ? 'default' : 'secondary'}>
-                        {lcaStatus === 'completed' ? 'Complete' : 'In Progress'}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Impact Calculations</span>
-                      <Badge variant={lcaStatus === 'completed' ? 'default' : 'secondary'}>
-                        {lcaStatus === 'completed' ? 'Ready' : 'Pending'}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Auto-populated from other tabs notice */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-green-800 mb-1">Automated Data Integration</h4>
-                      <p className="text-sm text-green-700">
-                        LCA data is automatically calculated based on your inputs in the Ingredients, Packaging, Production, and End of Life tabs. 
-                        The system uses OpenLCA ecoinvent database for precise environmental impact calculations.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* LCA Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-white border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="font-medium">Carbon Footprint</span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {lcaStatus === 'completed' ? '1.6' : '--'} <span className="text-sm font-normal">kg CO₂e</span>
-                    </p>
-                    <p className="text-xs text-gray-500">Per unit produced</p>
-                  </div>
-
-                  <div className="bg-white border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="font-medium">Water Footprint</span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {lcaStatus === 'completed' ? '47' : '--'} <span className="text-sm font-normal">L</span>
-                    </p>
-                    <p className="text-xs text-gray-500">Per unit produced</p>
-                  </div>
-
-                  <div className="bg-white border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <span className="font-medium">Waste Generated</span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {lcaStatus === 'completed' ? '0.15' : '--'} <span className="text-sm font-normal">kg</span>
-                    </p>
-                    <p className="text-xs text-gray-500">Per unit produced</p>
-                  </div>
-                </div>
-
-                {/* LCA Progress */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label>LCA Calculation Progress</Label>
-                    <span className="text-sm text-gray-500">{lcaProgress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-avallen-green h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${lcaProgress}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {lcaStatus === 'calculating' && (
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Calculating environmental impacts...</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
         </Tabs>
 
@@ -2948,9 +2826,6 @@ export default function EnhancedProductForm({
                 if (errors.packaging?.primaryContainer?.material) {
                   errorSummary.push("• Packaging tab: Select container material");
                 }
-                if (errors.lcaData) {
-                  errorSummary.push("• LCA Data tab: Complete required environmental data fields");
-                }
                 
                 if (errorSummary.length > 0) {
                   toast({
@@ -2964,8 +2839,6 @@ export default function EnhancedProductForm({
                     setActiveTab('basic');
                   } else if (errors.packaging) {
                     setActiveTab('packaging');
-                  } else if (errors.lcaData) {
-                    setActiveTab('lcadata');
                   }
                 }
                 
