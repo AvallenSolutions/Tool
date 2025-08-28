@@ -224,7 +224,7 @@ export class WasteIntensityCalculationService {
     const wasteToIncineration = parseFloat(facility.wasteToIncinerationKgPerYear?.toString() || '0');
     const wasteToEnergyRecovery = parseFloat(facility.wasteToEnergyRecoveryKgPerYear?.toString() || '0');
     
-    const totalFacilityProductionVolumePerYear = parseFloat(facility.annualCapacityVolume?.toString() || '0');
+    // This line is now redundant - production volume comes from monthly aggregation above
     
     if (totalFacilityProductionVolumePerYear === 0) {
       throw new Error('Facility annual production volume cannot be zero for waste footprint calculation');

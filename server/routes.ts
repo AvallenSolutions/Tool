@@ -2111,21 +2111,22 @@ Be precise and quote actual text from the content, not generic terms.`;
         for (const facility of facilities) {
           // Calculate per-unit facility impacts based on annual production volume
           
-          // Energy consumption -> CO2e
+          // LEGACY: Energy consumption calculations (now replaced by monthly data aggregation)
+          // TODO: Replace with MonthlyDataAggregationService for consistent data sourcing
           if (facility.totalElectricityKwhPerYear) {
             const electricityKwh = parseFloat(facility.totalElectricityKwhPerYear);
             const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
             const gridElectricity = electricityKwh * (1 - renewablePercent);
             const co2eFromElectricity = (gridElectricity * 0.233) / productionVolume; // UK grid factor 2024: 233g CO2e/kWh
             facilityImpacts.co2e += co2eFromElectricity;
-            console.log(`⚡ Facility electricity: ${electricityKwh}kWh/year (${renewablePercent*100}% renewable) = ${co2eFromElectricity.toFixed(3)}kg CO2e per unit`);
+            console.log(`⚡ LEGACY: Facility electricity: ${electricityKwh}kWh/year (${renewablePercent*100}% renewable) = ${co2eFromElectricity.toFixed(3)}kg CO2e per unit`);
           }
           
           if (facility.totalGasM3PerYear) {
             const gasM3 = parseFloat(facility.totalGasM3PerYear);
             const co2eFromGas = (gasM3 * 1.8514) / productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
             facilityImpacts.co2e += co2eFromGas;
-            console.log(`🔥 Facility gas: ${gasM3}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
+            console.log(`🔥 LEGACY: Facility gas: ${gasM3}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
           }
           
           // Water consumption
@@ -4370,12 +4371,12 @@ Be precise and quote actual text from the content, not generic terms.`;
     
     // For LCA calculations, we only need basic energy and water data
     const lcaFields = [
-      'totalElectricityKwhPerYear', 'totalProcessWaterLitersPerYear'
+      // Note: Energy and water data now sourced from monthly data collection
     ];
     
     // Optional fields that enhance accuracy but aren't required
     const optionalFields = [
-      'totalGasM3PerYear', 'renewableEnergyPercent', 'totalCleaningWaterLitersPerYear', 
+      // Note: Gas and water data now sourced from monthly data collection 
       'totalCoolingWaterLitersPerYear', 'annualCapacityVolume'
     ];
     
@@ -9657,7 +9658,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         
         // Add missing essential fields to the list
         const essentialFields = ['facilityName', 'facilityType', 'location', 'annualCapacityVolume'];
-        const lcaFields = ['totalElectricityKwhPerYear', 'totalGasM3PerYear', 'totalProcessWaterLitersPerYear'];
+        // Note: LCA calculations now use monthly aggregated data instead of annual facility fields
         
         [...essentialFields, ...lcaFields].forEach(field => {
           const value = (facility as any)[field];
