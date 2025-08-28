@@ -1,17 +1,15 @@
 import { db } from '../db';
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
 import { monthlyFacilityData, productVersions, kpiSnapshots } from '@shared/schema';
-import { KPICalculationService } from './kpiService';
+import { enhancedKpiService } from './kpiService';
 import { TimeSeriesEngine } from './TimeSeriesEngine';
 import { KPISnapshotService } from './KPISnapshotService';
 
 export class DataMigrationService {
-  private kpiCalculationService: KPICalculationService;
   private timeSeriesEngine: TimeSeriesEngine;
   private kpiSnapshotService: KPISnapshotService;
 
   constructor() {
-    this.kpiCalculationService = new KPICalculationService();
     this.timeSeriesEngine = new TimeSeriesEngine();
     this.kpiSnapshotService = new KPISnapshotService();
   }
@@ -229,16 +227,14 @@ export class DataMigrationService {
           const snapshotData = {
             companyId,
             kpiDefinitionId,
-            snapshotDate,
+            snapshotDate, // This is already a string in YYYY-MM-DD format
             value: kpiValue.toString(),
             metadata: {
               calculationMethod: 'historical_backfill',
               dataSource: 'facility_data_estimation',
               facilityDataMonth: snapshotDate,
-              notes: 'Generated during Phase 4 migration with estimated facility data',
-              migrationDate: new Date().toISOString()
-            },
-            createdAt: new Date().toISOString()
+              notes: 'Generated during Phase 4 migration with estimated facility data'
+            }
           };
 
           await db.insert(kpiSnapshots).values(snapshotData);
@@ -274,8 +270,9 @@ export class DataMigrationService {
       .limit(1);
 
     if (facilityData.length === 0) {
-      console.warn(`⚠️ No facility data found for ${month}, using current calculation`);
-      return await this.kpiCalculationService.calculateBaselineKpiValue(kpiDefinitionId, companyId);
+      console.warn(`⚠️ No facility data found for ${month}, using baseline estimation`);
+      // Use a simple baseline estimation instead of complex service call
+      return this.getEstimatedBaselineValue(kpiDefinitionId);
     }
 
     const data = facilityData[0];
@@ -298,9 +295,9 @@ export class DataMigrationService {
         return this.calculateRenewableEnergyUsage(data);
       
       default:
-        // Fallback to current calculation with slight variation
-        const currentValue = await this.kpiCalculationService.calculateBaselineKpiValue(kpiDefinitionId, companyId);
-        return currentValue * (0.9 + Math.random() * 0.2); // ±10% variation
+        // Fallback to estimated baseline with slight variation
+        const baselineValue = this.getEstimatedBaselineValue(kpiDefinitionId);
+        return baselineValue * (0.9 + Math.random() * 0.2); // ±10% variation
     }
   }
 
@@ -335,6 +332,21 @@ export class DataMigrationService {
     const totalElectricity = parseFloat(data.electricityKwh || '0');
     // Assume 25% renewable energy (can be updated with real data)
     return totalElectricity * 0.25;
+  }
+
+  /**
+   * Get estimated baseline values for KPIs when no historical data exists
+   */
+  private getEstimatedBaselineValue(kpiDefinitionId: string): number {
+    const estimatedBaselines: Record<string, number> = {
+      '170a5cca-9363-4a0a-88ec-ff1b046fe2d7': 1.8, // Carbon Intensity per Bottle (kg CO₂e/bottle)
+      'f934598b-5367-4024-8c82-3ed92f48b7da': 2.5, // Total Carbon Emissions (tonnes CO₂e)
+      '2bf9535d-c36a-4010-819e-61c0d8f1c555': 8.5, // Water Efficiency (L/bottle)
+      '91bc4cba-d22a-40c8-92f0-a17876c2dc35': 0.05, // Waste Reduction (%)
+      '0e0edb33-634a-4c27-8c4c-5ca856c255cb': 25, // Renewable Energy Usage (%)
+    };
+    
+    return estimatedBaselines[kpiDefinitionId] || 1.0;
   }
 
   // Utility methods
