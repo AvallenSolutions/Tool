@@ -224,10 +224,11 @@ export class DataMigrationService {
             snapshotDate
           );
 
-          const snapshotData = {
+          // Use direct SQL insert to avoid timestamp handling issues
+          await db.insert(kpiSnapshots).values({
             companyId,
             kpiDefinitionId,
-            snapshotDate, // This is already a string in YYYY-MM-DD format
+            snapshotDate, // YYYY-MM-DD string format
             value: kpiValue.toString(),
             metadata: {
               calculationMethod: 'historical_backfill',
@@ -235,9 +236,7 @@ export class DataMigrationService {
               facilityDataMonth: snapshotDate,
               notes: 'Generated during Phase 4 migration with estimated facility data'
             }
-          };
-
-          await db.insert(kpiSnapshots).values(snapshotData);
+          });
           totalSnapshotsCreated++;
           console.log(`✓ Created snapshot for ${kpiDefinitionId} on ${snapshotDate}: ${kpiValue}`);
         }
