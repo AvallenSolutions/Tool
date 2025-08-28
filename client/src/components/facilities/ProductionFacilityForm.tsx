@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info, Loader2, Calendar, ArrowRight, BarChart3 } from "lucide-react";
+import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info, Loader2, Calendar, ArrowRight, BarChart3, Factory } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

@@ -19,6 +19,15 @@ interface Product {
 }
 
 export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
+  // Always call hooks - use a placeholder array if products are not available
+  const productList = products && Array.isArray(products) ? products : [];
+  
+  // Get LCA data for all products
+  const lcaQueries = productList.map(product => 
+    useRefinedLCA(product.id)
+  );
+  
+  // Return early metrics if no products
   if (!products || !Array.isArray(products)) {
     return {
       totalCO2e: 0,
@@ -31,16 +40,12 @@ export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
       error: false
     };
   }
-  // Get LCA data for all products
-  const lcaQueries = products.map(product => 
-    useRefinedLCA(product.id)
-  );
 
   const isLoading = lcaQueries.some(query => query.isLoading);
   const error = lcaQueries.some(query => !!query.error);
 
   // Calculate totals
-  const metrics = products.reduce((acc, product, index) => {
+  const metrics = productList.reduce((acc, product, index) => {
     const lcaData = lcaQueries[index].data;
     const volume = parseFloat(product.annualProductionVolume?.toString() || '0') || 0;
     
@@ -67,7 +72,7 @@ export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
 
   return {
     ...metrics,
-    productCount: products.length,
+    productCount: productList.length,
     isLoading,
     error
   };

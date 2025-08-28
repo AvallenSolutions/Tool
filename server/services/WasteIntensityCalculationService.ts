@@ -224,10 +224,9 @@ export class WasteIntensityCalculationService {
     const wasteToIncineration = parseFloat(facility.wasteToIncinerationKgPerYear?.toString() || '0');
     const wasteToEnergyRecovery = parseFloat(facility.wasteToEnergyRecoveryKgPerYear?.toString() || '0');
     
-    // This line is now redundant - production volume comes from monthly aggregation above
-    
-    if (totalFacilityProductionVolumePerYear === 0) {
-      throw new Error('Facility annual production volume cannot be zero for waste footprint calculation');
+    // Use production volume from monthly aggregation
+    if (annualEquivalents.annualCapacityVolume === 0) {
+      throw new Error('No monthly production data found for waste footprint calculation');
     }
 
     // Calculate carbon emissions by disposal route (kg CO2e per year)
