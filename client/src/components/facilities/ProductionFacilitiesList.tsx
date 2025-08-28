@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, Edit, Trash2, Zap, Droplets, Leaf, MapPin, Factory, Plus, AlertCircle, CheckCircle } from "lucide-react";
+import { Building2, Edit, Trash2, Zap, Droplets, Leaf, MapPin, Factory, Plus, AlertCircle, CheckCircle, Calendar, BarChart3 } from "lucide-react";
 import ProductionFacilityForm from "./ProductionFacilityForm";
 
 interface ProductionFacility {
@@ -187,41 +187,18 @@ export default function ProductionFacilitiesList() {
                 </div>
 
                 {/* Environmental Metrics Preview */}
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Zap className="w-3 h-3 text-yellow-600" />
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-green-600" />
+                      <div>
+                        <div className="text-xs font-medium text-green-900">Monthly Data Collection</div>
+                        <div className="text-xs text-green-700">Track operational data monthly</div>
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">Energy</div>
-                    <div className="text-xs font-medium">
-                      {facility.totalElectricityKwhPerYear ? 
-                        `${parseFloat(facility.totalElectricityKwhPerYear).toLocaleString()} kWh/yr` : 
-                        'Not set'
-                      }
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Droplets className="w-3 h-3 text-blue-600" />
-                    </div>
-                    <div className="text-xs text-gray-500">Water</div>
-                    <div className="text-xs font-medium">
-                      {facility.totalProcessWaterLitersPerYear ? 
-                        `${parseFloat(facility.totalProcessWaterLitersPerYear).toLocaleString()} L/yr` : 
-                        'Not set'
-                      }
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Leaf className="w-3 h-3 text-green-600" />
-                    </div>
-                    <div className="text-xs text-gray-500">Renewable</div>
-                    <div className="text-xs font-medium">
-                      {facility.renewableEnergyPercent ? 
-                        `${facility.renewableEnergyPercent}%` : 
-                        'Not set'
-                      }
+                    <div className="flex items-center gap-1">
+                      <BarChart3 className="w-3 h-3 text-blue-600" />
+                      <span className="text-xs font-medium text-blue-900">Active</span>
                     </div>
                   </div>
                 </div>

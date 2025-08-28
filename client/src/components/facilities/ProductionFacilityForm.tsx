@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info, Loader2 } from "lucide-react";
+import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info, Loader2, Calendar, ArrowRight, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -300,26 +300,18 @@ export default function ProductionFacilityForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="basic" className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
                 Basic Info
               </TabsTrigger>
-              <TabsTrigger value="energy" className="flex items-center gap-2">
-                <Zap className="w-4 h-4" />
-                Energy
-              </TabsTrigger>
-              <TabsTrigger value="water" className="flex items-center gap-2">
-                <Droplets className="w-4 h-4" />
-                Water
-              </TabsTrigger>
-              <TabsTrigger value="waste" className="flex items-center gap-2">
-                <Trash2 className="w-4 h-4" />
-                Waste
-              </TabsTrigger>
               <TabsTrigger value="operations" className="flex items-center gap-2">
                 <Settings className="w-4 h-4" />
                 Operations
+              </TabsTrigger>
+              <TabsTrigger value="monthly-setup" className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Data Tracking
               </TabsTrigger>
             </TabsList>
 
@@ -489,476 +481,122 @@ export default function ProductionFacilityForm({
               </Card>
             </TabsContent>
 
-            {/* Energy Tab */}
-            <TabsContent value="energy" className="space-y-6">
+            {/* Monthly Data Tracking Setup Tab */}
+            <TabsContent value="monthly-setup" className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
-                    Energy Consumption (Total Facility)
+                    <Calendar className="w-5 h-5" />
+                    Monthly Data Tracking
                   </CardTitle>
                   <CardDescription>
-                    Total annual energy consumption for this facility
+                    Track your facility's operational data on a monthly basis for accurate reporting
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <Info className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-blue-900 mb-1">Total Facility Consumption</h4>
-                        <p className="text-sm text-blue-800">
-                          Enter the total annual energy consumption for this entire facility. 
-                          The system will automatically calculate per-unit values by dividing by your annual production capacity.
+                  {/* Primary Information */}
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-green-100 rounded-lg">
+                        <BarChart3 className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-green-900 mb-2">Monthly Data Collection System</h3>
+                        <p className="text-sm text-green-800 mb-4">
+                          Our platform uses monthly data collection for accurate, real-time sustainability tracking. 
+                          Instead of estimating annual totals, you'll track your actual operational data each month for precise calculations.
                         </p>
+                        <div className="space-y-2 text-sm text-green-700">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span>More accurate data from utility bills</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span>Real-time dashboard updates</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span>Track seasonal variations</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="totalElectricityKwhPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Total Electricity (kWh/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 125000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Total annual electricity consumption from utility bills
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {/* Navigation to Monthly Updates */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="text-center space-y-4">
+                      <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Calendar className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2">Ready to Start Monthly Tracking?</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Once you save this facility configuration, you can begin entering monthly operational data 
+                          including electricity, gas, water consumption, and production volumes.
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center justify-center gap-2 text-sm text-gray-700">
+                          <span>Navigate to:</span>
+                          <span className="font-medium text-blue-600">Operations → Facility Updates</span>
+                          <ArrowRight className="w-4 h-4 text-gray-500" />
+                          <span className="font-medium">Monthly Data Entry</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* What Data You'll Track */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Zap className="w-5 h-5 text-blue-600" />
+                        <h4 className="font-medium text-blue-900">Energy Consumption</h4>
+                      </div>
+                      <ul className="text-sm text-blue-800 space-y-1">
+                        <li>• Electricity (kWh)</li>
+                        <li>• Natural Gas (m³)</li>
+                        <li>• Other fuel sources</li>
+                      </ul>
+                    </div>
                     
-                    <FormField
-                      control={form.control}
-                      name="totalGasM3PerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Total Natural Gas (m³/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 25000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Total annual gas consumption from utility bills
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="totalSteamKgPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Total Steam (kg/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 50000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Total annual steam consumption
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="totalFuelLitersPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Total Fuel (liters/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 15000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Total annual fuel consumption (diesel, heating oil, etc.)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="renewableEnergyPercent"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Renewable Energy %</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              min="0"
-                              max="100"
-                              placeholder="0"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Percentage of energy from renewable sources
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="energySource"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Primary Energy Source</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select energy source" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {energySourceOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Water Tab */}
-            <TabsContent value="water" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Droplets className="w-5 h-5" />
-                    Water Consumption (Total Facility)
-                  </CardTitle>
-                  <CardDescription>
-                    Total annual water consumption for this facility
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="totalProcessWaterLitersPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Process Water (Liters/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 500000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Water used directly in production processes
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Droplets className="w-5 h-5 text-cyan-600" />
+                        <h4 className="font-medium text-cyan-900">Water Usage</h4>
+                      </div>
+                      <ul className="text-sm text-cyan-800 space-y-1">
+                        <li>• Total water consumption (m³)</li>
+                        <li>• Process and cleaning water</li>
+                        <li>• Utility bill verification</li>
+                      </ul>
+                    </div>
                     
-                    <FormField
-                      control={form.control}
-                      name="totalCleaningWaterLitersPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cleaning Water (Liters/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 200000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Water used for equipment and facility cleaning
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="totalCoolingWaterLitersPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cooling Water (Liters/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 300000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Water used for cooling systems and heat exchangers
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="waterSource"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Water Source</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select water source" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {waterSourceOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="waterRecyclingPercent"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Water Recycling %</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              min="0"
-                              max="100"
-                              placeholder="0"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Percentage of water recycled/reused
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <FormField
-                      control={form.control}
-                      name="wasteWaterTreatment"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>
-                              Wastewater Treatment
-                            </FormLabel>
-                            <FormDescription>
-                              Facility has on-site wastewater treatment
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Waste Tab */}
-            <TabsContent value="waste" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trash2 className="w-5 h-5" />
-                    Waste Generation (Total Facility)
-                  </CardTitle>
-                  <CardDescription>
-                    Total annual waste generation for this facility
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="totalOrganicWasteKgPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Organic Waste (kg/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 25000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Total annual organic waste (spent grains, pomace, etc.)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Factory className="w-5 h-5 text-purple-600" />
+                        <h4 className="font-medium text-purple-900">Production Volume</h4>
+                      </div>
+                      <ul className="text-sm text-purple-800 space-y-1">
+                        <li>• Monthly production output</li>
+                        <li>• Per-unit calculations</li>
+                        <li>• Seasonal tracking</li>
+                      </ul>
+                    </div>
                     
-                    <FormField
-                      control={form.control}
-                      name="totalPackagingWasteKgPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Packaging Waste (kg/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 15000"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Total annual packaging waste (cardboard, plastic, etc.)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="totalHazardousWasteKgPerYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Hazardous Waste (kg/year)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="1"
-                              placeholder="e.g., 500"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Total annual hazardous waste (chemicals, solvents, etc.)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="wasteRecycledPercent"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Waste Recycled %</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              min="0"
-                              max="100"
-                              placeholder="0"
-                              {...field}
-                              onChange={e => field.onChange(e.target.value || "")}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Percentage of waste recycled/diverted from landfill
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="wasteDisposalMethod"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Primary Disposal Method</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select disposal method" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {wasteDisposalOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Trash2 className="w-5 h-5 text-green-600" />
+                        <h4 className="font-medium text-green-900">Waste Management</h4>
+                      </div>
+                      <ul className="text-sm text-green-800 space-y-1">
+                        <li>• Waste generation tracking</li>
+                        <li>• Disposal method verification</li>
+                        <li>• Recycling percentages</li>
+                      </ul>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
