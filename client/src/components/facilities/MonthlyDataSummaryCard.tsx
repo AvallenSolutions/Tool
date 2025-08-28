@@ -161,7 +161,7 @@ export default function MonthlyDataSummaryCard() {
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <Zap className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                 <div className="text-lg font-bold text-blue-900">
-                  {(summary.aggregated.totalElectricityKwh / 1000).toFixed(1)}k
+                  {(parseFloat(summary.aggregated.totalElectricityKwh) / 1000).toFixed(1)}k
                 </div>
                 <div className="text-xs text-blue-700">kWh/year</div>
               </div>
@@ -169,7 +169,7 @@ export default function MonthlyDataSummaryCard() {
               <div className="text-center p-3 bg-orange-50 rounded-lg">
                 <Database className="w-5 h-5 text-orange-600 mx-auto mb-1" />
                 <div className="text-lg font-bold text-orange-900">
-                  {summary.aggregated.totalNaturalGasM3.toFixed(0)}
+                  {parseFloat(summary.aggregated.totalNaturalGasM3).toFixed(0)}
                 </div>
                 <div className="text-xs text-orange-700">m³ Gas/year</div>
               </div>
@@ -177,7 +177,7 @@ export default function MonthlyDataSummaryCard() {
               <div className="text-center p-3 bg-cyan-50 rounded-lg">
                 <Droplets className="w-5 h-5 text-cyan-600 mx-auto mb-1" />
                 <div className="text-lg font-bold text-cyan-900">
-                  {(summary.aggregated.totalWaterM3 / 1000).toFixed(1)}k
+                  {(parseFloat(summary.aggregated.totalWaterM3) / 1000).toFixed(1)}k
                 </div>
                 <div className="text-xs text-cyan-700">m³ Water/year</div>
               </div>
@@ -185,7 +185,7 @@ export default function MonthlyDataSummaryCard() {
               <div className="text-center p-3 bg-green-50 rounded-lg">
                 <Factory className="w-5 h-5 text-green-600 mx-auto mb-1" />
                 <div className="text-lg font-bold text-green-900">
-                  {(summary.aggregated.totalProductionVolume / 1000).toFixed(1)}k
+                  {(parseFloat(summary.aggregated.totalProductionVolume) / 1000).toFixed(1)}k
                 </div>
                 <div className="text-xs text-green-700">L Production/year</div>
               </div>
