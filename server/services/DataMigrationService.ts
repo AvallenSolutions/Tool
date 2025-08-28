@@ -275,7 +275,7 @@ export class DataMigrationService {
 
     if (facilityData.length === 0) {
       console.warn(`⚠️ No facility data found for ${month}, using current calculation`);
-      return await this.kpiCalculationService.calculateKPI(companyId, kpiDefinitionId);
+      return await this.kpiCalculationService.calculateBaselineKpiValue(kpiDefinitionId, companyId);
     }
 
     const data = facilityData[0];
@@ -299,7 +299,7 @@ export class DataMigrationService {
       
       default:
         // Fallback to current calculation with slight variation
-        const currentValue = await this.kpiCalculationService.calculateKPI(companyId, kpiDefinitionId);
+        const currentValue = await this.kpiCalculationService.calculateBaselineKpiValue(kpiDefinitionId, companyId);
         return currentValue * (0.9 + Math.random() * 0.2); // ±10% variation
     }
   }

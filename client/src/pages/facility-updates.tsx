@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, TrendingUp, Database, AlertCircle, BarChart3 } from 'lucide-react';
+import { Calendar, TrendingUp, Database, AlertCircle, BarChart3, TestTube } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -76,6 +76,31 @@ interface MigrationResult {
     endDate: string;
     dataQuality: string;
   };
+}
+
+interface ValidationResult {
+  component: string;
+  test: string;
+  status: 'pass' | 'fail' | 'warning';
+  message: string;
+  data?: any;
+}
+
+interface SystemHealthCheck {
+  overall: 'healthy' | 'degraded' | 'critical';
+  validationResults: ValidationResult[];
+  performance: {
+    responseTime: number;
+    dataQuality: number;
+    systemLoad: 'low' | 'medium' | 'high';
+  };
+  recommendations: string[];
+}
+
+interface QuickHealthCheck {
+  status: 'healthy' | 'degraded' | 'critical';
+  timestamp: string;
+  summary: string;
 }
 
 export default function FacilityUpdates() {
@@ -200,6 +225,38 @@ export default function FacilityUpdates() {
     },
   });
 
+  // Phase 5 Testing & Validation mutations and queries
+  const executeValidation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/time-series/validation/execute/1');
+      return response.json();
+    },
+    onSuccess: (data: { data: SystemHealthCheck }) => {
+      toast({
+        title: "Validation Complete",
+        description: `System health: ${data.data.overall.toUpperCase()}. Data quality: ${data.data.performance.dataQuality}%`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-series/validation/health/1'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Validation Failed",
+        description: "Failed to execute system validation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Quick health check query
+  const { data: healthCheck, isLoading: healthCheckLoading } = useQuery({
+    queryKey: ['/api/time-series/validation/health/1'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/time-series/validation/health/1');
+      return response.json();
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
   // Load existing data when month changes
   useEffect(() => {
     const existingData = facilityData.find((data: MonthlyFacilityData) => data.month === selectedMonth);
@@ -290,12 +347,13 @@ export default function FacilityUpdates() {
       </div>
 
       <Tabs defaultValue="entry" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="entry" data-testid="tab-data-entry">Data Entry</TabsTrigger>
           <TabsTrigger value="history" data-testid="tab-history">Historical Data</TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-analytics">Analytics</TabsTrigger>
           <TabsTrigger value="trends" data-testid="tab-trends">Trends</TabsTrigger>
           <TabsTrigger value="migration" data-testid="tab-migration">Migration</TabsTrigger>
+          <TabsTrigger value="testing" data-testid="tab-testing">Testing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="entry" className="space-y-6">
@@ -770,6 +828,214 @@ export default function FacilityUpdates() {
                         <div className="font-medium">KPI Snapshot Generation</div>
                         <div className="text-muted-foreground">Generates historical KPI values for 5 key metrics across 12 months, enabling trend analysis and performance tracking.</div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="testing" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TestTube className="w-5 h-5" />
+                Phase 5: Testing & Validation Dashboard
+              </CardTitle>
+              <CardDescription>
+                Comprehensive system health monitoring and validation testing
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Quick Health Status */}
+                <div className="border rounded-lg p-4 space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    System Health Status
+                    {healthCheckLoading ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full" />
+                    ) : healthCheck ? (
+                      <Badge 
+                        variant={
+                          healthCheck.status === 'healthy' ? 'default' : 
+                          healthCheck.status === 'degraded' ? 'secondary' : 'destructive'
+                        }
+                        className={
+                          healthCheck.status === 'healthy' ? 'bg-green-600' :
+                          healthCheck.status === 'degraded' ? 'bg-yellow-600' : 'bg-red-600'
+                        }
+                      >
+                        {healthCheck.status.toUpperCase()}
+                      </Badge>
+                    ) : null}
+                  </h3>
+                  
+                  {healthCheck && (
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">
+                        Last checked: {new Date(healthCheck.timestamp).toLocaleString()}
+                      </div>
+                      <div className="text-sm">{healthCheck.summary}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Validation Actions */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">System Validation</h3>
+                  
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Comprehensive validation will test:
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Data integrity and consistency across all time-series tables</li>
+                        <li>Time-series functionality including KPI calculations and historical retrieval</li>
+                        <li>Performance benchmarks for database queries and API responses</li>
+                        <li>UI integration and endpoint availability</li>
+                        <li>Database consistency and referential integrity</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={() => executeValidation.mutate()}
+                      disabled={executeValidation.isPending}
+                      className="flex-1"
+                      data-testid="button-execute-validation"
+                    >
+                      {executeValidation.isPending ? (
+                        <>
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                          Running Validation...
+                        </>
+                      ) : (
+                        <>
+                          <TestTube className="w-4 h-4 mr-2" />
+                          Run Comprehensive Validation
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/time-series/validation/health/1'] })}
+                      variant="outline"
+                      data-testid="button-refresh-health"
+                    >
+                      Refresh Health
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Validation Results Display */}
+                {executeValidation.data?.data && (
+                  <div className="border rounded-lg p-4 space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      Latest Validation Results
+                      <Badge 
+                        variant={
+                          executeValidation.data.data.overall === 'healthy' ? 'default' : 
+                          executeValidation.data.data.overall === 'degraded' ? 'secondary' : 'destructive'
+                        }
+                        className={
+                          executeValidation.data.data.overall === 'healthy' ? 'bg-green-600' :
+                          executeValidation.data.data.overall === 'degraded' ? 'bg-yellow-600' : 'bg-red-600'
+                        }
+                      >
+                        {executeValidation.data.data.overall.toUpperCase()}
+                      </Badge>
+                    </h3>
+                    
+                    {/* Performance Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{executeValidation.data.data.performance.responseTime}ms</div>
+                        <div className="text-sm text-blue-600">Response Time</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{executeValidation.data.data.performance.dataQuality}%</div>
+                        <div className="text-sm text-green-600">Data Quality</div>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">{executeValidation.data.data.performance.systemLoad}</div>
+                        <div className="text-sm text-purple-600">System Load</div>
+                      </div>
+                    </div>
+
+                    {/* Test Results Summary */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Test Results by Component</h4>
+                      <div className="space-y-2">
+                        {executeValidation.data.data.validationResults
+                          .reduce((acc: any[], result) => {
+                            const existing = acc.find(item => item.component === result.component);
+                            if (existing) {
+                              existing.tests.push(result);
+                            } else {
+                              acc.push({ component: result.component, tests: [result] });
+                            }
+                            return acc;
+                          }, [])
+                          .map((componentGroup: any) => {
+                            const passCount = componentGroup.tests.filter((t: ValidationResult) => t.status === 'pass').length;
+                            const failCount = componentGroup.tests.filter((t: ValidationResult) => t.status === 'fail').length;
+                            const warnCount = componentGroup.tests.filter((t: ValidationResult) => t.status === 'warning').length;
+                            
+                            return (
+                              <div key={componentGroup.component} className="flex items-center justify-between p-3 border rounded">
+                                <div className="font-medium">{componentGroup.component}</div>
+                                <div className="flex gap-2">
+                                  <Badge variant="outline" className="bg-green-50 text-green-700">{passCount} Pass</Badge>
+                                  {warnCount > 0 && <Badge variant="outline" className="bg-yellow-50 text-yellow-700">{warnCount} Warning</Badge>}
+                                  {failCount > 0 && <Badge variant="outline" className="bg-red-50 text-red-700">{failCount} Fail</Badge>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+
+                    {/* Recommendations */}
+                    {executeValidation.data.data.recommendations.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Recommendations</h4>
+                        <div className="space-y-1 text-sm">
+                          {executeValidation.data.data.recommendations.map((rec, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                              <div className="w-1 h-1 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
+                              <div>{rec}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Testing Information */}
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <h4 className="font-medium mb-3">Validation Test Coverage</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <div className="font-medium text-blue-600">Data Integrity Tests</div>
+                      <ul className="space-y-1 text-muted-foreground">
+                        <li>• Facility data completeness</li>
+                        <li>• Product version tracking</li>
+                        <li>• KPI snapshot availability</li>
+                        <li>• Date consistency validation</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="font-medium text-green-600">Functional Tests</div>
+                      <ul className="space-y-1 text-muted-foreground">
+                        <li>• Time-series data retrieval</li>
+                        <li>• KPI calculation accuracy</li>
+                        <li>• Performance benchmarks</li>
+                        <li>• Database consistency</li>
+                      </ul>
                     </div>
                   </div>
                 </div>

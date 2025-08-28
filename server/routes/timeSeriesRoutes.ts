@@ -15,11 +15,15 @@ import {
 import { timeSeriesEngine } from "../services/TimeSeriesEngine";
 import { kpiSnapshotService } from "../services/KPISnapshotService";
 import { DataMigrationService } from "../services/DataMigrationService";
+import { TestingValidationService } from "../services/TestingValidationService";
 
 const router = Router();
 
 // Initialize Data Migration Service
 const dataMigrationService = new DataMigrationService();
+
+// Initialize Testing & Validation Service
+const testingValidationService = new TestingValidationService();
 
 // Monthly Facility Data Routes
 
@@ -414,6 +418,49 @@ router.get("/migration/status/:companyId", async (req, res) => {
   } catch (error) {
     console.error("Error checking migration status:", error);
     res.status(500).json({ error: "Failed to check migration status" });
+  }
+});
+
+// Testing & Validation Routes - Phase 5
+
+// Execute comprehensive system validation
+router.post("/validation/execute/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    
+    console.log(`🧪 Starting Phase 5 validation for company ${companyId}`);
+    
+    const validationResult = await testingValidationService.executeComprehensiveValidation(companyId);
+    
+    res.json({
+      success: true,
+      message: `Phase 5 validation completed for company ${companyId}`,
+      data: validationResult
+    });
+  } catch (error) {
+    console.error("Error executing validation:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to execute validation",
+      details: error.message 
+    });
+  }
+});
+
+// Quick health check endpoint
+router.get("/validation/health/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    
+    const healthCheck = await testingValidationService.quickHealthCheck(companyId);
+    
+    res.json(healthCheck);
+  } catch (error) {
+    console.error("Error checking health:", error);
+    res.status(500).json({ 
+      error: "Failed to check system health",
+      details: error.message 
+    });
   }
 });
 
