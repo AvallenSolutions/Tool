@@ -55,9 +55,9 @@ export default function Sidebar() {
   ];
 
   const kpiGoalsSubItems = [
+    { path: "/app/facility-updates", label: "Monthly Updates", icon: Activity },
     { path: "/app/kpis", label: "KPIs", icon: BarChart3 },
     { path: "/app/initiatives", label: "SMART Goals", icon: Flag },
-    { path: "/app/facility-updates", label: "Facility Updates", icon: Activity },
   ];
 
   const adminSubItems = [
@@ -200,19 +200,19 @@ export default function Sidebar() {
             </Button>
           </li>
 
-          {/* KPI's & Goals Section with Sub-items */}
+          {/* Operations Section with Sub-items */}
           <li>
             <Button
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
-                location.startsWith('/app/kpis') || location.startsWith('/app/initiatives') || location.startsWith('/app/facility-updates')
+                location.startsWith('/app/facility-updates') || location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')
                   ? "bg-white text-[#209d50] hover:bg-gray-100"
                   : "text-white hover:bg-green-600"
               }`}
               onClick={() => setKpiGoalsExpanded(!kpiGoalsExpanded)}
             >
-              <Target className="w-5 h-5 mr-3" />
-              <span className="font-body font-medium flex-1 text-left">KPI's & Goals</span>
+              <Factory className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium flex-1 text-left">Operations</span>
               {kpiGoalsExpanded ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (

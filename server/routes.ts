@@ -40,6 +40,7 @@ import { setupOnboardingRoutes } from "./routes/onboarding";
 import { WebSocketService } from "./services/websocketService";
 import { supplierIntegrityService } from "./services/SupplierIntegrityService";
 import { WasteIntensityCalculationService } from "./services/WasteIntensityCalculationService";
+import { MonthlyDataAggregationService, monthlyDataAggregationService } from "./services/MonthlyDataAggregationService";
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities, verifiedSuppliers } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
@@ -103,6 +104,42 @@ export function registerRoutes(app: Express): Server {
 
   // Time-series routes for monthly facility data and KPI snapshots
   app.use('/api/time-series', timeSeriesRouter);
+
+  // Monthly data aggregation and summary endpoint
+  app.get('/api/monthly-data-summary', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || 'dev-user';
+      
+      // Get company ID for the authenticated user
+      const [userRecord] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!userRecord) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+
+      const [company] = await db.select().from(companies).where(eq(companies.ownerId, userId)).limit(1);
+      if (!company) {
+        return res.status(404).json({ success: false, error: 'Company not found' });
+      }
+
+      const summary = await monthlyDataAggregationService.getMonthlyDataSummary(company.id);
+      
+      console.log(`📊 Monthly data summary for company ${company.id}:`, {
+        hasData: summary.hasMonthlyData,
+        monthCount: summary.aggregated?.monthCount || 0,
+        quality: summary.aggregated?.dataQuality || 'none',
+        recommendation: summary.recommendation
+      });
+
+      res.json(summary);
+    } catch (error) {
+      console.error('Error getting monthly data summary:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get monthly data summary',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
   // Enhanced export for guided reports - supports multiple formats
   app.post('/api/reports/guided/:reportId/export', isAuthenticated, async (req: any, res: any) => {

@@ -21,6 +21,7 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import CompanyStorySection from "@/components/company/CompanyStorySection";
 import ProductionFacilitiesList from "@/components/facilities/ProductionFacilitiesList";
+import MonthlyDataSummaryCard from "@/components/facilities/MonthlyDataSummaryCard";
 
 // Sustainability data constants extracted from Settings
 const certificationOptions = [
@@ -733,20 +734,25 @@ export default function Company() {
             </TabsContent>
 
             <TabsContent value="operations" className="space-y-6">
-              {/* Production Facilities Management */}
-              <Card className="border-l-4 border-l-green-500">
-                <CardHeader className="bg-gradient-to-r from-green-50 to-gray-50">
+              {/* Monthly Data Collection - Primary Method */}
+              <MonthlyDataSummaryCard />
+
+              {/* Production Facilities Management - Legacy/Reference */}
+              <Card className="border-l-4 border-l-blue-500">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-gray-50">
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <div className="p-2 bg-green-100 rounded-lg mr-3">
-                        <Building2 className="w-5 h-5 text-green-600" />
+                      <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                        <Building2 className="w-5 h-5 text-blue-600" />
                       </div>
-                      Production Facilities Management
+                      Production Facilities (Reference)
                     </div>
+                    <Badge variant="secondary" className="text-xs">
+                      Legacy View
+                    </Badge>
                   </CardTitle>
                   <CardDescription>
-                    Create and manage your production facilities. Define detailed production metrics that will 
-                    automatically feed into product-level calculations and LCA assessments.
+                    Facility master data and configuration. For operational data, use monthly updates above for accurate calculations.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
