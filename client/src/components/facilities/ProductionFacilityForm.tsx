@@ -12,10 +12,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info, Loader2, Calendar, ArrowRight, BarChart3, Factory } from "lucide-react";
+import { Building2, Zap, Droplets, Trash2, Settings, Shield, CheckCircle, AlertCircle, Info, Loader2, Calendar, ArrowRight, BarChart3, Factory, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import MonthlyDataTab from "./MonthlyDataTab";
 
 // Production Facility Form Schema
 const productionFacilitySchema = z.object({
@@ -67,6 +68,7 @@ interface ProductionFacilityFormProps {
   existingData?: Partial<ProductionFacilityForm>;
   onComplete?: () => void;
   onCancel?: () => void;
+  defaultTab?: string;
 }
 
 const facilityTypeOptions = [
@@ -111,9 +113,10 @@ export default function ProductionFacilityForm({
   facilityId, 
   existingData, 
   onComplete, 
-  onCancel 
+  onCancel,
+  defaultTab = "basic"
 }: ProductionFacilityFormProps) {
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -300,7 +303,7 @@ export default function ProductionFacilityForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="basic" className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
                 Basic Info
@@ -308,6 +311,10 @@ export default function ProductionFacilityForm({
               <TabsTrigger value="operations" className="flex items-center gap-2">
                 <Settings className="w-4 h-4" />
                 Operations
+              </TabsTrigger>
+              <TabsTrigger value="monthly-data" className="flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Monthly Data
               </TabsTrigger>
               <TabsTrigger value="monthly-setup" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
@@ -664,6 +671,14 @@ export default function ProductionFacilityForm({
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Monthly Data Tab */}
+            <TabsContent value="monthly-data" className="space-y-6">
+              <MonthlyDataTab 
+                facilityId={facilityId} 
+                facilityName={existingData?.facilityName}
+              />
             </TabsContent>
           </Tabs>
 

@@ -48,7 +48,7 @@ import CollaborationHub from "@/pages/CollaborationHub";
 import ProductLcaPage from "@/pages/ProductLcaPage";
 import { KPIsPage } from "@/pages/kpis";
 import InitiativesPage from "@/pages/initiatives";
-import FacilityUpdates from "@/pages/facility-updates";
+// Monthly facility updates now integrated into Production Facility popup
 // Company story now integrated into Company page
 // Initiatives functionality now integrated into Report Builder and SMART Goals
 import ReportsCreate from "@/pages/reports-create";
@@ -170,7 +170,7 @@ function Router() {
       <Route path="/app/company" component={Company} />
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/kpis" component={KPIsPage} />
-      <Route path="/app/facility-updates" component={FacilityUpdates} />
+      {/* Monthly facility updates now integrated into Production Facility popup */}
       <Route path="/app/admin" component={AdminDashboardMain} />
       <Route path="/app/admin/suppliers/:id/edit" component={SupplierEdit} />
       <Route path="/app/admin/suppliers/:id" component={AdminSupplierDetail} />

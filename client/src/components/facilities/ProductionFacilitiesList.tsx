@@ -30,6 +30,7 @@ interface ProductionFacility {
 export default function ProductionFacilitiesList() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingFacility, setEditingFacility] = useState<ProductionFacility | null>(null);
+  const [monthlyDataFacility, setMonthlyDataFacility] = useState<ProductionFacility | null>(null);
 
   const { data: facilities, isLoading, refetch } = useQuery({
     queryKey: ['/api/production-facilities'],
@@ -43,6 +44,7 @@ export default function ProductionFacilitiesList() {
   const handleFormComplete = () => {
     setShowCreateForm(false);
     setEditingFacility(null);
+    setMonthlyDataFacility(null);
     refetch();
   };
 
@@ -186,21 +188,21 @@ export default function ProductionFacilitiesList() {
                   </span>
                 </div>
 
-                {/* Environmental Metrics Preview */}
+                {/* Monthly Data Collection Access */}
                 <div className="pt-2 border-t">
-                  <div className="flex items-center justify-between bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-green-600" />
-                      <div>
-                        <div className="text-xs font-medium text-green-900">Monthly Data Collection</div>
-                        <div className="text-xs text-green-700">Track operational data monthly</div>
-                      </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-green-50 to-blue-50 border-green-200 hover:from-green-100 hover:to-blue-100"
+                    onClick={() => setMonthlyDataFacility(facility)}
+                  >
+                    <Calendar className="w-4 h-4 text-green-600 mr-2" />
+                    <div className="flex-1 text-left">
+                      <div className="text-xs font-medium text-green-900">Monthly Data Entry</div>
+                      <div className="text-xs text-green-700">Track operational data</div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <BarChart3 className="w-3 h-3 text-blue-600" />
-                      <span className="text-xs font-medium text-blue-900">Active</span>
-                    </div>
-                  </div>
+                    <BarChart3 className="w-3 h-3 text-blue-600" />
+                  </Button>
                 </div>
 
                 {/* Completeness Score */}
@@ -250,6 +252,22 @@ export default function ProductionFacilitiesList() {
                         existingData={facility}
                         onComplete={handleFormComplete}
                         onCancel={() => setEditingFacility(null)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Monthly Data Popup */}
+                  <Dialog 
+                    open={monthlyDataFacility?.id === facility.id} 
+                    onOpenChange={(open) => !open && setMonthlyDataFacility(null)}
+                  >
+                    <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white border shadow">
+                      <ProductionFacilityForm
+                        facilityId={facility.id}
+                        existingData={facility}
+                        onComplete={handleFormComplete}
+                        onCancel={() => setMonthlyDataFacility(null)}
+                        defaultTab="monthly-data"
                       />
                     </DialogContent>
                   </Dialog>

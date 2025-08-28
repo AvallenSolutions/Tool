@@ -29,7 +29,7 @@ export default function Sidebar() {
 
   // Auto-expand KPI & Goals section when on any KPI/Goals-related page
   useEffect(() => {
-    if (location.startsWith('/app/kpis') || location.startsWith('/app/initiatives') || location.startsWith('/app/facility-updates')) {
+    if (location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')) {
       setKpiGoalsExpanded(true);
     }
   }, [location]);
@@ -55,7 +55,6 @@ export default function Sidebar() {
   ];
 
   const kpiGoalsSubItems = [
-    { path: "/app/facility-updates", label: "Monthly Updates", icon: Activity },
     { path: "/app/kpis", label: "KPIs", icon: BarChart3 },
     { path: "/app/initiatives", label: "SMART Goals", icon: Flag },
   ];
