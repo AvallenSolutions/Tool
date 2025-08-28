@@ -5189,17 +5189,10 @@ Be precise and quote actual text from the content, not generic terms.`;
       const { db } = await import('./db');
       const { OpenLCAService } = await import('./services/OpenLCAService');
       const { WaterFootprintService } = await import('./services/WaterFootprintService');
-      // In development mode for admin users, show products from ALL companies
-      let results;
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🎯 Admin mode: Fetching products from ALL companies`);
-        results = await db.select().from(products).orderBy(desc(products.createdAt));
-      } else {
-        // Production mode: use session-based company filtering
-        const companyId = (req.session as any)?.user?.companyId || 1;
-        console.log(`📦 Production mode: Fetching products for company ID: ${companyId}`);
-        results = await db.select().from(products).where(eq(products.companyId, companyId));
-      }
+      // For development mode, show all products from company 1 (including drafts that were just moved)
+      const companyId = process.env.NODE_ENV === 'development' ? 1 : (req.session as any)?.user?.companyId || 1;
+      console.log(`📦 Fetching products for company ID: ${companyId}`);
+      const results = await db.select().from(products).where(eq(products.companyId, companyId)).orderBy(desc(products.createdAt));
       
       // Enrich products with stored environmental footprints (for consistency)
       const enrichedProducts = await Promise.all(results.map(async (product) => {
