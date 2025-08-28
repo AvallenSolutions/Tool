@@ -5462,11 +5462,15 @@ Be precise and quote actual text from the content, not generic terms.`;
   // DELETE product endpoint
   app.delete('/api/products/:id', async (req, res) => {
     try {
-      const { products } = await import('@shared/schema');
+      const { products, productVersions } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
       const { db } = await import('./db');
       const productId = parseInt(req.params.id);
       
+      // First, delete related product versions to avoid foreign key constraint
+      await db.delete(productVersions).where(eq(productVersions.productId, productId));
+      
+      // Then delete the product
       const deletedProduct = await db.delete(products).where(eq(products.id, productId)).returning();
       
       if (deletedProduct.length === 0) {
