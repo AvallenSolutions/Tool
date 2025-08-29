@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db";
-import { eq, and, gte, lte, desc, asc } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql } from "drizzle-orm";
 import { 
   monthlyFacilityData,
   productVersions,
@@ -26,6 +26,67 @@ const dataMigrationService = new DataMigrationService();
 const testingValidationService = new TestingValidationService();
 
 // Monthly Facility Data Routes
+
+// Get aggregated monthly data by company (aggregates all facilities)
+router.get("/monthly-aggregated/:companyId", async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    const { limit = "12" } = req.query;
+    
+    // Validate companyId
+    if (isNaN(companyId)) {
+      return res.status(400).json({ error: "Invalid company ID" });
+    }
+
+    // Parse and validate limit
+    const limitValue = parseInt(limit as string);
+    const validLimit = isNaN(limitValue) ? 12 : Math.min(limitValue, 100);
+
+    // Query to get aggregated data by month for all facilities
+    const aggregatedData = await db
+      .select({
+        month: monthlyFacilityData.month,
+        totalElectricity: sql<number>`SUM(CAST(${monthlyFacilityData.electricityKwh} AS NUMERIC))`,
+        totalGas: sql<number>`SUM(CAST(${monthlyFacilityData.naturalGasM3} AS NUMERIC))`,
+        totalWater: sql<number>`SUM(CAST(${monthlyFacilityData.waterM3} AS NUMERIC))`,
+        totalProduction: sql<number>`SUM(CAST(${monthlyFacilityData.productionVolume} AS NUMERIC))`,
+        facilityCount: sql<number>`COUNT(*)`,
+        latestUpdate: sql<string>`MAX(${monthlyFacilityData.updatedAt})`
+      })
+      .from(monthlyFacilityData)
+      .where(eq(monthlyFacilityData.companyId, companyId))
+      .groupBy(monthlyFacilityData.month)
+      .orderBy(desc(monthlyFacilityData.month))
+      .limit(validLimit);
+
+    // Transform to match MonthlyFacilityData structure for frontend compatibility
+    const result = aggregatedData.map((data) => ({
+      id: `aggregated-${companyId}-${data.month}`,
+      companyId: companyId,
+      facilityId: null, // Indicates this is aggregated data
+      month: data.month,
+      electricityKwh: data.totalElectricity.toString(),
+      naturalGasM3: data.totalGas.toString(),
+      waterM3: data.totalWater.toString(),
+      productionVolume: data.totalProduction.toString(),
+      utilityBillUrl: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: data.latestUpdate,
+      // Add metadata to indicate this is aggregated from multiple facilities
+      _metadata: {
+        isAggregated: true,
+        facilityCount: data.facilityCount,
+        aggregationType: 'sum_all_facilities'
+      }
+    }));
+    
+    console.log(`📊 Aggregated monthly data for company ${companyId}: ${result.length} months, latest: ${result[0]?.month || 'none'}`);
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching aggregated monthly data:", error);
+    res.status(500).json({ error: "Failed to fetch aggregated monthly data" });
+  }
+});
 
 // Get monthly facility data for a company
 router.get("/monthly-facility/:companyId", async (req, res) => {

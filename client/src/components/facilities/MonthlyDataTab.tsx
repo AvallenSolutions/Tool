@@ -84,10 +84,8 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
 
 
 
-  // Facility-specific query URLs
-  const facilityQueryUrl = facilityId 
-    ? `/api/time-series/monthly-facility/${facilityId}`
-    : '/api/time-series/monthly-facility/1';
+  // Use aggregated company data instead of facility-specific data
+  const facilityQueryUrl = `/api/time-series/monthly-aggregated/1`;
   
   const analyticsQueryUrl = facilityId
     ? `/api/time-series/analytics/${facilityId}`

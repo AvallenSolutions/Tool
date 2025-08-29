@@ -13,6 +13,7 @@ import greenwashRouter from './features/greenwash';
 import { adminRouter } from './admin';
 import objectStorageRouter from './objectStorage';
 import { setupOnboardingRoutes } from './onboarding';
+import timeSeriesRouter from './timeSeriesRoutes';
 
 /**
  * Main router coordinator that combines all feature routers
@@ -37,6 +38,9 @@ export function setupFeatureRoutes(app: Express): void {
   
   // Object storage routes (existing modular router)  
   app.use('/api/objects', objectStorageRouter);
+  
+  // Time series routes (existing modular router)
+  app.use('/api/time-series', timeSeriesRouter);
   
   // Onboarding routes (existing modular setup)
   setupOnboardingRoutes(app);

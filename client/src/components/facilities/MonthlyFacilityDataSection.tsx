@@ -47,8 +47,8 @@ export default function MonthlyFacilityDataSection() {
     productionVolume: '',
   });
 
-  // Query for facility data across all facilities (using company ID 1)
-  const facilityQueryUrl = `/api/time-series/monthly-facility/1`;
+  // Query for aggregated facility data across all facilities (using company ID 1)
+  const facilityQueryUrl = `/api/time-series/monthly-aggregated/1`;
   const { data: allFacilityData, isLoading: isFacilityLoading, error: facilityError } = useQuery({
     queryKey: [facilityQueryUrl],
     queryFn: async () => {

@@ -124,9 +124,9 @@ export default function FacilityUpdates() {
 
   // Fetch monthly facility data
   const { data: facilityData = [], isLoading: facilityLoading } = useQuery({
-    queryKey: ['/api/time-series/monthly-facility/1'],
+    queryKey: ['/api/time-series/monthly-aggregated/1'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/time-series/monthly-facility/1?limit=12');
+      const response = await apiRequest('GET', '/api/time-series/monthly-aggregated/1?limit=12');
       return response.json();
     },
   });
@@ -152,7 +152,7 @@ export default function FacilityUpdates() {
         title: "Success",
         description: "Monthly facility data saved successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/time-series/monthly-facility/1'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-series/monthly-aggregated/1'] });
       queryClient.invalidateQueries({ queryKey: ['/api/time-series/analytics/1'] });
       setFormData({
         electricityKwh: '',
@@ -203,7 +203,7 @@ export default function FacilityUpdates() {
         title: "Migration Complete",
         description: `Backfilled ${data.facilityDataBackfilled} months of facility data and generated ${data.kpiSnapshotsGenerated} KPI snapshots`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/time-series/monthly-facility/1'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-series/monthly-aggregated/1'] });
       queryClient.invalidateQueries({ queryKey: ['/api/time-series/analytics/1'] });
       queryClient.invalidateQueries({ queryKey: ['/api/time-series/migration/status/1'] });
     },
