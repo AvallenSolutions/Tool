@@ -1793,10 +1793,11 @@ export const insertSmartGoalSchema = createInsertSchema(smartGoals).omit({
 
 // ==== MONTHLY FACILITY UPDATES & PRODUCT VERSIONING SYSTEM ====
 
-// Monthly Facility Data table - stores operational data on a monthly basis
+// Monthly Facility Data table - stores operational data on a monthly basis per facility
 export const monthlyFacilityData = pgTable("monthly_facility_data", {
   id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
   companyId: integer("company_id").notNull().references(() => companies.id),
+  facilityId: integer("facility_id").notNull().references(() => productionFacilities.id),
   month: date("month").notNull(), // First day of the month this data applies to
   electricityKwh: numeric("electricity_kwh", { precision: 12, scale: 2 }),
   naturalGasM3: numeric("natural_gas_m3", { precision: 12, scale: 2 }),
@@ -1841,6 +1842,10 @@ export const monthlyFacilityDataRelations = relations(monthlyFacilityData, ({ on
   company: one(companies, {
     fields: [monthlyFacilityData.companyId],
     references: [companies.id],
+  }),
+  facility: one(productionFacilities, {
+    fields: [monthlyFacilityData.facilityId],
+    references: [productionFacilities.id],
   }),
 }));
 

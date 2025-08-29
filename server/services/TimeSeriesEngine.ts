@@ -68,13 +68,14 @@ export class TimeSeriesEngine {
   }
 
   /**
-   * Get facility data for a specific month
+   * Get aggregated facility data for a specific month across all company facilities
    */
   async getFacilityDataForMonth(companyId: number, month: Date): Promise<MonthlyFacilityData | null> {
     try {
       const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
       
-      const [facilityData] = await db
+      // Get data from all facilities for this company and month
+      const facilityDataList = await db
         .select()
         .from(monthlyFacilityData)
         .where(
@@ -84,7 +85,34 @@ export class TimeSeriesEngine {
           )
         );
 
-      return facilityData || null;
+      if (facilityDataList.length === 0) {
+        return null;
+      }
+
+      // If there's only one facility data record, return it as is
+      if (facilityDataList.length === 1) {
+        return facilityDataList[0];
+      }
+
+      // Aggregate data from multiple facilities for this month
+      const aggregated = facilityDataList.reduce((acc, facility) => {
+        return {
+          ...facility, // Use the first record's metadata (id, month, etc.)
+          electricityKwh: (Number(acc.electricityKwh) || 0) + (Number(facility.electricityKwh) || 0),
+          naturalGasM3: (Number(acc.naturalGasM3) || 0) + (Number(facility.naturalGasM3) || 0),
+          waterM3: (Number(acc.waterM3) || 0) + (Number(facility.waterM3) || 0),
+          productionVolume: (Number(acc.productionVolume) || 0) + (Number(facility.productionVolume) || 0),
+        };
+      }, facilityDataList[0]);
+
+      // Convert aggregated numbers back to string format (to match schema)
+      return {
+        ...aggregated,
+        electricityKwh: aggregated.electricityKwh.toString(),
+        naturalGasM3: aggregated.naturalGasM3.toString(),
+        waterM3: aggregated.waterM3.toString(),
+        productionVolume: aggregated.productionVolume.toString(),
+      };
     } catch (error) {
       console.error(`Error getting facility data for month:`, error);
       return null;
