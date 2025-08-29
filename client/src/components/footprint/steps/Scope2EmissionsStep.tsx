@@ -145,9 +145,12 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     if (scope2Data.length > 0) {
       const loadedEntries = scope2Data.map(item => ({
         id: item.id,
+        energyType: item.dataType, // Map dataType to energyType
         value: item.value,
+        unit: item.unit || 'kWh',
         description: item.metadata?.description || '',
-        isRenewable: item.metadata?.isRenewable || false
+        isRenewable: item.metadata?.isRenewable || false,
+        isAutomated: false
       }));
       setEntries(prevEntries => {
         // Keep any automated entries that might already be loaded
@@ -248,12 +251,14 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
       const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === newEntry.energyType);
       const emissionFactor = (newEntry.isRenewable && energyType?.renewableOption) ? 0 : (energyType?.emissionFactor || 0);
       
-      // Save to backend with enhanced metadata
+      // Save to backend with enhanced metadata and calculate CO2 value
+      const co2Value = (parseFloat(newEntry.value) * emissionFactor).toString();
       onSave({
         dataType: newEntry.energyType,
         scope: 2,
         value: newEntry.value,
         unit: newEntry.unit,
+        co2Value: co2Value,
         metadata: { 
           description: newEntry.description,
           isRenewable: newEntry.isRenewable,

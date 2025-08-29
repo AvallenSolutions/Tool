@@ -3292,8 +3292,11 @@ Be precise and quote actual text from the content, not generic terms.`;
       refrigerant_r410a: { 'kg': 2088 }, // R-410A
       refrigerant_other: { 'kg': 1400 }, // Generic average
       
-      // Scope 2 factors (kg CO2e per kWh) - UK grid average
-      electricity: { 'kWh': 0.193 },
+      // Scope 2 factors (kg CO2e per unit) - DEFRA 2024 VERIFIED
+      electricity: { 'kWh': 0.22535 }, // Updated to match frontend
+      steam: { 'kg': 0.1796 }, // District heat and steam
+      heating: { 'kWh': 0.1796 }, // District heating
+      cooling: { 'kWh': 0.0849 }, // District cooling
       
       // Scope 3 factors (kg CO2e per unit)
       waste_landfill: { 'kg': 0.47 },
