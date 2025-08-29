@@ -2111,22 +2111,24 @@ Be precise and quote actual text from the content, not generic terms.`;
         for (const facility of facilities) {
           // Calculate per-unit facility impacts based on annual production volume
           
-          // LEGACY: Energy consumption calculations (now replaced by monthly data aggregation)
-          // TODO: Replace with MonthlyDataAggregationService for consistent data sourcing
-          if (facility.totalElectricityKwhPerYear) {
-            const electricityKwh = parseFloat(facility.totalElectricityKwhPerYear);
+          // Use monthly data aggregation for consistent energy calculation
+          const monthlyService = new MonthlyDataAggregationService();
+          const aggregatedData = await monthlyService.aggregateMonthlyData(product.companyId);
+          
+          if (aggregatedData.totalElectricityKwh > 0) {
+            const electricityKwh = aggregatedData.totalElectricityKwh;
             const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
             const gridElectricity = electricityKwh * (1 - renewablePercent);
             const co2eFromElectricity = (gridElectricity * 0.233) / productionVolume; // UK grid factor 2024: 233g CO2e/kWh
             facilityImpacts.co2e += co2eFromElectricity;
-            console.log(`⚡ LEGACY: Facility electricity: ${electricityKwh}kWh/year (${renewablePercent*100}% renewable) = ${co2eFromElectricity.toFixed(3)}kg CO2e per unit`);
+            console.log(`⚡ MONTHLY: Facility electricity: ${electricityKwh.toFixed(0)}kWh/year (${renewablePercent*100}% renewable) = ${co2eFromElectricity.toFixed(3)}kg CO2e per unit`);
           }
           
-          if (facility.totalGasM3PerYear) {
-            const gasM3 = parseFloat(facility.totalGasM3PerYear);
+          if (aggregatedData.totalNaturalGasM3 > 0) {
+            const gasM3 = aggregatedData.totalNaturalGasM3;
             const co2eFromGas = (gasM3 * 1.8514) / productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
             facilityImpacts.co2e += co2eFromGas;
-            console.log(`🔥 LEGACY: Facility gas: ${gasM3}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
+            console.log(`🔥 MONTHLY: Facility gas: ${gasM3.toFixed(0)}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
           }
           
           // Water consumption

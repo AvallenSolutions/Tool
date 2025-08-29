@@ -80,11 +80,21 @@ export class MonthlyDataAggregationService {
     if (completenessRatio >= 0.9) dataQuality = 'high';
     else if (completenessRatio >= 0.7) dataQuality = 'medium';
 
+    // Calculate annual projections based on available monthly data
+    // If we have partial year data, extrapolate to full year
+    const monthsInYear = 12;
+    const dataMonths = data.monthCount;
+    const annualMultiplier = dataMonths > 0 ? monthsInYear / dataMonths : 0;
+    
+    console.log(`📊 Monthly aggregation: ${dataMonths} months of data, extrapolating to annual (${annualMultiplier}x multiplier)`);
+    console.log(`   Raw totals: ${data.totalElectricity} kWh, ${data.totalGas} m³ gas`);
+    console.log(`   Annual projections: ${(data.totalElectricity * annualMultiplier).toFixed(0)} kWh, ${(data.totalGas * annualMultiplier).toFixed(0)} m³ gas`);
+
     return {
-      totalElectricityKwh: data.totalElectricity,
-      totalNaturalGasM3: data.totalGas,
-      totalWaterM3: data.totalWater,
-      totalProductionVolume: data.totalProduction,
+      totalElectricityKwh: data.totalElectricity * annualMultiplier,
+      totalNaturalGasM3: data.totalGas * annualMultiplier,
+      totalWaterM3: data.totalWater * annualMultiplier,
+      totalProductionVolume: data.totalProduction * annualMultiplier,
       monthCount: data.monthCount,
       dataQuality,
       missingMonths,
