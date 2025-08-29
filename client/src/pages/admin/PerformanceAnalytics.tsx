@@ -129,6 +129,8 @@ interface RealtimeResponse {
 export default function PerformanceAnalytics() {
   const [activeTab, setActiveTab] = useState('overview');
   const [realtimeMetrics, setRealtimeMetrics] = useState<RealtimeMetrics | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: analyticsResponse, isLoading, error, refetch } = useQuery<AnalyticsResponse>({
@@ -177,20 +179,36 @@ export default function PerformanceAnalytics() {
   const analytics = analyticsResponse?.data;
   const alerts = alertsResponse?.data || [];
 
-  const handleRefresh = () => {
-    refetch();
-    queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/alerts'] });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/alerts'] });
+      console.log('Analytics data refreshed successfully');
+    } catch (error) {
+      console.error('Failed to refresh:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const clearCache = async () => {
+    setIsClearing(true);
     try {
-      await fetch('/api/admin/analytics/cache/clear', { method: 'POST' });
-      // Clear all analytics-related queries from cache
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/performance'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/alerts'] });
-      refetch();
+      const response = await fetch('/api/admin/analytics/cache/clear', { method: 'POST' });
+      if (response.ok) {
+        // Clear all analytics-related queries from cache
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/performance'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/alerts'] });
+        await refetch();
+        console.log('Cache cleared and data refreshed successfully');
+      } else {
+        throw new Error('Failed to clear cache');
+      }
     } catch (error) {
       console.error('Failed to clear cache:', error);
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -296,13 +314,13 @@ export default function PerformanceAnalytics() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={clearCache}>
-                  <Database className="h-4 w-4 mr-2" />
-                  Clear Cache
+                <Button variant="outline" size="sm" onClick={clearCache} disabled={isClearing}>
+                  <Database className={`h-4 w-4 mr-2 ${isClearing ? 'animate-spin' : ''}`} />
+                  {isClearing ? 'Clearing...' : 'Clear Cache'}
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleRefresh}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
+                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
                 </Button>
               </div>
             </div>
