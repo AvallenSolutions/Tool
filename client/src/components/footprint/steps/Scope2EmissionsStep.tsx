@@ -37,18 +37,10 @@ interface EnergyEntry {
 // Official: https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2024
 const SCOPE2_ENERGY_TYPES = [
   {
-    id: 'electricity',
-    label: 'Grid Electricity',
-    unit: 'kWh',
-    emissionFactor: 0.22535, // kg CO₂e per kWh - DEFRA 2024 verified
-    renewableOption: true,
-    description: 'Purchased electricity from the national grid'
-  },
-  {
     id: 'steam',
     label: 'Purchased Steam',
     unit: 'kg',
-    emissionFactor: 0.2056, // kg CO₂e per kg - DEFRA 2024 verified
+    emissionFactor: 0.1796, // kg CO₂e per kg - DEFRA 2024 (district heat and steam)
     renewableOption: false,
     description: 'Steam purchased from external suppliers'
   },
@@ -56,7 +48,7 @@ const SCOPE2_ENERGY_TYPES = [
     id: 'heating',
     label: 'District Heating',
     unit: 'kWh',
-    emissionFactor: 0.2038, // kg CO₂e per kWh - DEFRA 2024 verified
+    emissionFactor: 0.1796, // kg CO₂e per kWh - DEFRA 2024 verified
     renewableOption: false,
     description: 'Heat supplied through district heating systems'
   },
@@ -64,7 +56,7 @@ const SCOPE2_ENERGY_TYPES = [
     id: 'cooling',
     label: 'District Cooling',
     unit: 'kWh',
-    emissionFactor: 0.0849, // kg CO₂e per kWh - DEFRA 2024 verified
+    emissionFactor: 0.0849, // kg CO₂e per kWh - DEFRA 2024 verified (different from heating)
     renewableOption: false,
     description: 'Cooling supplied through district cooling systems'
   }
@@ -167,8 +159,13 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
 
   // Calculate total emissions for current entries using DEFRA 2024 factors
   const calculateTotalEmissions = (): number => {
-    return entries.reduce((total, entry) => {
-      if (!entry.value || !entry.energyType) return total;
+    // Get automated electricity emissions
+    const automatedEmissions = automatedScope2Data?.success ? 
+      automatedScope2Data.data.footprintEntries.reduce((total: number, entry: any) => total + parseFloat(entry.co2Value || '0'), 0) : 0;
+    
+    // Add manual entry emissions
+    const manualEmissions = entries.reduce((total, entry) => {
+      if (!entry.value || !entry.energyType || entry.isAutomated) return total;
       const consumption = parseFloat(entry.value);
       const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === entry.energyType);
       if (!energyType) return total;
@@ -176,6 +173,8 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
       const emissionFactor = (entry.isRenewable && energyType.renewableOption) ? 0 : energyType.emissionFactor;
       return total + (consumption * emissionFactor);
     }, 0);
+    
+    return automatedEmissions + manualEmissions;
   };
 
   // Calculate total consumption
@@ -367,7 +366,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
                       <Zap className={`h-5 w-5 ${entry.isRenewable ? 'text-green-600' : 'text-slate-600'}`} />
                       <div>
                         <p className="font-medium text-slate-900 flex items-center space-x-2">
-                          <span>{energyType?.label || entry.energyType} Consumption</span>
+                          <span>{energyType?.label || entry.energyType}</span>
                           {entry.isRenewable && energyType?.renewableOption && (
                             <Badge variant="outline" className="text-green-600 border-green-300">
                               Renewable
@@ -495,8 +494,8 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             )}
           </div>
 
-          {/* Renewable Energy Toggle - only for electricity */}
-          {newEntry.energyType === 'electricity' && (
+          {/* Renewable Energy Toggle - none of these energy types support renewable options */}
+          {false && (
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
