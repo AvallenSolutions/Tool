@@ -374,6 +374,7 @@ export class OpenLCAService {
     unit: string
   ): Promise<IngredientImpactData | null> {
     try {
+      
       const processMapping = await this.getProcessMapping(materialName);
       if (!processMapping) {
         console.warn(`No process mapping found for ingredient: ${materialName}`);
@@ -389,6 +390,7 @@ export class OpenLCAService {
       
       // Scale impacts by the specified amount
       const scalingFactor = this.calculateScalingFactor(amount, unit, processMapping.unit);
+      
       
       return {
         materialName,
@@ -428,6 +430,7 @@ export class OpenLCAService {
         
         // Use subcategory-based impact factors from ecoinvent database
         const impactData = this.getImpactFactorsByCategory(materialData.subcategory, materialData.materialName);
+        
         
         return {
           processUuid,
@@ -635,8 +638,18 @@ export class OpenLCAService {
     // Special cases for specific high-impact ingredients
     const materialLower = materialName.toLowerCase();
     if (materialLower.includes('coconut')) {
+      // For coconut extract specifically, use reasonable values
+      if (materialLower.includes('extract')) {
+        return {
+          waterFootprint: 15, // L per kg (extract is concentrated)
+          carbonFootprint: 0.5, // kg CO2eq per kg  
+          energyConsumption: 2.1, // MJ per kg
+          landUse: 1.1 // m2*year per kg
+        };
+      }
+      // For other coconut products (oil, milk, etc.), keep higher values
       return {
-        waterFootprint: 2700, // L per kg (coconut specific)
+        waterFootprint: 2700, // L per kg (whole coconut products)
         carbonFootprint: 0.5, // kg CO2eq per kg  
         energyConsumption: 2.1, // MJ per kg
         landUse: 1.1 // m2*year per kg
@@ -653,12 +666,15 @@ export class OpenLCAService {
     }
 
     // Return category-based impacts or defaults
-    return categoryImpacts[category] || {
+    const result = categoryImpacts[category] || {
       waterFootprint: 1500, // Default L per kg
       carbonFootprint: 0.8, // Default kg CO2eq per kg
       energyConsumption: 3.0, // Default MJ per kg
       landUse: 1.5 // Default m2*year per kg
     };
+    
+    
+    return result;
   }
   
   /**
@@ -668,6 +684,7 @@ export class OpenLCAService {
     // Normalize both units to kg for comparison with material-specific densities
     const inputKg = this.convertToKg(inputAmount, inputUnit, materialName);
     const processKg = this.convertToKg(1, processUnit, materialName);
+    
     
     return inputKg / processKg;
   }
