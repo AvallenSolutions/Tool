@@ -9,6 +9,7 @@ import {
   projectGoals,
   kpiDefinitions,
   companyKpiGoals,
+  verifiedSuppliers,
   type KpiDefinition,
   type CompanyKpiGoal,
   type InsertCompanyKpiGoal
@@ -569,13 +570,6 @@ export class KPICalculationService {
 
   async calculateTotalEnergyConsumption(companyId: number): Promise<number> {
     try {
-      // TEMPORARY FIX: Use hardcoded realistic data until proper data integration
-      // Typical drinks company: ~150,000 kWh annually
-      if (companyId === 1) {
-        console.log('🔧 Using hardcoded energy consumption: 150,000 kWh/year');
-        return 150000; // kWh
-      }
-      
       const footprintData = await db
         .select()
         .from(companyFootprintData)
@@ -594,15 +588,6 @@ export class KPICalculationService {
 
   async calculateRenewableEnergyKwh(companyId: number): Promise<number> {
     try {
-      // TEMPORARY FIX: Use hardcoded realistic data until proper data integration
-      // Assume 25% renewable energy usage (industry average)
-      if (companyId === 1) {
-        const totalEnergy = await this.calculateTotalEnergyConsumption(companyId);
-        const renewableKwh = totalEnergy * 0.25; // 25% renewable
-        console.log(`🔧 Using hardcoded renewable energy: ${renewableKwh} kWh (25% of ${totalEnergy} kWh)`);
-        return renewableKwh;
-      }
-      
       const footprintData = await db
         .select()
         .from(companyFootprintData)
@@ -737,21 +722,34 @@ export class KPICalculationService {
   }
 
   async calculateVerifiedSustainableSuppliers(companyId: number): Promise<number> {
-    // TEMPORARY FIX: Use hardcoded realistic data until proper data integration
-    if (companyId === 1) {
-      console.log('🔧 Using hardcoded verified suppliers: 4 out of 6');
-      return 4; // verified suppliers
+    try {
+      const verifiedSuppliers = await db
+        .select()
+        .from(verifiedSuppliers)
+        .where(and(
+          eq(verifiedSuppliers.companyId, companyId),
+          eq(verifiedSuppliers.isVerified, true)
+        ));
+      
+      return verifiedSuppliers.length;
+    } catch (error) {
+      console.error('Error calculating verified suppliers:', error);
+      return 0;
     }
-    return 3; // default fallback
   }
 
   async calculateTotalSuppliers(companyId: number): Promise<number> {
-    // TEMPORARY FIX: Use hardcoded realistic data until proper data integration
-    if (companyId === 1) {
-      console.log('🔧 Using hardcoded total suppliers: 6');
-      return 6; // total suppliers
+    try {
+      const allSuppliers = await db
+        .select()
+        .from(verifiedSuppliers)
+        .where(eq(verifiedSuppliers.companyId, companyId));
+      
+      return allSuppliers.length;
+    } catch (error) {
+      console.error('Error calculating total suppliers:', error);
+      return 0;
     }
-    return 5; // default fallback
   }
 
   async calculateSupplierVerificationRate(companyId: number): Promise<number> {
@@ -768,13 +766,61 @@ export class KPICalculationService {
   }
 
   async calculateLocalIngredientsVolume(companyId: number): Promise<number> {
-    // Placeholder - would connect to actual sourcing data
-    return 1200; // liters of local ingredients (example)
+    try {
+      // Calculate based on actual ingredient data from products
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, companyId));
+
+      let localVolume = 0;
+      
+      for (const product of companyProducts) {
+        if (product.ingredients) {
+          const ingredientsData = JSON.parse(product.ingredients);
+          const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
+          
+          // Sum up local ingredients based on percentage and origin
+          for (const ingredient of ingredientsData) {
+            if (ingredient.origin === 'local' || ingredient.isLocal) {
+              const percentage = parseFloat(ingredient.percentage || '0') / 100;
+              const volumeML = parseFloat(product.volume?.toString().match(/([0-9.]+)/)?.[0] || '0');
+              localVolume += (volumeML / 1000) * percentage * annualProduction; // Convert to liters
+            }
+          }
+        }
+      }
+      
+      return localVolume;
+    } catch (error) {
+      console.error('Error calculating local ingredients volume:', error);
+      return 0;
+    }
   }
 
   async calculateTotalIngredientsVolume(companyId: number): Promise<number> {
-    // Placeholder - would connect to actual ingredients data
-    return 2000; // total liters of ingredients (example)
+    try {
+      // Calculate based on actual ingredient data from products
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, companyId));
+
+      let totalVolume = 0;
+      
+      for (const product of companyProducts) {
+        if (product.ingredients) {
+          const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
+          const volumeML = parseFloat(product.volume?.toString().match(/([0-9.]+)/)?.[0] || '0');
+          totalVolume += (volumeML / 1000) * annualProduction; // Convert to liters
+        }
+      }
+      
+      return totalVolume;
+    } catch (error) {
+      console.error('Error calculating total ingredients volume:', error);
+      return 0;
+    }
   }
 
   /**

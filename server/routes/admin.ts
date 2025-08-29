@@ -588,7 +588,14 @@ router.delete('/suppliers/:supplierId', async (req: AdminRequest, res: Response)
 router.put('/suppliers/:supplierId/verify', async (req: AdminRequest, res: Response) => {
   try {
     const { supplierId } = req.params;
-    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
+    const adminUserId = req.adminUser?.id;
+    
+    if (!adminUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin authentication required'
+      });
+    }
 
     // Update supplier verification status
     const [updatedSupplier] = await db
@@ -668,7 +675,14 @@ router.get('/reports/pending', async (req: AdminRequest, res: Response) => {
 router.put('/reports/:reportId/approve', async (req: AdminRequest, res: Response) => {
   try {
     const { reportId } = req.params;
-    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
+    const adminUserId = req.adminUser?.id;
+    
+    if (!adminUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin authentication required'
+      });
+    }
 
     // Update report status
     const [updatedReport] = await db
@@ -1207,7 +1221,14 @@ router.post('/conversations/:conversationId/messages', async (req: AdminRequest,
   try {
     const { conversationId } = req.params;
     const { content, messageType = 'text', priority = 'normal' } = req.body;
-    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
+    const adminUserId = req.adminUser?.id;
+    
+    if (!adminUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin authentication required'
+      });
+    }
 
     console.log(`Admin sending message to conversation: ${conversationId}`);
 
@@ -1279,8 +1300,15 @@ router.post('/conversations/:conversationId/messages', async (req: AdminRequest,
  */
 router.post('/conversations', async (req: AdminRequest, res: Response) => {
   try {
-    const { title, participants, type = 'direct_message', initialMessage } = req.body;
-    const adminUserId = req.adminUser?.id || '41152482'; // Use existing user ID in development
+    const { title, participants, type = 'direct_message', initialMessage, companyId } = req.body;
+    const adminUserId = req.adminUser?.id;
+    
+    if (!adminUserId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin authentication required'
+      });
+    }
 
     console.log('Admin creating new conversation:', { title, participants, type });
 
@@ -1298,6 +1326,13 @@ router.post('/conversations', async (req: AdminRequest, res: Response) => {
       });
     }
 
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Company ID is required',
+      });
+    }
+
     // Add admin to participants if not already included
     const allParticipants = [...new Set([adminUserId, ...participants])];
 
@@ -1309,7 +1344,7 @@ router.post('/conversations', async (req: AdminRequest, res: Response) => {
         type,
         participants: allParticipants,
         status: 'active',
-        companyId: 1, // Default company ID for admin conversations
+        companyId: parseInt(companyId),
       })
       .returning();
 

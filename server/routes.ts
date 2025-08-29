@@ -8297,7 +8297,14 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       // Use the same fallback pattern as working routes for development
       const user = req.user as any;
-      const userId = user?.claims?.sub || (req.session as any)?.user?.id || 'user-1'; // Fallback for development
+      const userId = user?.claims?.sub || (req.session as any)?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
       
       console.log('Company story save - userId:', userId);
 
@@ -8345,7 +8352,14 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       // Use the same fallback pattern as working routes for development  
       const user = req.user as any;
-      const userId = user?.claims?.sub || (req.session as any)?.user?.id || 'user-1'; // Fallback for development
+      const userId = user?.claims?.sub || (req.session as any)?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
       
       console.log('Company story fetch - userId:', userId);
 
@@ -8556,7 +8570,14 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       // Use the same fallback pattern as working routes for development
       const user = req.user as any;
-      const userId = user?.claims?.sub || (req.session as any)?.user?.id || 'user-1'; // Fallback for development
+      const userId = user?.claims?.sub || (req.session as any)?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
       
       console.log('AI content generation - userId:', userId);
 

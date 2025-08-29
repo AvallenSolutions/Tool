@@ -37,9 +37,15 @@ export function setupOnboardingRoutes(app: Express) {
           hasPassport: req.session && 'passport' in req.session
         });
         
-        // Use the exact same pattern as working products route with fallback
-        const companyId = (req.session as any)?.user?.companyId || 1; // Fallback for development
-        const userId = (req.session as any)?.user?.id || 'user-1'; // Fallback for development
+        const companyId = (req.session as any)?.user?.companyId;
+        const userId = (req.session as any)?.user?.id;
+        
+        if (!userId) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authentication required'
+          });
+        }
         
         console.log('Using fallback pattern - companyId:', companyId, 'userId:', userId);
 
@@ -106,7 +112,7 @@ export function setupOnboardingRoutes(app: Express) {
         });
       } catch (error) {
         console.error('Error updating company onboarding:', error);
-        const errorUserId = (req.session as any)?.user?.id || 'user-1';
+        const errorUserId = (req.session as any)?.user?.id;
         console.error('Error details:', {
           message: error instanceof Error ? error.message : 'Unknown error',
           stack: error instanceof Error ? error.stack : 'No stack trace',
@@ -124,9 +130,15 @@ export function setupOnboardingRoutes(app: Express) {
   // GET /api/companies/current - Get current company information
   app.get('/api/companies/current', async (req, res) => {
     try {
-      // Use the exact same pattern as working products route with fallback
-      const companyId = (req.session as any)?.user?.companyId || 1; // Fallback for development
-      const userId = (req.session as any)?.user?.id || 'user-1'; // Fallback for development
+      const companyId = (req.session as any)?.user?.companyId;
+      const userId = (req.session as any)?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
 
       // Get company by owner ID
       const company = await storage.getCompanyByOwner(userId);
