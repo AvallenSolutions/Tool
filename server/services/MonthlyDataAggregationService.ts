@@ -40,7 +40,7 @@ export class MonthlyDataAggregationService {
         totalGas: sql<number>`COALESCE(SUM(CAST(${monthlyFacilityData.naturalGasM3} AS NUMERIC)), 0)`,
         totalWater: sql<number>`COALESCE(SUM(CAST(${monthlyFacilityData.waterM3} AS NUMERIC)), 0)`,
         totalProduction: sql<number>`COALESCE(SUM(CAST(${monthlyFacilityData.productionVolume} AS NUMERIC)), 0)`,
-        monthCount: sql<number>`COUNT(*)`,
+        monthCount: sql<number>`COUNT(DISTINCT ${monthlyFacilityData.month})`,
         latestMonth: sql<string>`MAX(${monthlyFacilityData.month})`,
         earliestMonth: sql<string>`MIN(${monthlyFacilityData.month})`
       })
