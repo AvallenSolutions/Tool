@@ -80,21 +80,25 @@ export class MonthlyDataAggregationService {
     if (completenessRatio >= 0.9) dataQuality = 'high';
     else if (completenessRatio >= 0.7) dataQuality = 'medium';
 
-    // Calculate annual projections based on available monthly data
-    // If we have partial year data, extrapolate to full year
+    // Calculate annual projections using proper monthly average formula
+    // Formula: (total sum ÷ months) × 12
     const monthsInYear = 12;
     const dataMonths = data.monthCount;
-    const annualMultiplier = dataMonths > 0 ? monthsInYear / dataMonths : 0;
+    const monthlyAvgElectricity = dataMonths > 0 ? data.totalElectricity / dataMonths : 0;
+    const monthlyAvgGas = dataMonths > 0 ? data.totalGas / dataMonths : 0;
+    const monthlyAvgWater = dataMonths > 0 ? data.totalWater / dataMonths : 0;
+    const monthlyAvgProduction = dataMonths > 0 ? data.totalProduction / dataMonths : 0;
     
-    console.log(`📊 Monthly aggregation: ${dataMonths} months of data, extrapolating to annual (${annualMultiplier}x multiplier)`);
+    console.log(`📊 Monthly aggregation: ${dataMonths} months of data, calculating monthly average × 12`);
     console.log(`   Raw totals: ${data.totalElectricity} kWh, ${data.totalGas} m³ gas`);
-    console.log(`   Annual projections: ${(data.totalElectricity * annualMultiplier).toFixed(0)} kWh, ${(data.totalGas * annualMultiplier).toFixed(0)} m³ gas`);
+    console.log(`   Monthly averages: ${monthlyAvgElectricity.toFixed(0)} kWh, ${monthlyAvgGas.toFixed(0)} m³ gas`);
+    console.log(`   Annual projections: ${(monthlyAvgElectricity * monthsInYear).toFixed(0)} kWh, ${(monthlyAvgGas * monthsInYear).toFixed(0)} m³ gas`);
 
     return {
-      totalElectricityKwh: data.totalElectricity * annualMultiplier,
-      totalNaturalGasM3: data.totalGas * annualMultiplier,
-      totalWaterM3: data.totalWater * annualMultiplier,
-      totalProductionVolume: data.totalProduction * annualMultiplier,
+      totalElectricityKwh: monthlyAvgElectricity * monthsInYear,
+      totalNaturalGasM3: monthlyAvgGas * monthsInYear,
+      totalWaterM3: monthlyAvgWater * monthsInYear,
+      totalProductionVolume: monthlyAvgProduction * monthsInYear,
       monthCount: data.monthCount,
       dataQuality,
       missingMonths,
