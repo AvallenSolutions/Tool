@@ -29,6 +29,7 @@ import AdminSupplierDetail from "@/pages/admin/SupplierDetail";
 import SupplierEdit from "@/pages/admin/SupplierEdit";
 import AdminProductManagement from "@/pages/admin/ProductManagement";
 import LCAApprovals from "@/pages/admin/LCAApprovals";
+import LCAJobsMonitoring from "@/pages/admin/LCAJobsMonitoring";
 import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
 import SupplierInvitations from "@/pages/admin/SupplierInvitations";
@@ -181,6 +182,7 @@ function Router() {
       <Route path="/app/collaboration" component={CollaborationHub} />
       <Route path="/app/admin/product-management" component={AdminProductManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
+      <Route path="/app/admin/lca-jobs" component={LCAJobsMonitoring} />
       <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
       <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />
       <Route path="/app/admin/invitations" component={SupplierInvitations} />
