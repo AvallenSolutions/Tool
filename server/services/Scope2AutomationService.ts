@@ -153,18 +153,16 @@ export class Scope2AutomationService {
   static convertToFootprintEntries(automatedData: AutomatedScope2Data) {
     const entries = [];
     
-    // Add grid electricity entry (Scope 2) - convert annual to monthly to prevent duplication in UI
+    // Add grid electricity entry (Scope 2) - annual total from monthly facility data
     if (automatedData.electricity.gridConsumption > 0) {
-      const monthlyConsumption = automatedData.electricity.gridConsumption / 12;
-      const monthlyEmissions = automatedData.electricity.emissions / 12;
       entries.push({
         dataType: 'electricity',
         scope: 2,
-        value: monthlyConsumption.toString(),
+        value: automatedData.electricity.gridConsumption.toString(),
         unit: 'kWh',
-        calculatedEmissions: monthlyEmissions.toString(),
+        calculatedEmissions: automatedData.electricity.emissions.toString(),
         metadata: {
-          description: `Grid electricity (monthly average from ${automatedData.facilityCount} production facilities)`,
+          description: `Grid electricity from ${automatedData.facilityCount} production facilities (annual total)`,
           isRenewable: false,
           emissionFactor: UK_EMISSION_FACTORS.ELECTRICITY_GRID,
           source: 'automated_from_operations',
@@ -173,17 +171,16 @@ export class Scope2AutomationService {
       });
     }
     
-    // Add renewable electricity entry (Scope 2, zero emissions) - convert annual to monthly
+    // Add renewable electricity entry (Scope 2, zero emissions) - annual total
     if (automatedData.electricity.renewableConsumption > 0) {
-      const monthlyRenewableConsumption = automatedData.electricity.renewableConsumption / 12;
       entries.push({
         dataType: 'electricity',
         scope: 2,
-        value: monthlyRenewableConsumption.toString(),
+        value: automatedData.electricity.renewableConsumption.toString(),
         unit: 'kWh',
         calculatedEmissions: '0',
         metadata: {
-          description: `Renewable electricity (monthly average from ${automatedData.facilityCount} production facilities)`,
+          description: `Renewable electricity from ${automatedData.facilityCount} production facilities (annual total)`,
           isRenewable: true,
           emissionFactor: UK_EMISSION_FACTORS.ELECTRICITY_RENEWABLE,
           source: 'automated_from_operations'
@@ -191,18 +188,16 @@ export class Scope2AutomationService {
       });
     }
     
-    // Add steam entry if present (Scope 2) - convert annual to monthly
+    // Add steam entry if present (Scope 2) - annual total
     if (automatedData.steam && automatedData.steam.totalConsumption > 0) {
-      const monthlySteamConsumption = automatedData.steam.totalConsumption / 12;
-      const monthlySteamEmissions = automatedData.steam.emissions / 12;
       entries.push({
         dataType: 'steam',
         scope: 2,
-        value: monthlySteamConsumption.toString(),
+        value: automatedData.steam.totalConsumption.toString(),
         unit: 'kg',
-        calculatedEmissions: monthlySteamEmissions.toString(),
+        calculatedEmissions: automatedData.steam.emissions.toString(),
         metadata: {
-          description: `Purchased steam (monthly average from ${automatedData.facilityCount} production facilities)`,
+          description: `Purchased steam from ${automatedData.facilityCount} production facilities (annual total)`,
           emissionFactor: UK_EMISSION_FACTORS.STEAM,
           source: 'automated_from_operations'
         }

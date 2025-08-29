@@ -119,23 +119,21 @@ export class Scope1AutomationService {
   static convertToFootprintEntries(companyId: number, automatedData: AutomatedScope1Data) {
     const entries = [];
     
-    // Natural gas entry (convert annual to monthly to prevent duplication in UI)
+    // Natural gas entry (annual total from monthly facility data)
     if (automatedData.gas.totalConsumption > 0) {
-      const monthlyConsumption = automatedData.gas.totalConsumption / 12;
-      const monthlyEmissions = automatedData.gas.emissions / 12;
       entries.push({
         companyId,
         scope: 1,
         dataType: 'natural_gas',
-        value: monthlyConsumption.toString(),
+        value: automatedData.gas.totalConsumption.toString(),
         unit: 'm3',
         emissionsFactor: UK_EMISSION_FACTORS.NATURAL_GAS,
-        calculatedEmissions: monthlyEmissions.toString(),
+        calculatedEmissions: automatedData.gas.emissions.toString(),
         metadata: JSON.stringify({
           source: 'automated_from_operations',
           imported: true,
           importDate: new Date().toISOString(),
-          description: `Natural gas (monthly average from ${automatedData.facilityCount} production facilities)`,
+          description: `Natural gas from ${automatedData.facilityCount} production facilities (annual total)`,
           emissionFactor: UK_EMISSION_FACTORS.NATURAL_GAS,
           facilityBreakdown: automatedData.gas.facilityBreakdown
         }),
@@ -144,23 +142,21 @@ export class Scope1AutomationService {
       });
     }
     
-    // Fuel entry (if any, convert annual to monthly to prevent duplication in UI)
+    // Fuel entry (if any, annual total from monthly facility data)
     if (automatedData.fuel.totalConsumption > 0) {
-      const monthlyConsumption = automatedData.fuel.totalConsumption / 12;
-      const monthlyEmissions = automatedData.fuel.emissions / 12;
       entries.push({
         companyId,
         scope: 1,
         dataType: 'diesel', // Assumed diesel for now
-        value: monthlyConsumption.toString(),
+        value: automatedData.fuel.totalConsumption.toString(),
         unit: 'litres',
         emissionsFactor: UK_EMISSION_FACTORS.DIESEL,
-        calculatedEmissions: monthlyEmissions.toString(),
+        calculatedEmissions: automatedData.fuel.emissions.toString(),
         metadata: JSON.stringify({
           source: 'automated_from_operations',
           imported: true,
           importDate: new Date().toISOString(),
-          description: `Diesel fuel (monthly average from ${automatedData.facilityCount} production facilities)`,
+          description: `Diesel fuel from ${automatedData.facilityCount} production facilities (annual total)`,
           emissionFactor: UK_EMISSION_FACTORS.DIESEL,
           facilityBreakdown: automatedData.fuel.facilityBreakdown
         }),
