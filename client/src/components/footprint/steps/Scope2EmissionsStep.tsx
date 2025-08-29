@@ -75,20 +75,8 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
         return [...manualEntries, ...automatedEntries];
       });
       
-      // Automatically save automated entries to backend
-      automatedScope2Data.data.footprintEntries.forEach((entry: any) => {
-        onSave({
-          dataType: entry.dataType,
-          scope: entry.scope,
-          value: entry.value,
-          unit: entry.unit,
-          metadata: {
-            ...entry.metadata,
-            automated: true,
-            lastSyncDate: new Date().toISOString()
-          }
-        });
-      });
+      // Note: Automated entries are already saved by the backend automation service
+      // No need to save them again here to prevent duplicates
     }
   }, [automatedScope2Data, onSave]);
 
