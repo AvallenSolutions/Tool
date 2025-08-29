@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,11 +23,12 @@ interface Scope1EmissionsStepProps {
 }
 
 interface EmissionEntry {
-  id?: number;
+  id?: number | string;
   dataType: string;
   value: string;
   unit: string;
   description?: string;
+  isAutomated?: boolean;
 }
 
 // VERIFIED DEFRA 2024 EMISSION FACTORS
@@ -138,54 +139,49 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
     description: ''
   });
 
-  // Import from Operations mutation
-  const importMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('GET', '/api/company/footprint/scope1/automated');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.success && data.data.footprintEntries) {
-        const automatedEntries = data.data.footprintEntries.map((entry: any) => ({
-          value: entry.value,
-          description: entry.metadata.description,
-          dataType: entry.dataType
-        }));
-        
-        // Add automated entries to existing entries
-        setEntries(prevEntries => [...prevEntries, ...automatedEntries]);
-        
-        // Save each automated entry to the backend
-        data.data.footprintEntries.forEach((entry: any) => {
-          onSave({
-            dataType: entry.dataType,
-            scope: entry.scope,
-            value: entry.value,
-            unit: entry.unit,
-            metadata: {
-              ...entry.metadata,
-              imported: true,
-              importDate: new Date().toISOString()
-            }
-          });
-        });
-        
-        toast({
-          title: "Success",
-          description: `Imported ${data.data.footprintEntries.length} automated entries from production facilities`,
-        });
-      }
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Import Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  // Automatically load Scope 1 data from monthly facilities
+  const { data: automatedScope1Data, isLoading: automatedLoading } = useQuery({
+    queryKey: ['/api/company/footprint/scope1/automated'],
+    retry: false,
+    refetchOnWindowFocus: true,
+    staleTime: 30000, // Refresh every 30 seconds to catch Operations tab changes
   });
 
-  // Delete entry mutation
+  // Automatically sync automated data with form entries
+  useEffect(() => {
+    if (automatedScope1Data?.success && automatedScope1Data.data.footprintEntries) {
+      const automatedEntries = automatedScope1Data.data.footprintEntries.map((entry: any) => ({
+        value: entry.value,
+        description: entry.metadata.description,
+        dataType: entry.dataType,
+        id: entry.metadata.automated ? `auto-${entry.dataType}` : undefined,
+        isAutomated: true
+      }));
+      
+      // Remove any existing automated entries and add new ones
+      setEntries(prevEntries => {
+        const manualEntries = prevEntries.filter(entry => !entry.isAutomated);
+        return [...manualEntries, ...automatedEntries];
+      });
+      
+      // Automatically save automated entries to backend
+      automatedScope1Data.data.footprintEntries.forEach((entry: any) => {
+        onSave({
+          dataType: entry.dataType,
+          scope: entry.scope,
+          value: entry.value,
+          unit: entry.unit,
+          metadata: {
+            ...entry.metadata,
+            automated: true,
+            lastSyncDate: new Date().toISOString()
+          }
+        });
+      });
+    }
+  }, [automatedScope1Data, onSave]);
+
+  // Delete entry mutation (only for manual entries)
   const deleteEntryMutation = useMutation({
     mutationFn: async (entryId: number) => {
       const response = await fetch(`/api/company/footprint/${entryId}`, {
@@ -363,62 +359,29 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
         </AlertDescription>
       </Alert>
 
-      {/* Import from Operations */}
+      {/* Auto-sync Status */}
       <Card className="bg-green-50 border-green-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg text-green-800 flex items-center gap-2">
-            <Download className="w-5 h-5" />
-            Import from Operations
+            <Zap className="w-5 h-5" />
+            Auto-Sync with Operations
           </CardTitle>
           <CardDescription className="text-green-700">
-            Automatically populate Scope 1 emissions from your production facility data in the Operations tab
+            Scope 1 emissions are automatically populated from your monthly facility data in the Operations tab
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="text-sm text-green-700">
-              <p>This will import natural gas, fuel oil, and other direct fuel consumption data from your facilities.</p>
+              <p>Natural gas, fuel oil, and other direct fuel consumption data are automatically synchronized from your facilities.</p>
               <p className="text-xs mt-1 opacity-75">
-                Facility impacts are excluded from Scope 3 calculations to prevent double-counting.
+                Data updates automatically when you modify monthly facility data in Operations.
               </p>
             </div>
-            <Button 
-              onClick={() => importMutation.mutate()}
-              disabled={importMutation.isPending || isLoading}
-              className="bg-green-600 hover:bg-green-700 text-white"
-              data-testid="button-import-operations"
-            >
-              {importMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Importing...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Import Data
-                </>
-              )}
-            </Button>
+            <Badge variant="outline" className="text-green-600 border-green-300">
+              {automatedLoading ? 'Syncing...' : 'Auto-Synced'}
+            </Badge>
           </div>
-          
-          {importMutation.isSuccess && (
-            <Alert className="mt-4 bg-green-50 border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                Successfully imported {importMutation.data?.data?.footprintEntries?.length || 0} entries from your production facilities.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {importMutation.error && (
-            <Alert className="mt-4 bg-red-50 border-red-200">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                Failed to import data: {(importMutation.error as Error).message}
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       </Card>
 

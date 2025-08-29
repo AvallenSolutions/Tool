@@ -168,6 +168,7 @@ function Router() {
       <Route path="/app/suppliers" component={Suppliers} />
       <Route path="/app/lca" component={LCAPage} />
       <Route path="/app/company" component={Company} />
+      <Route path="/footprint" component={Company} />
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/kpis" component={KPIsPage} />
       {/* Monthly facility updates now integrated into Production Facility popup */}

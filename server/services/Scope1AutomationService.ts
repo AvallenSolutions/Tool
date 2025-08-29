@@ -89,7 +89,7 @@ export class Scope1AutomationService {
     console.log(`   Natural Gas: ${totalGasM3.toLocaleString()} m³/year = ${(totalGasEmissions/1000).toFixed(2)} tonnes CO2e`);
     console.log(`   Fuel: ${totalFuelLiters.toLocaleString()} liters/year = ${(totalFuelEmissions/1000).toFixed(2)} tonnes CO2e`);
     console.log(`   TOTAL SCOPE 1: ${(totalScope1Emissions/1000).toFixed(2)} tonnes CO2e`);
-    console.log(`   Facilities processed: ${facilities.length}`);
+    console.log(`   Data aggregated from: ${annualEquivalents.dataSource}`);
     
     return {
       gas: {
