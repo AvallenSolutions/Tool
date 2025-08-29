@@ -16,7 +16,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 interface MonthlyFacilityData {
   id: string;
   companyId: number;
-  facilityId?: number;
+  facilityId?: number | null;
   month: string;
   electricityKwh: string;
   naturalGasM3: string;
@@ -25,6 +25,11 @@ interface MonthlyFacilityData {
   utilityBillUrl?: string;
   createdAt: string;
   updatedAt: string;
+  _metadata?: {
+    isAggregated: boolean;
+    facilityCount: number;
+    aggregationType: string;
+  };
 }
 
 interface KpiSnapshot {

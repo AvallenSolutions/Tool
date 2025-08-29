@@ -16,6 +16,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 interface MonthlyFacilityData {
   id: string;
   companyId: number;
+  facilityId?: number | null;
   month: string;
   electricityKwh: string;
   naturalGasM3: string;
@@ -24,6 +25,11 @@ interface MonthlyFacilityData {
   utilityBillUrl?: string;
   createdAt: string;
   updatedAt: string;
+  _metadata?: {
+    isAggregated: boolean;
+    facilityCount: number;
+    aggregationType: string;
+  };
 }
 
 interface KpiSnapshot {
@@ -490,9 +496,16 @@ export default function FacilityUpdates() {
                     <div key={data.id} className="border rounded-lg p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">{formatMonth(data.month)}</h3>
-                        <Badge variant="secondary">
-                          Updated {new Date(data.updatedAt).toLocaleDateString()}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">
+                            Updated {new Date(data.updatedAt).toLocaleDateString()}
+                          </Badge>
+                          {data._metadata?.facilityCount && (
+                            <Badge variant="outline" className="text-xs">
+                              {data._metadata.facilityCount} {data._metadata.facilityCount === 1 ? 'facility' : 'facilities'}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>

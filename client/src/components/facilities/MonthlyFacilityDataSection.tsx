@@ -16,7 +16,7 @@ import { apiRequest } from '@/lib/queryClient';
 
 interface MonthlyFacilityData {
   id: string;
-  facilityId: number;
+  facilityId: number | null;
   companyId: number;
   month: string;
   electricityKwh: string | null;
@@ -25,6 +25,11 @@ interface MonthlyFacilityData {
   productionVolume: string | null;
   createdAt: string;
   updatedAt: string;
+  _metadata?: {
+    isAggregated: boolean;
+    facilityCount: number;
+    aggregationType: string;
+  };
 }
 
 interface KpiSnapshot {
@@ -217,6 +222,12 @@ export default function MonthlyFacilityDataSection() {
                               <Badge variant="outline" className="text-xs">
                                 {new Date(data.updatedAt).toLocaleDateString()}
                               </Badge>
+                              {data._metadata?.facilityCount && (
+                                <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                                  <Factory className="w-3 h-3" />
+                                  {data._metadata.facilityCount} {data._metadata.facilityCount === 1 ? 'facility' : 'facilities'}
+                                </Badge>
+                              )}
                               {editingRecord === data.id ? (
                                 <div className="flex gap-1">
                                   <Button
