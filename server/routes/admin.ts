@@ -705,6 +705,55 @@ router.put('/reports/:reportId/approve', async (req: AdminRequest, res: Response
 });
 
 /**
+ * GET /api/admin/supplier-products
+ * Returns all supplier products for admin management
+ */
+router.get('/supplier-products', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin supplier-products endpoint called');
+    
+    const supplierProductsData = await db
+      .select({
+        id: supplierProducts.id,
+        productName: supplierProducts.productName,
+        supplierName: supplierProducts.supplierName,
+        supplierCategory: supplierProducts.supplierCategory,
+        productCategory: supplierProducts.productCategory,
+        unitPrice: supplierProducts.unitPrice,
+        currency: supplierProducts.currency,
+        minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
+        leadTimeDays: supplierProducts.leadTimeDays,
+        sustainabilityCertifications: supplierProducts.sustainabilityCertifications,
+        carbonFootprintPerUnit: supplierProducts.carbonFootprintPerUnit,
+        waterUsagePerUnit: supplierProducts.waterUsagePerUnit,
+        wasteGeneratedPerUnit: supplierProducts.wasteGeneratedPerUnit,
+        packagingMaterials: supplierProducts.packagingMaterials,
+        description: supplierProducts.description,
+        availabilityStatus: supplierProducts.availabilityStatus,
+        qualityScore: supplierProducts.qualityScore,
+        supplierLocation: supplierProducts.supplierLocation,
+        createdAt: supplierProducts.createdAt,
+        updatedAt: supplierProducts.updatedAt
+      })
+      .from(supplierProducts)
+      .orderBy(desc(supplierProducts.createdAt));
+
+    res.json({
+      success: true,
+      data: supplierProductsData,
+      count: supplierProductsData.length
+    });
+
+  } catch (error) {
+    console.error('Admin supplier-products list error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch supplier products data',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * PUT /api/admin/suppliers/:supplierId
  * Updates a supplier's information
  */
