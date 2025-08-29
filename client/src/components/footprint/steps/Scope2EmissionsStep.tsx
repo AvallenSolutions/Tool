@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
@@ -21,30 +22,60 @@ interface Scope2EmissionsStepProps {
   isLoading: boolean;
 }
 
-interface ElectricityEntry {
+interface EnergyEntry {
   id?: number | string;
+  energyType: string;
   value: string;
+  unit: string;
   description?: string;
   isRenewable?: boolean;
   isAutomated?: boolean;
 }
 
-// VERIFIED DEFRA 2024 UK GRID ELECTRICITY EMISSION FACTORS
+// VERIFIED DEFRA 2024 UK SCOPE 2 ENERGY EMISSION FACTORS
 // Source: UK Government GHG Conversion Factors 2024 (Published July 8, 2024, Updated October 30, 2024)
 // Official: https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2024
-const UK_ELECTRICITY_FACTORS = {
-  // Combined total factor (generation + transmission & distribution)
-  TOTAL: 0.22535,          // kg CO₂e per kWh - DEFRA 2024 verified
-  GENERATION: 0.20705,     // kg CO₂e per kWh - generation only
-  TRANSMISSION: 0.01830,   // kg CO₂e per kWh - T&D losses
-  // Market-based approach for renewable energy certificates (REGOs)
-  RENEWABLE: 0             // Zero emissions for verified renewable electricity
-};
+const SCOPE2_ENERGY_TYPES = [
+  {
+    id: 'electricity',
+    label: 'Grid Electricity',
+    unit: 'kWh',
+    emissionFactor: 0.22535, // kg CO₂e per kWh - DEFRA 2024 verified
+    renewableOption: true,
+    description: 'Purchased electricity from the national grid'
+  },
+  {
+    id: 'steam',
+    label: 'Purchased Steam',
+    unit: 'kg',
+    emissionFactor: 0.2056, // kg CO₂e per kg - DEFRA 2024 verified
+    renewableOption: false,
+    description: 'Steam purchased from external suppliers'
+  },
+  {
+    id: 'heating',
+    label: 'District Heating',
+    unit: 'kWh',
+    emissionFactor: 0.2038, // kg CO₂e per kWh - DEFRA 2024 verified
+    renewableOption: false,
+    description: 'Heat supplied through district heating systems'
+  },
+  {
+    id: 'cooling',
+    label: 'District Cooling',
+    unit: 'kWh',
+    emissionFactor: 0.0849, // kg CO₂e per kWh - DEFRA 2024 verified
+    renewableOption: false,
+    description: 'Cooling supplied through district cooling systems'
+  }
+];
 
 export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, isLoading }: Scope2EmissionsStepProps) {
-  const [entries, setEntries] = useState<ElectricityEntry[]>([]);
-  const [newEntry, setNewEntry] = useState<ElectricityEntry>({
+  const [entries, setEntries] = useState<EnergyEntry[]>([]);
+  const [newEntry, setNewEntry] = useState<EnergyEntry>({
+    energyType: '',
     value: '',
+    unit: '',
     description: '',
     isRenewable: false
   });
@@ -62,7 +93,9 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
   useEffect(() => {
     if (automatedScope2Data?.success && automatedScope2Data.data.footprintEntries) {
       const automatedEntries = automatedScope2Data.data.footprintEntries.map((entry: any) => ({
+        energyType: entry.dataType,
         value: entry.value,
+        unit: entry.unit,
         description: entry.metadata.description,
         isRenewable: entry.metadata.isRenewable || false,
         id: entry.metadata.automated ? `auto-${entry.dataType}` : undefined,
@@ -135,10 +168,12 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
   // Calculate total emissions for current entries using DEFRA 2024 factors
   const calculateTotalEmissions = (): number => {
     return entries.reduce((total, entry) => {
-      if (!entry.value) return total;
+      if (!entry.value || !entry.energyType) return total;
       const consumption = parseFloat(entry.value);
-      // Market-based approach: Renewable electricity (REGOs) has zero emissions, grid electricity uses full DEFRA factor
-      const emissionFactor = entry.isRenewable ? UK_ELECTRICITY_FACTORS.RENEWABLE : UK_ELECTRICITY_FACTORS.TOTAL;
+      const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === entry.energyType);
+      if (!energyType) return total;
+      // Market-based approach: Renewable electricity (REGOs) has zero emissions, other energy uses standard factors
+      const emissionFactor = (entry.isRenewable && energyType.renewableOption) ? 0 : energyType.emissionFactor;
       return total + (consumption * emissionFactor);
     }, 0);
   };
@@ -152,27 +187,35 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
   };
 
   // Enhanced validation for Scope 2 entries
-  const validateElectricityEntry = (entry: ElectricityEntry): { isValid: boolean; errors: string[]; warnings: string[] } => {
+  const validateEnergyEntry = (entry: EnergyEntry): { isValid: boolean; errors: string[]; warnings: string[] } => {
     const errors: string[] = [];
     const warnings: string[] = [];
     
+    if (!entry.energyType) {
+      errors.push('Energy type is required');
+    }
+    
     if (!entry.value) {
-      errors.push('Electricity consumption value is required');
+      errors.push('Consumption value is required');
     } else {
       const numValue = parseFloat(entry.value);
       if (isNaN(numValue) || numValue < 0) {
         errors.push('Value must be a positive number');
       } else if (numValue === 0) {
-        warnings.push('Zero electricity consumption - ensure all facilities and equipment are accounted for');
-      } else if (numValue > 500000) {
-        warnings.push('Very high electricity consumption detected - please verify this figure');
+        warnings.push('Zero consumption detected - ensure all sources are accounted for');
+      } else if (numValue > 1000000) {
+        warnings.push('Very high consumption detected - please verify this figure');
       }
       
-      // Industry benchmarking for SME drinks companies (annual kWh consumption)
-      if (numValue > 200000) {
-        warnings.push(`High electricity consumption (${numValue.toLocaleString()} kWh) - above typical levels for SME drinks companies`);
-      } else if (numValue < 5000) {
-        warnings.push('Low electricity consumption detected - ensure all facilities and equipment are captured');
+      // Type-specific validation
+      const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === entry.energyType);
+      if (energyType && energyType.id === 'electricity') {
+        // Industry benchmarking for SME drinks companies (annual kWh consumption)
+        if (numValue > 200000) {
+          warnings.push(`High electricity consumption (${numValue.toLocaleString()} kWh) - above typical levels for SME drinks companies`);
+        } else if (numValue < 5000) {
+          warnings.push('Low electricity consumption detected - ensure all facilities and equipment are captured');
+        }
       }
     }
     
@@ -181,10 +224,15 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
 
   // Add new entry with validation
   const addEntry = () => {
-    const validation = validateElectricityEntry(newEntry);
+    const validation = validateEnergyEntry(newEntry);
     
     if (!validation.isValid) {
       console.warn('Scope 2 validation errors:', validation.errors);
+      toast({
+        title: "Validation Error",
+        description: validation.errors.join(', '),
+        variant: "destructive",
+      });
       return;
     }
     
@@ -192,27 +240,30 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
       console.info('Scope 2 validation warnings:', validation.warnings);
     }
 
-    if (newEntry.value) {
+    if (newEntry.value && newEntry.energyType) {
       const updatedEntries = [...entries, { ...newEntry }];
       setEntries(updatedEntries);
       
+      const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === newEntry.energyType);
+      const emissionFactor = (newEntry.isRenewable && energyType?.renewableOption) ? 0 : (energyType?.emissionFactor || 0);
+      
       // Save to backend with enhanced metadata
       onSave({
-        dataType: 'electricity',
+        dataType: newEntry.energyType,
         scope: 2,
         value: newEntry.value,
-        unit: 'kWh',
+        unit: newEntry.unit,
         metadata: { 
           description: newEntry.description,
           isRenewable: newEntry.isRenewable,
-          emissionFactor: newEntry.isRenewable ? UK_ELECTRICITY_FACTORS.RENEWABLE : UK_ELECTRICITY_FACTORS.TOTAL,
+          emissionFactor: emissionFactor,
           validationWarnings: validation.warnings,
-          industryBenchmark: 'Typical SME drinks companies: 10,000 - 200,000 kWh/year'
+          energyTypeLabel: energyType?.label || newEntry.energyType
         }
       });
 
       // Reset form
-      setNewEntry({ value: '', description: '', isRenewable: false });
+      setNewEntry({ energyType: '', value: '', unit: '', description: '', isRenewable: false });
     }
   };
 
@@ -306,7 +357,8 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             <div className="grid gap-3 mb-4">
               {entries.map((entry, index) => {
                 const consumption = parseFloat(entry.value || '0');
-                const emissionFactor = entry.isRenewable ? UK_ELECTRICITY_FACTORS.RENEWABLE : UK_ELECTRICITY_FACTORS.TOTAL;
+                const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === entry.energyType);
+                const emissionFactor = (entry.isRenewable && energyType?.renewableOption) ? 0 : (energyType?.emissionFactor || 0.22535);
                 const emissions = consumption * emissionFactor;
                 
                 return (
@@ -315,15 +367,15 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
                       <Zap className={`h-5 w-5 ${entry.isRenewable ? 'text-green-600' : 'text-slate-600'}`} />
                       <div>
                         <p className="font-medium text-slate-900 flex items-center space-x-2">
-                          <span>Electricity Consumption</span>
-                          {entry.isRenewable && (
+                          <span>{energyType?.label || entry.energyType} Consumption</span>
+                          {entry.isRenewable && energyType?.renewableOption && (
                             <Badge variant="outline" className="text-green-600 border-green-300">
                               Renewable
                             </Badge>
                           )}
                         </p>
                         <p className="text-sm text-slate-600">
-                          {consumption.toLocaleString()} kWh = {emissions.toLocaleString()} kg CO₂e
+                          {consumption.toLocaleString()} {entry.unit || energyType?.unit} = {emissions.toLocaleString()} kg CO₂e
                         </p>
                         {entry.description && (
                           <p className="text-xs text-slate-500 mt-1">{entry.description}</p>
@@ -359,7 +411,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-xl font-semibold text-slate-900">
-                  {totalConsumption.toLocaleString()} kWh
+                  {totalConsumption.toLocaleString()}
                 </div>
                 <p className="text-sm text-slate-600">Total Consumption</p>
               </div>
@@ -385,44 +437,82 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Plus className="h-5 w-5" />
-            <span>Add Electricity Consumption</span>
+            <span>Add Other Purchased Energy</span>
           </CardTitle>
           <CardDescription>
-            Enter your electricity consumption data from utility bills or meter readings
+            Enter consumption data for purchased energy sources (electricity, steam, district heating/cooling)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Energy Type Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="energyType">Energy Type</Label>
+            <Select
+              value={newEntry.energyType}
+              onValueChange={(value) => {
+                const selectedType = SCOPE2_ENERGY_TYPES.find(type => type.id === value);
+                setNewEntry({ 
+                  ...newEntry, 
+                  energyType: value, 
+                  unit: selectedType?.unit || '',
+                  isRenewable: selectedType?.renewableOption ? newEntry.isRenewable : false
+                });
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select energy type..." />
+              </SelectTrigger>
+              <SelectContent>
+                {SCOPE2_ENERGY_TYPES.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{type.label}</span>
+                      <span className="text-xs text-slate-500">{type.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Value Input */}
           <div className="space-y-2">
-            <Label htmlFor="value">Electricity Consumption (kWh)</Label>
+            <Label htmlFor="value">
+              Consumption ({newEntry.unit || 'Select energy type first'})
+            </Label>
             <Input
               id="value"
               type="number"
-              placeholder="Enter kWh consumed..."
+              placeholder={`Enter ${newEntry.unit || 'amount'} consumed...`}
               value={newEntry.value}
               onChange={(e) => setNewEntry({ ...newEntry, value: e.target.value })}
+              disabled={!newEntry.energyType}
             />
-            <p className="text-sm text-slate-500">
-              Find this on your electricity bills under "kWh used" or "units consumed"
-            </p>
+            {newEntry.energyType && (
+              <p className="text-sm text-slate-500">
+                {SCOPE2_ENERGY_TYPES.find(t => t.id === newEntry.energyType)?.description}
+              </p>
+            )}
           </div>
 
-          {/* Renewable Energy Toggle */}
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="renewable"
-              checked={newEntry.isRenewable || false}
-              onChange={(e) => setNewEntry({ ...newEntry, isRenewable: e.target.checked })}
-              className="rounded border-slate-300 text-green-600 focus:ring-green-500"
-            />
-            <Label htmlFor="renewable" className="flex items-center space-x-2">
-              <Lightbulb className="h-4 w-4 text-green-600" />
-              <span>This is renewable electricity (market-based approach)</span>
-            </Label>
-          </div>
+          {/* Renewable Energy Toggle - only for electricity */}
+          {newEntry.energyType === 'electricity' && (
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="renewable"
+                checked={newEntry.isRenewable || false}
+                onChange={(e) => setNewEntry({ ...newEntry, isRenewable: e.target.checked })}
+                className="rounded border-slate-300 text-green-600 focus:ring-green-500"
+              />
+              <Label htmlFor="renewable" className="flex items-center space-x-2">
+                <Lightbulb className="h-4 w-4 text-green-600" />
+                <span>This is renewable electricity (market-based approach)</span>
+              </Label>
+            </div>
+          )}
 
-          {newEntry.isRenewable && (
+          {newEntry.isRenewable && newEntry.energyType === 'electricity' && (
             <Alert className="bg-green-50 border-green-200">
               <Lightbulb className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
@@ -437,7 +527,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
-              placeholder="Add details about this electricity consumption (e.g., which site, billing period)..."
+              placeholder="Add details about this energy consumption (e.g., supplier, billing period, site location)..."
               value={newEntry.description}
               onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
               rows={2}
@@ -445,31 +535,27 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
           </div>
 
           {/* Emission Preview */}
-          {newEntry.value && (
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="text-sm text-slate-600">Location-based emissions</p>
+          {newEntry.value && newEntry.energyType && (() => {
+            const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === newEntry.energyType);
+            const consumption = parseFloat(newEntry.value || '0');
+            const emissionFactor = (newEntry.isRenewable && energyType?.renewableOption) ? 0 : (energyType?.emissionFactor || 0);
+            const emissions = consumption * emissionFactor;
+            
+            return (
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="text-center">
+                  <p className="text-sm text-slate-600">Calculated emissions</p>
                   <p className="text-lg font-semibold text-slate-900">
-                    {(parseFloat(newEntry.value || '0') * UK_ELECTRICITY_FACTORS.TOTAL).toLocaleString()} kg CO₂e
-                  </p>
-                  <p className="text-xs text-slate-500">UK grid average: {UK_ELECTRICITY_FACTORS.TOTAL} kg CO₂e/kWh</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">Market-based emissions</p>
-                  <p className="text-lg font-semibold text-green-600">
-                    {newEntry.isRenewable 
-                      ? '0 kg CO₂e' 
-                      : (parseFloat(newEntry.value || '0') * UK_ELECTRICITY_FACTORS.TOTAL).toLocaleString() + ' kg CO₂e'
-                    }
+                    {emissions.toLocaleString()} kg CO₂e
                   </p>
                   <p className="text-xs text-slate-500">
-                    {newEntry.isRenewable ? 'Renewable electricity' : 'Standard grid electricity'}
+                    {energyType?.label}: {energyType?.emissionFactor} kg CO₂e/{energyType?.unit}
+                    {newEntry.isRenewable && ' (renewable: 0 kg CO₂e)'}
                   </p>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Add Button */}
           <Button 
@@ -477,7 +563,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             disabled={!newEntry.value || isLoading}
             className="w-full"
           >
-            {isLoading ? 'Saving...' : 'Add Electricity Consumption'}
+            {isLoading ? 'Saving...' : 'Add Other Purchased Energy'}
           </Button>
         </CardContent>
       </Card>
@@ -530,7 +616,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
               <div>
                 <h4 className="font-medium text-blue-900">Location-based</h4>
                 <p className="text-sm text-blue-700">
-                  Uses average emission factors for your electricity grid (UK: {UK_ELECTRICITY_FACTORS.TOTAL} kg CO₂e/kWh)
+                  Uses average emission factors for your energy grid (UK electricity: 0.22535 kg CO₂e/kWh)
                 </p>
               </div>
               <div>
@@ -558,13 +644,13 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
               <p className="text-blue-800">
-                <strong>UK Grid Emission Factor:</strong> UK DEFRA 2024 Greenhouse Gas Conversion Factors ({UK_ELECTRICITY_FACTORS.TOTAL} kg CO₂e/kWh total)
+                <strong>UK Energy Emission Factors:</strong> UK DEFRA 2024 Greenhouse Gas Conversion Factors (Electricity: 0.22535 kg CO₂e/kWh, Steam: 0.2056 kg CO₂e/kg)
               </p>
             </div>
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
               <p className="text-blue-800">
-                <strong>Factor Breakdown:</strong> Generation ({UK_ELECTRICITY_FACTORS.GENERATION} kg CO₂e/kWh) + Transmission & Distribution ({UK_ELECTRICITY_FACTORS.TRANSMISSION} kg CO₂e/kWh)
+                <strong>Electricity Factor Breakdown:</strong> Generation (0.20705 kg CO₂e/kWh) + Transmission & Distribution (0.01830 kg CO₂e/kWh)
               </p>
             </div>
             <div className="flex items-start space-x-2">
