@@ -309,7 +309,7 @@ export default function ProductsPage() {
                   ))}
 
                   {/* Other Products */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     {products.filter(p => !p.isMainProduct).map((product) => (
                       <Card key={product.id} className="border border-light-gray hover:shadow-md transition-all duration-200 overflow-hidden">
                         <CardContent className="p-0">
