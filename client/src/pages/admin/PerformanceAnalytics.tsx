@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -129,6 +129,7 @@ interface RealtimeResponse {
 export default function PerformanceAnalytics() {
   const [activeTab, setActiveTab] = useState('overview');
   const [realtimeMetrics, setRealtimeMetrics] = useState<RealtimeMetrics | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: analyticsResponse, isLoading, error, refetch } = useQuery<AnalyticsResponse>({
     queryKey: ['/api/admin/analytics/performance'],
@@ -178,11 +179,15 @@ export default function PerformanceAnalytics() {
 
   const handleRefresh = () => {
     refetch();
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/alerts'] });
   };
 
   const clearCache = async () => {
     try {
       await fetch('/api/admin/analytics/cache/clear', { method: 'POST' });
+      // Clear all analytics-related queries from cache
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/performance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/alerts'] });
       refetch();
     } catch (error) {
       console.error('Failed to clear cache:', error);

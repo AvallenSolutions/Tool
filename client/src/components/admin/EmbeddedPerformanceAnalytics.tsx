@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -94,6 +94,7 @@ interface RealtimeMetrics {
 export default function EmbeddedPerformanceAnalytics() {
   const [activeTab, setActiveTab] = useState('overview');
   const [realtimeMetrics, setRealtimeMetrics] = useState<RealtimeMetrics | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: analyticsResponse, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/admin/analytics/performance'],
@@ -127,6 +128,21 @@ export default function EmbeddedPerformanceAnalytics() {
   }, []);
 
   const analytics: PerformanceMetrics = analyticsResponse?.data;
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  const clearCache = async () => {
+    try {
+      await fetch('/api/admin/analytics/cache/clear', { method: 'POST' });
+      // Clear all analytics-related queries from cache
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/analytics/performance'] });
+      refetch();
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
+  };
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -189,10 +205,16 @@ export default function EmbeddedPerformanceAnalytics() {
             Real-time insights into platform performance and user engagement
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={clearCache}>
+            <Database className="h-4 w-4 mr-2" />
+            Clear Cache
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Real-time Metrics */}
