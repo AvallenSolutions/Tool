@@ -390,6 +390,11 @@ export class OpenLCAService {
       // Scale impacts by the specified amount
       const scalingFactor = this.calculateScalingFactor(amount, unit, processMapping.unit);
       
+      console.log(`🧮 ${materialName} scaling calculation:`);
+      console.log(`   Input: ${amount} ${unit} → scaling factor: ${scalingFactor}`);
+      console.log(`   Base impacts: CO2e=${baseImpacts.carbonFootprint}, Water=${baseImpacts.waterFootprint} L/kg`);
+      console.log(`   Scaled impacts: CO2e=${baseImpacts.carbonFootprint * scalingFactor}, Water=${baseImpacts.waterFootprint * scalingFactor}L`);
+      
       return {
         materialName,
         amount,
