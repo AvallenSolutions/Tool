@@ -85,7 +85,7 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
   useEffect(() => {
     if (automatedScope2Data?.success && automatedScope2Data.data.footprintEntries) {
       const automatedEntries = automatedScope2Data.data.footprintEntries.map((entry: any) => ({
-        energyType: entry.dataType,
+        energyType: 'electricity', // Automated entries are always electricity
         value: entry.value,
         unit: entry.unit,
         description: entry.metadata.description,
@@ -159,22 +159,24 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
 
   // Calculate total emissions for current entries using DEFRA 2024 factors
   const calculateTotalEmissions = (): number => {
-    // Get automated electricity emissions
-    const automatedEmissions = automatedScope2Data?.success ? 
-      automatedScope2Data.data.footprintEntries.reduce((total: number, entry: any) => total + parseFloat(entry.co2Value || '0'), 0) : 0;
-    
-    // Add manual entry emissions
-    const manualEmissions = entries.reduce((total, entry) => {
-      if (!entry.value || !entry.energyType || entry.isAutomated) return total;
+    return entries.reduce((total, entry) => {
+      if (!entry.value) return total;
+      
+      // For automated electricity entries, use the existing calculation
+      if (entry.isAutomated) {
+        const consumption = parseFloat(entry.value);
+        // Use electricity emission factor for automated entries
+        return total + (consumption * 0.22535);
+      }
+      
+      // For manual entries, use the energy type factor
+      if (!entry.energyType) return total;
       const consumption = parseFloat(entry.value);
       const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === entry.energyType);
       if (!energyType) return total;
-      // Market-based approach: Renewable electricity (REGOs) has zero emissions, other energy uses standard factors
       const emissionFactor = (entry.isRenewable && energyType.renewableOption) ? 0 : energyType.emissionFactor;
       return total + (consumption * emissionFactor);
     }, 0);
-    
-    return automatedEmissions + manualEmissions;
   };
 
   // Calculate total consumption
@@ -356,8 +358,18 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
             <div className="grid gap-3 mb-4">
               {entries.map((entry, index) => {
                 const consumption = parseFloat(entry.value || '0');
-                const energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === entry.energyType);
-                const emissionFactor = (entry.isRenewable && energyType?.renewableOption) ? 0 : (energyType?.emissionFactor || 0.22535);
+                // For automated electricity entries, use electricity factors; for manual entries use their type
+                let energyType, emissionFactor;
+                
+                if (entry.isAutomated) {
+                  // Automated entries are electricity
+                  energyType = { label: 'Grid Electricity', unit: 'kWh', renewableOption: true };
+                  emissionFactor = entry.isRenewable ? 0 : 0.22535;
+                } else {
+                  // Manual entries use their selected energy type
+                  energyType = SCOPE2_ENERGY_TYPES.find(type => type.id === entry.energyType);
+                  emissionFactor = (entry.isRenewable && energyType?.renewableOption) ? 0 : (energyType?.emissionFactor || 0);
+                }
                 const emissions = consumption * emissionFactor;
                 
                 return (
