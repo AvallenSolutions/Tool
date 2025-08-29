@@ -150,13 +150,19 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
   // Automatically sync automated data with form entries
   useEffect(() => {
     if (automatedScope1Data?.success && automatedScope1Data.data.footprintEntries) {
-      const automatedEntries = automatedScope1Data.data.footprintEntries.map((entry: any) => ({
-        value: entry.value,
-        description: entry.metadata.description,
-        dataType: entry.dataType,
-        id: entry.metadata.automated ? `auto-${entry.dataType}` : undefined,
-        isAutomated: true
-      }));
+      const automatedEntries = automatedScope1Data.data.footprintEntries.map((entry: any) => {
+        // Parse metadata if it's a string
+        const metadata = typeof entry.metadata === 'string' ? JSON.parse(entry.metadata) : entry.metadata;
+        
+        return {
+          value: entry.value,
+          unit: entry.unit,
+          description: metadata.description,
+          dataType: entry.dataType,
+          id: metadata.automated ? `auto-${entry.dataType}` : undefined,
+          isAutomated: true
+        };
+      });
       
       // Remove any existing automated entries and add new ones
       setEntries(prevEntries => {
