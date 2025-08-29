@@ -433,6 +433,7 @@ export default function GuidedProductCreation({ onComplete, onSkip }: GuidedProd
                           />
                           <Input
                             type="number"
+                            step="0.00001"
                             placeholder="Amount"
                             value={ingredient.amount}
                             onChange={(e) => updateIngredient(index, 'amount', parseFloat(e.target.value) || 0)}

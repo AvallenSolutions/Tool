@@ -1362,7 +1362,7 @@ export default function EnhancedProductForm({
                                   <FormControl>
                                     <Input
                                       type="number"
-                                      step="0.001"
+                                      step="0.00001"
                                       placeholder="e.g., 3.5"
                                       {...field}
                                       onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
