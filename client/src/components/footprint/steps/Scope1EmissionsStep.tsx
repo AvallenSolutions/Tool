@@ -225,9 +225,12 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
     },
   });
 
-  // Load existing Scope 1 data with IDs
+  // Load existing Scope 1 data with IDs (excluding automated entries that are handled separately)
   useEffect(() => {
-    const scope1Data = existingData.filter(item => item.scope === 1);
+    const scope1Data = existingData.filter(item => 
+      item.scope === 1 && 
+      item.metadata?.source !== 'automated_from_operations' // Exclude automated entries
+    );
     if (scope1Data.length > 0) {
       const loadedEntries = scope1Data.map(item => ({
         id: item.id,
@@ -236,9 +239,14 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
         unit: item.unit,
         description: item.metadata?.description || ''
       }));
-      setEntries(loadedEntries);
+      setEntries(prevEntries => {
+        // Keep any automated entries that might already be loaded
+        const automatedEntries = prevEntries.filter(entry => entry.isAutomated);
+        return [...loadedEntries, ...automatedEntries];
+      });
     } else {
-      setEntries([]); // Clear entries when no data
+      // Only clear if there are no automated entries
+      setEntries(prevEntries => prevEntries.filter(entry => entry.isAutomated));
     }
   }, [existingData]);
 

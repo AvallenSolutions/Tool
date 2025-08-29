@@ -111,9 +111,12 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
     }
   }, [automatedScope2Data, onSave]);
 
-  // Load existing Scope 2 data
+  // Load existing Scope 2 data (excluding automated entries that are handled separately)
   useEffect(() => {
-    const scope2Data = existingData.filter(item => item.scope === 2);
+    const scope2Data = existingData.filter(item => 
+      item.scope === 2 && 
+      item.metadata?.source !== 'automated_from_operations' // Exclude automated entries
+    );
     if (scope2Data.length > 0) {
       const loadedEntries = scope2Data.map(item => ({
         id: item.id,
@@ -121,7 +124,11 @@ export function Scope2EmissionsStep({ data, onDataChange, existingData, onSave, 
         description: item.metadata?.description || '',
         isRenewable: item.metadata?.isRenewable || false
       }));
-      setEntries(loadedEntries);
+      setEntries(prevEntries => {
+        // Keep any automated entries that might already be loaded
+        const automatedEntries = prevEntries.filter((entry: any) => entry.isAutomated);
+        return [...loadedEntries, ...automatedEntries];
+      });
     }
   }, [existingData]);
 
