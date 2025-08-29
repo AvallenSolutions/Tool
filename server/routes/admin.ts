@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { users, companies, reports, verifiedSuppliers, supplierProducts, conversations, messages, lcaJobs, feedbackSubmissions } from '@shared/schema';
+import { users, companies, reports, verifiedSuppliers, supplierProducts, conversations, messages, lcaJobs, feedbackSubmissions, products, companyData, companyFootprintData } from '@shared/schema';
 import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
 import { eq, count, gte, desc, and, lt, ilike, or, sql } from 'drizzle-orm';
 
@@ -1312,6 +1312,159 @@ router.post('/conversations', async (req: AdminRequest, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to create conversation',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/users
+ * Returns paginated user list with company information and completeness metrics for User Management page
+ */
+router.get('/users', async (req: AdminRequest, res: Response) => {
+  try {
+    console.log('Admin users endpoint called');
+    
+    const { limit = '20', offset = '0', search } = req.query;
+    const limitNum = parseInt(limit as string);
+    const offsetNum = parseInt(offset as string);
+
+    // Build base query with user and company data
+    let query = db
+      .select({
+        companyId: companies.id,
+        companyName: companies.name,
+        ownerName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        ownerEmail: users.email,
+        onboardingComplete: companies.onboardingComplete,
+        lastActivity: users.updatedAt,
+      })
+      .from(users)
+      .leftJoin(companies, eq(users.id, companies.ownerId))
+      .where(eq(users.role, 'user'))
+      .$dynamic();
+
+    // Add search filter if provided
+    if (search) {
+      const searchTerm = `%${search}%`;
+      query = query.where(
+        or(
+          ilike(companies.name, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm),
+          ilike(users.email, searchTerm)
+        )
+      );
+    }
+
+    // Get paginated results
+    const usersData = await query
+      .orderBy(desc(users.updatedAt))
+      .limit(limitNum)
+      .offset(offsetNum);
+
+    // Get total count for pagination
+    let countQuery = db
+      .select({ count: count() })
+      .from(users)
+      .leftJoin(companies, eq(users.id, companies.ownerId))
+      .where(eq(users.role, 'user'))
+      .$dynamic();
+
+    if (search) {
+      const searchTerm = `%${search}%`;
+      countQuery = countQuery.where(
+        or(
+          ilike(companies.name, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm),
+          ilike(users.email, searchTerm)
+        )
+      );
+    }
+
+    const [totalResult] = await countQuery;
+    const total = totalResult.count;
+
+    // Calculate completeness and attention flags for each user
+    const enrichedUsers = await Promise.all(
+      usersData.map(async (user) => {
+        if (!user.companyId) {
+          return {
+            ...user,
+            overallCompleteness: 0,
+            needsAttention: true,
+          };
+        }
+
+        // Calculate basic completeness based on available data
+        let completeness = 0;
+        let completionFactors = 0;
+
+        // Company setup completion
+        if (user.onboardingComplete) {
+          completeness += 25;
+        }
+        completionFactors++;
+
+        // Check for company data presence
+        const [companyDataExists] = await db
+          .select({ count: count() })
+          .from(companyData)
+          .where(eq(companyData.companyId, user.companyId));
+
+        if (companyDataExists.count > 0) {
+          completeness += 25;
+        }
+        completionFactors++;
+
+        // Check for footprint data presence  
+        const [footprintDataExists] = await db
+          .select({ count: count() })
+          .from(companyFootprintData)
+          .where(eq(companyFootprintData.companyId, user.companyId));
+
+        if (footprintDataExists.count > 0) {
+          completeness += 25;
+        }
+        completionFactors++;
+
+        // Check for products
+        const [productsExist] = await db
+          .select({ count: count() })
+          .from(products)
+          .where(eq(products.companyId, user.companyId));
+
+        if (productsExist.count > 0) {
+          completeness += 25;
+        }
+        completionFactors++;
+
+        const overallCompleteness = Math.round(completeness / completionFactors);
+
+        return {
+          ...user,
+          overallCompleteness,
+          needsAttention: overallCompleteness < 50 || !user.onboardingComplete,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: enrichedUsers,
+      pagination: {
+        limit: limitNum,
+        offset: offsetNum,
+        total,
+      },
+    });
+
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch users',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
