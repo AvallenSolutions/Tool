@@ -164,8 +164,39 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
         return [...manualEntries, ...automatedEntries];
       });
       
-      // Note: Automated entries are already saved by the backend automation service
-      // No need to save them again here to prevent duplicates
+      // Save automated entries to backend (but only if they don't already exist)
+      automatedScope1Data.data.footprintEntries.forEach(async (entry: any) => {
+        // Check if this automated entry already exists in the database (multiple checks for robustness)
+        const existingAutomatedEntry = existingData.find(existing => 
+          existing.scope === entry.scope && 
+          existing.dataType === entry.dataType && 
+          (existing.metadata?.source === 'automated_from_operations' || 
+           existing.value === entry.value) // Also check by value as backup
+        );
+        
+        // Also check if any entry with this exact scope, type and value already exists
+        const duplicateValueEntry = existingData.find(existing =>
+          existing.scope === entry.scope && 
+          existing.dataType === entry.dataType && 
+          parseFloat(existing.value) === parseFloat(entry.value)
+        );
+        
+        if (!existingAutomatedEntry && !duplicateValueEntry) {
+          // Only create if it doesn't exist
+          onSave({
+            dataType: entry.dataType,
+            scope: entry.scope,
+            value: entry.value,
+            unit: entry.unit,
+            metadata: {
+              source: 'automated_from_operations',
+              description: `${entry.dataType.replace('_', ' ')} from monthly facility data (annual total)`,
+              automated: true,
+              lastSyncDate: new Date().toISOString()
+            }
+          });
+        }
+      });
     }
   }, [automatedScope1Data, onSave]);
 
