@@ -433,8 +433,8 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
               </Button>
             </div>
 
-            {/* Data Preview - Show current entries */}
-            {facilityData.length > 0 && (
+            {/* Data Preview - Show current entries only for existing facilities */}
+            {facilityId && facilityData.length > 0 && (
               <Card className="border-gray-200">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-gray-900">
