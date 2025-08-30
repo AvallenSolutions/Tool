@@ -143,8 +143,8 @@ export default function SupplierNetwork() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/supplier-invitations'] });
       toast({
-        title: 'Invitation Sent',
-        description: `Invitation sent to ${newSupplier.contactEmail}. They will receive an email to complete their registration.`,
+        title: 'Invitation Created',
+        description: `Invitation for ${newSupplier.supplierName} has been created. A notification has been sent to the admin via the Collaboration Hub to contact them directly.`,
       });
       
       setIsAddSupplierOpen(false);
@@ -163,7 +163,7 @@ export default function SupplierNetwork() {
     onError: (error) => {
       toast({
         title: 'Error',
-        description: (error as any)?.message || 'Failed to send invitation',
+        description: (error as any)?.message || 'Failed to create invitation',
         variant: 'destructive',
       });
     },
@@ -182,7 +182,7 @@ export default function SupplierNetwork() {
     if (!newSupplier.contactEmail) {
       toast({
         title: 'Validation Error',
-        description: 'Contact email is required to send invitation',
+        description: 'Contact email is required for the invitation',
         variant: 'destructive',
       });
       return;
@@ -425,7 +425,7 @@ export default function SupplierNetwork() {
             <DialogHeader>
               <DialogTitle>Invite Your Supplier</DialogTitle>
               <DialogDescription>
-                Invite suppliers to join your network and provide environmental data. They'll receive an email invitation to complete their supplier profile.
+                Invite suppliers to join your network and provide environmental data. A notification will be sent to the admin via the Collaboration Hub so they can contact the supplier directly.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-6 py-4">

@@ -4664,29 +4664,54 @@ Be precise and quote actual text from the content, not generic terms.`;
         })
         .returning();
 
-      // Send the invitation email
-      const emailSent = await emailService.sendSupplierInvitation(
-        email,
-        fromCompanyName,
-        category,
-        invitationToken,
-        contactName,
-        message
-      );
+      // Create internal message to admin instead of sending email
+      const { internalMessages } = await import('@shared/schema');
+      
+      const messageContent = `
+New Supplier Invitation Request
 
-      // Return success even if email fails (invitation is still created)
+Company: ${companyName}
+Contact: ${contactName || 'Not provided'}
+Email: ${email}
+Category: ${category}
+Message: ${message || 'No additional message'}
+
+Invitation Token: ${invitationToken}
+Invitation URL: ${req.get('origin')}/supplier-onboarding?token=${invitationToken}
+
+Please contact this supplier directly to set them up in the system.
+      `.trim();
+
+      try {
+        await db.insert(internalMessages).values({
+          companyId: invitingCompany?.id || 1, // Default to company 1 if not found
+          fromUserId: invitedByUserId,
+          toUserId: '44886248', // Admin user ID
+          subject: `Supplier Invitation Request: ${companyName}`,
+          message: messageContent,
+          messageType: 'supplier_invitation',
+          priority: 'normal',
+          isRead: false
+        });
+
+        console.log('✅ Internal message created for supplier invitation:', { 
+          email, 
+          companyName, 
+          category,
+          token: invitationToken 
+        });
+      } catch (messageError) {
+        console.error('❌ Failed to create internal message:', messageError);
+        // Continue anyway since the invitation was created
+      }
+
+      // Return success
       res.json({ 
         success: true, 
         invitation: newInvitation[0],
         invitationUrl: `${req.get('origin')}/supplier-onboarding?token=${invitationToken}`,
-        emailSent: emailSent
+        notificationSent: true // Changed from emailSent to notificationSent
       });
-      
-      if (!emailSent) {
-        console.warn('Invitation created but email failed to send:', { email, invitationToken });
-      } else {
-        console.log('Supplier invitation sent successfully:', { email, category, companyName });
-      }
     } catch (error) {
       console.error('Error creating supplier invitation:', error);
       res.status(500).json({ error: 'Failed to create supplier invitation' });
