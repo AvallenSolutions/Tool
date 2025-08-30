@@ -29,6 +29,7 @@ interface EmissionEntry {
   unit: string;
   description?: string;
   isAutomated?: boolean;
+  calculatedEmissions?: number; // For automated entries with pre-calculated emissions
 }
 
 // VERIFIED DEFRA 2024 EMISSION FACTORS
@@ -160,7 +161,8 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
           description: metadata.description,
           dataType: entry.dataType,
           id: metadata.automated ? `auto-${entry.dataType}` : undefined,
-          isAutomated: true
+          isAutomated: true,
+          calculatedEmissions: parseFloat(entry.calculatedEmissions) // Use backend's calculated emissions
         };
       });
       
@@ -259,6 +261,12 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
   // Calculate total emissions for current entries
   const calculateTotalEmissions = (): number => {
     return entries.reduce((total, entry) => {
+      // For automated entries, use pre-calculated emissions from backend
+      if (entry.isAutomated && entry.calculatedEmissions) {
+        return total + entry.calculatedEmissions;
+      }
+      
+      // For manual entries, calculate using frontend factors
       if (!entry.value || !entry.unit) return total;
       const dataType = SCOPE1_DATA_TYPES.find(type => type.id === entry.dataType);
       const unitInfo = dataType?.units.find(u => u.value === entry.unit);
@@ -428,8 +436,14 @@ export function Scope1EmissionsStep({ data, onDataChange, existingData, onSave, 
             <div className="grid gap-3">
               {entries.map((entry, index) => {
                 const dataType = SCOPE1_DATA_TYPES.find(type => type.id === entry.dataType);
-                const unitInfo = dataType?.units.find(u => u.value === entry.unit);
-                const emissions = unitInfo ? parseFloat(entry.value) * unitInfo.factor : 0;
+                
+                // Use pre-calculated emissions for automated entries, calculate for manual entries
+                const emissions = entry.isAutomated && entry.calculatedEmissions 
+                  ? entry.calculatedEmissions 
+                  : (() => {
+                      const unitInfo = dataType?.units.find(u => u.value === entry.unit);
+                      return unitInfo ? parseFloat(entry.value) * unitInfo.factor : 0;
+                    })();
                 
                 return (
                   <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 border">
