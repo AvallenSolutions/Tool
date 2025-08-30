@@ -320,18 +320,36 @@ export default function ProductionFacilityForm({
 
             {/* Basic Information Tab */}
             <TabsContent value="basic" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5" />
-                    Facility Information
-                  </CardTitle>
-                  <CardDescription>
-                    Basic details about your production facility
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Header with guidance */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <Building2 className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-green-900 mb-2">Facility Setup</h3>
+                    <p className="text-sm text-green-800 mb-4">
+                      Configure the basic information for your production facility. This forms the foundation for all sustainability calculations.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-green-700">
+                      <Info className="w-4 h-4" />
+                      <span>Complete facility details ensure accurate environmental impact tracking</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Basic Information Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Facility Identity */}
+                <Card className="border-green-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-green-900">
+                      <Building2 className="w-5 h-5 text-green-600" />
+                      Facility Identity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
                       name="facilityName"
@@ -339,7 +357,7 @@ export default function ProductionFacilityForm({
                         <FormItem>
                           <FormLabel>Facility Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Main Distillery" {...field} />
+                            <Input placeholder="e.g., Main Distillery" {...field} className="text-base" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -354,7 +372,7 @@ export default function ProductionFacilityForm({
                           <FormLabel>Facility Type</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="text-base">
                                 <SelectValue placeholder="Select facility type" />
                               </SelectTrigger>
                             </FormControl>
@@ -370,23 +388,32 @@ export default function ProductionFacilityForm({
                         </FormItem>
                       )}
                     />
-                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Location</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Glasgow, Scotland" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Glasgow, Scotland" {...field} className="text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Production Capacity */}
+                <Card className="border-blue-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-blue-900">
+                      <Factory className="w-5 h-5 text-blue-600" />
+                      Production Capacity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
                       name="annualCapacityVolume"
@@ -396,11 +423,15 @@ export default function ProductionFacilityForm({
                           <FormControl>
                             <Input 
                               type="number"
-                              placeholder="0"
+                              placeholder="e.g., 100000"
                               {...field}
                               onChange={e => field.onChange(e.target.value || "")}
+                              className="text-base"
                             />
                           </FormControl>
+                          <FormDescription>
+                            Maximum annual production capacity
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -414,8 +445,8 @@ export default function ProductionFacilityForm({
                           <FormLabel>Capacity Unit</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
+                              <SelectTrigger className="text-base">
+                                <SelectValue placeholder="Select unit" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -426,6 +457,9 @@ export default function ProductionFacilityForm({
                               ))}
                             </SelectContent>
                           </Select>
+                          <FormDescription>
+                            Production measurement unit
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -436,7 +470,7 @@ export default function ProductionFacilityForm({
                       name="averageUtilizationPercent"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Utilization %</FormLabel>
+                          <FormLabel>Capacity Utilization %</FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
@@ -445,55 +479,85 @@ export default function ProductionFacilityForm({
                               placeholder="80"
                               {...field}
                               onChange={e => field.onChange(e.target.value || "80")}
+                              className="text-base"
                             />
                           </FormControl>
                           <FormDescription>
-                            Average capacity utilization
+                            Average percentage of capacity used
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-                  <div className="flex items-center space-x-2">
-                    <FormField
-                      control={form.control}
-                      name="isPrimaryFacility"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>
-                              Primary Facility
-                            </FormLabel>
-                            <FormDescription>
-                              Mark as the main production facility for your company
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+              {/* Primary Facility Setting */}
+              <Card className="border-purple-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-purple-900">
+                    <Shield className="w-5 h-5 text-purple-600" />
+                    Facility Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="isPrimaryFacility"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-base font-medium">
+                            Primary Production Facility
+                          </FormLabel>
+                          <FormDescription>
+                            Mark this as your main production facility for company-wide calculations
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* Operations Tab */}
             <TabsContent value="operations" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Operational Parameters
+              {/* Header with guidance */}
+              <div className="bg-gradient-to-r from-orange-50 to-purple-50 border border-orange-200 rounded-lg p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <Settings className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-orange-900 mb-2">Operational Configuration</h3>
+                    <p className="text-sm text-orange-800 mb-4">
+                      Set up your facility's operating schedule and capacity parameters. This helps calculate accurate per-unit environmental impacts.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-orange-700">
+                      <Info className="w-4 h-4" />
+                      <span>Operating parameters help normalize data across different production volumes</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Operations Configuration */}
+              <Card className="border-orange-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-orange-900">
+                    <Settings className="w-5 h-5 text-orange-600" />
+                    Operating Schedule
                   </CardTitle>
                   <CardDescription>
-                    Operating schedules and capacity utilization
+                    Configure your facility's operating schedule and shift patterns
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -503,18 +567,23 @@ export default function ProductionFacilityForm({
                       name="operatingDaysPerYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Operating Days per Year</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-orange-600" />
+                            Operating Days per Year
+                          </FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
                               min="1"
                               max="365"
+                              placeholder="e.g., 250"
                               {...field}
                               onChange={e => field.onChange(parseInt(e.target.value) || 250)}
+                              className="text-base"
                             />
                           </FormControl>
                           <FormDescription>
-                            Number of operational days annually
+                            How many days per year does this facility operate?
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -526,18 +595,23 @@ export default function ProductionFacilityForm({
                       name="shiftsPerDay"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Shifts per Day</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-orange-600" />
+                            Shifts per Day
+                          </FormLabel>
                           <FormControl>
                             <Input 
                               type="number"
                               min="1"
                               max="3"
+                              placeholder="e.g., 2"
                               {...field}
                               onChange={e => field.onChange(parseInt(e.target.value) || 1)}
+                              className="text-base"
                             />
                           </FormControl>
                           <FormDescription>
-                            Number of production shifts per day
+                            How many production shifts run each operating day?
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

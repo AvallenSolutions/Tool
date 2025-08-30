@@ -89,8 +89,10 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
 
 
 
-  // Use aggregated company data instead of facility-specific data
-  const facilityQueryUrl = `/api/time-series/monthly-aggregated/1`;
+  // Use facility-specific data when available, otherwise company data
+  const facilityQueryUrl = facilityId 
+    ? `/api/time-series/monthly-facility/${facilityId}`
+    : `/api/time-series/monthly-aggregated/1`;
   
   const analyticsQueryUrl = facilityId
     ? `/api/time-series/analytics/${facilityId}`
@@ -438,9 +440,17 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
                   <CardTitle className="flex items-center gap-2 text-gray-900">
                     <BarChart3 className="w-5 h-5" />
                     Recent Entries
+                    {facilityId && (
+                      <Badge variant="outline" className="text-xs">
+                        {facilityName || `Facility ${facilityId}`}
+                      </Badge>
+                    )}
                   </CardTitle>
                   <CardDescription>
-                    Your latest monthly data entries
+                    {facilityId 
+                      ? `Latest monthly data for this facility` 
+                      : 'Latest monthly data entries (company-wide)'
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -449,9 +459,16 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
                       <div key={data.id} className="border rounded-lg p-4 bg-gray-50">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium">{formatMonth(data.month)}</h4>
-                          <Badge variant="secondary" className="text-xs">
-                            {new Date(data.updatedAt).toLocaleDateString()}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {new Date(data.updatedAt).toLocaleDateString()}
+                            </Badge>
+                            {data._metadata?.facilityCount && (
+                              <Badge variant="outline" className="text-xs">
+                                {data._metadata.facilityCount} {data._metadata.facilityCount === 1 ? 'facility' : 'facilities'}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div className="flex items-center gap-2">
