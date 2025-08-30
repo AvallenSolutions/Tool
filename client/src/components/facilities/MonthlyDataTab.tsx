@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, TrendingUp, Database, AlertCircle, BarChart3, TestTube, Edit, Save, X } from 'lucide-react';
+import { Calendar, TrendingUp, Database, AlertCircle, BarChart3, TestTube, Edit, Save, X, Zap, Droplets, Factory, CheckCircle, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -245,144 +245,250 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
 
   return (
     <div className="space-y-6" data-testid="monthly-data-tab">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Monthly Facility Data</h3>
-          <p className="text-sm text-muted-foreground">
-            {facilityName ? `Track operational data for ${facilityName}` : 'Track operational data over time'}
-          </p>
+      {/* Header with guidance */}
+      <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-blue-100 rounded-lg">
+            <Calendar className="w-6 h-6 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">Monthly Data Collection</h3>
+            <p className="text-sm text-blue-800 mb-4">
+              {facilityName ? `Track monthly operational data for ${facilityName}` : 'Track your facility\'s monthly operational data'} to ensure accurate sustainability calculations and KPI tracking.
+            </p>
+            <div className="flex items-center gap-2 text-sm text-blue-700">
+              <Info className="w-4 h-4" />
+              <span>Enter actual meter readings and utility bill data for best accuracy</span>
+            </div>
+          </div>
         </div>
-        <Button
-          onClick={() => initializeSnapshots.mutate()}
-          disabled={initializeSnapshots.isPending}
-          variant="outline"
-          data-testid="button-initialize-snapshots"
-          size="sm"
-        >
-          <Database className="w-4 h-4 mr-2" />
-          {initializeSnapshots.isPending ? 'Initializing...' : 'Initialize KPI History'}
-        </Button>
       </div>
 
-      <Tabs defaultValue="entry" className="w-full">
-        <TabsList className="grid w-full grid-cols-1">
-          <TabsTrigger value="entry" data-testid="tab-data-entry">Data Entry</TabsTrigger>
-        </TabsList>
+      {/* Data Entry Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Data Entry
+          </CardTitle>
+          <CardDescription>
+            Select a month and enter your operational data from utility bills and production records
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Month Selection - Prominent */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <Label htmlFor="month" className="text-base font-medium">Select Month</Label>
+              <p className="text-sm text-muted-foreground mb-3">Choose the month you want to enter data for</p>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger data-testid="select-month" className="text-base">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const date = new Date();
+                    date.setMonth(date.getMonth() - i);
+                    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
+                    return (
+                      <SelectItem key={value} value={value}>
+                        {formatMonth(value)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <TabsContent value="entry" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Monthly Data Entry
-              </CardTitle>
-              <CardDescription>
-                Enter operational data for accurate KPI calculations and trend tracking
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid gap-4">
+            {/* Data Input Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Energy Consumption */}
+              <Card className="border-blue-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-blue-900">
+                    <Zap className="w-5 h-5 text-blue-600" />
+                    Energy Consumption
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="month">Month</Label>
-                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                      <SelectTrigger data-testid="select-month">
-                        <SelectValue placeholder="Select month" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => {
-                          const date = new Date();
-                          date.setMonth(date.getMonth() - i);
-                          const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
-                          return (
-                            <SelectItem key={value} value={value}>
-                              {formatMonth(value)}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="electricityKwh" className="flex items-center gap-2">
+                      Electricity Consumption
+                      <span className="text-xs text-muted-foreground">(kWh)</span>
+                    </Label>
+                    <Input
+                      id="electricityKwh"
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., 15000"
+                      value={formData.electricityKwh}
+                      onChange={(e) => setFormData(prev => ({ ...prev, electricityKwh: e.target.value }))}
+                      data-testid="input-electricity"
+                      className="text-base"
+                    />
+                    <p className="text-xs text-muted-foreground">From your electricity bill for {formatMonth(selectedMonth)}</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="electricityKwh">Electricity (kWh)</Label>
-                      <Input
-                        id="electricityKwh"
-                        type="number"
-                        step="0.01"
-                        placeholder="15000"
-                        value={formData.electricityKwh}
-                        onChange={(e) => setFormData(prev => ({ ...prev, electricityKwh: e.target.value }))}
-                        data-testid="input-electricity"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="naturalGasM3" className="flex items-center gap-2">
+                      Natural Gas Usage
+                      <span className="text-xs text-muted-foreground">(m³)</span>
+                    </Label>
+                    <Input
+                      id="naturalGasM3"
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., 2500"
+                      value={formData.naturalGasM3}
+                      onChange={(e) => setFormData(prev => ({ ...prev, naturalGasM3: e.target.value }))}
+                      data-testid="input-natural-gas"
+                      className="text-base"
+                    />
+                    <p className="text-xs text-muted-foreground">From your gas bill for {formatMonth(selectedMonth)}</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="naturalGasM3">Natural Gas (m³)</Label>
-                      <Input
-                        id="naturalGasM3"
-                        type="number"
-                        step="0.01"
-                        placeholder="2500"
-                        value={formData.naturalGasM3}
-                        onChange={(e) => setFormData(prev => ({ ...prev, naturalGasM3: e.target.value }))}
-                        data-testid="input-natural-gas"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="waterM3">Water Consumption (m³)</Label>
-                      <Input
-                        id="waterM3"
-                        type="number"
-                        step="0.01"
-                        placeholder="1200"
-                        value={formData.waterM3}
-                        onChange={(e) => setFormData(prev => ({ ...prev, waterM3: e.target.value }))}
-                        data-testid="input-water"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="productionVolume">Production Volume (units)</Label>
-                      <Input
-                        id="productionVolume"
-                        type="number"
-                        step="1"
-                        placeholder="25000"
-                        value={formData.productionVolume}
-                        onChange={(e) => setFormData(prev => ({ ...prev, productionVolume: e.target.value }))}
-                        data-testid="input-production-volume"
-                      />
-                    </div>
+              {/* Water & Production */}
+              <Card className="border-green-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-green-900">
+                    <Factory className="w-5 h-5 text-green-600" />
+                    Water & Production
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="waterM3" className="flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-cyan-600" />
+                      Water Consumption
+                      <span className="text-xs text-muted-foreground">(m³)</span>
+                    </Label>
+                    <Input
+                      id="waterM3"
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., 1200"
+                      value={formData.waterM3}
+                      onChange={(e) => setFormData(prev => ({ ...prev, waterM3: e.target.value }))}
+                      data-testid="input-water"
+                      className="text-base"
+                    />
+                    <p className="text-xs text-muted-foreground">From your water bill for {formatMonth(selectedMonth)}</p>
                   </div>
 
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Enter data for {formatMonth(selectedMonth)}. This will enable time-aware KPI calculations
-                      and improve accuracy of sustainability metrics.
-                    </AlertDescription>
-                  </Alert>
+                  <div className="space-y-2">
+                    <Label htmlFor="productionVolume" className="flex items-center gap-2">
+                      <Factory className="w-4 h-4 text-green-600" />
+                      Production Volume
+                      <span className="text-xs text-muted-foreground">(units)</span>
+                    </Label>
+                    <Input
+                      id="productionVolume"
+                      type="number"
+                      step="1"
+                      placeholder="e.g., 25000"
+                      value={formData.productionVolume}
+                      onChange={(e) => setFormData(prev => ({ ...prev, productionVolume: e.target.value }))}
+                      data-testid="input-production-volume"
+                      className="text-base"
+                    />
+                    <p className="text-xs text-muted-foreground">Total units produced in {formatMonth(selectedMonth)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                  <Button 
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={saveFacilityData.isPending}
-                    className="w-full"
-                    data-testid="button-save-facility-data"
-                  >
-                    {saveFacilityData.isPending ? 'Saving...' : 'Save Monthly Data'}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            {/* Help Section */}
+            <Alert className="border-amber-200 bg-amber-50">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                <strong>Tip:</strong> Use actual meter readings from your utility bills for the most accurate carbon footprint calculations. 
+                This data feeds directly into your sustainability metrics and KPI tracking.
+              </AlertDescription>
+            </Alert>
 
+            {/* Save Button */}
+            <div className="flex justify-center">
+              <Button 
+                type="button"
+                onClick={handleSubmit}
+                disabled={saveFacilityData.isPending}
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-base"
+                data-testid="button-save-facility-data"
+              >
+                {saveFacilityData.isPending ? (
+                  <>
+                    <Database className="w-4 h-4 mr-2 animate-spin" />
+                    Saving Data...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save {formatMonth(selectedMonth)} Data
+                  </>
+                )}
+              </Button>
+            </div>
 
-      </Tabs>
+            {/* Data Preview - Show current entries */}
+            {facilityData.length > 0 && (
+              <Card className="border-gray-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <BarChart3 className="w-5 h-5" />
+                    Recent Entries
+                  </CardTitle>
+                  <CardDescription>
+                    Your latest monthly data entries
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {facilityData.slice(0, 3).map((data: MonthlyFacilityData) => (
+                      <div key={data.id} className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">{formatMonth(data.month)}</h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {new Date(data.updatedAt).toLocaleDateString()}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Zap className="w-3 h-3 text-blue-500" />
+                            <span className="text-muted-foreground">Electricity:</span>
+                            <span className="font-medium">{formatValue(data.electricityKwh, 'kWh')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 bg-orange-500 rounded-full" />
+                            <span className="text-muted-foreground">Gas:</span>
+                            <span className="font-medium">{formatValue(data.naturalGasM3, 'm³')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Droplets className="w-3 h-3 text-cyan-500" />
+                            <span className="text-muted-foreground">Water:</span>
+                            <span className="font-medium">{formatValue(data.waterM3, 'm³')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Factory className="w-3 h-3 text-green-500" />
+                            <span className="text-muted-foreground">Production:</span>
+                            <span className="font-medium">{formatValue(data.productionVolume, 'units')}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {facilityData.length > 3 && (
+                      <div className="text-center text-sm text-muted-foreground">
+                        ... and {facilityData.length - 3} more entries
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

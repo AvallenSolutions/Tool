@@ -303,7 +303,7 @@ export default function ProductionFacilityForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="basic" className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
                 Basic Info
@@ -315,10 +315,6 @@ export default function ProductionFacilityForm({
               <TabsTrigger value="monthly-data" className="flex items-center gap-2">
                 <Activity className="w-4 h-4" />
                 Monthly Data
-              </TabsTrigger>
-              <TabsTrigger value="monthly-setup" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Data Tracking
               </TabsTrigger>
             </TabsList>
 
@@ -483,127 +479,6 @@ export default function ProductionFacilityForm({
                         </FormItem>
                       )}
                     />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Monthly Data Tracking Setup Tab */}
-            <TabsContent value="monthly-setup" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    Monthly Data Tracking
-                  </CardTitle>
-                  <CardDescription>
-                    Track your facility's operational data on a monthly basis for accurate reporting
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Primary Information */}
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-green-100 rounded-lg">
-                        <BarChart3 className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-green-900 mb-2">Monthly Data Collection System</h3>
-                        <p className="text-sm text-green-800 mb-4">
-                          Our platform uses monthly data collection for accurate, real-time sustainability tracking. 
-                          Instead of estimating annual totals, you'll track your actual operational data each month for precise calculations.
-                        </p>
-                        <div className="space-y-2 text-sm text-green-700">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                            <span>More accurate data from utility bills</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                            <span>Real-time dashboard updates</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                            <span>Track seasonal variations</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Navigation to Monthly Updates */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <div className="text-center space-y-4">
-                      <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Calendar className="w-8 h-8 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-2">Ready to Start Monthly Tracking?</h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                          Once you save this facility configuration, you can begin entering monthly operational data 
-                          including electricity, gas, water consumption, and production volumes.
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center justify-center gap-2 text-sm text-gray-700">
-                          <span>Navigate to:</span>
-                          <span className="font-medium text-blue-600">Operations → Facility Updates</span>
-                          <ArrowRight className="w-4 h-4 text-gray-500" />
-                          <span className="font-medium">Monthly Data Entry</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* What Data You'll Track */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Zap className="w-5 h-5 text-blue-600" />
-                        <h4 className="font-medium text-blue-900">Energy Consumption</h4>
-                      </div>
-                      <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• Electricity (kWh)</li>
-                        <li>• Natural Gas (m³)</li>
-                        <li>• Other fuel sources</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Droplets className="w-5 h-5 text-cyan-600" />
-                        <h4 className="font-medium text-cyan-900">Water Usage</h4>
-                      </div>
-                      <ul className="text-sm text-cyan-800 space-y-1">
-                        <li>• Total water consumption (m³)</li>
-                        <li>• Process and cleaning water</li>
-                        <li>• Utility bill verification</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Factory className="w-5 h-5 text-purple-600" />
-                        <h4 className="font-medium text-purple-900">Production Volume</h4>
-                      </div>
-                      <ul className="text-sm text-purple-800 space-y-1">
-                        <li>• Monthly production output</li>
-                        <li>• Per-unit calculations</li>
-                        <li>• Seasonal tracking</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Trash2 className="w-5 h-5 text-green-600" />
-                        <h4 className="font-medium text-green-900">Waste Management</h4>
-                      </div>
-                      <ul className="text-sm text-green-800 space-y-1">
-                        <li>• Waste generation tracking</li>
-                        <li>• Disposal method verification</li>
-                        <li>• Recycling percentages</li>
-                      </ul>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
