@@ -36,7 +36,7 @@ export class EmailService {
         return;
       }
 
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: emailHost,
         port: emailPort,
         secure: emailPort === 465, // true for 465, false for other ports
@@ -60,6 +60,10 @@ export class EmailService {
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     if (!this.isConfigured || !this.transporter) {
+      console.warn('📧 Email service not configured - cannot send email:', {
+        isConfigured: this.isConfigured,
+        hasTransporter: !!this.transporter
+      });
       logger.warn('Email service not configured - cannot send email');
       return false;
     }
