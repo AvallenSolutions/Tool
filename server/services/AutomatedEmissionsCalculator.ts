@@ -127,6 +127,29 @@ export async function calculateFuelEnergyUpstreamEmissions(companyId: number): P
     let totalEmissions = 0;
     const breakdown: Record<string, number> = {};
 
+    // Calculate upstream emissions from facility natural gas consumption
+    // Import MonthlyDataAggregationService to get facility consumption data
+    const { MonthlyDataAggregationService } = await import('./MonthlyDataAggregationService');
+    const monthlyService = new MonthlyDataAggregationService();
+    
+    try {
+      const aggregatedData = await monthlyService.aggregateMonthlyData(companyId);
+      const annualNaturalGasM3 = aggregatedData.totalNaturalGasM3;
+      
+      if (annualNaturalGasM3 > 0) {
+        // Upstream natural gas emissions factor (wellhead-to-burner): 2.044 - 1.8514 = 0.1926 kg CO2e/m³
+        const naturalGasUpstreamFactor = 0.1926; // DEFRA 2024: full lifecycle - direct combustion
+        const naturalGasUpstreamEmissions = annualNaturalGasM3 * naturalGasUpstreamFactor;
+        
+        totalEmissions += naturalGasUpstreamEmissions;
+        breakdown['Natural Gas (Upstream)'] = naturalGasUpstreamEmissions;
+        
+        console.log(`🔥 Natural Gas Upstream (Scope 3): ${annualNaturalGasM3.toLocaleString()} m³ × ${naturalGasUpstreamFactor} = ${naturalGasUpstreamEmissions.toFixed(1)} kg CO2e`);
+      }
+    } catch (facilityError) {
+      console.error('Error fetching facility natural gas data for upstream calculation:', facilityError);
+    }
+
     for (const product of companyProducts) {
       // Calculate upstream emissions from processing energy
       if (product.electricityKwh && product.annualProductionVolume) {

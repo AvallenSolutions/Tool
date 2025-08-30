@@ -3440,34 +3440,57 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   }
   
-  // Calculate Fuel & Energy-Related Activities (upstream) emissions from Scope 1/2 data
+  // Calculate Fuel & Energy-Related Activities (upstream) emissions using latest monthly facility data
   async function calculateFuelEnergyUpstreamEmissions(companyId: number): Promise<{
     totalEmissions: number;
     breakdown: Record<string, number>
   }> {
     try {
-      const footprintData = await dbStorage.getCompanyFootprintData(companyId);
+      console.log(`🔧 EXECUTING calculateFuelEnergyUpstreamEmissions for company ${companyId}`);
+      // Use MonthlyDataAggregationService for latest aggregated facility data
+      const { MonthlyDataAggregationService } = await import('./services/MonthlyDataAggregationService');
+      const monthlyService = new MonthlyDataAggregationService();
+      const aggregatedData = await monthlyService.aggregateMonthlyData(companyId);
+      
       let totalEmissions = 0;
       const breakdown: Record<string, number> = {};
       
       // DEFRA 2024 verified upstream factors
-      const upstreamFactors: Record<string, number> = {
+      const upstreamFactors = {
         'electricity': 0.01830, // T&D losses kg CO2e/kWh
-        'natural_gas': 0.027,   // ~15% of combustion factor for upstream
+        'natural_gas': 0.1926,  // Wellhead-to-burner upstream (2.044 - 1.8514 kg CO2e/m³)
         'heating_oil': 0.44,    // ~15% of combustion factor
         'lpg': 0.23,           // ~15% of combustion factor
         'petrol': 0.35,        // ~15% of combustion factor
         'diesel': 0.40         // ~15% of combustion factor
       };
       
+      // Calculate upstream emissions from aggregated facility consumption
+      if (aggregatedData.totalElectricityKwh > 0) {
+        const electricityUpstream = aggregatedData.totalElectricityKwh * upstreamFactors.electricity;
+        totalEmissions += electricityUpstream;
+        breakdown['electricity'] = electricityUpstream;
+        console.log(`⚡ Electricity Upstream (Scope 3): ${aggregatedData.totalElectricityKwh.toLocaleString()} kWh × ${upstreamFactors.electricity} = ${electricityUpstream.toFixed(1)} kg CO2e`);
+      }
+      
+      if (aggregatedData.totalNaturalGasM3 > 0) {
+        const naturalGasUpstream = aggregatedData.totalNaturalGasM3 * upstreamFactors.natural_gas;
+        totalEmissions += naturalGasUpstream;
+        breakdown['natural_gas'] = naturalGasUpstream;
+        console.log(`🔥 Natural Gas Upstream (Scope 3): ${aggregatedData.totalNaturalGasM3.toLocaleString()} m³ × ${upstreamFactors.natural_gas} = ${naturalGasUpstream.toFixed(1)} kg CO2e`);
+      }
+      
+      // For other fuel types, fall back to footprint table if needed
+      const footprintData = await dbStorage.getCompanyFootprintData(companyId);
       for (const entry of footprintData) {
-        if (entry.scope === 1 || entry.scope === 2) {
-          const upstreamFactor = upstreamFactors[entry.dataType];
+        if ((entry.scope === 1 || entry.scope === 2) && entry.dataType !== 'electricity' && entry.dataType !== 'natural_gas') {
+          const upstreamFactor = upstreamFactors[entry.dataType as keyof typeof upstreamFactors];
           if (upstreamFactor) {
             const value = parseFloat(entry.value);
             const upstreamEmissions = value * upstreamFactor;
             totalEmissions += upstreamEmissions;
             breakdown[entry.dataType] = (breakdown[entry.dataType] || 0) + upstreamEmissions;
+            console.log(`🛢️ ${entry.dataType} Upstream (Scope 3): ${value} × ${upstreamFactor} = ${upstreamEmissions.toFixed(1)} kg CO2e`);
           }
         }
       }
