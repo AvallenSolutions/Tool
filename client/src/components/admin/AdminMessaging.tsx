@@ -422,9 +422,9 @@ export default function AdminMessaging() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col space-y-6 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Messaging</h1>
           <p className="text-muted-foreground">
@@ -443,7 +443,7 @@ export default function AdminMessaging() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px] max-h-[calc(100vh-16rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 overflow-hidden">
         {/* Conversations List */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-3">
@@ -498,7 +498,7 @@ export default function AdminMessaging() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-[calc(100vh-32rem)] min-h-[400px] max-h-[600px]">
+            <ScrollArea className="h-[calc(100vh-28rem)]">
               {loadingConversations ? (
                 <div className="p-4">
                   <div className="space-y-3">
@@ -691,7 +691,7 @@ export default function AdminMessaging() {
               </CardHeader>
               <Separator />
               <CardContent className="p-0">
-                <ScrollArea className="h-[calc(100vh-32rem)] min-h-[300px] max-h-[500px] p-4">
+                <ScrollArea className="h-[calc(100vh-28rem)] p-4">
                   {loadingMessages ? (
                     <div className="space-y-4">
                       {[...Array(3)].map((_, i) => (
