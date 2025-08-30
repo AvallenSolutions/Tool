@@ -4606,6 +4606,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   app.post('/api/admin/supplier-invitations', isAuthenticated, validateSupplierInvitation, async (req: any, res: any) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.error('Validation errors for supplier invitation:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
     try {
@@ -4629,6 +4630,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         .limit(1);
 
       if (existingInvitation.length > 0) {
+        console.error('Invitation already exists for email:', email);
         return res.status(400).json({ 
           error: 'An invitation already exists for this email address' 
         });

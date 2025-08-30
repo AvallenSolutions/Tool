@@ -134,11 +134,15 @@ export default function SupplierNetwork() {
         body: JSON.stringify(invitationData),
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to send invitation');
+        // Extract error message from the response
+        const errorMessage = data.error || data.message || 'Failed to create invitation';
+        throw new Error(errorMessage);
       }
       
-      return response.json();
+      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/supplier-invitations'] });
@@ -160,10 +164,19 @@ export default function SupplierNetwork() {
         products: []
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      let errorMessage = 'Failed to create invitation';
+      
+      // Handle specific error cases
+      if (error?.message?.includes('already exists')) {
+        errorMessage = 'An invitation has already been sent to this email address. Please use a different email or check existing invitations.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: 'Error',
-        description: (error as any)?.message || 'Failed to create invitation',
+        title: 'Cannot Create Invitation',
+        description: errorMessage,
         variant: 'destructive',
       });
     },
