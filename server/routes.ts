@@ -4672,16 +4672,22 @@ Be precise and quote actual text from the content, not generic terms.`;
       const messageContent = `
 New Supplier Invitation Request
 
-Company: ${companyName}
-Contact: ${contactName || 'Not provided'}
-Email: ${email}
-Category: ${category}
-Message: ${message || 'No additional message'}
+Supplier Details:
+• Company Name: ${companyName}
+• Contact Person: ${contactName || 'Not provided'}
+• Email Address: ${email}
+• Supplier Category: ${category.replace('_', ' ').toUpperCase()}
 
-Invitation Token: ${invitationToken}
-Invitation URL: ${req.get('origin')}/supplier-onboarding?token=${invitationToken}
+Additional Information:
+• Custom Message: ${message || 'No additional information provided'}
 
-Please contact this supplier directly to set them up in the system.
+System Information:
+• Invitation Token: ${invitationToken}
+• Invitation URL: ${req.get('origin')}/supplier-onboarding?token=${invitationToken}
+• Expires: ${expiresAt.toLocaleDateString()}
+
+Next Steps:
+Please contact this supplier directly at ${email} to coordinate their onboarding and data collection process.
       `.trim();
 
       try {

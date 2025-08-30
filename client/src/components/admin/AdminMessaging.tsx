@@ -443,7 +443,7 @@ export default function AdminMessaging() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px] max-h-[calc(100vh-16rem)]">
         {/* Conversations List */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-3">
@@ -498,12 +498,12 @@ export default function AdminMessaging() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-[450px]">
+            <ScrollArea className="h-[calc(100vh-32rem)] min-h-[400px] max-h-[600px]">
               {loadingConversations ? (
                 <div className="p-4">
                   <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+                      <div key={`skeleton-${i}`} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
                     ))}
                   </div>
                 </div>
@@ -691,11 +691,11 @@ export default function AdminMessaging() {
               </CardHeader>
               <Separator />
               <CardContent className="p-0">
-                <ScrollArea className="h-[360px] p-4">
+                <ScrollArea className="h-[calc(100vh-32rem)] min-h-[300px] max-h-[500px] p-4">
                   {loadingMessages ? (
                     <div className="space-y-4">
                       {[...Array(3)].map((_, i) => (
-                        <div key={i} className="flex gap-3">
+                        <div key={`message-skeleton-${i}`} className="flex gap-3">
                           <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
                           <div className="flex-1">
                             <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
