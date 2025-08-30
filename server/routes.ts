@@ -4611,6 +4611,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     try {
       const { supplierInvitations } = await import('@shared/schema');
       const { nanoid } = await import('nanoid');
+      const { emailService } = await import('./services/EmailService');
       
       const { email, category, companyName, contactName, message } = req.body;
       
@@ -4645,6 +4646,10 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
+      // Get the inviting company name
+      const invitingCompany = await dbStorage.getCompanyByOwner(invitedByUserId);
+      const fromCompanyName = invitingCompany?.companyName || 'Your Partner Company';
+
       const newInvitation = await db
         .insert(supplierInvitations)
         .values({
@@ -4659,11 +4664,29 @@ Be precise and quote actual text from the content, not generic terms.`;
         })
         .returning();
 
+      // Send the invitation email
+      const emailSent = await emailService.sendSupplierInvitation(
+        email,
+        fromCompanyName,
+        category,
+        invitationToken,
+        contactName,
+        message
+      );
+
+      // Return success even if email fails (invitation is still created)
       res.json({ 
         success: true, 
         invitation: newInvitation[0],
-        invitationUrl: `${req.get('origin')}/supplier-onboarding?token=${invitationToken}`
+        invitationUrl: `${req.get('origin')}/supplier-onboarding?token=${invitationToken}`,
+        emailSent: emailSent
       });
+      
+      if (!emailSent) {
+        console.warn('Invitation created but email failed to send:', { email, invitationToken });
+      } else {
+        console.log('Supplier invitation sent successfully:', { email, category, companyName });
+      }
     } catch (error) {
       console.error('Error creating supplier invitation:', error);
       res.status(500).json({ error: 'Failed to create supplier invitation' });
