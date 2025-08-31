@@ -422,7 +422,7 @@ export default function AdminMessaging() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
       {/* Header */}
       <div className="flex items-center justify-between flex-shrink-0 mb-6">
         <div>
@@ -443,9 +443,9 @@ export default function AdminMessaging() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
         {/* Conversations List */}
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-1 flex flex-col">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -497,8 +497,8 @@ export default function AdminMessaging() {
               />
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[calc(100vh-24rem)]">
+          <CardContent className="p-0 flex-1">
+            <ScrollArea className="h-full">
               {loadingConversations ? (
                 <div className="p-4">
                   <div className="space-y-3">
@@ -627,7 +627,7 @@ export default function AdminMessaging() {
         </Card>
 
         {/* Messages Area */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 flex flex-col">
           {selectedConversation ? (
             <>
               <CardHeader className="pb-3">
@@ -690,8 +690,8 @@ export default function AdminMessaging() {
                 </div>
               </CardHeader>
               <Separator />
-              <CardContent className="p-0">
-                <ScrollArea className="h-[calc(100vh-24rem)] p-4">
+              <CardContent className="p-0 flex-1">
+                <ScrollArea className="h-full p-4">
                   {loadingMessages ? (
                     <div className="space-y-4">
                       {[...Array(3)].map((_, i) => (
@@ -792,7 +792,7 @@ export default function AdminMessaging() {
               </CardContent>
             </>
           ) : (
-            <CardContent className="flex items-center justify-center h-full">
+            <CardContent className="flex items-center justify-center flex-1">
               <div className="text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-medium mb-2">Select a conversation</h3>
