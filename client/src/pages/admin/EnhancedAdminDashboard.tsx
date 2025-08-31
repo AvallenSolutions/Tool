@@ -138,11 +138,11 @@ export default function EnhancedAdminDashboard() {
 
   if (analyticsLoading) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="Admin Dashboard" subtitle="Loading platform management interface..." />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <div className="animate-pulse space-y-6">
               <div className="h-8 bg-gray-200 rounded w-1/4"></div>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -158,11 +158,11 @@ export default function EnhancedAdminDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="Admin Dashboard" subtitle="Platform management and oversight" />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
