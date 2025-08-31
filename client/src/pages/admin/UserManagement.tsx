@@ -104,11 +104,11 @@ export default function UserManagement() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="User Management" subtitle="Loading user data..." />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
@@ -133,11 +133,11 @@ export default function UserManagement() {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="User Management" subtitle="Error loading user data" />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <Card className="border-red-200 bg-red-50">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2">
@@ -158,14 +158,14 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header 
           title="User Management" 
           subtitle={`Managing ${users.length} client companies and their sustainability profiles`}
         />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">

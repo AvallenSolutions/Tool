@@ -174,6 +174,7 @@ function Router() {
       <Route path="/app/kpis" component={KPIsPage} />
       {/* Monthly facility updates now integrated into Production Facility popup */}
       <Route path="/app/admin" component={AdminDashboardMain} />
+      <Route path="/app/admin/dashboard" component={AdminDashboardMain} />
       <Route path="/app/admin/suppliers/:id/edit" component={SupplierEdit} />
       <Route path="/app/admin/suppliers/:id" component={AdminSupplierDetail} />
       <Route path="/app/admin/suppliers" component={SupplierManagement} />

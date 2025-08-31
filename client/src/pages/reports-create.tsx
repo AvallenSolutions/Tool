@@ -80,9 +80,9 @@ export default function ReportsCreate() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="Create Reports" subtitle="Generate new sustainability and LCA reports" />
         <main className="flex-1 p-6 overflow-y-auto space-y-8">
           

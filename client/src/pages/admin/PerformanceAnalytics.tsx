@@ -242,11 +242,11 @@ export default function PerformanceAnalytics() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-screen">
           <Header title="Performance Analytics" subtitle="Loading performance data..." />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Performance Analytics</h1>
@@ -271,11 +271,11 @@ export default function PerformanceAnalytics() {
 
   if (error || !analytics) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <Header title="Performance Analytics" subtitle="Error loading analytics data" />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <Card className="border-red-200 bg-red-50">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2">
@@ -296,14 +296,14 @@ export default function PerformanceAnalytics() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header 
           title="Performance Analytics" 
           subtitle="Comprehensive platform performance monitoring and insights"
         />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">

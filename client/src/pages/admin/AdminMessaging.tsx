@@ -21,11 +21,11 @@ export default function AdminMessagingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <Header title="Admin Messaging" subtitle="Loading messaging system..." />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Admin Messaging</h1>
@@ -50,11 +50,11 @@ export default function AdminMessagingPage() {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-lightest-gray">
+      <div className="flex min-h-screen bg-lightest-gray">
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <Header title="Admin Messaging" subtitle="Error loading messaging system" />
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="flex-1 p-6">
             <Card className="border-red-200 bg-red-50">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2">
@@ -75,14 +75,14 @@ export default function AdminMessagingPage() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray overflow-hidden">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header 
           title="Admin Messaging" 
           subtitle="Direct communication with users and support conversation management"
         />
-        <div className="flex-1 p-6 overflow-hidden">
+        <div className="flex-1 p-6">
           <AdminMessaging />
         </div>
       </div>

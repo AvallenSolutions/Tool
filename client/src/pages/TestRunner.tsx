@@ -83,11 +83,11 @@ export default function TestRunner() {
   };
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex min-h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         <Header title="Test Runner" subtitle="End-to-End Testing & Validation for Drinks Sustainability Tool" />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6">
           <div className="max-w-6xl mx-auto space-y-6">
             
             {/* Control Panel */}
