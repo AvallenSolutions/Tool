@@ -158,12 +158,12 @@ export default function EnhancedAdminDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray overflow-hidden">
+    <div className="flex h-screen bg-lightest-gray">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         <Header title="Admin Dashboard" subtitle="Platform management and oversight" />
         <main className="flex-1 p-6 overflow-y-auto">
-          <div className="space-y-6 h-full">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
