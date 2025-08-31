@@ -422,7 +422,7 @@ export default function AdminMessaging() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
@@ -443,7 +443,7 @@ export default function AdminMessaging() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
         {/* Conversations List */}
         <Card className="lg:col-span-1 h-full flex flex-col">
           <CardHeader className="pb-3">

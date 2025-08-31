@@ -75,17 +75,15 @@ export default function AdminMessagingPage() {
   }
 
   return (
-    <div className="flex h-screen bg-lightest-gray">
+    <div className="flex h-screen bg-lightest-gray overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Admin Messaging" 
           subtitle="Direct communication with users and support conversation management"
         />
-        <div className="flex-1 p-6 min-h-0">
-          <div className="h-full">
-            <AdminMessaging />
-          </div>
+        <div className="flex-1 p-6 overflow-hidden">
+          <AdminMessaging />
         </div>
       </div>
     </div>
