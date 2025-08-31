@@ -82,8 +82,10 @@ export default function AdminMessagingPage() {
           title="Admin Messaging" 
           subtitle="Direct communication with users and support conversation management"
         />
-        <div className="flex-1 p-6">
-          <AdminMessaging />
+        <div className="flex-1 p-6 min-h-0">
+          <div className="h-full">
+            <AdminMessaging />
+          </div>
         </div>
       </div>
     </div>
