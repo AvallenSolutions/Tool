@@ -34,6 +34,13 @@ export default function Sidebar() {
     }
   }, [location]);
 
+  // Auto-expand Admin section when on any admin-related page
+  useEffect(() => {
+    if (location.startsWith('/app/admin')) {
+      setAdminExpanded(true);
+    }
+  }, [location]);
+
   const handleLogout = () => {
     window.location.href = "/api/logout";
   };
@@ -347,7 +354,7 @@ export default function Sidebar() {
                           size="sm"
                           className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
                             isSubActive
-                              ? "bg-white text-[#209d50] hover:bg-gray-100"
+                              ? "bg-white text-[#209d50] font-semibold hover:bg-gray-100 border border-green-200 shadow-sm"
                               : "text-white/80 hover:bg-green-600 hover:text-white"
                           }`}
                           onClick={() => navigate(subItem.path)}
