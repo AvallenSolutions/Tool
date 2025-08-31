@@ -141,9 +141,17 @@ export class BrowserPoolService {
 
     try {
       if (shouldReset) {
-        // Reset page state for next use
+        // Enhanced reset to prevent memory leaks
         await pooledPage.page.goto('about:blank');
         await pooledPage.page.setContent('');
+        
+        // Clear all cookies and cache
+        const client = await pooledPage.page.target().createCDPSession();
+        await client.send('Network.clearBrowserCookies');
+        await client.send('Network.clearBrowserCache');
+        await client.detach();
+        
+        // Clear JavaScript heap
         await pooledPage.page.evaluateOnNewDocument(() => {
           // Clear any global state
           delete (window as any).__PDF_GENERATION__;

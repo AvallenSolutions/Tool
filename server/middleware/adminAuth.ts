@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from '../db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '../config/logger';
 
 export interface AdminRequest extends Request {
   user: any;
@@ -19,31 +20,43 @@ export interface AdminRequest extends Request {
  */
 export async function requireAdminRole(req: AdminRequest, res: Response, next: NextFunction) {
   try {
-    // SECURITY FIX: Restricted development mode bypass with additional safeguards
-    if (process.env.NODE_ENV === 'development' || process.env.ADMIN_BYPASS_DEV === '1') {
-      // Additional safety check: only allow on localhost
-      const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname.endsWith('.replit.dev');
+    // SECURITY: Only allow development bypass in strictly controlled conditions
+    if (process.env.NODE_ENV === 'development' && process.env.REPLIT_DB_URL) {
+      // Only allow on Replit development environments
+      const isReplitDev = req.hostname.endsWith('.replit.dev') || req.hostname.endsWith('.repl.co');
+      const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1';
       
-      if (!isLocalhost) {
-        console.error('🚨 SECURITY ALERT: Admin bypass attempted on non-localhost domain:', req.hostname);
+      if (!isReplitDev && !isLocalhost) {
+        logger.error({ 
+          hostname: req.hostname, 
+          ip: req.ip,
+          userAgent: req.get('User-Agent')
+        }, 'SECURITY ALERT: Admin bypass attempted on unauthorized domain');
+        
         return res.status(403).json({ 
-          error: 'Admin bypass only allowed on localhost',
-          message: 'Security violation detected'
+          error: 'Unauthorized access attempt',
+          message: 'Admin access restricted to development environments only'
         });
       }
       
-      console.warn('⚠️  DEV MODE: Admin authentication bypassed - THIS SHOULD NEVER HAPPEN IN PRODUCTION');
-      
-      // Create a mock admin user for development using existing user ID
-      req.adminUser = {
-        id: '41152482', // Use existing user ID in database
-        email: 'admin@avallen.solutions',
-        firstName: 'Development',
-        lastName: 'Admin',
-        role: 'admin'
-      };
-      
-      return next();
+      // Verify this is actually a development Replit environment
+      if (process.env.REPL_OWNER && process.env.REPL_SLUG) {
+        logger.warn({ 
+          repl: `${process.env.REPL_OWNER}/${process.env.REPL_SLUG}`,
+          hostname: req.hostname 
+        }, 'Development admin bypass activated in Replit environment');
+        
+        // Use predefined admin user for development
+        req.adminUser = {
+          id: '44886248', // Existing verified admin user ID
+          email: 'tim@avallen.solutions',
+          firstName: 'Tim',
+          lastName: 'Admin', 
+          role: 'admin'
+        };
+        
+        return next();
+      }
     }
 
     /* Production authentication code */

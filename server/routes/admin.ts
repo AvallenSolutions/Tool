@@ -3,6 +3,7 @@ import { db } from '../db';
 import { users, companies, reports, verifiedSuppliers, supplierProducts, conversations, messages, lcaJobs, feedbackSubmissions, products, companyData, companyFootprintData } from '@shared/schema';
 import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
 import { eq, count, gte, desc, and, lt, ilike, or, sql } from 'drizzle-orm';
+import { logger } from '../config/logger';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.use(requireAdminRole);
  */
 router.get('/lca-jobs', async (req: AdminRequest, res: Response) => {
   try {
-    console.log('Admin LCA jobs monitoring endpoint called');
+    logger.info({ endpoint: 'admin/lca-jobs' }, 'Admin LCA jobs monitoring query initiated');
     
     // Fetch latest 100 LCA jobs ordered by start time
     const jobs = await db
@@ -51,7 +52,7 @@ router.get('/lca-jobs', async (req: AdminRequest, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Error fetching LCA jobs:', error);
+    logger.error({ error, endpoint: 'admin/lca-jobs' }, 'Failed to fetch LCA jobs data');
     res.status(500).json({ 
       success: false,
       error: 'Failed to fetch LCA jobs' 
@@ -65,7 +66,7 @@ router.get('/lca-jobs', async (req: AdminRequest, res: Response) => {
  */
 router.get('/feedback', async (req: AdminRequest, res: Response) => {
   try {
-    console.log('Admin feedback endpoint called');
+    logger.info({ endpoint: 'admin/feedback' }, 'Admin feedback query initiated');
     
     // Fetch all feedback submissions with company information
     const feedback = await db
@@ -92,7 +93,7 @@ router.get('/feedback', async (req: AdminRequest, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Error fetching feedback:', error);
+    logger.error({ error, endpoint: 'admin/feedback' }, 'Failed to fetch feedback submissions');
     res.status(500).json({ 
       success: false,
       error: 'Failed to fetch feedback submissions' 
@@ -135,7 +136,7 @@ router.patch('/feedback/:id/status', async (req: AdminRequest, res: Response) =>
     });
 
   } catch (error) {
-    console.error('Error updating feedback status:', error);
+    logger.error({ error, feedbackId: id, endpoint: 'admin/feedback/status' }, 'Failed to update feedback status');
     res.status(500).json({ 
       success: false,
       error: 'Failed to update feedback status' 
@@ -149,7 +150,7 @@ router.patch('/feedback/:id/status', async (req: AdminRequest, res: Response) =>
  */
 router.get('/analytics', async (req: AdminRequest, res: Response) => {
   try {
-    console.log('Admin analytics endpoint called');
+    logger.info({ endpoint: 'admin/analytics' }, 'Admin analytics query initiated');
     // Calculate date ranges for growth calculations
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -361,7 +362,7 @@ router.post('/products/:id/reject', async (req: AdminRequest, res: Response) => 
 
 router.get('/suppliers', async (req: AdminRequest, res: Response) => {
   try {
-    console.log('Admin suppliers endpoint called');
+    logger.info({ endpoint: 'admin/suppliers' }, 'Admin suppliers query initiated');
     const suppliersWithSubmitter = await db
       .select({
         id: verifiedSuppliers.id,
@@ -724,28 +725,31 @@ router.put('/reports/:reportId/approve', async (req: AdminRequest, res: Response
  */
 router.get('/supplier-products', async (req: AdminRequest, res: Response) => {
   try {
-    console.log('Admin supplier-products endpoint called');
+    logger.info({ endpoint: 'admin/supplier-products' }, 'Admin supplier products query initiated');
     
     const supplierProductsData = await db
       .select({
         id: supplierProducts.id,
         productName: supplierProducts.productName,
-        supplierName: supplierProducts.supplierName,
-        supplierCategory: supplierProducts.supplierCategory,
-        productCategory: supplierProducts.productCategory,
-        unitPrice: supplierProducts.unitPrice,
+        productDescription: supplierProducts.productDescription,
+        sku: supplierProducts.sku,
+        hasPrecalculatedLca: supplierProducts.hasPrecalculatedLca,
+        lcaDataJson: supplierProducts.lcaDataJson,
+        productAttributes: supplierProducts.productAttributes,
+        submittedBy: supplierProducts.submittedBy,
+        submittedByUserId: supplierProducts.submittedByUserId,
+        submittedByCompanyId: supplierProducts.submittedByCompanyId,
+        isVerified: supplierProducts.isVerified,
+        verifiedBy: supplierProducts.verifiedBy,
+        verifiedAt: supplierProducts.verifiedAt,
+        basePrice: supplierProducts.basePrice,
         currency: supplierProducts.currency,
         minimumOrderQuantity: supplierProducts.minimumOrderQuantity,
         leadTimeDays: supplierProducts.leadTimeDays,
-        sustainabilityCertifications: supplierProducts.sustainabilityCertifications,
-        carbonFootprintPerUnit: supplierProducts.carbonFootprintPerUnit,
-        waterUsagePerUnit: supplierProducts.waterUsagePerUnit,
-        wasteGeneratedPerUnit: supplierProducts.wasteGeneratedPerUnit,
-        packagingMaterials: supplierProducts.packagingMaterials,
-        description: supplierProducts.description,
-        availabilityStatus: supplierProducts.availabilityStatus,
-        qualityScore: supplierProducts.qualityScore,
-        supplierLocation: supplierProducts.supplierLocation,
+        certifications: supplierProducts.certifications,
+        submissionStatus: supplierProducts.submissionStatus,
+        adminNotes: supplierProducts.adminNotes,
+        imageUrl: supplierProducts.imageUrl,
         createdAt: supplierProducts.createdAt,
         updatedAt: supplierProducts.updatedAt
       })
@@ -759,7 +763,7 @@ router.get('/supplier-products', async (req: AdminRequest, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Admin supplier-products list error:', error);
+    logger.error({ error, endpoint: 'admin/supplier-products' }, 'Failed to fetch supplier products data');
     res.status(500).json({ 
       error: 'Failed to fetch supplier products data',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -775,7 +779,7 @@ router.put('/suppliers/:supplierId', async (req: AdminRequest, res: Response) =>
   try {
     const { supplierId } = req.params;
     
-    console.log('Raw request body:', JSON.stringify(req.body, null, 2));
+    logger.debug({ body: req.body, supplierId }, 'Admin supplier update request received');
     
     // Clean the request body and ensure proper date handling
     const { images, createdAt, updatedAt, id, submittedBy, companyName, ...cleanData } = req.body;
