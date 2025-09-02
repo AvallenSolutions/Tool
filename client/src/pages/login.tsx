@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle, Shield, Lock, Globe, ArrowRight, Leaf, Award, BarChart3, Users, FileText } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
@@ -9,8 +10,12 @@ import avallenLogo from "@assets/White Background-Winner-Avallen Solutions_17558
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleLogin = async () => {
+    if (!agreedToTerms) {
+      return; // Don't proceed if terms not agreed
+    }
     setIsLoading(true);
     // Direct login without CAPTCHA for now
     window.location.href = "/api/login";
@@ -89,11 +94,33 @@ export default function Login() {
                     </p>
                   </div>
 
+                  {/* Terms Agreement Checkbox */}
+                  <div className="flex items-start space-x-3 bg-gray-50 rounded-lg p-4">
+                    <Checkbox 
+                      id="terms-agreement"
+                      checked={agreedToTerms}
+                      onCheckedChange={setAgreedToTerms}
+                      className="mt-0.5"
+                      data-testid="checkbox-terms-agreement"
+                    />
+                    <label htmlFor="terms-agreement" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
+                      I acknowledge that I have read and agree to the{" "}
+                      <Link href="/app/terms-of-service" className="text-avallen-green hover:underline font-medium">
+                        Terms of Service
+                      </Link>
+                      {" "}and{" "}
+                      <Link href="/app/privacy-policy" className="text-avallen-green hover:underline font-medium">
+                        Privacy Policy
+                      </Link>
+                    </label>
+                  </div>
+
                   {/* Login Button */}
                   <Button 
                     onClick={handleLogin}
-                    disabled={isLoading}
-                    className="w-full bg-avallen-green hover:bg-avallen-green-light text-white py-6 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading || !agreedToTerms}
+                    className="w-full bg-avallen-green hover:bg-avallen-green-light text-white py-6 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                    data-testid="button-login"
                   >
                     <div className="flex items-center justify-center">
                       <div className="w-6 h-6 bg-white rounded mr-3 flex items-center justify-center">
@@ -103,6 +130,12 @@ export default function Login() {
                       {!isLoading && <ArrowRight className="ml-3 w-5 h-5" />}
                     </div>
                   </Button>
+
+                  {!agreedToTerms && (
+                    <p className="text-xs text-gray-500 text-center">
+                      Please agree to the Terms of Service and Privacy Policy to continue
+                    </p>
+                  )}
 
                   {/* Account Help Section */}
                   <div className="text-center space-y-2">
