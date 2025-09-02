@@ -268,6 +268,24 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* Footer with Privacy Policy Link */}
+      <footer className="bg-white/80 backdrop-blur-sm border-t border-light-gray">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
+            <p>© 2025 Avallen Solutions Ltd. All rights reserved.</p>
+            <div className="flex items-center space-x-4 mt-2 sm:mt-0">
+              <Link href="/app/privacy-policy" className="text-avallen-green hover:underline" data-testid="login-privacy-link">
+                Privacy Policy
+              </Link>
+              <span className="text-gray-400">|</span>
+              <a href="mailto:tim@avallen.solutions" className="text-avallen-green hover:underline">
+                Support
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

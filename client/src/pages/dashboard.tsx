@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import MetricsCards from "@/components/dashboard/metrics-cards";
 import EmissionsChart from "@/components/dashboard/emissions-chart";
 import ReportStatus from "@/components/dashboard/report-status";
@@ -199,6 +200,7 @@ export default function Dashboard() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
 
       {/* Tour components */}
