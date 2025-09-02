@@ -39,6 +39,14 @@ export default function Footer() {
                 <Shield className="w-4 h-4" />
                 <span>Privacy Policy</span>
               </Link>
+              <Link 
+                href="/app/terms-of-service" 
+                className="flex items-center space-x-2 text-gray-600 hover:text-avallen-green transition-colors"
+                data-testid="footer-terms-link"
+              >
+                <Shield className="w-4 h-4" />
+                <span>Terms of Service</span>
+              </Link>
               <div className="text-gray-500">
                 <p>UK GDPR Compliant</p>
                 <p>Last Updated: 01/09/2025</p>

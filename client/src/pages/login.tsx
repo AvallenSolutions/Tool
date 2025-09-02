@@ -279,6 +279,10 @@ export default function Login() {
                 Privacy Policy
               </Link>
               <span className="text-gray-400">|</span>
+              <Link href="/app/terms-of-service" className="text-avallen-green hover:underline" data-testid="login-terms-link">
+                Terms of Service
+              </Link>
+              <span className="text-gray-400">|</span>
               <a href="mailto:tim@avallen.solutions" className="text-avallen-green hover:underline">
                 Support
               </a>
