@@ -66,6 +66,13 @@ const categoryColors = {
   'Environmental': 'bg-green-100 text-green-800 border-green-200',
   'Supply Chain': 'bg-blue-100 text-blue-800 border-blue-200',
   'Production': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Purpose & Stakeholder Governance': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  'Worker Engagement': 'bg-rose-100 text-rose-800 border-rose-200',
+  'Human Rights': 'bg-amber-100 text-amber-800 border-amber-200',
+  'JEDI': 'bg-violet-100 text-violet-800 border-violet-200',
+  'Climate Action': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  'Risk Standards': 'bg-orange-100 text-orange-800 border-orange-200',
+  'Circularity': 'bg-teal-100 text-teal-800 border-teal-200',
 };
 
 export function KPIsPage() {
@@ -80,6 +87,7 @@ export function KPIsPage() {
   const [calculatedBaseline, setCalculatedBaseline] = useState<number | null>(null);
   const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
   const [kpiBaselines, setKpiBaselines] = useState<Record<string, number>>({});
+  const [activeTab, setActiveTab] = useState('traditional');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -99,6 +107,15 @@ export function KPIsPage() {
     queryKey: ['/api/enhanced-kpis/dashboard'],
     queryFn: async () => {
       const response = await fetch('/api/enhanced-kpis/dashboard');
+      return await response.json();
+    },
+  });
+
+  // Fetch B Corp KPIs
+  const { data: bCorpKPIsData, isLoading: bCorpKPIsLoading } = useQuery({
+    queryKey: ['/api/kpis/b-corp'],
+    queryFn: async () => {
+      const response = await fetch('/api/kpis/b-corp');
       return await response.json();
     },
   });
@@ -313,8 +330,9 @@ export function KPIsPage() {
       </div>
 
       <Tabs defaultValue="library" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="library">KPI Library</TabsTrigger>
+          <TabsTrigger value="b-corp">B Corp Certification</TabsTrigger>
           <TabsTrigger value="dashboard">Progress Dashboard</TabsTrigger>
         </TabsList>
 
@@ -462,6 +480,85 @@ export function KPIsPage() {
               })}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="b-corp" className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+            <Card className="bg-white border shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-green-600" />
+                  B Corp Certification KPIs
+                </CardTitle>
+                <CardDescription>
+                  Track your progress towards B Corp certification across key impact areas: Purpose & Stakeholder Governance, Worker Engagement, Human Rights, Justice/Equity/Diversity/Inclusion (JEDI), Climate Action, Risk Standards, and Circularity.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            
+            {bCorpKPIsLoading ? (
+              <div className="text-center py-8">Loading B Corp KPIs...</div>
+            ) : (
+              <div className="space-y-6">
+                {bCorpKPIsData?.success && Object.entries(bCorpKPIsData.kpis).map(([category, kpis]) => (
+                  <Card key={category} className="bg-white border shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4" />
+                          {category}
+                        </div>
+                        <Badge 
+                          className={`${categoryColors[category as keyof typeof categoryColors] || 'bg-gray-100 text-gray-800 border-gray-200'} px-3 py-1`}
+                          variant="outline"
+                        >
+                          {(kpis as KpiDefinition[]).length} KPIs
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {(kpis as KpiDefinition[]).map((kpi) => (
+                          <div key={kpi.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium text-sm">{kpi.kpiName}</h4>
+                              <span className="text-xs text-gray-500">{kpi.unit}</span>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-3 line-clamp-2">{kpi.description}</p>
+                            <div className="text-xs text-blue-600 mb-3">
+                              <strong>Formula:</strong> {kpi.formulaJson.calculation_type}
+                            </div>
+                            <Button 
+                              onClick={() => {
+                                setSelectedKpi(kpi);
+                                setGoalFormData({ ...goalFormData, kpiDefinitionId: kpi.id });
+                                setIsGoalDialogOpen(true);
+                              }}
+                              size="sm" 
+                              className="w-full"
+                              data-testid={`button-set-goal-${kpi.id}`}
+                            >
+                              Set Goal
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {(!bCorpKPIsData || !bCorpKPIsData.success || Object.keys(bCorpKPIsData.kpis || {}).length === 0) && (
+                  <Card className="bg-gray-50 border border-gray-200">
+                    <CardContent className="p-8 text-center">
+                      <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">B Corp KPIs Not Available</h3>
+                      <p className="text-gray-600">B Corp certification KPIs are being loaded. Please try again in a moment.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 

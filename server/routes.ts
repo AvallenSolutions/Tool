@@ -10985,6 +10985,170 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
 
   // ============ END PIONEERS PROGRAM ENDPOINTS ============
 
+  // ===== EVIDENCE LOCKER API ENDPOINTS =====
+
+  // GET /api/evidence-locker - Get all evidence for a company
+  app.get('/api/evidence-locker', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+
+      const evidence = await db
+        .select()
+        .from(evidenceLocker)
+        .where(and(
+          eq(evidenceLocker.companyId, company.id),
+          eq(evidenceLocker.isActive, true)
+        ))
+        .orderBy(evidenceLocker.uploadedAt);
+
+      res.json({ success: true, evidence });
+    } catch (error) {
+      console.error('Error fetching evidence locker:', error);
+      res.status(500).json({ error: 'Failed to fetch evidence locker' });
+    }
+  });
+
+  // POST /api/evidence-locker - Upload new evidence document
+  app.post('/api/evidence-locker', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+
+      const { policyType, documentName, documentUrl } = req.body;
+      
+      if (!policyType || !documentName || !documentUrl) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: policyType, documentName, documentUrl' 
+        });
+      }
+
+      // Deactivate any existing evidence for the same policy type
+      await db
+        .update(evidenceLocker)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(and(
+          eq(evidenceLocker.companyId, company.id),
+          eq(evidenceLocker.policyType, policyType)
+        ));
+
+      // Insert new evidence
+      const newEvidence = await db
+        .insert(evidenceLocker)
+        .values({
+          companyId: company.id,
+          policyType,
+          documentName,
+          documentUrl,
+          isActive: true,
+        })
+        .returning();
+
+      res.status(201).json({ success: true, evidence: newEvidence[0] });
+    } catch (error) {
+      console.error('Error uploading evidence:', error);
+      res.status(500).json({ error: 'Failed to upload evidence' });
+    }
+  });
+
+  // DELETE /api/evidence-locker/:id - Remove evidence document
+  app.delete('/api/evidence-locker/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      const evidenceId = req.params.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+
+      // Verify evidence belongs to user's company
+      const evidence = await db
+        .select()
+        .from(evidenceLocker)
+        .where(and(
+          eq(evidenceLocker.id, evidenceId),
+          eq(evidenceLocker.companyId, company.id)
+        ))
+        .limit(1);
+
+      if (evidence.length === 0) {
+        return res.status(404).json({ error: 'Evidence not found' });
+      }
+
+      // Mark as inactive instead of hard delete
+      await db
+        .update(evidenceLocker)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(evidenceLocker.id, evidenceId));
+
+      res.json({ success: true, message: 'Evidence removed successfully' });
+    } catch (error) {
+      console.error('Error removing evidence:', error);
+      res.status(500).json({ error: 'Failed to remove evidence' });
+    }
+  });
+
+  // ===== B CORP KPI CATEGORIES ENDPOINT =====
+
+  // GET /api/kpis/b-corp - Get B Corp specific KPIs by category
+  app.get('/api/kpis/b-corp', isAuthenticated, async (req, res) => {
+    try {
+      const bCorpCategories = [
+        'Purpose & Stakeholder Governance',
+        'Worker Engagement', 
+        'Human Rights',
+        'JEDI',
+        'Climate Action',
+        'Risk Standards',
+        'Circularity'
+      ];
+
+      const bCorpKPIs = await db
+        .select()
+        .from(kpiDefinitions)
+        .where(inArray(kpiDefinitions.kpiCategory, bCorpCategories))
+        .orderBy(kpiDefinitions.kpiCategory, kpiDefinitions.kpiName);
+
+      // Group by category
+      const groupedKPIs = bCorpKPIs.reduce((acc, kpi) => {
+        if (!acc[kpi.kpiCategory]) {
+          acc[kpi.kpiCategory] = [];
+        }
+        acc[kpi.kpiCategory].push(kpi);
+        return acc;
+      }, {} as Record<string, typeof bCorpKPIs>);
+
+      res.json({ success: true, kpis: groupedKPIs });
+    } catch (error) {
+      console.error('Error fetching B Corp KPIs:', error);
+      res.status(500).json({ error: 'Failed to fetch B Corp KPIs' });
+    }
+  });
+
   const server = createServer(app);
   
   // Initialize WebSocket service

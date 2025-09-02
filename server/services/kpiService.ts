@@ -318,6 +318,34 @@ export class KPICalculationService {
         case 'total_ingredients_volume':
           return await this.calculateTotalIngredientsVolume(companyId);
         
+        // B Corp specific data points
+        case 'suppliers_with_signed_code':
+          return await this.calculateSuppliersWithSignedCode(companyId);
+          
+        case 'suppliers_human_rights_screened':
+          return await this.calculateSuppliersHumanRightsScreened(companyId);
+          
+        case 'total_employees':
+          return await this.calculateTotalEmployees(companyId);
+          
+        case 'employees_earning_living_wage':
+          return await this.calculateEmployeesEarningLivingWage(companyId);
+          
+        case 'employees_covered_by_wellbeing_programs':
+          return await this.calculateEmployeesCoveredByWellbeingPrograms(companyId);
+          
+        case 'employees_completed_jedi_training':
+          return await this.calculateEmployeesCompletedJediTraining(companyId);
+          
+        case 'total_training_hours':
+          return await this.calculateTotalTrainingHours(companyId);
+          
+        case 'jedi_policy_implemented':
+          return await this.checkJediPolicyImplemented(companyId);
+          
+        case 'human_rights_policy_implemented':
+          return await this.checkHumanRightsPolicyImplemented(companyId);
+        
         default:
           console.warn(`Unknown data point: ${dataPoint}`);
           return 0;
@@ -856,6 +884,218 @@ export class KPICalculationService {
       return totalLiters;
     } catch (error) {
       console.error('Error calculating total liters produced:', error);
+      return 0;
+    }
+  }
+
+  // ===== B CORP SPECIFIC CALCULATIONS =====
+
+  /**
+   * Calculate suppliers with signed code of conduct for B Corp compliance
+   */
+  async calculateSuppliersWithSignedCode(companyId: number): Promise<number> {
+    try {
+      const suppliersWithCode = await db
+        .select()
+        .from(suppliers)
+        .where(and(
+          eq(suppliers.companyId, companyId),
+          eq(suppliers.supplierCodeOfConductSigned, true)
+        ));
+      
+      return suppliersWithCode.length;
+    } catch (error) {
+      console.error('Error calculating suppliers with signed code:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate suppliers screened for human rights compliance
+   */
+  async calculateSuppliersHumanRightsScreened(companyId: number): Promise<number> {
+    try {
+      const screenedSuppliers = await db
+        .select()
+        .from(suppliers)
+        .where(and(
+          eq(suppliers.companyId, companyId),
+          eq(suppliers.supplierHumanRightsScreened, true)
+        ));
+      
+      return screenedSuppliers.length;
+    } catch (error) {
+      console.error('Error calculating suppliers human rights screened:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate total employees from company social data
+   */
+  async calculateTotalEmployees(companyId: number): Promise<number> {
+    try {
+      const company = await db
+        .select({ socialData: companies.socialData })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+      
+      if (company.length > 0 && company[0].socialData) {
+        const socialData = company[0].socialData as any;
+        return socialData.employeeMetrics?.totalEmployees || 0;
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error('Error calculating total employees:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate employees earning living wage
+   */
+  async calculateEmployeesEarningLivingWage(companyId: number): Promise<number> {
+    try {
+      const company = await db
+        .select({ socialData: companies.socialData })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+      
+      if (company.length > 0 && company[0].socialData) {
+        const socialData = company[0].socialData as any;
+        const totalEmployees = socialData.employeeMetrics?.totalEmployees || 0;
+        const livingWageAchieved = socialData.jediData?.livingWageAchieved || false;
+        
+        // If living wage is achieved for all employees, return total employees
+        return livingWageAchieved ? totalEmployees : 0;
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error('Error calculating employees earning living wage:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate employees covered by wellbeing programs
+   */
+  async calculateEmployeesCoveredByWellbeingPrograms(companyId: number): Promise<number> {
+    try {
+      const company = await db
+        .select({ socialData: companies.socialData })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+      
+      if (company.length > 0 && company[0].socialData) {
+        const socialData = company[0].socialData as any;
+        const totalEmployees = socialData.employeeMetrics?.totalEmployees || 0;
+        const wellbeingCoverage = socialData.jediData?.wellbeingProgramCoverage || 0;
+        
+        return Math.round((totalEmployees * wellbeingCoverage) / 100);
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error('Error calculating employees covered by wellbeing programs:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate employees who completed JEDI training
+   */
+  async calculateEmployeesCompletedJediTraining(companyId: number): Promise<number> {
+    try {
+      const company = await db
+        .select({ socialData: companies.socialData })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+      
+      if (company.length > 0 && company[0].socialData) {
+        const socialData = company[0].socialData as any;
+        return socialData.jediData?.employeesCompletedJediTraining || 0;
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error('Error calculating employees completed JEDI training:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate total training hours from company social data
+   */
+  async calculateTotalTrainingHours(companyId: number): Promise<number> {
+    try {
+      const company = await db
+        .select({ socialData: companies.socialData })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+      
+      if (company.length > 0 && company[0].socialData) {
+        const socialData = company[0].socialData as any;
+        const totalEmployees = socialData.employeeMetrics?.totalEmployees || 0;
+        const trainingHoursPerEmployee = socialData.employeeMetrics?.trainingHoursPerEmployee || 0;
+        
+        return totalEmployees * trainingHoursPerEmployee;
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error('Error calculating total training hours:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Check if JEDI policy is implemented (binary)
+   */
+  async checkJediPolicyImplemented(companyId: number): Promise<number> {
+    try {
+      const company = await db
+        .select({ socialData: companies.socialData })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+      
+      if (company.length > 0 && company[0].socialData) {
+        const socialData = company[0].socialData as any;
+        return socialData.jediData?.jediPolicyImplemented ? 1 : 0;
+      }
+      
+      return 0;
+    } catch (error) {
+      console.error('Error checking JEDI policy implementation:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Check if human rights policy is implemented (binary)
+   */
+  async checkHumanRightsPolicyImplemented(companyId: number): Promise<number> {
+    try {
+      // Check if company has evidence locker entry for human rights policy
+      const policyEvidence = await db
+        .select()
+        .from(evidenceLocker)
+        .where(and(
+          eq(evidenceLocker.companyId, companyId),
+          eq(evidenceLocker.policyType, 'human_rights_policy'),
+          eq(evidenceLocker.isActive, true)
+        ));
+      
+      return policyEvidence.length > 0 ? 1 : 0;
+    } catch (error) {
+      console.error('Error checking human rights policy implementation:', error);
       return 0;
     }
   }

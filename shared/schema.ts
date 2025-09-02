@@ -329,6 +329,11 @@ export const suppliers = pgTable("suppliers", {
   submittedData: jsonb("submitted_data"),
   submittedAt: timestamp("submitted_at"),
   
+  // B Corp supplier compliance fields
+  supplierCodeOfConductSigned: boolean("supplier_code_of_conduct_signed").default(false),
+  supplierHumanRightsScreened: boolean("supplier_human_rights_screened").default(false),
+  supplierLivingWageCommitted: boolean("supplier_living_wage_committed").default(false),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -659,6 +664,7 @@ export const companySustainabilityData = pgTable("company_sustainability_data", 
       genderDiversityLeadership?: number;
       trainingHoursPerEmployee?: number;
       satisfactionScore?: number;
+      totalEmployees?: number;
     };
     communityImpact: {
       localSuppliersPercentage?: number;
@@ -666,18 +672,33 @@ export const companySustainabilityData = pgTable("company_sustainability_data", 
       localJobsCreated?: number;
       volunteerHours?: number;
     };
+    jediData: {
+      jediPolicyImplemented?: boolean;
+      jediPolicyDocumentUrl?: string;
+      employeesCompletedJediTraining?: number;
+      wellbeingProgramCoverage?: number;
+      livingWageAchieved?: boolean;
+    };
   }>().default({
     employeeMetrics: {
       turnoverRate: undefined,
       genderDiversityLeadership: undefined,
       trainingHoursPerEmployee: undefined,
       satisfactionScore: undefined,
+      totalEmployees: undefined,
     },
     communityImpact: {
       localSuppliersPercentage: undefined,
       communityInvestment: undefined,
       localJobsCreated: undefined,
       volunteerHours: undefined,
+    },
+    jediData: {
+      jediPolicyImplemented: undefined,
+      jediPolicyDocumentUrl: undefined,
+      employeesCompletedJediTraining: undefined,
+      wellbeingProgramCoverage: undefined,
+      livingWageAchieved: undefined,
     },
   }),
   
@@ -1820,6 +1841,19 @@ export const productVersions = pgTable("product_versions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Evidence Locker table - stores governance documents for B Corp compliance
+export const evidenceLocker = pgTable("evidence_locker", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  policyType: varchar("policy_type", { length: 100 }).notNull(), // 'mission_statement', 'vision', 'jedi_policy', 'code_of_conduct', 'supplier_code'
+  documentName: varchar("document_name", { length: 255 }).notNull(),
+  documentUrl: varchar("document_url", { length: 500 }).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // KPI Snapshots table - stores calculated KPI values at specific points in time
 export const kpiSnapshots = pgTable("kpi_snapshots", {
   id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
@@ -2264,6 +2298,23 @@ export const insertProductFacilityMappingSchema = createInsertSchema(productFaci
 export type RegionalWasteStatistics = typeof regionalWasteStatistics.$inferSelect;
 export type InsertRegionalWasteStatistics = typeof regionalWasteStatistics.$inferInsert;
 export const insertRegionalWasteStatisticsSchema = createInsertSchema(regionalWasteStatistics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Evidence Locker relations
+export const evidenceLockerRelations = relations(evidenceLocker, ({ one }) => ({
+  company: one(companies, {
+    fields: [evidenceLocker.companyId],
+    references: [companies.id],
+  }),
+}));
+
+// Type exports for Evidence Locker
+export type EvidenceLocker = typeof evidenceLocker.$inferSelect;
+export type InsertEvidenceLocker = typeof evidenceLocker.$inferInsert;
+export const insertEvidenceLockerSchema = createInsertSchema(evidenceLocker).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
