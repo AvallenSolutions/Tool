@@ -88,6 +88,7 @@ export function KPIsPage() {
   const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
   const [kpiBaselines, setKpiBaselines] = useState<Record<string, number>>({});
   const [activeTab, setActiveTab] = useState('traditional');
+  const [selectedBCorpCategory, setSelectedBCorpCategory] = useState<string>('all');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -491,16 +492,41 @@ export function KPIsPage() {
                   B Corp Certification KPIs
                 </CardTitle>
                 <CardDescription>
-                  Track your progress towards B Corp certification across key impact areas: Purpose & Stakeholder Governance, Worker Engagement, Human Rights, Justice/Equity/Diversity/Inclusion (JEDI), Climate Action, Risk Standards, and Circularity.
+                  Track your progress towards B Corp certification across key impact areas.
                 </CardDescription>
               </CardHeader>
             </Card>
+            
+            {/* B Corp Category Filter */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={selectedBCorpCategory === 'all' ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedBCorpCategory('all')}
+                className="text-xs"
+              >
+                All Areas
+              </Button>
+              {bCorpKPIsData?.success && Object.keys(bCorpKPIsData.kpis).map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedBCorpCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedBCorpCategory(category)}
+                  className="text-xs"
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
             
             {bCorpKPIsLoading ? (
               <div className="text-center py-8">Loading B Corp KPIs...</div>
             ) : (
               <div className="space-y-6">
-                {bCorpKPIsData?.success && Object.entries(bCorpKPIsData.kpis).map(([category, kpis]) => (
+                {bCorpKPIsData?.success && Object.entries(bCorpKPIsData.kpis)
+                  .filter(([category]) => selectedBCorpCategory === 'all' || selectedBCorpCategory === category)
+                  .map(([category, kpis]) => (
                   <Card key={category} className="bg-white border shadow-sm">
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
@@ -517,16 +543,16 @@ export function KPIsPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(kpis as KpiDefinition[]).map((kpi) => (
                           <div key={kpi.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="font-medium text-sm">{kpi.kpiName}</h4>
-                              <span className="text-xs text-gray-500">{kpi.unit}</span>
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{kpi.unit}</span>
                             </div>
                             <p className="text-xs text-gray-600 mb-3 line-clamp-2">{kpi.description}</p>
-                            <div className="text-xs text-blue-600 mb-3">
-                              <strong>Formula:</strong> {kpi.formulaJson.calculation_type}
+                            <div className="text-xs text-blue-600 mb-3 bg-blue-50 p-2 rounded">
+                              <strong>Method:</strong> {kpi.formulaJson.calculation_type}
                             </div>
                             <Button 
                               onClick={() => {
