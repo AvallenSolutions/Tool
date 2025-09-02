@@ -89,6 +89,8 @@ export function KPIsPage() {
   const [kpiBaselines, setKpiBaselines] = useState<Record<string, number>>({});
   const [activeTab, setActiveTab] = useState('traditional');
   const [selectedBCorpCategory, setSelectedBCorpCategory] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'categories' | 'kpis'>('categories');
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
