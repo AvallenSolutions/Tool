@@ -5554,22 +5554,72 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
   // DELETE product endpoint
   app.delete('/api/products/:id', async (req, res) => {
     try {
-      const { products, productVersions } = await import('@shared/schema');
-      const { eq } = await import('drizzle-orm');
+      const { products, productVersions, lcaCalculationJobs } = await import('@shared/schema');
+      const { eq, and } = await import('drizzle-orm');
       const { db } = await import('./db');
       const productId = parseInt(req.params.id);
       
-      // First, delete related product versions to avoid foreign key constraint
+      // Get the product being deleted to check if it's main product
+      const [productToDelete] = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+      
+      if (!productToDelete) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // If this is the main product, transfer main status to another product
+      if (productToDelete.isMainProduct) {
+        // Find the next product in the same company
+        const [nextProduct] = await db
+          .select()
+          .from(products)
+          .where(and(
+            eq(products.companyId, productToDelete.companyId),
+            eq(products.status, 'active')
+          ))
+          .orderBy(products.createdAt)
+          .limit(2); // Get 2 to find the next one after the current
+
+        // Find a product that isn't the one being deleted
+        const nextMainProduct = await db
+          .select()
+          .from(products)
+          .where(and(
+            eq(products.companyId, productToDelete.companyId),
+            eq(products.status, 'active')
+          ))
+          .orderBy(products.createdAt);
+
+        const newMainProduct = nextMainProduct.find(p => p.id !== productId);
+        
+        if (newMainProduct) {
+          await db
+            .update(products)
+            .set({ isMainProduct: true })
+            .where(eq(products.id, newMainProduct.id));
+          console.log(`✅ Transferred main product status from ${productToDelete.name} to ${newMainProduct.name}`);
+        }
+      }
+
+      // Delete related records to avoid foreign key constraints
+      
+      // 1. Delete LCA calculation jobs
+      await db.delete(lcaCalculationJobs).where(eq(lcaCalculationJobs.productId, productId));
+      
+      // 2. Delete product versions
       await db.delete(productVersions).where(eq(productVersions.productId, productId));
       
-      // Then delete the product
+      // 3. Finally delete the product
       const deletedProduct = await db.delete(products).where(eq(products.id, productId)).returning();
       
       if (deletedProduct.length === 0) {
         return res.status(404).json({ error: 'Product not found' });
       }
 
-      res.json({ message: 'Product deleted successfully', id: productId });
+      res.json({ 
+        message: 'Product deleted successfully', 
+        id: productId,
+        mainProductTransferred: productToDelete.isMainProduct
+      });
     } catch (error) {
       console.error('Error deleting product:', error);
       res.status(500).json({ error: 'Failed to delete product' });
