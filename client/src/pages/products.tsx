@@ -101,8 +101,12 @@ export default function ProductsPage() {
 
   const products: ClientProduct[] = rawProducts || [];
 
-  // Get portfolio metrics with calculated LCA data - ensure this hook is always called
-  const portfolioMetrics = usePortfolioMetrics(products || []);
+  // Separate draft and confirmed products
+  const draftProducts = products.filter(product => product.status === 'draft');
+  const confirmedProducts = products.filter(product => product.status !== 'draft');
+
+  // Get portfolio metrics with calculated LCA data - use only confirmed products
+  const portfolioMetrics = usePortfolioMetrics(confirmedProducts || []);
 
   console.log('🔍 Current products state:', products, 'Loading:', isLoading, 'Error:', error);
   console.log('🔍 Products array length:', products.length);
@@ -182,8 +186,13 @@ export default function ProductsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {products.length} {products.length === 1 ? 'product' : 'products'}
+                    {confirmedProducts.length} confirmed
                   </Badge>
+                  {draftProducts.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      {draftProducts.length} draft{draftProducts.length === 1 ? '' : 's'}
+                    </Badge>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -206,7 +215,7 @@ export default function ProductsPage() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-avallen-green mx-auto"></div>
                   <p className="text-sm text-gray-500 mt-2">Loading products...</p>
                 </div>
-              ) : products.length === 0 ? (
+              ) : confirmedProducts.length === 0 && draftProducts.length === 0 ? (
                 <div className="text-center py-12">
                   <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-slate-gray mb-2">No Products Yet</h3>
@@ -222,9 +231,77 @@ export default function ProductsPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Main Product (if any) */}
-                  {products.filter(p => p.isMainProduct).map((product) => (
+                <div className="space-y-6">
+                  {/* Draft Products Section */}
+                  {draftProducts.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                        <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                          <Edit className="w-4 h-4 text-orange-500" />
+                          Draft Products ({draftProducts.length})
+                        </h4>
+                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">
+                          Work in Progress
+                        </Badge>
+                      </div>
+                      {draftProducts.map((product) => (
+                        <Card key={product.id} className="border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-orange-25">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="text-lg font-semibold text-slate-gray">{product.name}</h3>
+                                  <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                                    DRAFT
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">
+                                  SKU: {product.sku || 'Not set'}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Created: {new Date(product.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => navigate(`/app/products/${product.id}/edit`)}
+                                  className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                                >
+                                  <Edit className="w-4 h-4 mr-1" />
+                                  Continue Editing
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDelete(product.id, product.name)}
+                                  className="text-red-600 border-red-300 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Confirmed Products Section */}
+                  {confirmedProducts.length > 0 && (
+                    <div className="space-y-4">
+                      {draftProducts.length > 0 && (
+                        <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                          <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                            <Package className="w-4 h-4 text-avallen-green" />
+                            Confirmed Products ({confirmedProducts.length})
+                          </h4>
+                        </div>
+                      )}
+                      
+                      {/* Main Product (if any) */}
+                      {confirmedProducts.filter(p => p.isMainProduct).map((product) => (
                     <Card key={product.id} className="border-2 border-avallen-green bg-gradient-to-r from-green-50 to-green-25 overflow-hidden">
                       <CardContent className="p-0">
                         <div className="flex">
@@ -310,7 +387,7 @@ export default function ProductsPage() {
 
                   {/* Other Products */}
                   <div className="space-y-4">
-                    {products.filter(p => !p.isMainProduct).map((product) => (
+                      {confirmedProducts.filter(p => !p.isMainProduct).map((product) => (
                       <Card key={product.id} className="border border-light-gray hover:shadow-md transition-all duration-200 overflow-hidden">
                         <CardContent className="p-0">
                           <div className="flex">
@@ -397,7 +474,9 @@ export default function ProductsPage() {
                         </CardContent>
                       </Card>
                     ))}
-                  </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Enhanced Portfolio Overview */}
                   {products.length > 0 && (
