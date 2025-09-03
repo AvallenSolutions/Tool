@@ -5,6 +5,9 @@ import { eq } from 'drizzle-orm';
 interface EmissionsResult {
   totalEmissions: number; // in tonnes CO2e
   breakdown?: Record<string, number>;
+  details?: Array<{productId: number; name: string; emissions: number}>;
+  productCount?: number;
+  entryCount?: number;
 }
 
 /**
@@ -20,6 +23,7 @@ export async function calculatePurchasedGoodsEmissions(companyId: number): Promi
       .where(eq(products.companyId, companyId));
 
     console.log('📦 Found', companyProducts.length, 'products for emissions calculation');
+    console.log('📦 Product details:', companyProducts.map(p => ({ id: p.id, name: p.name, volume: p.annualProductionVolume })));
 
     let totalEmissions = 0;
     const breakdown: Record<string, number> = {};
@@ -79,43 +83,15 @@ export async function calculatePurchasedGoodsEmissions(companyId: number): Promi
         breakdown['Glass Packaging'] = (breakdown['Glass Packaging'] || 0) + bottleEmissions;
       }
 
-      // Add facility allocation emissions (matching refined LCA calculation)
-      try {
-        const { MonthlyDataAggregationService } = await import('./MonthlyDataAggregationService');
-        const monthlyService = new MonthlyDataAggregationService();
-        const aggregatedData = await monthlyService.aggregateMonthlyData(companyId);
-        
-        // Calculate total company production volume for allocation
-        const totalCompanyProduction = companyProducts.reduce((sum, p) => {
-          return sum + (parseFloat(p.annualProductionVolume || '0') || 0);
-        }, 0);
-        
-        if (totalCompanyProduction > 0) {
-          const productionVolume = parseFloat(product.annualProductionVolume || '0') || 0;
-          const allocationRatio = productionVolume / totalCompanyProduction;
-          
-          // Facility energy allocation (same factors as refined LCA)
-          const facilityElectricityEmissions = aggregatedData.totalElectricityKwh * 0.193; // DEFRA 2024
-          const facilityNaturalGasEmissions = aggregatedData.totalNaturalGasM3 * 2.044; // DEFRA 2024
-          const facilityFuelEmissions = aggregatedData.totalFuelLiters * 2.246; // DEFRA 2024 diesel average
-          
-          const facilityEnergyPerUnit = (facilityElectricityEmissions + facilityNaturalGasEmissions + facilityFuelEmissions) * allocationRatio / productionVolume;
-          productEmissions += facilityEnergyPerUnit;
-          
-          console.log(`🏭 Facility allocation for ${product.name}: ${facilityEnergyPerUnit.toFixed(3)} kg CO₂e per unit (${(allocationRatio*100).toFixed(1)}% of facility impacts)`);
-          breakdown['Facility Energy (Allocated)'] = (breakdown['Facility Energy (Allocated)'] || 0) + facilityEnergyPerUnit;
-        }
-      } catch (facilityError) {
-        console.error('Error calculating facility allocation for', product.name, ':', facilityError);
-      }
+      // NOTE: Facility impacts are excluded from Purchased Goods & Services to avoid double-counting with Scope 1 & 2
 
       // Calculate total annual emissions for this product
       const annualVolume = parseFloat(product.annualProductionVolume || '1');
       const annualProductEmissions = productEmissions * annualVolume; // kg CO2e
       
-      console.log(`✅ Total calculated footprint for ${product.name}: ${productEmissions.toFixed(3)} kg CO₂e per unit`);
-      const ingredientEmissions = productEmissions - (breakdown['Glass Packaging'] || 0) - (breakdown['Facility Energy (Allocated)'] || 0);
-      console.log(`📋 Complete breakdown: ${ingredientEmissions.toFixed(3)} kg (ingredients) + ${(breakdown['Glass Packaging'] || 0).toFixed(3)} kg (packaging) + ${(breakdown['Facility Energy (Allocated)'] || 0).toFixed(3)} kg (facility allocation)`);
+      console.log(`✅ Purchased Goods calculation for ${product.name}: ${productEmissions.toFixed(3)} kg CO₂e per unit`);
+      const ingredientEmissions = productEmissions - (breakdown['Glass Packaging'] || 0);
+      console.log(`📋 Breakdown: ${ingredientEmissions.toFixed(3)} kg (ingredients) + ${(breakdown['Glass Packaging'] || 0).toFixed(3)} kg (packaging) - excludes facility impacts`);
       console.log(`📊 ${product.name} per-unit emissions: ${productEmissions.toFixed(3)} kg CO₂e per unit`);
       console.log(`🏭 ${product.name} annual production: ${annualVolume.toLocaleString()} units`);
       console.log(`🌍 ${product.name} total annual emissions: ${(annualProductEmissions/1000).toFixed(1)} tonnes CO₂e`);
@@ -131,12 +107,18 @@ export async function calculatePurchasedGoodsEmissions(companyId: number): Promi
     // Convert from kg to tonnes
     const totalInTonnes = totalEmissions / 1000;
     
+    console.log(`🧮 TOTAL Purchased Goods & Services: ${totalInTonnes.toFixed(3)} tonnes CO₂e from ${companyProducts.length} products`);
+    console.log(`📋 Total breakdown by category:`, Object.fromEntries(
+      Object.entries(breakdown).map(([key, value]) => [key, `${(value / 1000).toFixed(3)} tonnes`])
+    ));
+    
     return {
       totalEmissions: totalInTonnes,
       breakdown: Object.fromEntries(
         Object.entries(breakdown).map(([key, value]) => [key, value / 1000])
       ),
-      details: details
+      details: details,
+      productCount: companyProducts.length
     };
 
   } catch (error) {
