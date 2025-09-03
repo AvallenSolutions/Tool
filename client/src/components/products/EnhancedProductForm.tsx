@@ -2813,6 +2813,8 @@ export default function EnhancedProductForm({
               
               // Trigger validation
               const isValid = await form.trigger();
+              console.log('🔍 Form validation result:', isValid);
+              console.log('🔍 Form errors:', form.formState.errors);
               
               if (!isValid) {
                 // Create error summary with tab guidance
@@ -2825,6 +2827,9 @@ export default function EnhancedProductForm({
                 }
                 if (errors.packaging?.primaryContainer?.material) {
                   errorSummary.push("• Packaging tab: Select container material");
+                }
+                if (errors.endOfLife) {
+                  errorSummary.push("• End of Life tab: Complete end-of-life management details");
                 }
                 
                 if (errorSummary.length > 0) {
@@ -2839,6 +2844,8 @@ export default function EnhancedProductForm({
                     setActiveTab('basic');
                   } else if (errors.packaging) {
                     setActiveTab('packaging');
+                  } else if (errors.endOfLife) {
+                    setActiveTab('endoflife');
                   }
                 }
                 
