@@ -138,11 +138,12 @@ export function KPIsPage() {
     queryKey: ['/api/enhanced-kpis/ai-insights', selectedMainCategory],
     queryFn: async () => {
       if (!selectedMainCategory) return null;
-      const response = await apiRequest('/api/enhanced-kpis/ai-insights', {
+      const response = await fetch('/api/enhanced-kpis/ai-insights', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: selectedMainCategory, context: 'dashboard' }),
       });
-      return response;
+      return await response.json();
     },
     enabled: !!selectedMainCategory && viewMode === 'category-detail',
     staleTime: 5 * 60 * 1000, // 5 minutes
