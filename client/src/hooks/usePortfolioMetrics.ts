@@ -67,14 +67,20 @@ export function usePortfolioMetrics(products?: Product[]): PortfolioMetrics {
   const error = !!portfolioQuery.error;
   const data = portfolioQuery.data;
 
-  // Calculate totals from the fetched data
+  // Calculate totals from the fetched data (exclude facility impacts to match Carbon Calculator)
   const metrics = data ? data.reduce((acc, item) => {
     const { product, lcaData } = item;
     const volume = parseFloat(product.annualProductionVolume?.toString() || '0') || 0;
     
     if (lcaData?.success && lcaData.data) {
       const perUnit = lcaData.data.perUnit;
-      acc.totalCO2e += perUnit.co2e_kg * volume;
+      const breakdown = lcaData.data.breakdown;
+      
+      // Calculate supply chain emissions only (ingredients + packaging, excluding facilities)
+      const facilityImpactPerUnit = breakdown?.facilities?.co2e || 0;
+      const supplyChainCO2e = perUnit.co2e_kg - facilityImpactPerUnit;
+      
+      acc.totalCO2e += supplyChainCO2e * volume;
       acc.totalWater += perUnit.water_liters * volume;
       acc.totalWaste += perUnit.waste_kg * volume;
       acc.withLCADataCount++;
