@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Target, TrendingUp, TrendingDown, Award, Clock, AlertTriangle } from "lucide-react";
+import { CalendarIcon, Target, TrendingUp, TrendingDown, Award, Clock, AlertTriangle, Edit, Trash2, MoreVertical } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -79,7 +80,9 @@ export function KPIsPage() {
   const [viewMode, setViewMode] = useState<'categories' | 'category-detail'>('categories');
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
+  const [isEditGoalDialogOpen, setIsEditGoalDialogOpen] = useState(false);
   const [selectedKpi, setSelectedKpi] = useState<KpiDefinition | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<KpiGoalData | null>(null);
   const [goalFormData, setGoalFormData] = useState<GoalFormData>({
     kpiDefinitionId: '',
     targetReductionPercentage: 10,
@@ -144,6 +147,29 @@ export function KPIsPage() {
     },
   });
 
+  // Delete goal mutation
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (goalId: string) => {
+      return await apiRequest(`/api/enhanced-kpis/goals/${goalId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/dashboard'] });
+      toast({
+        title: "Goal Deleted",
+        description: "The sustainability goal has been removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete goal. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const definitions = definitionsData?.success ? definitionsData.definitions : [];
   const kpiGoals = dashboardData?.success ? dashboardData.goals : [];
   const summary = dashboardData?.success ? dashboardData.summary : {
@@ -200,6 +226,30 @@ export function KPIsPage() {
       targetDate: format(goalFormData.targetDate, 'yyyy-MM-dd'),
     });
   };
+
+  const handleDeleteGoal = (goalId: string) => {
+    if (confirm("Are you sure you want to delete this goal? This action cannot be undone.")) {
+      deleteGoalMutation.mutate(goalId);
+    }
+  };
+
+  const resetGoalForm = () => {
+    setGoalFormData({
+      kpiDefinitionId: '',
+      targetReductionPercentage: 10,
+      targetDate: undefined,
+    });
+    setCalculatedBaseline(null);
+    setSelectedKpi(null);
+    setSelectedGoal(null);
+  };
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!isGoalDialogOpen) {
+      resetGoalForm();
+    }
+  }, [isGoalDialogOpen]);
   
   if (definitionsLoading) {
     return (
@@ -311,12 +361,67 @@ export function KPIsPage() {
                   </Badge>
                 </div>
                 
+                {/* Category Summary Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {definitions.filter((kpi: KpiDefinition) => kpi.kpiCategory === selectedMainCategory).length +
+                         (bCorpKPIsData?.success && bCorpKPIsData.kpis[selectedMainCategory] ? 
+                          (bCorpKPIsData.kpis[selectedMainCategory] as KpiDefinition[]).length : 0)}
+                      </div>
+                      <div className="text-xs text-gray-600">Total KPIs</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {(kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory && goal.status === 'achieved').length}
+                      </div>
+                      <div className="text-xs text-gray-600">Goals Achieved</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {(kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory && goal.status === 'on-track').length}
+                      </div>
+                      <div className="text-xs text-gray-600">On Track</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {(kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory && (goal.status === 'behind' || goal.status === 'at-risk')).length}
+                      </div>
+                      <div className="text-xs text-gray-600">Need Attention</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
                 <Tabs defaultValue="traditional" className="space-y-6">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="traditional">Traditional KPIs</TabsTrigger>
-                    <TabsTrigger value="b-corp">B Corp KPIs</TabsTrigger>
-                    <TabsTrigger value="dashboard">Progress Dashboard</TabsTrigger>
-                  </TabsList>
+                  <div className="flex justify-between items-center">
+                    <TabsList className="grid w-full max-w-md grid-cols-3">
+                      <TabsTrigger value="traditional">Traditional KPIs</TabsTrigger>
+                      <TabsTrigger value="b-corp">B Corp KPIs</TabsTrigger>
+                      <TabsTrigger value="dashboard">Progress Dashboard</TabsTrigger>
+                    </TabsList>
+                    <Button 
+                      variant="outline" 
+                      className="ml-4"
+                      onClick={() => {
+                        // TODO: Implement bulk goal creation
+                        toast({
+                          title: "Coming Soon",
+                          description: "Bulk goal creation will be available in the next update.",
+                        });
+                      }}
+                      data-testid="button-bulk-goals"
+                    >
+                      <Target className="w-4 h-4 mr-2" />
+                      Set Category Goals
+                    </Button>
+                  </div>
 
                   <TabsContent value="traditional" className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -447,6 +552,37 @@ export function KPIsPage() {
                                     )}>
                                       {statusInfo.label}
                                     </Badge>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`button-goal-menu-${goal.id}`}>
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="bg-white border shadow-lg">
+                                        <DropdownMenuItem 
+                                          onClick={() => {
+                                            // TODO: Implement goal editing
+                                            toast({
+                                              title: "Coming Soon",
+                                              description: "Goal editing will be available in the next update.",
+                                            });
+                                          }}
+                                          className="cursor-pointer"
+                                          data-testid={`menu-edit-goal-${goal.id}`}
+                                        >
+                                          <Edit className="mr-2 h-4 w-4" />
+                                          Edit Goal
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem 
+                                          onClick={() => handleDeleteGoal(goal.id)}
+                                          className="cursor-pointer text-red-600 focus:text-red-600"
+                                          data-testid={`menu-delete-goal-${goal.id}`}
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete Goal
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
                                   </div>
                                 </div>
                               </CardHeader>
@@ -464,6 +600,32 @@ export function KPIsPage() {
                                   <div className="flex justify-between text-xs text-gray-500">
                                     <span>Progress: {goal.progress.toFixed(1)}%</span>
                                     <span>Due: {format(new Date(goal.targetDate), 'MMM dd, yyyy')}</span>
+                                  </div>
+                                  
+                                  {/* Progress Trend Indicator */}
+                                  <div className="flex items-center justify-between pt-2 border-t">
+                                    <div className="flex items-center text-xs text-gray-500">
+                                      <span className="mr-2">Trend:</span>
+                                      {goal.progress > 50 ? (
+                                        <div className="flex items-center text-green-600">
+                                          <TrendingUp className="w-3 h-3 mr-1" />
+                                          <span>Improving</span>
+                                        </div>
+                                      ) : goal.progress > 25 ? (
+                                        <div className="flex items-center text-yellow-600">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          <span>Steady</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center text-red-600">
+                                          <TrendingDown className="w-3 h-3 mr-1" />
+                                          <span>Needs Focus</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                      {Math.ceil((new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+                                    </div>
                                   </div>
                                 </div>
                               </CardContent>
