@@ -23,7 +23,6 @@ import CompanyStorySection from "@/components/company/CompanyStorySection";
 import ProductionFacilitiesList from "@/components/facilities/ProductionFacilitiesList";
 import MonthlyDataSummaryCard from "@/components/facilities/MonthlyDataSummaryCard";
 import MonthlyFacilityDataSection from "@/components/facilities/MonthlyFacilityDataSection";
-import Footer from "@/components/layout/footer";
 
 // Sustainability data constants extracted from Settings
 const certificationOptions = [
@@ -1340,7 +1339,6 @@ export default function Company() {
 
           </Tabs>
         </main>
-        <Footer />
       </div>
     </div>
   );

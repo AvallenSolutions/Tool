@@ -4,7 +4,6 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
-import Footer from '@/components/layout/footer';
 import OptimizedProductForm from '@/components/products/OptimizedProductForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -498,7 +497,6 @@ export default function ProductsPage() {
 
 
         </main>
-        <Footer />
       </div>
     </div>
   );
