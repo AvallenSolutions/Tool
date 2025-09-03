@@ -136,9 +136,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-lightest-gray">
+    <div className="flex h-screen bg-lightest-gray overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col h-full">
         <Header title="Dashboard" subtitle={getReportingPeriod()} />
         
         {/* Development helper - remove in production */}
@@ -152,7 +152,7 @@ export default function Dashboard() {
             </button>
           </div>
         )}
-        <main className="flex-1 p-6" id="dashboard-main">
+        <main className="flex-1 p-6 overflow-y-auto" id="dashboard-main">
           <div id="metrics-cards">
             <MetricsCards />
           </div>
