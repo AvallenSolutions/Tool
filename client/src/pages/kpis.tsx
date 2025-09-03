@@ -668,7 +668,7 @@ export function KPIsPage() {
                     {isCalculatingBaseline ? (
                       <span className="text-blue-600">Calculating...</span>
                     ) : (
-                      calculatedBaseline !== null ? `${calculatedBaseline.toFixed(2)} ${selectedKpi.unit}` : 'Not available'
+                      calculatedBaseline !== null && selectedKpi ? `${calculatedBaseline.toFixed(2)} ${selectedKpi.unit}` : 'Not available'
                     )}
                   </span>
                 </div>
@@ -691,10 +691,10 @@ export function KPIsPage() {
                     data-testid="input-target-reduction"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Target: {calculatedBaseline !== null ? 
-                      (calculatedBaseline * (1 - goalFormData.targetReductionPercentage / 100)).toFixed(2) : 
+                    Target: {calculatedBaseline !== null && selectedKpi ? 
+                      (calculatedBaseline * (1 - goalFormData.targetReductionPercentage / 100)).toFixed(2) + ' ' + selectedKpi.unit : 
                       'Calculating...'
-                    } {selectedKpi.unit}
+                    }
                   </p>
                 </div>
 
