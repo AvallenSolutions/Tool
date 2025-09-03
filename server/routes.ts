@@ -3887,7 +3887,15 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Company not found' });
       }
       
-      console.log(`🏢 Using company ID ${company.id} for refined LCA-based automated calculations`);
+      console.log(`🏢 AUTOMATED SCOPE 3 CALCULATION REQUESTED for company ID ${company.id}`);
+      console.log(`🔄 Forcing fresh calculation (no cache)`);
+      
+      // Add cache-busting headers
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
       
       // Calculate using refined LCA methodology with ALL Scope 3 components
       const [purchasedGoods, fuelEnergyUpstream, wasteGenerated, businessTravel, employeeCommuting, transportation, capitalGoods] = await Promise.all([

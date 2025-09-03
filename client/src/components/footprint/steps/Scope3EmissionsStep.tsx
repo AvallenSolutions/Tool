@@ -208,10 +208,12 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
     description: ''
   });
 
-  // Fetch automated calculations
+  // Fetch automated calculations (force fresh data)
   const { data: automatedData, isLoading: automatedLoading } = useQuery({
-    queryKey: ['/api/company/footprint/scope3/automated'],
-    enabled: true
+    queryKey: ['/api/company/footprint/scope3/automated', Date.now()],
+    enabled: true,
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0  // Don't cache the result
   });
 
   // Debug automated data
