@@ -210,7 +210,7 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
 
   // Fetch automated calculations (force fresh data)
   const { data: automatedData, isLoading: automatedLoading } = useQuery({
-    queryKey: ['/api/company/footprint/scope3/automated', Date.now()],
+    queryKey: ['/api/company/footprint/scope3/automated'],
     enabled: true,
     staleTime: 0, // Always fetch fresh data
     cacheTime: 0  // Don't cache the result
@@ -219,6 +219,9 @@ export function Scope3EmissionsStep({ data, onDataChange, existingData, onSave, 
   // Debug automated data
   console.log('🔍 Automated data:', automatedData);
   console.log('🔍 Automated loading:', automatedLoading);
+  console.log('🔍 Automated data structure:', automatedData ? Object.keys(automatedData) : 'null');
+  console.log('🔍 Automated success:', automatedData?.success);
+  console.log('🔍 Automated data.data:', automatedData?.data);
 
   // Calculate category emissions
   const calculateCategoryEmissions = (categoryKey: string) => {
