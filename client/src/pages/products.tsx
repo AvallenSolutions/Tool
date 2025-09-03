@@ -110,7 +110,8 @@ export default function ProductsPage() {
 
   console.log('🔍 Current products state:', products, 'Loading:', isLoading, 'Error:', error);
   console.log('🔍 Products array length:', products.length);
-  console.log('🔍 Products array contents:', JSON.stringify(products, null, 2));
+  console.log('🔍 Draft products:', draftProducts.length, draftProducts);
+  console.log('🔍 Confirmed products:', confirmedProducts.length, confirmedProducts);
 
   const handleDelete = (id: number, name: string) => {
     if (window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
