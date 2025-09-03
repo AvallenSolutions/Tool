@@ -410,7 +410,7 @@ export function KPIsPage() {
                   </TabsContent>
 
                   <TabsContent value="dashboard" className="space-y-6">
-                    {kpiGoals.filter((goal: KpiGoalData) => goal.category === selectedMainCategory).length === 0 ? (
+                    {!kpiGoals || kpiGoals.filter((goal: KpiGoalData) => goal.category === selectedMainCategory).length === 0 ? (
                       <Card>
                         <CardContent className="p-8 text-center">
                           <Target className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -422,7 +422,7 @@ export function KPIsPage() {
                       </Card>
                     ) : (
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {kpiGoals.filter((goal: KpiGoalData) => goal.category === selectedMainCategory).map((goal: KpiGoalData) => {
+                        {(kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory).map((goal: KpiGoalData) => {
                           const statusInfo = statusConfig[goal.status];
                           const Icon = statusInfo.icon;
                           
