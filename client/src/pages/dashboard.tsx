@@ -199,8 +199,11 @@ export default function Dashboard() {
               <ProductsSection />
             </div>
           </div>
+          {/* Footer - only appears when scrolling to bottom */}
+          <div className="mt-12">
+            <Footer />
+          </div>
         </main>
-        <Footer />
       </div>
 
       {/* Tour components */}
