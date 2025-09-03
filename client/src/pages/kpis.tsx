@@ -133,7 +133,7 @@ export function KPIsPage() {
     enabled: !!selectedMainCategory && viewMode === 'category-detail',
   });
 
-  // Fetch AI insights for the selected category
+  // Fetch intelligent insights for the selected category
   const { data: insightsData, refetch: refetchInsights } = useQuery({
     queryKey: ['/api/enhanced-kpis/ai-insights', selectedMainCategory],
     queryFn: async () => {
@@ -460,7 +460,7 @@ export function KPIsPage() {
                       <TabsTrigger value="b-corp">B Corp</TabsTrigger>
                       <TabsTrigger value="dashboard">Goals</TabsTrigger>
                       <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                      <TabsTrigger value="insights">AI Insights</TabsTrigger>
+                      <TabsTrigger value="insights">Intelligent Insights</TabsTrigger>
                     </TabsList>
                     <Button 
                       variant="outline" 
@@ -827,12 +827,12 @@ export function KPIsPage() {
 
                   <TabsContent value="insights" className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      {/* AI Recommendations */}
+                      {/* Intelligent Recommendations */}
                       <Card className="lg:col-span-2">
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2">
                             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                            AI-Powered Insights
+                            Intelligent Insights
                           </CardTitle>
                           <CardDescription>Personalized recommendations for {selectedMainCategory} improvements</CardDescription>
                         </CardHeader>
@@ -879,7 +879,7 @@ export function KPIsPage() {
                                   <div className="h-20 bg-gray-200 rounded"></div>
                                   <div className="h-20 bg-gray-200 rounded"></div>
                                 </div>
-                                <p className="text-sm text-gray-500 mt-4">Loading AI insights...</p>
+                                <p className="text-sm text-gray-500 mt-4">Loading insights...</p>
                               </div>
                             )}
                             

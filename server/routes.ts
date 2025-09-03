@@ -7420,7 +7420,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     }
   });
 
-  // POST /api/enhanced-kpis/ai-insights - Get AI-powered insights and recommendations
+  // POST /api/enhanced-kpis/ai-insights - Get intelligent insights and recommendations
   app.post('/api/enhanced-kpis/ai-insights', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
@@ -7436,7 +7436,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         return res.status(400).json({ error: 'User not associated with a company' });
       }
 
-      // TODO: Implement AI-powered insights using Anthropic API
+      // TODO: Implement intelligent insights using Anthropic API
       // For now, return structured recommendations
       const insights = {
         recommendations: [
@@ -7474,8 +7474,8 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
 
       res.json({ success: true, insights });
     } catch (error) {
-      console.error('Error generating AI insights:', error);
-      res.status(500).json({ error: 'Failed to generate AI insights' });
+      console.error('Error generating intelligent insights:', error);
+      res.status(500).json({ error: 'Failed to generate intelligent insights' });
     }
   });
 
