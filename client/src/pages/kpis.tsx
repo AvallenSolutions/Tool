@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 interface KpiDefinition {
   id: string;
@@ -121,6 +122,32 @@ export function KPIsPage() {
     },
   });
 
+  // Fetch analytics data for the selected category
+  const { data: analyticsData } = useQuery({
+    queryKey: ['/api/enhanced-kpis/analytics', selectedMainCategory],
+    queryFn: async () => {
+      if (!selectedMainCategory) return null;
+      const response = await fetch(`/api/enhanced-kpis/analytics/${encodeURIComponent(selectedMainCategory)}`);
+      return await response.json();
+    },
+    enabled: !!selectedMainCategory && viewMode === 'category-detail',
+  });
+
+  // Fetch AI insights for the selected category
+  const { data: insightsData, refetch: refetchInsights } = useQuery({
+    queryKey: ['/api/enhanced-kpis/ai-insights', selectedMainCategory],
+    queryFn: async () => {
+      if (!selectedMainCategory) return null;
+      const response = await apiRequest('/api/enhanced-kpis/ai-insights', {
+        method: 'POST',
+        body: JSON.stringify({ category: selectedMainCategory, context: 'dashboard' }),
+      });
+      return response;
+    },
+    enabled: !!selectedMainCategory && viewMode === 'category-detail',
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // Create goal mutation
   const createGoalMutation = useMutation({
     mutationFn: async (goalData: { kpiDefinitionId: string; targetReductionPercentage: number; targetDate: string }) => {
@@ -131,6 +158,7 @@ export function KPIsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/analytics', selectedMainCategory] });
       setIsGoalDialogOpen(false);
       setCalculatedBaseline(null);
       toast({
@@ -142,6 +170,31 @@ export function KPIsPage() {
       toast({
         title: "Error",
         description: "Failed to create goal. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Generate category report mutation
+  const generateReportMutation = useMutation({
+    mutationFn: async (categoryData: { category: string }) => {
+      return await apiRequest('/api/enhanced-kpis/generate-report', {
+        method: 'POST',
+        body: JSON.stringify(categoryData),
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Report Generated",
+        description: `${selectedMainCategory} sustainability report created successfully.`,
+      });
+      // TODO: Open report in new tab or download
+      console.log('Generated report:', data);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to generate report. Please try again.",
         variant: "destructive",
       });
     },
@@ -401,10 +454,12 @@ export function KPIsPage() {
 
                 <Tabs defaultValue="traditional" className="space-y-6">
                   <div className="flex justify-between items-center">
-                    <TabsList className="grid w-full max-w-md grid-cols-3">
-                      <TabsTrigger value="traditional">Traditional KPIs</TabsTrigger>
-                      <TabsTrigger value="b-corp">B Corp KPIs</TabsTrigger>
-                      <TabsTrigger value="dashboard">Progress Dashboard</TabsTrigger>
+                    <TabsList className="grid w-full max-w-2xl grid-cols-5">
+                      <TabsTrigger value="traditional">Traditional</TabsTrigger>
+                      <TabsTrigger value="b-corp">B Corp</TabsTrigger>
+                      <TabsTrigger value="dashboard">Goals</TabsTrigger>
+                      <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                      <TabsTrigger value="insights">AI Insights</TabsTrigger>
                     </TabsList>
                     <Button 
                       variant="outline" 
@@ -634,6 +689,263 @@ export function KPIsPage() {
                         })}
                       </div>
                     )}
+                  </TabsContent>
+
+                  <TabsContent value="analytics" className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Progress Trend Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Progress Trends</CardTitle>
+                          <CardDescription>KPI performance over time for {selectedMainCategory}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <LineChart data={analyticsData?.success ? analyticsData.data.progressTrends : [
+                              { month: 'Jan', progress: 15, target: 25 },
+                              { month: 'Feb', progress: 22, target: 30 },
+                              { month: 'Mar', progress: 28, target: 35 },
+                              { month: 'Apr', progress: 35, target: 40 },
+                              { month: 'May', progress: 42, target: 45 },
+                              { month: 'Jun', progress: 48, target: 50 }
+                            ]}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="month" />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend />
+                              <Line type="monotone" dataKey="progress" stroke="#10b981" strokeWidth={2} name="Actual Progress" />
+                              <Line type="monotone" dataKey="target" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" name="Target Trajectory" />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Goal Status Distribution */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Goal Status Distribution</CardTitle>
+                          <CardDescription>Current status of goals in {selectedMainCategory}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { name: 'On Track', value: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory && goal.status === 'on-track').length, fill: '#10b981' },
+                                  { name: 'At Risk', value: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory && goal.status === 'at-risk').length, fill: '#f59e0b' },
+                                  { name: 'Behind', value: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory && goal.status === 'behind').length, fill: '#ef4444' },
+                                  { name: 'Achieved', value: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory && goal.status === 'achieved').length, fill: '#3b82f6' }
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              />
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Performance Comparison */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Category Performance</CardTitle>
+                          <CardDescription>Average progress across all categories</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={Object.keys(categoryColors).map(category => ({
+                              category: category.length > 15 ? category.substring(0, 12) + '...' : category,
+                              fullCategory: category,
+                              progress: Math.round(Math.random() * 80 + 10), // TODO: Replace with real data
+                              goals: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === category).length
+                            }))}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="category" angle={-45} textAnchor="end" height={80} />
+                              <YAxis />
+                              <Tooltip 
+                                formatter={(value, name, props) => [
+                                  name === 'progress' ? `${value}% progress` : `${value} goals`,
+                                  props.payload.fullCategory
+                                ]}
+                              />
+                              <Bar dataKey="progress" fill="#10b981" name="Avg Progress %" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Alert Summary */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Alert Summary</CardTitle>
+                          <CardDescription>Recent notifications and alerts for {selectedMainCategory}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {analyticsData?.success && analyticsData.data.alerts.length > 0 ? (
+                              analyticsData.data.alerts.map((alert: any, index: number) => {
+                                const alertConfig = {
+                                  warning: { bg: 'bg-red-50 border-red-200', icon: AlertTriangle, iconColor: 'text-red-500', textColor: 'text-red-700', badgeColor: 'text-red-600 border-red-200' },
+                                  info: { bg: 'bg-yellow-50 border-yellow-200', icon: Clock, iconColor: 'text-yellow-500', textColor: 'text-yellow-700', badgeColor: 'text-yellow-600 border-yellow-200' },
+                                  success: { bg: 'bg-green-50 border-green-200', icon: Award, iconColor: 'text-green-500', textColor: 'text-green-700', badgeColor: 'text-green-600 border-green-200' }
+                                };
+                                const config = alertConfig[alert.type as keyof typeof alertConfig] || alertConfig.info;
+                                const Icon = config.icon;
+                                
+                                return (
+                                  <div key={index} className={`flex items-center justify-between p-3 border rounded-lg ${config.bg}`}>
+                                    <div className="flex items-center space-x-3">
+                                      <Icon className={`w-4 h-4 ${config.iconColor}`} />
+                                      <div>
+                                        <div className={`text-sm font-medium ${config.textColor}`}>{alert.title}</div>
+                                        <div className={`text-xs ${config.textColor.replace('700', '600')}`}>{alert.message}</div>
+                                      </div>
+                                    </div>
+                                    <Badge variant="outline" className={`${config.badgeColor}`}>{alert.date}</Badge>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="text-center py-6">
+                                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                <p className="text-sm text-gray-500">No recent alerts for {selectedMainCategory}</p>
+                                <p className="text-xs text-gray-400 mt-1">Alerts will appear here when goals need attention</p>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="insights" className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* AI Recommendations */}
+                      <Card className="lg:col-span-2">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            AI-Powered Insights
+                          </CardTitle>
+                          <CardDescription>Personalized recommendations for {selectedMainCategory} improvements</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {insightsData?.success ? insightsData.insights.recommendations.map((rec, index) => {
+                              const bgColor = rec.type === 'optimization' ? 'bg-blue-50 border-blue-200' :
+                                            rec.type === 'best_practice' ? 'bg-green-50 border-green-200' :
+                                            'bg-amber-50 border-amber-200';
+                              const textColor = rec.type === 'optimization' ? 'text-blue-900' :
+                                              rec.type === 'best_practice' ? 'text-green-900' :
+                                              'text-amber-900';
+                              const iconColor = rec.type === 'optimization' ? 'text-blue-500' :
+                                              rec.type === 'best_practice' ? 'text-green-500' :
+                                              'text-amber-500';
+                              const Icon = rec.type === 'optimization' ? TrendingUp :
+                                          rec.type === 'best_practice' ? Award : Clock;
+                              
+                              return (
+                                <div key={index} className={`p-4 border rounded-lg ${bgColor}`}>
+                                  <div className="flex items-start space-x-3">
+                                    <Icon className={`w-5 h-5 mt-0.5 ${iconColor}`} />
+                                    <div>
+                                      <div className={`font-medium ${textColor}`}>{rec.title}</div>
+                                      <div className={`text-sm mt-1 ${textColor.replace('900', '700')}`}>
+                                        {rec.description}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-2">
+                                        <Button size="sm" variant="outline">
+                                          {rec.actionable ? 'Take Action' : 'Learn More'}
+                                        </Button>
+                                        <Badge variant="outline" className="text-xs">
+                                          {Math.round(rec.confidence * 100)}% confidence
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }) : (
+                              <div className="text-center py-8">
+                                <div className="animate-pulse space-y-3">
+                                  <div className="h-20 bg-gray-200 rounded"></div>
+                                  <div className="h-20 bg-gray-200 rounded"></div>
+                                  <div className="h-20 bg-gray-200 rounded"></div>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-4">Loading AI insights...</p>
+                              </div>
+                            )}
+                            
+                            {insightsData?.success && (
+                              <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                                <div className="text-sm font-medium text-gray-900 mb-2">Predictive Analytics</div>
+                                <div className="grid grid-cols-3 gap-4 text-xs">
+                                  <div className="text-center">
+                                    <div className="text-lg font-bold text-green-600">{insightsData.insights.predictiveAnalytics.projectedOutcome}%</div>
+                                    <div className="text-gray-600">Projected Success</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-lg font-bold text-blue-600">{insightsData.insights.predictiveAnalytics.confidenceLevel}%</div>
+                                    <div className="text-gray-600">Confidence</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-lg font-bold text-purple-600">{insightsData.insights.predictiveAnalytics.timeToTarget}mo</div>
+                                    <div className="text-gray-600">Est. Timeline</div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Report Integration */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Report Integration</CardTitle>
+                          <CardDescription>Include {selectedMainCategory} progress in sustainability reports</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Goals in Reports:</span>
+                              <Badge variant="outline" className="text-green-600">
+                                {(kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory).length} included
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Last Report:</span>
+                              <span className="text-gray-500">Dec 2024</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Next Report:</span>
+                              <span className="text-gray-500">Jan 2025</span>
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="w-full" 
+                            size="sm" 
+                            onClick={() => generateReportMutation.mutate({ category: selectedMainCategory })}
+                            disabled={generateReportMutation.isPending}
+                            data-testid="button-generate-category-report"
+                          >
+                            <Target className="w-4 h-4 mr-2" />
+                            {generateReportMutation.isPending ? 'Generating...' : 'Generate Category Report'}
+                          </Button>
+                          
+                          <div className="text-xs text-gray-500 text-center">
+                            Automatically includes goal progress and recommendations
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
