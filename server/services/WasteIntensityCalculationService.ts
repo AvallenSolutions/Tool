@@ -224,10 +224,15 @@ export class WasteIntensityCalculationService {
     const wasteToIncineration = parseFloat(facility.wasteToIncinerationKgPerYear?.toString() || '0');
     const wasteToEnergyRecovery = parseFloat(facility.wasteToEnergyRecoveryKgPerYear?.toString() || '0');
     
-    // Use production volume from monthly aggregation
+    // Get production volume from monthly aggregation
+    const { MonthlyDataAggregationService } = await import('./MonthlyDataAggregationService');
+    const annualEquivalents = await MonthlyDataAggregationService.getAnnualEquivalents(facility.companyId);
+    
     if (annualEquivalents.annualCapacityVolume === 0) {
       throw new Error('No monthly production data found for waste footprint calculation');
     }
+    
+    const totalFacilityProductionVolumePerYear = annualEquivalents.annualCapacityVolume;
 
     // Calculate carbon emissions by disposal route (kg CO2e per year)
     const landfillEmissionsPerYear = wasteToLandfill * emissionFactors.landfill;
