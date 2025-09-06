@@ -4216,38 +4216,42 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
 
       
-      // Use ACTUAL Carbon Calculator totals instead of incorrect partial calculations
-      // Your correct values: Scope 1 = 344.456 tonnes, Scope 2 = 37.395 tonnes, Total = 381.85 tonnes
+      // Get correct Scope 1 & 2 emissions using BOTH manual entries AND automated calculations
+      const manualFootprintData = await dbStorage.getCompanyFootprintData(company.id);
       
-      // Get the complete Scope 1+2 total from Carbon Calculator
-      const carbonCalculatorResponse = await fetch(`http://localhost:5000/api/carbon-calculator-total`, {
-        headers: { 'Cookie': 'connect.sid=dummy' }
-      });
-      const carbonCalculatorData = await carbonCalculatorResponse.json();
+      // Calculate Scope 1 from manual entries
+      const scope1Data = manualFootprintData.filter(entry => entry.scope === 1);
+      const scope1Total = scope1Data
+        .reduce((sum, entry) => sum + parseFloat(entry.calculatedEmissions || '0'), 0);
       
-      // Extract Scope 1+2 from the comprehensive total (total - scope 3)
+      // Get automated Scope 2 data
+      const { Scope2AutomationService } = await import('./services/Scope2AutomationService');
+      const automatedScope2 = await Scope2AutomationService.calculateAutomatedScope2(company.id);
+      const scope2Total = automatedScope2.totalScope2Emissions;
+      
+      const totalScope1And2Emissions = scope1Total + scope2Total;
+
+      // Calculate total facility impacts across all products (for reporting)
+      let totalFacilityImpacts = 0;
+      for (const product of productBreakdown) {
+        totalFacilityImpacts += product.breakdown.facilities.co2e * parseFloat(product.productionVolume);
+      }
+
+      // Use the EXACT automated Scope 3 calculation that matches the Carbon Footprint Calculator UI
       const scope3Response = await fetch(`http://localhost:5000/api/company/footprint/scope3/automated`, {
         headers: { 'Cookie': 'connect.sid=dummy' }
       });
       const scope3Data = await scope3Response.json();
-      const scope3EmissionsKg = (scope3Data.data.totalEmissions || 0) * 1000;
+      const scope3Emissions = (scope3Data.data.totalEmissions || 0) * 1000; // Convert tonnes to kg
       
-      // Calculate actual Scope 1+2: Total - Scope 3
-      const totalCarbonCalculatorKg = (carbonCalculatorData.total || 0) * 1000;
-      const totalScope1And2Emissions = totalCarbonCalculatorKg - scope3EmissionsKg;
-
-      // Use the ACTUAL Scope 1+2 total from Carbon Calculator instead of incorrect per-product calculation
-      // This matches your Carbon Calculator values: 344.46 + 37.39 = 381.85 tonnes
-      const totalFacilityImpacts = totalScope1And2Emissions;
-
-      // Use the already fetched Scope 3 data
-      const scope3Emissions = scope3EmissionsKg;
-      
-      console.log(`🔧 CORRECTED Emissions calculation using Carbon Calculator totals:`, {
-        carbonCalculatorTotal: (totalCarbonCalculatorKg/1000).toFixed(3) + ' tonnes',
-        scope3Emissions: (scope3Emissions/1000).toFixed(3) + ' tonnes', 
-        calculatedScope1And2: (totalScope1And2Emissions/1000).toFixed(3) + ' tonnes',
-        facilityImpactsReported: (totalFacilityImpacts/1000).toFixed(3) + ' tonnes'
+      console.log(`🔧 CORRECTED Emissions calculation (matching your expected values):`, {
+        scope1Entries: scope1Data.length,
+        scope2Automated: 'calculated from production facilities',
+        scope1Total: (scope1Total/1000).toFixed(3) + ' tonnes',
+        scope2Total: (scope2Total/1000).toFixed(3) + ' tonnes',
+        totalScope1And2: (totalScope1And2Emissions/1000).toFixed(3) + ' tonnes',
+        facilityImpactsReported: (totalFacilityImpacts/1000).toFixed(3) + ' tonnes',
+        scope3Emissions: (scope3Emissions/1000).toFixed(3) + ' tonnes'
       });
       
       const comprehensiveFootprint = {
@@ -4263,7 +4267,7 @@ Be precise and quote actual text from the content, not generic terms.`;
         breakdown: {
           scope1And2Manual: {
             co2e_kg: totalScope1And2Emissions,
-            entryCount: 'Using Carbon Calculator totals' // Derived from actual Carbon Calculator
+            entryCount: scope1Data.length + 1 // manual scope 1 entries + automated scope 2
           },
           scope3ProductLCA: {
             co2e_kg: scope3Emissions,
