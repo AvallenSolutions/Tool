@@ -16,6 +16,7 @@ export default function Sidebar() {
   const [supplierManagementExpanded, setSupplierManagementExpanded] = useState(false);
   const navContainerRef = useRef<HTMLDivElement>(null);
   const scrollPosition = useRef<number>(0);
+  const isNavigating = useRef<boolean>(false);
 
   // Fetch company data to show company name in header
   const { data: company } = useQuery({
@@ -54,7 +55,7 @@ export default function Sidebar() {
   // Store scroll position whenever we're in supplier management
   useEffect(() => {
     const handleScroll = () => {
-      if (location.startsWith('/app/admin/supplier-management') && navContainerRef.current) {
+      if (location.startsWith('/app/admin/supplier-management') && navContainerRef.current && !isNavigating.current) {
         scrollPosition.current = navContainerRef.current.scrollTop;
       }
     };
@@ -73,22 +74,45 @@ export default function Sidebar() {
       scrollPosition.current = navContainerRef.current.scrollTop;
     }
     
+    isNavigating.current = true;
+    
+    // Prevent any scrolling during navigation
+    if (navContainerRef.current) {
+      navContainerRef.current.style.overflowY = 'hidden';
+    }
+    
     navigate(path);
+    
+    // Restore scrolling and position after navigation
+    setTimeout(() => {
+      if (navContainerRef.current) {
+        navContainerRef.current.style.overflowY = 'auto';
+        navContainerRef.current.scrollTop = scrollPosition.current;
+      }
+      isNavigating.current = false;
+    }, 100);
   };
 
-  // Restore scroll position after navigation
+  // Restore scroll position after navigation - more aggressive approach
   useEffect(() => {
-    if (location.startsWith('/app/admin/supplier-management') && scrollPosition.current > 0) {
+    if (location.startsWith('/app/admin/supplier-management') && scrollPosition.current > 0 && isNavigating.current) {
       const restoreScroll = () => {
         if (navContainerRef.current) {
           navContainerRef.current.scrollTop = scrollPosition.current;
         }
       };
       
-      // Multiple restoration attempts
-      setTimeout(restoreScroll, 0);
+      // Immediate restoration
+      restoreScroll();
+      
+      // Multiple restoration attempts with different timings
+      requestAnimationFrame(restoreScroll);
+      setTimeout(restoreScroll, 1);
+      setTimeout(restoreScroll, 5);
       setTimeout(restoreScroll, 10);
+      setTimeout(restoreScroll, 50);
       setTimeout(restoreScroll, 100);
+      setTimeout(restoreScroll, 200);
     }
   }, [location]);
 
@@ -156,7 +180,9 @@ export default function Sidebar() {
         className="flex-1 p-4 overflow-y-auto" 
         style={{ 
           scrollBehavior: 'auto',
-          overflowBehavior: 'contain'
+          overflowBehavior: 'contain',
+          scrollbarGutter: 'stable',
+          overflowAnchor: 'auto'
         }}
       >
         <ul className="space-y-2">
