@@ -4231,11 +4231,9 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       const totalScope1And2Emissions = scope1Total + scope2Total;
 
-      // Calculate total facility impacts across all products (for reporting)
-      let totalFacilityImpacts = 0;
-      for (const product of productBreakdown) {
-        totalFacilityImpacts += product.breakdown.facilities.co2e * parseFloat(product.productionVolume);
-      }
+      // Use the ACTUAL Scope 1+2 total from Carbon Calculator instead of incorrect per-product calculation
+      // This matches your Carbon Calculator values: 344.46 + 37.39 = 381.85 tonnes
+      const totalFacilityImpacts = totalScope1And2Emissions;
 
       // Use the EXACT automated Scope 3 calculation that matches the Carbon Footprint Calculator UI
       const scope3Response = await fetch(`http://localhost:5000/api/company/footprint/scope3/automated`, {
