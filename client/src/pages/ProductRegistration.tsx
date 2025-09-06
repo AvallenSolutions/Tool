@@ -5,7 +5,6 @@ import Header from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import OptimizedProductForm from "@/components/products/OptimizedProductForm";
 import { Package, Building2, AlertTriangle, ArrowLeft, Plus, RefreshCw } from "lucide-react";
 import { useVerifiedSuppliers } from "@/hooks/useVerifiedSuppliers";
 
@@ -33,7 +32,7 @@ export default function ProductRegistration() {
   }, [suppliers, isLoading, getVerifiedSuppliers]);
 
   const handleProductSubmit = (productData: any) => {
-    // This will be handled by the OptimizedProductForm
+    // Redirected to Enhanced Product Form
     console.log("Product submitted:", productData);
   };
 
@@ -149,7 +148,16 @@ export default function ProductRegistration() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <OptimizedProductForm />
+                  <div className="p-6 text-center text-gray-500">
+                    <Package className="mx-auto h-12 w-12 mb-4" />
+                    <p>Product registration form has been replaced with the Enhanced Product Form.</p>
+                    <Button 
+                      onClick={() => navigate('/app/products/create/enhanced')} 
+                      className="mt-4"
+                    >
+                      Create Enhanced Product
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
