@@ -5938,30 +5938,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     try {
       const { products, companies } = await import('@shared/schema');
       
-      // Get or create a default company
-      let companyId = 1;
-      const existingCompanies = await db.select().from(companies).limit(1);
-      
-      if (existingCompanies.length === 0) {
-        console.log('No companies found, creating default company');
-        const [newCompany] = await db.insert(companies).values({
-          name: 'Demo Company',
-          industry: 'Spirits & Distilleries',
-          size: 'SME (10-250 employees)',
-          address: '123 Demo Street',
-          country: 'United Kingdom',
-          website: 'https://demo.company',
-          ownerId: 44886248, // Use existing user ID
-          onboardingComplete: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }).returning();
-        companyId = newCompany.id;
-        console.log('Created default company:', newCompany);
-      } else {
-        companyId = existingCompanies[0].id;
-        console.log('Using existing company:', companyId);
-      }
+      // Use same company logic as the main products endpoint
+      const companyId = process.env.NODE_ENV === 'development' ? 1 : (req.session as any)?.user?.companyId || 1;
+      console.log(`📦 Creating draft for company ID: ${companyId}`);
       
       // Process the complex form data structure properly
       console.log('Raw request body:', JSON.stringify(req.body, null, 2));
