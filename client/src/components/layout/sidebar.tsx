@@ -15,6 +15,7 @@ export default function Sidebar() {
   const [kpiGoalsExpanded, setKpiGoalsExpanded] = useState(false);
   const [supplierManagementExpanded, setSupplierManagementExpanded] = useState(false);
   const navContainerRef = useRef<HTMLDivElement>(null);
+  const scrollPosition = useRef<number>(0);
 
   // Fetch company data to show company name in header
   const { data: company } = useQuery({
@@ -50,17 +51,46 @@ export default function Sidebar() {
     }
   }, [location]);
 
+  // Store scroll position whenever we're in supplier management
+  useEffect(() => {
+    const handleScroll = () => {
+      if (location.startsWith('/app/admin/supplier-management') && navContainerRef.current) {
+        scrollPosition.current = navContainerRef.current.scrollTop;
+      }
+    };
+
+    const container = navContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [location]);
+
   // Handle supplier management navigation without scroll reset
   const handleSupplierNavigation = (path: string) => {
-    const currentScrollTop = navContainerRef.current?.scrollTop || 0;
+    // Store current position
+    if (navContainerRef.current) {
+      scrollPosition.current = navContainerRef.current.scrollTop;
+    }
+    
     navigate(path);
-    // Restore scroll position after navigation
-    requestAnimationFrame(() => {
-      if (navContainerRef.current) {
-        navContainerRef.current.scrollTop = currentScrollTop;
-      }
-    });
   };
+
+  // Restore scroll position after navigation
+  useEffect(() => {
+    if (location.startsWith('/app/admin/supplier-management') && scrollPosition.current > 0) {
+      const restoreScroll = () => {
+        if (navContainerRef.current) {
+          navContainerRef.current.scrollTop = scrollPosition.current;
+        }
+      };
+      
+      // Multiple restoration attempts
+      setTimeout(restoreScroll, 0);
+      setTimeout(restoreScroll, 10);
+      setTimeout(restoreScroll, 100);
+    }
+  }, [location]);
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -121,7 +151,14 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <div ref={navContainerRef} className="flex-1 p-4 overflow-y-auto" style={{ scrollBehavior: 'auto' }}>
+      <div 
+        ref={navContainerRef} 
+        className="flex-1 p-4 overflow-y-auto" 
+        style={{ 
+          scrollBehavior: 'auto',
+          overflowBehavior: 'contain'
+        }}
+      >
         <ul className="space-y-2">
           {/* Dashboard */}
           <li>
