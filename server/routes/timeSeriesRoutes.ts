@@ -134,13 +134,14 @@ router.post("/monthly-facility", async (req, res) => {
   try {
     const facilityData = insertMonthlyFacilityDataSchema.parse(req.body);
 
-    // Check if data already exists for this company and month
+    // Check if data already exists for this company, facility and month
     const existing = await db
       .select()
       .from(monthlyFacilityData)
       .where(
         and(
           eq(monthlyFacilityData.companyId, facilityData.companyId),
+          eq(monthlyFacilityData.facilityId, facilityData.facilityId),
           eq(monthlyFacilityData.month, facilityData.month)
         )
       );
@@ -154,6 +155,7 @@ router.post("/monthly-facility", async (req, res) => {
         .where(
           and(
             eq(monthlyFacilityData.companyId, facilityData.companyId),
+            eq(monthlyFacilityData.facilityId, facilityData.facilityId),
             eq(monthlyFacilityData.month, facilityData.month)
           )
         )
