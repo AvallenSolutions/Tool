@@ -2125,25 +2125,32 @@ Be precise and quote actual text from the content, not generic terms.`;
         console.log(`🔍 DEBUG: Monthly data query result:`, monthlyData);
 
         if (monthlyData.length > 0) {
-          // Calculate monthly averages from real data
-          const avgElectricityKwh = monthlyData.reduce((sum, month) => sum + (month.electricityKwh || 0), 0) / monthlyData.length;
-          const avgGasM3 = monthlyData.reduce((sum, month) => sum + (month.naturalGasM3 || 0), 0) / monthlyData.length;
+          // YOUR METHOD: Calculate monthly EMISSIONS for each month, then average
+          let totalMonthlyScope1 = 0;
+          let totalMonthlyScope2 = 0;
           
-          // Calculate annual totals (monthly average × 12)
-          const annualElectricityKwh = avgElectricityKwh * 12;
-          const annualGasM3 = avgGasM3 * 12;
+          monthlyData.forEach(month => {
+            const monthlyScope2 = (month.electricityKwh || 0) * 0.233; // kg CO2e for this month
+            const monthlyScope1 = (month.naturalGasM3 || 0) * 1.8514; // kg CO2e for this month
+            totalMonthlyScope1 += monthlyScope1;
+            totalMonthlyScope2 += monthlyScope2;
+          });
           
-          // Calculate Scope 1 & 2 emissions
-          const scope2Emissions = annualElectricityKwh * 0.233; // UK grid factor: 233g CO2e/kWh
-          const scope1Emissions = annualGasM3 * 1.8514; // Natural gas factor: 1.8514 kg CO2e/m³
-          const totalFacilityEmissions = scope1Emissions + scope2Emissions; // kg CO2e per year
+          // Average monthly emissions
+          const avgMonthlyScope1 = totalMonthlyScope1 / monthlyData.length;
+          const avgMonthlyScope2 = totalMonthlyScope2 / monthlyData.length;
           
-          // Allocate per unit across ALL company products
+          // Annual facility footprint (average monthly emissions × 12)
+          const annualScope1 = avgMonthlyScope1 * 12;
+          const annualScope2 = avgMonthlyScope2 * 12;
+          const totalFacilityEmissions = annualScope1 + annualScope2; // kg CO2e per year
+          
+          // Divide by total units across ALL products
           facilityImpacts.co2e = totalFacilityEmissions / totalCompanyUnits;
           
-          console.log(`🏭 YOUR PRODUCT METHOD: Monthly avg electricity: ${avgElectricityKwh.toFixed(0)}kWh, gas: ${avgGasM3.toFixed(0)}m³`);
-          console.log(`🏭 YOUR PRODUCT METHOD: Annual totals: ${annualElectricityKwh.toFixed(0)}kWh, ${annualGasM3.toFixed(0)}m³`);
-          console.log(`🏭 YOUR PRODUCT METHOD: Scope 1: ${(scope1Emissions/1000).toFixed(1)}t, Scope 2: ${(scope2Emissions/1000).toFixed(1)}t, Total: ${(totalFacilityEmissions/1000).toFixed(1)}t`);
+          console.log(`🏭 YOUR METHOD: Avg monthly Scope 1: ${avgMonthlyScope1.toFixed(1)}kg, Scope 2: ${avgMonthlyScope2.toFixed(1)}kg`);
+          console.log(`🏭 YOUR METHOD: Annual Scope 1: ${(annualScope1/1000).toFixed(1)}t, Scope 2: ${(annualScope2/1000).toFixed(1)}t, Total: ${(totalFacilityEmissions/1000).toFixed(1)}t`);
+          console.log(`🏭 YOUR METHOD: Per unit: ${facilityImpacts.co2e.toFixed(3)}kg CO2e ÷ ${totalCompanyUnits.toLocaleString()} units`);
           console.log(`🏭 YOUR PRODUCT METHOD: Per unit: ${facilityImpacts.co2e.toFixed(3)}kg CO2e ÷ ${totalCompanyUnits.toLocaleString()} units`);
         }
         
