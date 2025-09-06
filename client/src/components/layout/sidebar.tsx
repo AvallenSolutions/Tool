@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +14,7 @@ export default function Sidebar() {
   const [reportsExpanded, setReportsExpanded] = useState(false);
   const [kpiGoalsExpanded, setKpiGoalsExpanded] = useState(false);
   const [supplierManagementExpanded, setSupplierManagementExpanded] = useState(false);
+  const navContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch company data to show company name in header
   const { data: company } = useQuery({
@@ -48,6 +49,18 @@ export default function Sidebar() {
       setSupplierManagementExpanded(true);
     }
   }, [location]);
+
+  // Handle supplier management navigation without scroll reset
+  const handleSupplierNavigation = (path: string) => {
+    const currentScrollTop = navContainerRef.current?.scrollTop || 0;
+    navigate(path);
+    // Restore scroll position after navigation
+    requestAnimationFrame(() => {
+      if (navContainerRef.current) {
+        navContainerRef.current.scrollTop = currentScrollTop;
+      }
+    });
+  };
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -108,7 +121,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div ref={navContainerRef} className="flex-1 p-4 overflow-y-auto" style={{ scrollBehavior: 'auto' }}>
         <ul className="space-y-2">
           {/* Dashboard */}
           <li>
@@ -424,7 +437,7 @@ export default function Sidebar() {
                               ? "bg-white text-[#209d50] font-semibold hover:bg-gray-100 border border-green-200 shadow-sm"
                               : "text-white/80 hover:bg-green-600 hover:text-white"
                           }`}
-                          onClick={() => navigate(subItem.path)}
+                          onClick={() => handleSupplierNavigation(subItem.path)}
                         >
                           <SubIcon className="w-4 h-4 mr-2" />
                           <span className="font-body text-sm">{subItem.label}</span>
