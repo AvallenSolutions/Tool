@@ -5490,6 +5490,10 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
       const { db } = await import('./db');
       const productId = parseInt(req.params.id);
       
+      if (isNaN(productId)) {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+      
       const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
       
       if (product.length === 0) {
