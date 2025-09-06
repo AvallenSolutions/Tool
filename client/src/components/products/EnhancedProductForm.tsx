@@ -779,6 +779,90 @@ export default function EnhancedProductForm({
     }
   }, [initialData, form]);
 
+  // Consolidated packaging supplier selection handler
+  const handlePackagingSupplierSelect = (supplier: any) => {
+    console.log('🎯 Packaging supplier selected:', supplier);
+    setSelectedPackagingSupplier(supplier);
+    
+    // Auto-fill packaging data from supplier product (user-friendly fields + auto-sync to LCA)
+    const productAttrs = supplier.productAttributes || {};
+    const lcaData = supplier.lcaDataJson || {};
+    const supplierAddr = supplier.supplierAddress || {};
+    const origin = `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '';
+    
+    console.log('🔧 Auto-filling form with supplier data:', {
+      material: productAttrs.material,
+      weight: productAttrs.weight,
+      recycledContent: productAttrs.recycledContent,
+      co2Emissions: productAttrs.co2Emissions
+    });
+    
+    // Update user-friendly packaging tab fields
+    if (productAttrs.material) {
+      form.setValue('packaging.primaryContainer.material', productAttrs.material);
+    }
+    if (productAttrs.weight || productAttrs.weight_grams) {
+      form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams);
+    }
+    if (productAttrs.recycledContent || productAttrs.recycled_content_percent) {
+      form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent);
+    }
+    if (productAttrs.color) {
+      form.setValue('packaging.primaryContainer.color', productAttrs.color);
+    }
+    if (origin) {
+      form.setValue('packaging.primaryContainer.origin', origin);
+    }
+    if (productAttrs.thickness) {
+      form.setValue('packaging.primaryContainer.thickness', productAttrs.thickness);
+    }
+    if (productAttrs.recyclability) {
+      form.setValue('packaging.primaryContainer.recyclability', productAttrs.recyclability);
+    }
+    
+    // Update supplier information
+    form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.supplierId || '');
+    form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName || '');
+    form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory || '');
+    form.setValue('packaging.supplierInformation.selectedProductId', supplier.id || '');
+    form.setValue('packaging.supplierInformation.selectedProductName', supplier.productName || '');
+    
+    // Auto-sync to LCA Data (for calculations)
+    if (productAttrs.material) {
+      form.setValue('lcaData.packagingDetailed.container.materialType', productAttrs.material.toLowerCase() as any);
+    }
+    if (productAttrs.weight || productAttrs.weight_grams) {
+      form.setValue('lcaData.packagingDetailed.container.weightGrams', productAttrs.weight || productAttrs.weight_grams);
+    }
+    if (productAttrs.recycledContent || productAttrs.recycled_content_percent) {
+      form.setValue('lcaData.packagingDetailed.container.recycledContentPercentage', productAttrs.recycledContent || productAttrs.recycled_content_percent);
+    }
+    if (productAttrs.color) {
+      form.setValue('lcaData.packagingDetailed.container.color', productAttrs.color);
+    }
+    if (origin) {
+      form.setValue('lcaData.packagingDetailed.container.manufacturingLocation', origin);
+    }
+    if (productAttrs.thickness) {
+      form.setValue('lcaData.packagingDetailed.container.thickness', productAttrs.thickness);
+    }
+    if (productAttrs.recyclability) {
+      form.setValue('lcaData.packagingDetailed.container.recyclability', productAttrs.recyclability);
+    }
+    
+    // Supplier CO2 emissions data override (converted from grams to kg for calculation)
+    if (productAttrs.co2Emissions) {
+      const supplierCo2Kg = productAttrs.co2Emissions / 1000; // Convert grams to kg
+      form.setValue('environmentalImpact.co2Emissions', supplierCo2Kg);
+      
+      // Also update LCA data to reflect supplier-provided emissions
+      form.setValue('lcaData.packagingDetailed.container.co2EmissionsKg', supplierCo2Kg);
+      form.setValue('lcaData.packagingDetailed.container.hasSupplierLcaData', true);
+    }
+    
+    console.log('✅ Packaging supplier autofill complete');
+  };
+
   // Initialize selectedPackagingSupplier from existing data
   useEffect(() => {
     console.log('🔍 useEffect triggered with initialData:', {
@@ -1681,57 +1765,7 @@ export default function EnhancedProductForm({
                       </p>
                       <SupplierSelectionModal
                         inputType="bottle"
-                        onSelect={(supplier) => {
-                          setSelectedPackagingSupplier(supplier);
-                          // Auto-fill packaging data from supplier product (user-friendly fields + auto-sync to LCA)
-                          const productAttrs = supplier.productAttributes || {};
-                          const lcaData = supplier.lcaDataJson || {};
-                          const supplierAddr = supplier.supplierAddress || {};
-                          const origin = `${supplierAddr.city || ''}, ${supplierAddr.country || ''}`.replace(/^, |, $/, '') || '';
-                          
-                          // Update user-friendly packaging tab fields
-                          form.setValue('packaging.primaryContainer.material', productAttrs.material || '');
-                          form.setValue('packaging.primaryContainer.weight', productAttrs.weight || productAttrs.weight_grams || 0);
-                          form.setValue('packaging.primaryContainer.recycledContent', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
-                          form.setValue('packaging.primaryContainer.color', productAttrs.color || '');
-                          form.setValue('packaging.primaryContainer.origin', origin);
-                          if (productAttrs.thickness) {
-                            form.setValue('packaging.primaryContainer.thickness', productAttrs.thickness);
-                          }
-                          if (productAttrs.recyclability) {
-                            form.setValue('packaging.primaryContainer.recyclability', productAttrs.recyclability);
-                          }
-                          
-                          // Update supplier information
-                          form.setValue('packaging.supplierInformation.selectedSupplierId', supplier.supplierId);
-                          form.setValue('packaging.supplierInformation.supplierName', supplier.supplierName);
-                          form.setValue('packaging.supplierInformation.supplierCategory', supplier.supplierCategory);
-                          form.setValue('packaging.supplierInformation.selectedProductId', supplier.id);
-                          form.setValue('packaging.supplierInformation.selectedProductName', supplier.productName);
-                          
-                          // Auto-sync to LCA Data (for calculations)
-                          form.setValue('lcaData.packagingDetailed.container.materialType', productAttrs.material?.toLowerCase() as any);
-                          form.setValue('lcaData.packagingDetailed.container.weightGrams', productAttrs.weight || productAttrs.weight_grams || 0);
-                          form.setValue('lcaData.packagingDetailed.container.recycledContentPercentage', productAttrs.recycledContent || productAttrs.recycled_content_percent || 0);
-                          form.setValue('lcaData.packagingDetailed.container.color', productAttrs.color || '');
-                          form.setValue('lcaData.packagingDetailed.container.manufacturingLocation', origin);
-                          if (productAttrs.thickness) {
-                            form.setValue('lcaData.packagingDetailed.container.thickness', productAttrs.thickness);
-                          }
-                          if (productAttrs.recyclability) {
-                            form.setValue('lcaData.packagingDetailed.container.recyclability', productAttrs.recyclability);
-                          }
-                          
-                          // Supplier CO2 emissions data override (converted from grams to kg for calculation)
-                          if (productAttrs.co2Emissions) {
-                            const supplierCo2Kg = productAttrs.co2Emissions / 1000; // Convert grams to kg
-                            form.setValue('environmentalImpact.co2Emissions', supplierCo2Kg);
-                            
-                            // Also update LCA data to reflect supplier-provided emissions
-                            form.setValue('lcaData.packagingDetailed.container.co2EmissionsKg', supplierCo2Kg);
-                            form.setValue('lcaData.packagingDetailed.container.hasSupplierLcaData', true);
-                          }
-                        }}
+                        onSelect={handlePackagingSupplierSelect}
                         onManualEntry={() => {
                           setSelectedPackagingSupplier(null);
                         }}
