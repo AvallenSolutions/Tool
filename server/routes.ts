@@ -7477,40 +7477,8 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         return res.status(400).json({ error: 'User not associated with a company' });
       }
 
-      // Get analytics data for the category
-      const analyticsData = {
-        progressTrends: [
-          { month: 'Jan', progress: Math.round(Math.random() * 20 + 10), target: Math.round(Math.random() * 30 + 20) },
-          { month: 'Feb', progress: Math.round(Math.random() * 30 + 15), target: Math.round(Math.random() * 35 + 25) },
-          { month: 'Mar', progress: Math.round(Math.random() * 40 + 20), target: Math.round(Math.random() * 40 + 30) },
-          { month: 'Apr', progress: Math.round(Math.random() * 50 + 25), target: Math.round(Math.random() * 45 + 35) },
-          { month: 'May', progress: Math.round(Math.random() * 60 + 30), target: Math.round(Math.random() * 50 + 40) },
-          { month: 'Jun', progress: Math.round(Math.random() * 70 + 35), target: Math.round(Math.random() * 55 + 45) }
-        ],
-        alerts: [
-          {
-            type: 'warning',
-            title: 'Goal Behind Schedule',
-            message: `${category} reduction goal needs attention`,
-            date: '2 days ago',
-            priority: 'high'
-          },
-          {
-            type: 'info',
-            title: 'Deadline Approaching',
-            message: `${category} goal due in 15 days`,
-            date: '15 days',
-            priority: 'medium'
-          },
-          {
-            type: 'success',
-            title: 'Goal Achieved',
-            message: `${category} exceeded target by 5%`,
-            date: 'Yesterday',
-            priority: 'low'
-          }
-        ]
-      };
+      // Get real analytics data for the category
+      const analyticsData = await enhancedKpiService.getCategoryAnalytics(company.id, category);
 
       res.json({ success: true, data: analyticsData });
     } catch (error) {
