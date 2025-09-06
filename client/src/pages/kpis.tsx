@@ -152,10 +152,7 @@ export function KPIsPage() {
   // Create goal mutation
   const createGoalMutation = useMutation({
     mutationFn: async (goalData: { kpiDefinitionId: string; targetReductionPercentage: number; targetDate: string }) => {
-      return await apiRequest('/api/enhanced-kpis/goals', {
-        method: 'POST',
-        body: JSON.stringify(goalData),
-      });
+      return await apiRequest('POST', '/api/enhanced-kpis/goals', goalData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/dashboard'] });
@@ -179,10 +176,7 @@ export function KPIsPage() {
   // Generate category report mutation
   const generateReportMutation = useMutation({
     mutationFn: async (categoryData: { category: string }) => {
-      return await apiRequest('/api/enhanced-kpis/generate-report', {
-        method: 'POST',
-        body: JSON.stringify(categoryData),
-      });
+      return await apiRequest('POST', '/api/enhanced-kpis/generate-report', categoryData);
     },
     onSuccess: (data) => {
       toast({
@@ -204,9 +198,7 @@ export function KPIsPage() {
   // Delete goal mutation
   const deleteGoalMutation = useMutation({
     mutationFn: async (goalId: string) => {
-      return await apiRequest(`/api/enhanced-kpis/goals/${goalId}`, {
-        method: 'DELETE',
-      });
+      return await apiRequest('DELETE', `/api/enhanced-kpis/goals/${goalId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/dashboard'] });
