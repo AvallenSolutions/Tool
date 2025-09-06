@@ -6024,6 +6024,10 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         // Handle certifications array
         certifications: certifications ? JSON.stringify(certifications) : null,
         
+        // Handle product images
+        productImages: req.body.productImages ? JSON.stringify(req.body.productImages) : null,
+        packShotUrl: req.body.productImages && req.body.productImages.length > 0 ? req.body.productImages[0] : null,
+        
         // Handle distribution data
         ...(distribution && {
           averageTransportDistance: distribution.averageTransportDistance ? parseFloat(distribution.averageTransportDistance) : null,
