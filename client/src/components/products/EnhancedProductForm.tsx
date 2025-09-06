@@ -125,7 +125,7 @@ const enhancedProductSchema = z.object({
     
     // Legacy fields maintained for compatibility
     productionModel: z.string().optional(),
-    annualProductionVolume: z.coerce.number().min(0, "Production volume must be positive"),
+    annualProductionVolume: z.coerce.number().min(1, "Annual production volume is required and must be at least 1"),
     productionUnit: z.string().default('units'),
     facilityLocation: z.string().optional(),
     facilityAddress: z.string().optional(),
@@ -889,6 +889,17 @@ export default function EnhancedProductForm({
     console.log('🎯 EnhancedProductForm handleSubmit called');
     console.log('📋 Form data:', data);
     console.log('🖼️ Product images:', productImages);
+    
+    // Validate annual production volume is present and valid
+    const productionVolume = data.production?.annualProductionVolume;
+    if (!productionVolume || productionVolume < 1) {
+      toast({
+        title: "❌ Production Volume Required",
+        description: "Annual production volume must be specified and at least 1 before saving the product.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Convert form data back to database format
     const preparedData = { ...data };
