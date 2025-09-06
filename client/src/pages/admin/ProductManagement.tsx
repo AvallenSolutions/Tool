@@ -34,10 +34,54 @@ export default function ProductManagement() {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 
-  const { data: pendingProducts, isLoading } = useQuery<ProductForReview[]>({
-    queryKey: ['/api/admin/products/pending'],
+  const { data: productsResponse, isLoading } = useQuery<{success: boolean, data: ProductForReview[], count: number}>({
+    queryKey: ['/api/admin/supplier-products'],
     refetchInterval: 30000,
   });
+
+  const allProducts = productsResponse?.data || [];
+
+  // Group products by type
+  const groupProductsByType = (products: ProductForReview[]) => {
+    const groups: Record<string, ProductForReview[]> = {};
+    
+    if (!products || !Array.isArray(products)) return groups;
+    
+    products.forEach(product => {
+      let productType = 'Other';
+      
+      // Use productAttributes.type if available, otherwise categorize by name/description
+      if (product.productAttributes && typeof product.productAttributes === 'object') {
+        const attributes = product.productAttributes as any;
+        productType = attributes.type || 'Other';
+      } else {
+        // Fallback categorization based on product name/description
+        const name = product.productName.toLowerCase();
+        const desc = product.productDescription?.toLowerCase() || '';
+        
+        if (name.includes('bottle') || desc.includes('bottle') || name.includes('glass')) {
+          productType = 'Primary Packaging';
+        } else if (name.includes('label') || desc.includes('label')) {
+          productType = 'Labels';
+        } else if (name.includes('stopper') || name.includes('cork') || desc.includes('stopper')) {
+          productType = 'Stoppers';
+        } else if (name.includes('berries') || name.includes('ingredient') || desc.includes('ingredient')) {
+          productType = 'Ingredients';
+        } else if (name.includes('tote') || name.includes('packaging') || desc.includes('packaging')) {
+          productType = 'Secondary Packaging';
+        }
+      }
+      
+      if (!groups[productType]) {
+        groups[productType] = [];
+      }
+      groups[productType].push(product);
+    });
+    
+    return groups;
+  };
+
+  const productsByType = allProducts ? groupProductsByType(allProducts) : {};
 
   const approveMutation = useMutation({
     mutationFn: async (productId: string) => {
@@ -89,7 +133,8 @@ export default function ProductManagement() {
     return <Badge variant="outline" className="bg-orange-100 text-orange-800">Pending Review</Badge>;
   };
 
-  const pendingCount = pendingProducts?.filter(p => !p.isVerified).length || 0;
+  const pendingCount = allProducts.filter(p => !p.isVerified).length;
+  const totalCount = allProducts.length;
 
   if (isLoading) {
     return (
@@ -143,9 +188,14 @@ export default function ProductManagement() {
                   <Building2 className="h-4 w-4 mr-2" />
                   Supplier Dashboard
                 </Button>
-                <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
-                  {pendingCount} pending review
-                </Badge>
+                <div className="flex gap-2">
+                  <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
+                    {pendingCount} pending review
+                  </Badge>
+                  <Badge variant="outline">
+                    {totalCount} total products
+                  </Badge>
+                </div>
               </div>
             </div>
 
@@ -165,10 +215,17 @@ export default function ProductManagement() {
               </CardContent>
             </Card>
 
-            {/* Products List */}
-            <div className="space-y-4">
-              {pendingProducts && pendingProducts.length > 0 ? (
-                pendingProducts.map((product) => (
+            {/* Products List by Type */}
+            <div className="space-y-6">
+              {Object.keys(productsByType).length > 0 ? (
+                Object.entries(productsByType).map(([productType, products]) => (
+                  <div key={productType} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl font-semibold text-gray-900">{productType}</h2>
+                      <Badge variant="secondary">{products.length}</Badge>
+                    </div>
+                    <div className="grid gap-4">
+                      {products.map((product) => (
                   <Card key={product.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -248,15 +305,18 @@ export default function ProductManagement() {
                         )}
                       </div>
                     </CardContent>
-                  </Card>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 ))
               ) : (
                 <Card>
                   <CardContent className="p-12 text-center">
                     <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No Products Pending Review</h3>
+                    <h3 className="text-lg font-medium mb-2">No Supplier Products Found</h3>
                     <p className="text-muted-foreground">
-                      All product submissions have been reviewed. New submissions will appear here.
+                      No supplier products have been submitted yet.
                     </p>
                   </CardContent>
                 </Card>
