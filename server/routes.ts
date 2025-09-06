@@ -2104,57 +2104,68 @@ Be precise and quote actual text from the content, not generic terms.`;
         breakdown.packaging.water += closureWeightKg * 8; // Closure production water
       }
       
-      // 3. Add facility impacts (energy, water, waste) allocated per product unit
-      
-      // Get facility data for this company
-      const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
-      
-      let facilityImpacts = { co2e: 0, water: 0, waste: 0 }; // Only co2e and water used per requirements
-      
-      // PHASE 2: Add production waste carbon footprint from facility disposal routes
+      // 3. Add facility impacts using YOUR METHOD: Average monthly Scope 1&2 × 12 ÷ total units
+      let facilityImpacts = { co2e: 0, water: 0, waste: 0 }; 
       let productionWasteFootprint = 0;
-      
-      // PHASE 3: Add end-of-life packaging waste footprint using regional recycling rates
       let endOfLifePackagingFootprint = 0;
       
-      if (facilities.length > 0) {
+      // Calculate annual Scope 1 & 2 facility footprint using monthly averages
+      try {
+        // Get monthly facility data for the company
+        const monthlyData = await db
+          .select({
+            month: monthlyFacilityData.month,
+            electricityKwh: sql<number>`SUM(CAST(${monthlyFacilityData.electricityKwh} AS NUMERIC))`,
+            naturalGasM3: sql<number>`SUM(CAST(${monthlyFacilityData.naturalGasM3} AS NUMERIC))`,
+          })
+          .from(monthlyFacilityData)
+          .where(eq(monthlyFacilityData.companyId, product.companyId))
+          .groupBy(monthlyFacilityData.month);
+
+        if (monthlyData.length > 0) {
+          // Calculate monthly averages
+          const avgElectricityKwh = monthlyData.reduce((sum, month) => sum + month.electricityKwh, 0) / monthlyData.length;
+          const avgGasM3 = monthlyData.reduce((sum, month) => sum + month.naturalGasM3, 0) / monthlyData.length;
+          
+          // Calculate annual totals (monthly average × 12)
+          const annualElectricityKwh = avgElectricityKwh * 12;
+          const annualGasM3 = avgGasM3 * 12;
+          
+          // Calculate Scope 1 & 2 emissions
+          const scope2Emissions = annualElectricityKwh * 0.233; // UK grid factor: 233g CO2e/kWh
+          const scope1Emissions = annualGasM3 * 1.8514; // Natural gas factor: 1.8514 kg CO2e/m³
+          const totalFacilityEmissions = scope1Emissions + scope2Emissions; // kg CO2e per year
+          
+          // Allocate per unit across ALL company products
+          facilityImpacts.co2e = totalFacilityEmissions / totalCompanyUnits;
+          
+          console.log(`🏭 YOUR PRODUCT METHOD: Monthly avg electricity: ${avgElectricityKwh.toFixed(0)}kWh, gas: ${avgGasM3.toFixed(0)}m³`);
+          console.log(`🏭 YOUR PRODUCT METHOD: Annual totals: ${annualElectricityKwh.toFixed(0)}kWh, ${annualGasM3.toFixed(0)}m³`);
+          console.log(`🏭 YOUR PRODUCT METHOD: Scope 1: ${(scope1Emissions/1000).toFixed(1)}t, Scope 2: ${(scope2Emissions/1000).toFixed(1)}t, Total: ${(totalFacilityEmissions/1000).toFixed(1)}t`);
+          console.log(`🏭 YOUR PRODUCT METHOD: Per unit: ${facilityImpacts.co2e.toFixed(3)}kg CO2e ÷ ${totalCompanyUnits.toLocaleString()} units`);
+        }
+        
+        // Water consumption (keep existing logic for water)
+        const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
         for (const facility of facilities) {
-          // Calculate per-unit facility impacts based on annual production volume
-          
-          // Use monthly data aggregation for consistent energy calculation
-          const monthlyService = new MonthlyDataAggregationService();
-          const aggregatedData = await monthlyService.aggregateMonthlyData(product.companyId);
-          
-          if (aggregatedData.totalElectricityKwh > 0) {
-            const electricityKwh = aggregatedData.totalElectricityKwh;
-            const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
-            const gridElectricity = electricityKwh * (1 - renewablePercent);
-            // FIXED: Allocate facility emissions across ALL company products, not just this product
-            const co2eFromElectricity = (gridElectricity * 0.233) / totalCompanyUnits; // UK grid factor 2024: 233g CO2e/kWh
-            facilityImpacts.co2e += co2eFromElectricity;
-            console.log(`⚡ MONTHLY: Facility electricity: ${electricityKwh.toFixed(0)}kWh/year (${renewablePercent*100}% renewable) = ${co2eFromElectricity.toFixed(3)}kg CO2e per unit`);
-          }
-          
-          if (aggregatedData.totalNaturalGasM3 > 0) {
-            const gasM3 = aggregatedData.totalNaturalGasM3;
-            // FIXED: Allocate facility emissions across ALL company products, not just this product
-            const co2eFromGas = (gasM3 * 1.8514) / totalCompanyUnits; // Natural gas factor: 1.8514 kg CO2e/m³
-            facilityImpacts.co2e += co2eFromGas;
-            console.log(`🔥 MONTHLY: Facility gas: ${gasM3.toFixed(0)}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
-          }
-          
-          // Water consumption
           const totalFacilityWater = 
             (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
             (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
             (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
           
           if (totalFacilityWater > 0) {
-            // FIXED: Allocate facility water across ALL company products, not just this product  
             const waterPerUnit = totalFacilityWater / totalCompanyUnits;
             facilityImpacts.water += waterPerUnit;
-            console.log(`💧 Facility water: ${totalFacilityWater.toFixed(0)}L/year = ${waterPerUnit.toFixed(1)}L per unit`);
+            console.log(`💧 PRODUCT WATER: ${totalFacilityWater.toFixed(0)}L/year ÷ ${totalCompanyUnits.toLocaleString()} units = ${waterPerUnit.toFixed(1)}L per unit`);
           }
+        }
+      } catch (error) {
+        console.error('Error calculating facility impacts using your product method:', error);
+      }
+      
+      const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
+      if (facilities.length > 0) {
+        for (const facility of facilities) {
           
           // PHASE 2: Calculate production waste carbon footprint from disposal routes
           try {
