@@ -108,7 +108,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-2">
           {/* Dashboard */}
           <li>
