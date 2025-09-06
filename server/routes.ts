@@ -2111,7 +2111,7 @@ Be precise and quote actual text from the content, not generic terms.`;
       
       // Calculate annual Scope 1 & 2 facility footprint using monthly averages
       try {
-        // Get monthly facility data for the company
+        // Get monthly facility data for the company - SUM ALL facilities by month
         const monthlyData = await db
           .select({
             month: monthlyFacilityData.month,
