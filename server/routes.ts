@@ -4237,12 +4237,8 @@ Be precise and quote actual text from the content, not generic terms.`;
         totalFacilityImpacts += product.breakdown.facilities.co2e * parseFloat(product.productionVolume);
       }
 
-      // Use the EXACT automated Scope 3 calculation that matches the Carbon Footprint Calculator UI
-      const scope3Response = await fetch(`http://localhost:5000/api/company/footprint/scope3/automated`, {
-        headers: { 'Cookie': 'connect.sid=dummy' }
-      });
-      const scope3Data = await scope3Response.json();
-      const scope3Emissions = (scope3Data.data.totalEmissions || 0) * 1000; // Convert tonnes to kg
+      // Calculate Scope 3 emissions directly from product LCA data (avoiding rate limits)
+      const scope3Emissions = totalCompanyCO2e; // Already calculated from product breakdown above
       
       console.log(`🔧 CORRECTED Emissions calculation (matching your expected values):`, {
         scope1Entries: scope1Data.length,
