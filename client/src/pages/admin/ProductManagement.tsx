@@ -100,7 +100,7 @@ export default function ProductManagement() {
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">Product Review Queue</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Supplier Product Review Queue</h1>
                 <Badge variant="outline">Loading...</Badge>
               </div>
             </div>
@@ -115,17 +115,17 @@ export default function ProductManagement() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header 
-          title="Product Management" 
-          subtitle="Review and approve submitted products"
+          title="Supplier Product Management" 
+          subtitle="Review and approve supplier products only"
         />
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Product Management</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Supplier Product Management</h1>
                 <p className="text-muted-foreground">
-                  Create new products and review pending submissions
+                  Review and approve supplier product submissions only
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -137,11 +137,11 @@ export default function ProductManagement() {
                   Create Supplier Product
                 </Button>
                 <Button 
-                  onClick={() => navigate('/app/product-registration')}
+                  onClick={() => navigate('/app/admin/supplier-management/overview')}
                   variant="outline"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add User Product
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Supplier Dashboard
                 </Button>
                 <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
                   {pendingCount} pending review
@@ -149,16 +149,16 @@ export default function ProductManagement() {
               </div>
             </div>
 
-            {/* Product Type Notice */}
-            <Card className="bg-blue-50 border-blue-200">
+            {/* Supplier Product Notice */}
+            <Card className="bg-green-50 border-green-200">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <Package className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <Building2 className="w-5 h-5 text-green-600 mt-0.5" />
                   <div>
-                    <p className="font-medium text-blue-900">Product Types in Review</p>
-                    <p className="text-sm text-blue-700 mt-1">
-                      This queue includes both <strong>supplier products</strong> (submitted via Supplier Management) and <strong>user products</strong> (created via Enhanced Product Form). 
-                      Use the "Create Supplier Product" button above to add products directly to suppliers with admin privileges.
+                    <p className="font-medium text-green-900">Supplier Products Only</p>
+                    <p className="text-sm text-green-700 mt-1">
+                      This management page is <strong>exclusively for supplier products</strong> submitted through the Supplier Management system. 
+                      User products are managed separately through the main Products section.
                     </p>
                   </div>
                 </div>
