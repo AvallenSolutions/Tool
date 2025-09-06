@@ -5266,6 +5266,60 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     }
   });
 
+  // Admin-specific supplier product creation endpoint
+  app.post('/api/admin/supplier-products', async (req, res) => {
+    try {
+      const { supplierProducts } = await import('@shared/schema');
+      
+      console.log('🏗️  Admin creating supplier product:', {
+        productName: req.body.productName,
+        supplierId: req.body.supplierId,
+        submittedBy: req.body.submittedBy || 'ADMIN'
+      });
+      
+      const productData = {
+        productName: req.body.productName,
+        productDescription: req.body.productDescription || null,
+        sku: req.body.sku || `SKU-${Date.now()}`,
+        supplierId: req.body.supplierId,
+        submittedBy: req.body.submittedBy || 'ADMIN',
+        submittedByUserId: req.body.submittedByUserId || null,
+        submittedByCompanyId: req.body.submittedByCompanyId || null,
+        isVerified: req.body.isVerified !== undefined ? req.body.isVerified : true,
+        verifiedBy: req.body.isVerified ? 'admin' : null,
+        verifiedAt: req.body.isVerified ? new Date() : null,
+        submissionStatus: req.body.submissionStatus || 'approved',
+        productAttributes: req.body.productAttributes || {},
+        hasPrecalculatedLca: req.body.hasPrecalculatedLca || false,
+        lcaDataJson: req.body.lcaDataJson || null,
+        basePrice: req.body.basePrice || null,
+        currency: req.body.currency || 'USD',
+        minimumOrderQuantity: req.body.minimumOrderQuantity || null,
+        leadTimeDays: req.body.leadTimeDays || null,
+        certifications: req.body.certifications || [],
+        imageUrl: req.body.imageUrl || null
+      };
+
+      const [newProduct] = await db
+        .insert(supplierProducts)
+        .values(productData)
+        .returning();
+
+      console.log('✅ Admin supplier product created:', newProduct.id);
+      
+      res.json({
+        success: true,
+        data: newProduct
+      });
+    } catch (error) {
+      console.error('❌ Error creating admin supplier product:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to create supplier product' 
+      });
+    }
+  });
+
   // Main product creation endpoint (Enhanced Product Form)
   // GET products endpoint
   app.get('/api/products', async (req, res) => {
