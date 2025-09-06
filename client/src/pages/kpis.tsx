@@ -217,8 +217,8 @@ export function KPIsPage() {
   });
 
   const definitions = definitionsData?.success ? definitionsData.definitions : [];
-  const kpiGoals = dashboardData?.success ? dashboardData.goals : [];
-  const summary = dashboardData?.success ? dashboardData.summary : {
+  const kpiGoals = dashboardData?.success ? dashboardData.data.kpiGoals : [];
+  const summary = dashboardData?.success ? dashboardData.data.summary : {
     total: 0,
     onTrack: 0,
     atRisk: 0,
