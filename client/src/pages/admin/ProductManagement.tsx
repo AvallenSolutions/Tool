@@ -130,17 +130,40 @@ export default function ProductManagement() {
               </div>
               <div className="flex items-center gap-3">
                 <Button 
-                  onClick={() => navigate('/app/product-registration')}
-                  className="bg-avallen-green hover:bg-avallen-green/90"
+                  onClick={() => navigate('/app/admin/supplier-management/products/create')}
+                  className="bg-green-600 hover:bg-green-700 mr-2"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Product
+                  Create Supplier Product
+                </Button>
+                <Button 
+                  onClick={() => navigate('/app/product-registration')}
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add User Product
                 </Button>
                 <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
                   {pendingCount} pending review
                 </Badge>
               </div>
             </div>
+
+            {/* Product Type Notice */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Package className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-900">Product Types in Review</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      This queue includes both <strong>supplier products</strong> (submitted via Supplier Management) and <strong>user products</strong> (created via Enhanced Product Form). 
+                      Use the "Create Supplier Product" button above to add products directly to suppliers with admin privileges.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Products List */}
             <div className="space-y-4">
