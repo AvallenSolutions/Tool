@@ -186,14 +186,14 @@ export class KPICalculationService {
           const renewablePercent = 0;
           const gridElectricity = electricityKwh * (1 - renewablePercent);
           // FIXED: Allocate facility emissions across ALL company products, not just this product
-          const co2eFromElectricity = (gridElectricity * 0.233) / totalCompanyUnits * productionVolume; // UK grid factor 2024: 233g CO2e/kWh
+          const co2eFromElectricity = (gridElectricity * 0.233) / totalCompanyUnits; // UK grid factor 2024: 233g CO2e/kWh
           breakdown.facilities.co2e += co2eFromElectricity;
         }
         
         if (annualEquivalents.totalGasM3PerYear > 0) {
           const gasM3 = annualEquivalents.totalGasM3PerYear;
           // FIXED: Allocate facility emissions across ALL company products, not just this product
-          const co2eFromGas = (gasM3 * 1.8514) / totalCompanyUnits * productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
+          const co2eFromGas = (gasM3 * 1.8514) / totalCompanyUnits; // Natural gas factor: 1.8514 kg CO2e/m³
           breakdown.facilities.co2e += co2eFromGas;
         }
         
@@ -205,7 +205,7 @@ export class KPICalculationService {
         
         if (totalFacilityWater > 0) {
           // FIXED: Allocate facility water across ALL company products, not just this product
-          const waterPerUnit = (totalFacilityWater / totalCompanyUnits) * productionVolume;
+          const waterPerUnit = totalFacilityWater / totalCompanyUnits;
           breakdown.facilities.water += waterPerUnit;
         }
         
