@@ -210,19 +210,152 @@ export default function CreateEnhancedProduct() {
     return result;
   };
 
-  // Draft saving mutation
+  // Transform form data to database format (shared by both draft save and final submit)
+  const transformFormDataToDatabase = (data: any, isDraft: boolean = false) => {
+    console.log('🔄 Transforming form data:', { isDraft, hasWaterDilution: !!data.waterDilution, hasIngredients: !!data.ingredients });
+    
+    return {
+      // Basic fields
+      name: data.name,
+      sku: data.sku,
+      type: data.type,
+      volume: data.volume,
+      description: data.description,
+      productionModel: data.productionModel,
+      annualProductionVolume: data.annualProductionVolume,
+      productionUnit: data.productionUnit,
+      status: isDraft ? 'draft' : (isEditMode ? 'confirmed' : (data.status || 'draft')),
+      isMainProduct: data.isMainProduct,
+      packShotUrl: data.productImage,
+      productImages: data.productImages || [],
+      
+      // Water dilution (serialize as JSON)
+      waterDilution: data.waterDilution ? JSON.stringify(data.waterDilution) : null,
+      
+      // Ingredients array (serialize as JSON)
+      ingredients: data.ingredients ? JSON.stringify(data.ingredients) : null,
+      
+      // Packaging - Primary Container (with null safety)
+      bottleName: data.packaging?.primaryContainer?.name || null,
+      bottleMaterial: data.packaging?.primaryContainer?.material || '',
+      bottleWeight: data.packaging?.primaryContainer?.weight || null,
+      bottleRecycledContent: data.packaging?.primaryContainer?.recycledContent || null,
+      bottleRecyclability: data.packaging?.primaryContainer?.recyclability || null,
+      bottleColor: data.packaging?.primaryContainer?.color || '',
+      bottleThickness: data.packaging?.primaryContainer?.thickness || null,
+      
+      // Packaging - Labels & Printing (with null safety)
+      labelMaterial: data.packaging?.labeling?.labelMaterial || '',
+      labelWeight: data.packaging?.labeling?.labelWeight || null,
+      labelPrintingMethod: data.packaging?.labeling?.printingMethod || null,
+      labelInkType: data.packaging?.labeling?.inkType || null,
+      labelSize: data.packaging?.labeling?.labelSize || null,
+      
+      // Packaging - Closure System (with null safety)
+      closureType: data.packaging?.closure?.closureType || '',
+      closureMaterial: data.packaging?.closure?.material || '',
+      closureWeight: data.packaging?.closure?.weight || null,
+      hasBuiltInClosure: data.packaging?.closure?.hasLiner || false,
+      linerMaterial: data.packaging?.closure?.linerMaterial || null,
+      
+      // Packaging - Secondary (with null safety)
+      hasSecondaryPackaging: data.packaging?.secondaryPackaging?.hasSecondaryPackaging || false,
+      boxMaterial: data.packaging?.secondaryPackaging?.boxMaterial || null,
+      boxWeight: data.packaging?.secondaryPackaging?.boxWeight || null,
+      fillerMaterial: data.packaging?.secondaryPackaging?.fillerMaterial || null,
+      fillerWeight: data.packaging?.secondaryPackaging?.fillerWeight || null,
+      
+      // Packaging - Supplier Information (with null safety)
+      packagingSupplier: data.packaging?.supplierInformation?.supplierName || '',
+      packagingSupplierId: data.packaging?.supplierInformation?.selectedSupplierId || '',
+      packagingSupplierCategory: data.packaging?.supplierInformation?.supplierCategory || '',
+      packagingSelectedProductId: data.packaging?.supplierInformation?.selectedProductId || '',
+      packagingSelectedProductName: data.packaging?.supplierInformation?.selectedProductName || '',
+      
+      // Production Process - Energy (with null safety)
+      electricityKwh: data.production?.energyConsumption?.electricityKwh || null,
+      gasM3: data.production?.energyConsumption?.gasM3 || null,
+      steamKg: data.production?.energyConsumption?.steamKg || null,
+      fuelLiters: data.production?.energyConsumption?.fuelLiters || null,
+      renewableEnergyPercent: data.production?.energyConsumption?.renewableEnergyPercent || null,
+      
+      // Production Process - Water (with null safety)
+      processWaterLiters: data.production?.waterUsage?.processWaterLiters || null,
+      cleaningWaterLiters: data.production?.waterUsage?.cleaningWaterLiters || null,
+      coolingWaterLiters: data.production?.waterUsage?.coolingWaterLiters || null,
+      wasteWaterTreatment: data.production?.waterUsage?.wasteWaterTreatment || false,
+      
+      // Production Process - Waste (with null safety)
+      organicWasteKg: data.production?.wasteGeneration?.organicWasteKg || null,
+      packagingWasteKg: data.production?.wasteGeneration?.packagingWasteKg || null,
+      hazardousWasteKg: data.production?.wasteGeneration?.hazardousWasteKg || null,
+      wasteRecycledPercent: data.production?.wasteGeneration?.wasteRecycledPercent || null,
+      
+      // Production Basic Fields (with null safety)
+      facilityLocation: data.production?.facilityLocation || '',
+      energySource: data.production?.energySource || '',
+      waterSourceType: data.production?.waterSourceType || '',
+      heatRecoverySystem: data.production?.heatRecoverySystem || false,
+      wasteManagement: data.production?.wasteManagement || '',
+      
+      // Production Methods (serialize as JSON with null safety)
+      productionMethods: data.production ? JSON.stringify(data.production) : null,
+      
+      // Distribution (with null safety)
+      averageTransportDistance: data.distribution?.averageTransportDistance || null,
+      primaryTransportMode: data.distribution?.primaryTransportMode || '',
+      distributionCenters: data.distribution?.distributionCenters || null,
+      coldChainRequired: data.distribution?.coldChainRequired || false,
+      packagingEfficiency: data.distribution?.packagingEfficiency || null,
+      
+      // Environmental (with null safety)
+      carbonFootprint: data.environmental?.carbonFootprint || null,
+      waterFootprint: data.environmental?.waterFootprint || null,
+      
+      // End of Life (with null safety)
+      returnableContainer: data.endOfLife?.returnableContainer || false,
+      recyclingRate: data.endOfLife?.recyclingRate || null,
+      disposalMethod: data.endOfLife?.disposalMethod || '',
+      consumerEducation: data.endOfLife?.consumerEducation || null,
+      
+      // Certifications (serialize as JSON)
+      certifications: data.certifications ? JSON.stringify(data.certifications) : null,
+    };
+  };
+
+  // Draft saving mutation (now using proper data transformation)
   const saveDraftMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Add the product ID if we're editing an existing product
+      console.log('💾 Draft save - raw form data:', data);
+      
+      // Transform form data using the shared transformation function
+      const transformedData = transformFormDataToDatabase(data, true);
+      
+      // Add product ID if editing existing product
       const draftData = {
-        ...data,
+        ...transformedData,
         id: productId ? parseInt(productId) : undefined,
-        status: 'draft'
       };
+      
+      console.log('💾 Draft save - transformed data:', { 
+        hasWaterDilution: !!draftData.waterDilution,
+        hasIngredients: !!draftData.ingredients,
+        hasProductImages: !!draftData.productImages
+      });
+      
       const response = await apiRequest("POST", "/api/products/draft", draftData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (savedProduct) => {
+      console.log('✅ Draft saved successfully:', savedProduct);
+      
+      // Invalidate and refetch product data to show updated draft
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      if (productId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/products", productId] });
+        queryClient.refetchQueries({ queryKey: ["/api/products", productId] });
+      }
+      
       toast({
         title: "✅ Draft Saved",
         description: "Your progress has been saved. You can continue editing later.",
@@ -230,7 +363,7 @@ export default function CreateEnhancedProduct() {
       });
     },
     onError: (error) => {
-      console.error("Error saving draft:", error);
+      console.error("❌ Error saving draft:", error);
       toast({
         title: "❌ Error",
         description: "Failed to save draft. Please try again.",
@@ -319,114 +452,8 @@ export default function CreateEnhancedProduct() {
     
     const startTime = Date.now();
     
-    // Transform the enhanced form data to match the database schema columns with null safety
-    const transformedData = {
-      // Basic fields
-      name: data.name,
-      sku: data.sku,
-      type: data.type,
-      volume: data.volume,
-      description: data.description,
-      productionModel: data.productionModel,
-      annualProductionVolume: data.annualProductionVolume,
-      productionUnit: data.productionUnit,
-      status: isEditMode ? 'confirmed' : (data.status || 'draft'),
-      isMainProduct: data.isMainProduct,
-      packShotUrl: data.productImage,
-      productImages: data.productImages || [],
-      
-      // Water dilution (serialize as JSON)
-      waterDilution: data.waterDilution ? JSON.stringify(data.waterDilution) : null,
-      
-      // Ingredients array (serialize as JSON)
-      ingredients: data.ingredients ? JSON.stringify(data.ingredients) : null,
-      
-      // Packaging - Primary Container (with null safety)
-      bottleName: data.packaging?.primaryContainer?.name || null,
-      bottleMaterial: data.packaging?.primaryContainer?.material || '',
-      bottleWeight: data.packaging?.primaryContainer?.weight || null,
-      bottleRecycledContent: data.packaging?.primaryContainer?.recycledContent || null,
-      bottleRecyclability: data.packaging?.primaryContainer?.recyclability || null,
-      bottleColor: data.packaging?.primaryContainer?.color || '',
-      bottleThickness: data.packaging?.primaryContainer?.thickness || null,
-      
-      // Packaging - Labels & Printing (with null safety)
-      labelMaterial: data.packaging?.labeling?.labelMaterial || '',
-      labelWeight: data.packaging?.labeling?.labelWeight || null,
-      labelPrintingMethod: data.packaging?.labeling?.printingMethod || null,
-      labelInkType: data.packaging?.labeling?.inkType || null,
-      labelSize: data.packaging?.labeling?.labelSize || null,
-      
-      // Packaging - Closure System (with null safety)
-      closureType: data.packaging?.closure?.closureType || '',
-      closureMaterial: data.packaging?.closure?.material || '',
-      closureWeight: data.packaging?.closure?.weight || null,
-      hasBuiltInClosure: data.packaging?.closure?.hasLiner || false,
-      linerMaterial: data.packaging?.closure?.linerMaterial || null,
-      
-      // Packaging - Secondary (with null safety)
-      hasSecondaryPackaging: data.packaging?.secondaryPackaging?.hasSecondaryPackaging || false,
-      boxMaterial: data.packaging?.secondaryPackaging?.boxMaterial || null,
-      boxWeight: data.packaging?.secondaryPackaging?.boxWeight || null,
-      fillerMaterial: data.packaging?.secondaryPackaging?.fillerMaterial || null,
-      fillerWeight: data.packaging?.secondaryPackaging?.fillerWeight || null,
-      
-      // Packaging - Supplier Information (with null safety)
-      packagingSupplier: data.packaging?.supplierInformation?.supplierName || '',
-      packagingSupplierId: data.packaging?.supplierInformation?.selectedSupplierId || '',
-      packagingSupplierCategory: data.packaging?.supplierInformation?.supplierCategory || '',
-      packagingSelectedProductId: data.packaging?.supplierInformation?.selectedProductId || '',
-      packagingSelectedProductName: data.packaging?.supplierInformation?.selectedProductName || '',
-      
-      // Production Process - Energy (with null safety)
-      electricityKwh: data.production?.energyConsumption?.electricityKwh || null,
-      gasM3: data.production?.energyConsumption?.gasM3 || null,
-      steamKg: data.production?.energyConsumption?.steamKg || null,
-      fuelLiters: data.production?.energyConsumption?.fuelLiters || null,
-      renewableEnergyPercent: data.production?.energyConsumption?.renewableEnergyPercent || null,
-      
-      // Production Process - Water (with null safety)
-      processWaterLiters: data.production?.waterUsage?.processWaterLiters || null,
-      cleaningWaterLiters: data.production?.waterUsage?.cleaningWaterLiters || null,
-      coolingWaterLiters: data.production?.waterUsage?.coolingWaterLiters || null,
-      wasteWaterTreatment: data.production?.waterUsage?.wasteWaterTreatment || false,
-      
-      // Production Process - Waste (with null safety)
-      organicWasteKg: data.production?.wasteGeneration?.organicWasteKg || null,
-      packagingWasteKg: data.production?.wasteGeneration?.packagingWasteKg || null,
-      hazardousWasteKg: data.production?.wasteGeneration?.hazardousWasteKg || null,
-      wasteRecycledPercent: data.production?.wasteGeneration?.wasteRecycledPercent || null,
-      
-      // Production Basic Fields (with null safety)
-      facilityLocation: data.production?.facilityLocation || '',
-      energySource: data.production?.energySource || '',
-      waterSourceType: data.production?.waterSourceType || '',
-      heatRecoverySystem: data.production?.heatRecoverySystem || false,
-      wasteManagement: data.production?.wasteManagement || '',
-      
-      // Production Methods (serialize as JSON with null safety)
-      productionMethods: data.production ? JSON.stringify(data.production) : null,
-      
-      // Distribution (with null safety)
-      averageTransportDistance: data.distribution?.averageTransportDistance || null,
-      primaryTransportMode: data.distribution?.primaryTransportMode || '',
-      distributionCenters: data.distribution?.distributionCenters || null,
-      coldChainRequired: data.distribution?.coldChainRequired || false,
-      packagingEfficiency: data.distribution?.packagingEfficiency || null,
-      
-      // End of Life (with null safety)
-      returnableContainer: data.endOfLife?.returnableContainer || false,
-      recyclingRate: data.endOfLife?.recyclingRate || null,
-      disposalMethod: data.endOfLife?.disposalMethod || '',
-      consumerEducation: data.endOfLife?.consumerEducation || null,
-      
-      // Environmental (with null safety)
-      carbonFootprint: data.environmental?.carbonFootprint || null,
-      waterFootprint: data.environmental?.waterFootprint || null,
-      
-      // Certifications (serialize as JSON with null safety)
-      certifications: data.certifications ? JSON.stringify(data.certifications) : null,
-    };
+    // Use shared transformation function
+    const transformedData = transformFormDataToDatabase(data, false);
     
     const transformTime = Date.now() - startTime;
     
