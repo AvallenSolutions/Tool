@@ -33,6 +33,7 @@ import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
 import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
 import SupplierInvitations from "@/pages/admin/SupplierInvitations";
 import FeedbackDashboard from "@/pages/admin/FeedbackDashboard";
+import SupplierManagementOverview from "@/pages/admin/supplier-management/SupplierManagementOverview";
 import SupplierNetwork from "@/pages/SupplierNetwork";
 import SupplierDetail from "@/pages/SupplierDetail";
 import ProductDetail from "@/pages/ProductDetail";
@@ -177,6 +178,15 @@ function Router() {
       {/* Monthly facility updates now integrated into Production Facility popup */}
       <Route path="/app/admin" component={AdminDashboardMain} />
       <Route path="/app/admin/dashboard" component={AdminDashboardMain} />
+      
+      {/* New Supplier Management Routes */}
+      <Route path="/app/admin/supplier-management/overview" component={SupplierManagementOverview} />
+      <Route path="/app/admin/supplier-management/suppliers" component={SupplierManagement} />
+      <Route path="/app/admin/supplier-management/products" component={AdminProductManagement} />
+      <Route path="/app/admin/supplier-management/data-extraction" component={SupplierDataExtraction} />
+      <Route path="/app/admin/supplier-management/onboarding" component={SupplierRegistration} />
+      
+      {/* Legacy Admin Routes - Keep for backward compatibility */}
       <Route path="/app/admin/suppliers/:id/edit" component={SupplierEdit} />
       <Route path="/app/admin/suppliers/:id" component={AdminSupplierDetail} />
       <Route path="/app/admin/suppliers" component={SupplierManagement} />
