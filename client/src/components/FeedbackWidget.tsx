@@ -78,7 +78,7 @@ export function FeedbackWidget() {
     <div style={{ 
       position: 'fixed', 
       bottom: 0, 
-      right: 0, 
+      left: 0, 
       pointerEvents: 'none',
       zIndex: 9999 
     }}>
@@ -87,11 +87,11 @@ export function FeedbackWidget() {
         <Button
           variant="outline"
           size="sm" 
-          className="fixed bottom-4 right-4 z-[9999] bg-white dark:bg-black shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-300 dark:border-gray-600"
+          className="fixed bottom-4 left-4 z-[9999] bg-white dark:bg-black shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-300 dark:border-gray-600"
           style={{
             position: 'fixed',
             bottom: '16px',
-            right: '16px',
+            left: '16px',
             zIndex: 9999,
             pointerEvents: 'auto',
             isolation: 'isolate'
