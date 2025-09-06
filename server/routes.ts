@@ -1978,6 +1978,16 @@ Be precise and quote actual text from the content, not generic terms.`;
       }
       
       const productionVolume = Number(product.annualProductionVolume) || 1;
+      
+      // Get total company production for proper facility allocation (same as KPI calculation)
+      const companyProducts = await db.select().from(products).where(eq(products.companyId, product.companyId));
+      let totalCompanyUnits = 0;
+      for (const companyProduct of companyProducts) {
+        const annualProduction = parseFloat(companyProduct.annualProductionVolume?.toString() || '0');
+        totalCompanyUnits += annualProduction;
+      }
+      console.log(`🧮 Total company production units: ${totalCompanyUnits.toLocaleString()} units across ${companyProducts.length} products`);
+      
       let totalCO2e = 0;
       let totalWater = 0; // Excluding dilution water
       let totalWaste = 0;
@@ -2119,14 +2129,16 @@ Be precise and quote actual text from the content, not generic terms.`;
             const electricityKwh = aggregatedData.totalElectricityKwh;
             const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
             const gridElectricity = electricityKwh * (1 - renewablePercent);
-            const co2eFromElectricity = (gridElectricity * 0.233) / productionVolume; // UK grid factor 2024: 233g CO2e/kWh
+            // FIXED: Allocate facility emissions across ALL company products, not just this product
+            const co2eFromElectricity = (gridElectricity * 0.233) / totalCompanyUnits * productionVolume; // UK grid factor 2024: 233g CO2e/kWh
             facilityImpacts.co2e += co2eFromElectricity;
             console.log(`⚡ MONTHLY: Facility electricity: ${electricityKwh.toFixed(0)}kWh/year (${renewablePercent*100}% renewable) = ${co2eFromElectricity.toFixed(3)}kg CO2e per unit`);
           }
           
           if (aggregatedData.totalNaturalGasM3 > 0) {
             const gasM3 = aggregatedData.totalNaturalGasM3;
-            const co2eFromGas = (gasM3 * 1.8514) / productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
+            // FIXED: Allocate facility emissions across ALL company products, not just this product
+            const co2eFromGas = (gasM3 * 1.8514) / totalCompanyUnits * productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
             facilityImpacts.co2e += co2eFromGas;
             console.log(`🔥 MONTHLY: Facility gas: ${gasM3.toFixed(0)}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
           }
@@ -2138,7 +2150,8 @@ Be precise and quote actual text from the content, not generic terms.`;
             (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
           
           if (totalFacilityWater > 0) {
-            const waterPerUnit = totalFacilityWater / productionVolume;
+            // FIXED: Allocate facility water across ALL company products, not just this product
+            const waterPerUnit = (totalFacilityWater / totalCompanyUnits) * productionVolume;
             facilityImpacts.water += waterPerUnit;
             console.log(`💧 Facility water: ${totalFacilityWater.toFixed(0)}L/year = ${waterPerUnit.toFixed(1)}L per unit`);
           }
