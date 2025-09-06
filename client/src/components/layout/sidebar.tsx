@@ -387,7 +387,7 @@ export default function Sidebar() {
           )}
 
           {/* Supplier Management Section with Sub-items (Admin Only) */}
-          {user?.isAdmin && (
+          {user && user.role === 'admin' && (
             <li>
               <Button
                 variant="ghost"
