@@ -56,9 +56,9 @@ export function useProductLCAMetrics(productId: number): ProductLCAMetrics {
     const data = refinedLCAResponse.data;
     console.log('✅ Using refined LCA data:', data.perUnit);
     return {
-      co2e: `${data.perUnit.co2e_kg.toFixed(1)}kg`,
-      water: `${Math.round(data.perUnit.water_liters)}L`,
-      waste: `${data.perUnit.waste_kg.toFixed(3)}kg`,
+      co2e: (data.perUnit.co2e_kg !== null && !isNaN(data.perUnit.co2e_kg)) ? `${data.perUnit.co2e_kg.toFixed(1)}kg` : 'TBD',
+      water: (data.perUnit.water_liters !== null && !isNaN(data.perUnit.water_liters)) ? `${Math.round(data.perUnit.water_liters)}L` : 'TBD',
+      waste: (data.perUnit.waste_kg !== null && !isNaN(data.perUnit.waste_kg)) ? `${data.perUnit.waste_kg.toFixed(3)}kg` : 'TBD',
       isLoading: false,
       error: false
     };

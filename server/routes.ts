@@ -2121,6 +2121,8 @@ Be precise and quote actual text from the content, not generic terms.`;
           .from(monthlyFacilityData)
           .where(eq(monthlyFacilityData.companyId, product.companyId))
           .groupBy(monthlyFacilityData.month);
+          
+        console.log(`🔍 DEBUG: Monthly data query result:`, monthlyData);
 
         if (monthlyData.length > 0) {
           // Calculate monthly averages
