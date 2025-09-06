@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag, Factory } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag, Factory, Database, Globe, Upload } from "lucide-react";
 import avallenLogo from "@/assets/avallen-logo.png";
 
 export default function Sidebar() {
@@ -13,6 +13,7 @@ export default function Sidebar() {
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [reportsExpanded, setReportsExpanded] = useState(false);
   const [kpiGoalsExpanded, setKpiGoalsExpanded] = useState(false);
+  const [supplierManagementExpanded, setSupplierManagementExpanded] = useState(false);
 
   // Fetch company data to show company name in header
   const { data: company } = useQuery({
@@ -38,6 +39,13 @@ export default function Sidebar() {
   useEffect(() => {
     if (location.startsWith('/app/admin')) {
       setAdminExpanded(true);
+    }
+  }, [location]);
+
+  // Auto-expand Supplier Management section when on any supplier management page
+  useEffect(() => {
+    if (location.startsWith('/app/admin/supplier-management')) {
+      setSupplierManagementExpanded(true);
     }
   }, [location]);
 
@@ -73,6 +81,14 @@ export default function Sidebar() {
     { path: "/app/admin/lca-jobs", label: "LCA Monitoring", icon: Activity },
     { path: "/app/admin/analytics", label: "Performance Analytics", icon: Activity },
     { path: "/app/admin/messaging", label: "Messaging", icon: MessageSquare },
+  ];
+
+  const supplierManagementSubItems = [
+    { path: "/app/admin/supplier-management/overview", label: "Overview", icon: BarChart3 },
+    { path: "/app/admin/supplier-management/suppliers", label: "Suppliers", icon: Building2 },
+    { path: "/app/admin/supplier-management/products", label: "Products", icon: Package },
+    { path: "/app/admin/supplier-management/data-extraction", label: "Data Extraction", icon: Globe },
+    { path: "/app/admin/supplier-management/onboarding", label: "Onboarding", icon: UserPlus },
   ];
 
   return (
@@ -344,6 +360,57 @@ export default function Sidebar() {
               {adminExpanded && (
                 <ul className="mt-2 ml-4 space-y-1">
                   {adminSubItems.map((subItem) => {
+                    const SubIcon = subItem.icon;
+                    const isSubActive = location === subItem.path;
+                    
+                    return (
+                      <li key={subItem.path}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
+                            isSubActive
+                              ? "bg-white text-[#209d50] font-semibold hover:bg-gray-100 border border-green-200 shadow-sm"
+                              : "text-white/80 hover:bg-green-600 hover:text-white"
+                          }`}
+                          onClick={() => navigate(subItem.path)}
+                        >
+                          <SubIcon className="w-4 h-4 mr-2" />
+                          <span className="font-body text-sm">{subItem.label}</span>
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+          )}
+
+          {/* Supplier Management Section with Sub-items (Admin Only) */}
+          {user?.isAdmin && (
+            <li>
+              <Button
+                variant="ghost"
+                className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                  location.startsWith('/app/admin/supplier-management')
+                    ? "bg-white text-[#209d50] hover:bg-gray-100"
+                    : "text-white hover:bg-green-600"
+                }`}
+                onClick={() => setSupplierManagementExpanded(!supplierManagementExpanded)}
+              >
+                <Building2 className="w-5 h-5 mr-3" />
+                <span className="font-body font-medium flex-1 text-left">Supplier Management</span>
+                {supplierManagementExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </Button>
+              
+              {/* Supplier Management Sub-items */}
+              {supplierManagementExpanded && (
+                <ul className="mt-2 ml-4 space-y-1">
+                  {supplierManagementSubItems.map((subItem) => {
                     const SubIcon = subItem.icon;
                     const isSubActive = location === subItem.path;
                     
