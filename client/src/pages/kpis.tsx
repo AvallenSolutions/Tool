@@ -694,14 +694,7 @@ export function KPIsPage() {
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={analyticsData?.success ? analyticsData.data.progressTrends : [
-                              { month: 'Jan', progress: 15, target: 25 },
-                              { month: 'Feb', progress: 22, target: 30 },
-                              { month: 'Mar', progress: 28, target: 35 },
-                              { month: 'Apr', progress: 35, target: 40 },
-                              { month: 'May', progress: 42, target: 45 },
-                              { month: 'Jun', progress: 48, target: 50 }
-                            ]}>
+                            <LineChart data={analyticsData?.success ? analyticsData.data.progressTrends : []}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
@@ -755,7 +748,7 @@ export function KPIsPage() {
                             <BarChart data={Object.keys(categoryColors).map(category => ({
                               category: category.length > 15 ? category.substring(0, 12) + '...' : category,
                               fullCategory: category,
-                              progress: Math.round(Math.random() * 80 + 10), // TODO: Replace with real data
+                              progress: 0, // Real data will show actual progress
                               goals: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === category).length
                             }))}>
                               <CartesianGrid strokeDasharray="3 3" />

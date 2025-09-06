@@ -373,6 +373,17 @@ export class KPICalculationService {
         .from(companyGoals)
         .where(eq(companyGoals.companyId, companyId));
 
+      // Only process KPIs that have actual company goals set
+      const relevantKPIs = allKPIs.filter(kpi => {
+        // Include custom KPIs (company-specific)
+        if (kpi.companyId !== null) return true;
+        
+        // For preset KPIs, only include if there's a matching company goal
+        return goals.some(goal => 
+          goal.kpiName.toLowerCase().includes(kpi.kpiName.toLowerCase())
+        );
+      });
+
       // Get project goals
       const projectGoalsData = await db
         .select()
@@ -381,7 +392,7 @@ export class KPICalculationService {
 
       const dashboardKPIs: DashboardKPIData[] = [];
 
-      for (const kpi of allKPIs) {
+      for (const kpi of relevantKPIs) {
         // Calculate current value using formula
         const currentValue = await this.evaluateKPIFormula(kpi.formulaJson, companyId);
         
