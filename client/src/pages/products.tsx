@@ -267,7 +267,7 @@ export default function ProductsPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => navigate(`/app/products/${product.id}/edit`)}
+                                  onClick={() => navigate(`/app/products/${product.id}/enhanced`)}
                                   className="text-orange-600 border-orange-300 hover:bg-orange-50"
                                 >
                                   <Edit className="w-4 h-4 mr-1" />
