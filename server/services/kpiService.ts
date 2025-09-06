@@ -55,6 +55,25 @@ export interface DashboardResponse {
 export class KPICalculationService {
 
   /**
+   * Calculate total production units across all company products (for proper facility allocation)
+   */
+  private async calculateTotalCompanyProductionUnits(companyId: number): Promise<number> {
+    const companyProducts = await db
+      .select()
+      .from(products)
+      .where(eq(products.companyId, companyId));
+
+    let totalUnits = 0;
+    for (const product of companyProducts) {
+      const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
+      totalUnits += annualProduction;
+    }
+
+    console.log(`🧮 Total company production units: ${totalUnits.toLocaleString()} units across ${companyProducts.length} products`);
+    return totalUnits;
+  }
+
+  /**
    * Calculate refined LCA for a single product (matches the product detail page calculation)
    * Integrates OpenLCA ingredients, packaging, facilities, production waste, and end-of-life packaging
    */
@@ -72,6 +91,8 @@ export class KPICalculationService {
     endOfLifeFootprint: number;
   }> {
     const productionVolume = Number(product.annualProductionVolume) || 1;
+    // Get total company production for proper facility allocation
+    const totalCompanyUnits = await this.calculateTotalCompanyProductionUnits(product.companyId);
     let totalCO2e = 0;
     let totalWater = 0;
     let totalWaste = 0;
@@ -164,13 +185,15 @@ export class KPICalculationService {
           // TODO: Add renewable percentage to monthly data - for now assume 0%
           const renewablePercent = 0;
           const gridElectricity = electricityKwh * (1 - renewablePercent);
-          const co2eFromElectricity = (gridElectricity * 0.233) / productionVolume; // UK grid factor 2024: 233g CO2e/kWh
+          // FIXED: Allocate facility emissions across ALL company products, not just this product
+          const co2eFromElectricity = (gridElectricity * 0.233) / totalCompanyUnits * productionVolume; // UK grid factor 2024: 233g CO2e/kWh
           breakdown.facilities.co2e += co2eFromElectricity;
         }
         
         if (annualEquivalents.totalGasM3PerYear > 0) {
           const gasM3 = annualEquivalents.totalGasM3PerYear;
-          const co2eFromGas = (gasM3 * 1.8514) / productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
+          // FIXED: Allocate facility emissions across ALL company products, not just this product
+          const co2eFromGas = (gasM3 * 1.8514) / totalCompanyUnits * productionVolume; // Natural gas factor: 1.8514 kg CO2e/m³
           breakdown.facilities.co2e += co2eFromGas;
         }
         
@@ -181,7 +204,8 @@ export class KPICalculationService {
           (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
         
         if (totalFacilityWater > 0) {
-          const waterPerUnit = totalFacilityWater / productionVolume;
+          // FIXED: Allocate facility water across ALL company products, not just this product
+          const waterPerUnit = (totalFacilityWater / totalCompanyUnits) * productionVolume;
           breakdown.facilities.water += waterPerUnit;
         }
         
