@@ -225,33 +225,34 @@ export class KPICalculationService {
     } catch (error) {
       console.error('Error calculating facility impacts using your method:', error);
     }
-        
-        // Calculate production waste carbon footprint from disposal routes
-        try {
-          const wasteFootprint = await WasteIntensityCalculationService.calculateProductionWasteFootprint(facility.id, 'United Kingdom');
-          productionWasteFootprint += wasteFootprint.totalWasteCarbonFootprint;
-        } catch (error) {
-          productionWasteFootprint = 0;
-        }
-        
-        // Calculate end-of-life packaging waste footprint
-        try {
-          const packagingComponents = {
-            glassBottleWeightKg: product.bottleWeight ? parseFloat(product.bottleWeight) / 1000 : 0,
-            paperLabelWeightKg: product.labelWeight ? parseFloat(product.labelWeight) / 1000 : 0,
-            aluminumClosureWeightKg: product.closureWeight ? parseFloat(product.closureWeight) / 1000 : 0
-          };
-          
-          const eolFootprint = await WasteIntensityCalculationService.calculatePackagingEndOfLifeFootprint(
-            packagingComponents, 
-            'United Kingdom'
-          );
-          
-          endOfLifePackagingFootprint = eolFootprint.totalEolCarbonFootprint;
-        } catch (error) {
-          endOfLifePackagingFootprint = 0;
-        }
+    
+    // Calculate production waste carbon footprint from disposal routes for all facilities
+    const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
+    for (const facility of facilities) {
+      try {
+        const wasteFootprint = await WasteIntensityCalculationService.calculateProductionWasteFootprint(facility.id, 'United Kingdom');
+        productionWasteFootprint += wasteFootprint.totalWasteCarbonFootprint;
+      } catch (error) {
+        // Ignore individual facility waste errors
       }
+    }
+    
+    // Calculate end-of-life packaging waste footprint
+    try {
+      const packagingComponents = {
+        glassBottleWeightKg: product.bottleWeight ? parseFloat(product.bottleWeight) / 1000 : 0,
+        paperLabelWeightKg: product.labelWeight ? parseFloat(product.labelWeight) / 1000 : 0,
+        aluminumClosureWeightKg: product.closureWeight ? parseFloat(product.closureWeight) / 1000 : 0
+      };
+      
+      const eolFootprint = await WasteIntensityCalculationService.calculatePackagingEndOfLifeFootprint(
+        packagingComponents, 
+        'United Kingdom'
+      );
+      
+      endOfLifePackagingFootprint = eolFootprint.totalEolCarbonFootprint;
+    } catch (error) {
+      endOfLifePackagingFootprint = 0;
     }
 
     // 4. Record water dilution but exclude from product water footprint
