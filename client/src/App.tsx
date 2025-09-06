@@ -34,6 +34,7 @@ import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
 import SupplierInvitations from "@/pages/admin/SupplierInvitations";
 import FeedbackDashboard from "@/pages/admin/FeedbackDashboard";
 import SupplierManagementOverview from "@/pages/admin/supplier-management/SupplierManagementOverview";
+import CreateSupplierProduct from "@/pages/admin/supplier-management/CreateSupplierProduct";
 import SupplierNetwork from "@/pages/SupplierNetwork";
 import SupplierDetail from "@/pages/SupplierDetail";
 import ProductDetail from "@/pages/ProductDetail";
@@ -183,6 +184,7 @@ function Router() {
       <Route path="/app/admin/supplier-management/overview" component={SupplierManagementOverview} />
       <Route path="/app/admin/supplier-management/suppliers" component={SupplierManagement} />
       <Route path="/app/admin/supplier-management/products" component={AdminProductManagement} />
+      <Route path="/app/admin/supplier-management/products/create" component={CreateSupplierProduct} />
       <Route path="/app/admin/supplier-management/data-extraction" component={SupplierDataExtraction} />
       <Route path="/app/admin/supplier-management/onboarding" component={SupplierRegistration} />
       
