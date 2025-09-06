@@ -283,12 +283,35 @@ export default function EnhancedAdminDashboard() {
 
               {/* Supplier Management Tab */}
               <TabsContent value="supplier-management" className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
+                {/* New Dedicated Supplier Management System */}
+                <Card className="border-green-200 bg-green-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-800">
+                      <Building2 className="w-5 h-5" />
+                      Dedicated Supplier Management System
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">NEW</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-green-700 mb-4">
+                      Access the comprehensive supplier management dashboard with dedicated workflows for supplier onboarding, product creation, and data extraction.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/app/admin/supplier-management/overview')}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open Supplier Management Dashboard
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <div className="grid gap-4 md:grid-cols-3">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Building2 className="w-5 h-5" />
-                        Supplier Management
+                        Supplier Network
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -299,13 +322,25 @@ export default function EnhancedAdminDashboard() {
                         </div>
                         <Users className="w-8 h-8 text-blue-600" />
                       </div>
-                      <Button 
-                        onClick={() => navigate('/app/admin/suppliers')}
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Manage Suppliers
-                      </Button>
+                      <div className="grid gap-2">
+                        <Button 
+                          onClick={() => navigate('/app/admin/supplier-management/suppliers')}
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                          size="sm"
+                        >
+                          <Settings className="w-4 h-4 mr-2" />
+                          Manage Suppliers
+                        </Button>
+                        <Button 
+                          onClick={() => navigate('/app/admin/supplier-management/onboarding')}
+                          variant="outline"
+                          className="w-full"
+                          size="sm"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Add New Supplier
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
 
@@ -313,7 +348,7 @@ export default function EnhancedAdminDashboard() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Package className="w-5 h-5" />
-                        Product Management
+                        Supplier Products
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -324,13 +359,62 @@ export default function EnhancedAdminDashboard() {
                         </div>
                         <Package className="w-8 h-8 text-purple-600" />
                       </div>
-                      <Button 
-                        onClick={() => navigate('/app/admin/products')}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Database className="w-4 h-4 mr-2" />
-                        Manage Products
-                      </Button>
+                      <div className="grid gap-2">
+                        <Button 
+                          onClick={() => navigate('/app/admin/supplier-management/products')}
+                          className="w-full bg-purple-600 hover:bg-purple-700"
+                          size="sm"
+                        >
+                          <Database className="w-4 h-4 mr-2" />
+                          Manage Products
+                        </Button>
+                        <Button 
+                          onClick={() => navigate('/app/admin/supplier-management/products/create')}
+                          variant="outline"
+                          className="w-full"
+                          size="sm"
+                        >
+                          <Package className="w-4 h-4 mr-2" />
+                          Create Product
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileCheck className="w-5 h-5" />
+                        Data & Automation
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">Auto-Extraction</p>
+                          <p className="text-2xl font-bold text-orange-600">Active</p>
+                        </div>
+                        <Activity className="w-8 h-8 text-orange-600" />
+                      </div>
+                      <div className="grid gap-2">
+                        <Button 
+                          onClick={() => navigate('/app/admin/supplier-management/data-extraction')}
+                          className="w-full bg-orange-600 hover:bg-orange-700"
+                          size="sm"
+                        >
+                          <Database className="w-4 h-4 mr-2" />
+                          Data Extraction
+                        </Button>
+                        <Button 
+                          onClick={() => navigate('/app/admin/lca-approvals')}
+                          variant="outline"
+                          className="w-full"
+                          size="sm"
+                        >
+                          <Shield className="w-4 h-4 mr-2" />
+                          LCA Approvals
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
