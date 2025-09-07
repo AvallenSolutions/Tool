@@ -1290,12 +1290,16 @@ export function KPIsPage() {
                           <Button 
                             className="w-full" 
                             size="sm" 
-                            onClick={() => generateReportMutation.mutate({ category: selectedMainCategory })}
-                            disabled={generateReportMutation.isPending}
+                            onClick={() => {
+                              toast({
+                                title: "This feature is coming later",
+                                description: "Category report generation will be available in a future update.",
+                              });
+                            }}
                             data-testid="button-generate-category-report"
                           >
                             <Target className="w-4 h-4 mr-2" />
-                            {generateReportMutation.isPending ? 'Generating...' : 'Generate Category Report'}
+                            Generate Category Report
                           </Button>
                           
                           <div className="text-xs text-gray-500 text-center">
