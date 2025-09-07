@@ -1205,13 +1205,20 @@ export function KPIsPage() {
                                       <Icon className={`w-5 h-5 ${iconColor}`} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <h4 className={`font-semibold text-base ${textColor} mb-2`}>{rec.title}</h4>
-                                      <p className={`text-sm leading-relaxed ${textColor.replace('900', '600')} mb-4`}>
-                                        {rec.description.length > 120 ? 
-                                          rec.description.substring(0, 120) + '...' : 
-                                          rec.description
-                                        }
-                                      </p>
+                                      <h4 className={`font-semibold text-base ${textColor} mb-3`}>{rec.title}</h4>
+                                      <div className={`text-sm leading-relaxed ${textColor.replace('900', '600')} mb-4`}>
+                                        {rec.description.split('.').filter(sentence => sentence.trim().length > 0).map((sentence, sentenceIndex) => {
+                                          const trimmedSentence = sentence.trim();
+                                          if (trimmedSentence.length === 0) return null;
+                                          
+                                          return (
+                                            <div key={sentenceIndex} className="mb-2 flex items-start">
+                                              <span className={`inline-block w-1.5 h-1.5 rounded-full ${iconColor.replace('text-', 'bg-')} mt-2 mr-3 flex-shrink-0`}></span>
+                                              <span className="flex-1">{trimmedSentence}.</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
                                       <div className="flex items-center gap-3">
                                         <Button 
                                           size="sm" 
