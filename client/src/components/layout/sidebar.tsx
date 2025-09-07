@@ -159,9 +159,9 @@ export default function Sidebar() {
   ];
 
   return (
-    <nav className="w-64 flex flex-col shadow-xl relative" id="sidebar-nav">
+    <nav className="w-64 flex flex-col relative" id="sidebar-nav">
       {/* Header-level section - solid green to match header left edge */}
-      <div className="bg-green-500 p-6 border-b border-white/20">
+      <div className="bg-green-500 p-6">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-lg">
             <span className="text-green-600 font-bold text-sm">
