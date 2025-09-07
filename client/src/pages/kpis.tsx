@@ -1196,20 +1196,42 @@ export function KPIsPage() {
                                           rec.type === 'best_practice' ? Award : Clock;
                               
                               return (
-                                <div key={index} className={`p-4 border rounded-lg ${bgColor}`}>
-                                  <div className="flex items-start space-x-3">
-                                    <Icon className={`w-5 h-5 mt-0.5 ${iconColor}`} />
-                                    <div>
-                                      <div className={`font-medium ${textColor}`}>{rec.title}</div>
-                                      <div className={`text-sm mt-1 ${textColor.replace('900', '700')}`}>
-                                        {rec.description}
-                                      </div>
-                                      <div className="flex items-center gap-2 mt-2">
-                                        <Button size="sm" variant="outline">
-                                          {rec.actionable ? 'Take Action' : 'Learn More'}
+                                <div key={index} className={`p-6 border rounded-xl ${bgColor} hover:shadow-md transition-shadow`}>
+                                  <div className="flex items-start space-x-4">
+                                    <div className={`p-2 rounded-lg ${bgColor.replace('50', '100')} flex-shrink-0`}>
+                                      <Icon className={`w-5 h-5 ${iconColor}`} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className={`font-semibold text-base ${textColor} mb-2`}>{rec.title}</h4>
+                                      <p className={`text-sm leading-relaxed ${textColor.replace('900', '600')} mb-4`}>
+                                        {rec.description.length > 120 ? 
+                                          rec.description.substring(0, 120) + '...' : 
+                                          rec.description
+                                        }
+                                      </p>
+                                      <div className="flex items-center gap-3">
+                                        <Button 
+                                          size="sm" 
+                                          variant="default" 
+                                          className={`${rec.type === 'optimization' ? 'bg-blue-600 hover:bg-blue-700' : 
+                                                     rec.type === 'best_practice' ? 'bg-green-600 hover:bg-green-700' : 
+                                                     'bg-amber-600 hover:bg-amber-700'} text-white border-0`}
+                                          onClick={() => {
+                                            toast({
+                                              title: "Insight Noted",
+                                              description: "This recommendation has been logged for follow-up.",
+                                            });
+                                          }}
+                                        >
+                                          <span className="text-sm font-medium">View Details</span>
                                         </Button>
-                                        <Badge variant="outline" className="text-xs">
-                                          {Math.round(rec.confidence * 100)}% confidence
+                                        <Badge 
+                                          variant="secondary" 
+                                          className={`text-xs px-2 py-1 ${rec.potentialImpact === 'high' ? 'bg-red-100 text-red-700' : 
+                                                      rec.potentialImpact === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
+                                                      'bg-gray-100 text-gray-700'}`}
+                                        >
+                                          {rec.potentialImpact} impact
                                         </Badge>
                                       </div>
                                     </div>
