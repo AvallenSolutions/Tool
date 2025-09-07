@@ -7564,7 +7564,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
       }
 
       // Get category-specific goals and progress
-      const goals = await enhancedKpiService.getKpiGoalsByCompany(company.id);
+      const goals = await enhancedKpiService.getCompanyKpiGoals(company.id);
       const categoryGoals = goals.filter(goal => goal.category === category);
       
       // Generate report data
