@@ -1791,16 +1791,70 @@ export const smartGoals = pgTable("smart_goals", {
   status: varchar("status", { length: 20 }).default("active").notNull(), // active, completed, paused
   narrative: text("narrative"), // For report builder integration
   selectedForReport: boolean("selected_for_report").default(false), // For report builder integration
+  // Progress tracking fields for metric-based measurement
+  hasQuantitativeMetrics: boolean("has_quantitative_metrics").default(false).notNull(),
+  progressPercentage: numeric("progress_percentage", { precision: 5, scale: 2 }).default("0").notNull(), // Auto-calculated from metrics
+  lastProgressUpdate: timestamp("last_progress_update"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Relations for SMART Goals
-export const smartGoalsRelations = relations(smartGoals, ({ one }) => ({
+// Goal Metrics table - defines quantitative metrics for measuring SMART goal progress
+export const goalMetrics = pgTable("goal_metrics", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  goalId: text("goal_id").notNull().references(() => smartGoals.id, { onDelete: "cascade" }),
+  metricName: varchar("metric_name", { length: 255 }).notNull(),
+  unit: varchar("unit", { length: 50 }).notNull(), // kg, kWh, L, %, tonnes, etc.
+  baselineValue: numeric("baseline_value", { precision: 15, scale: 4 }).notNull(),
+  targetValue: numeric("target_value", { precision: 15, scale: 4 }).notNull(),
+  currentValue: numeric("current_value", { precision: 15, scale: 4 }).default("0"),
+  isHigherBetter: boolean("is_higher_better").default(false).notNull(), // true for efficiency metrics, false for emission metrics
+  lastUpdated: timestamp("last_updated"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Metric Snapshots table - stores historical measurement data for goal metrics
+export const metricSnapshots = pgTable("metric_snapshots", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  goalId: text("goal_id").notNull().references(() => smartGoals.id, { onDelete: "cascade" }),
+  metricId: text("metric_id").notNull().references(() => goalMetrics.id, { onDelete: "cascade" }),
+  value: numeric("value", { precision: 15, scale: 4 }).notNull(),
+  recordedDate: date("recorded_date").notNull(),
+  notes: text("notes"),
+  source: varchar("source", { length: 100 }), // manual, automated, imported, etc.
+  verifiedBy: varchar("verified_by", { length: 255 }), // user who verified this data point
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Relations for Goal Metrics
+export const goalMetricsRelations = relations(goalMetrics, ({ one, many }) => ({
+  goal: one(smartGoals, {
+    fields: [goalMetrics.goalId],
+    references: [smartGoals.id],
+  }),
+  snapshots: many(metricSnapshots),
+}));
+
+// Relations for Metric Snapshots
+export const metricSnapshotsRelations = relations(metricSnapshots, ({ one }) => ({
+  goal: one(smartGoals, {
+    fields: [metricSnapshots.goalId],
+    references: [smartGoals.id],
+  }),
+  metric: one(goalMetrics, {
+    fields: [metricSnapshots.metricId],
+    references: [goalMetrics.id],
+  }),
+}));
+
+// Update SMART Goals relations to include metrics
+export const smartGoalsRelations = relations(smartGoals, ({ one, many }) => ({
   company: one(companies, {
     fields: [smartGoals.companyId],
     references: [companies.id],
   }),
+  metrics: many(goalMetrics),
 }));
 
 // Type exports for SMART Goals
@@ -1810,6 +1864,23 @@ export const insertSmartGoalSchema = createInsertSchema(smartGoals).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+// Type exports for Goal Metrics
+export type GoalMetric = typeof goalMetrics.$inferSelect;
+export type InsertGoalMetric = typeof goalMetrics.$inferInsert;
+export const insertGoalMetricSchema = createInsertSchema(goalMetrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports for Metric Snapshots
+export type MetricSnapshot = typeof metricSnapshots.$inferSelect;
+export type InsertMetricSnapshot = typeof metricSnapshots.$inferInsert;
+export const insertMetricSnapshotSchema = createInsertSchema(metricSnapshots).omit({
+  id: true,
+  createdAt: true,
 });
 
 // ==== MONTHLY FACILITY UPDATES & PRODUCT VERSIONING SYSTEM ====
