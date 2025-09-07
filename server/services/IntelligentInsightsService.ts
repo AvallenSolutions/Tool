@@ -275,7 +275,7 @@ ${goalsContext || 'No active goals set for this category'}
 CURRENT PERFORMANCE:
 - Products tracked: ${performance.productsCount}
 - Active goals: ${performance.goalsCount}
-- Average goal progress: ${performance.averageGoalProgress.toFixed(1)}%
+- Average target reduction: ${Number(performance.averageGoalProgress || 0).toFixed(1)}%
 - Total emissions: ${performance.totalEmissions.toFixed(1)} kg CO2e
 - Recent improvements: ${performance.recentImprovements.join(', ') || 'None identified'}
 - Areas of concern: ${performance.concernAreas.join(', ') || 'None identified'}

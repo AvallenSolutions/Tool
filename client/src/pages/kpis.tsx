@@ -183,7 +183,7 @@ export function KPIsPage() {
 
   // Fetch intelligent insights for the selected category
   const { data: insightsData, refetch: refetchInsights } = useQuery({
-    queryKey: ['/api/enhanced-kpis/ai-insights', selectedMainCategory],
+    queryKey: ['/api/enhanced-kpis/ai-insights', selectedMainCategory, Date.now()],
     queryFn: async () => {
       if (!selectedMainCategory) return null;
       const response = await fetch('/api/enhanced-kpis/ai-insights', {
