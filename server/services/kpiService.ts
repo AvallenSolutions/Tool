@@ -603,6 +603,72 @@ export class KPICalculationService {
   }
 
   /**
+   * Get total water footprint from DASHBOARD METRICS - Use the exact same value shown on dashboard
+   */
+  async calculateTotalWaterFootprint(companyId: number): Promise<number> {
+    try {
+      // Use the EXACT same comprehensive endpoint that the Dashboard water usage displays
+      const response = await fetch(`http://localhost:5000/api/dashboard/metrics`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to get dashboard metrics');
+      }
+      
+      const dashboardData = await response.json();
+      
+      if (dashboardData?.waterUsage) {
+        const dashboardWaterLitres = dashboardData.waterUsage;
+        
+        console.log(`🎯 KPI SERVICE: Using LIVE DASHBOARD water value: ${dashboardWaterLitres.toLocaleString()} litres`);
+        return dashboardWaterLitres;
+      } else {
+        throw new Error('No water usage data available');
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard water footprint:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate Water Usage per Unit (litres per unit produced)
+   * Total water ÷ Total units produced across all products
+   */
+  async calculateWaterUsagePerUnit(companyId: number): Promise<number> {
+    try {
+      const totalWaterLitres = await this.calculateTotalWaterFootprint(companyId);
+      const totalUnits = await this.calculateTotalCompanyProductionUnits(companyId);
+      
+      const waterPerUnit = totalUnits > 0 ? totalWaterLitres / totalUnits : 0;
+      
+      console.log(`🎯 Water Usage per Unit: ${totalWaterLitres.toLocaleString()}L ÷ ${totalUnits.toLocaleString()} units = ${waterPerUnit.toFixed(6)} L/unit`);
+      return waterPerUnit;
+    } catch (error) {
+      console.error('Error calculating water usage per unit:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate Water Usage per Litre (litres per litre produced)
+   * Total water ÷ Total litres produced across all products
+   */
+  async calculateWaterUsagePerLitre(companyId: number): Promise<number> {
+    try {
+      const totalWaterLitres = await this.calculateTotalWaterFootprint(companyId);
+      const totalLitresProduced = await this.calculateTotalCompanyProductionLitres(companyId);
+      
+      const waterPerLitre = totalLitresProduced > 0 ? totalWaterLitres / totalLitresProduced : 0;
+      
+      console.log(`🎯 Water Usage per Litre: ${totalWaterLitres.toLocaleString()}L ÷ ${totalLitresProduced.toLocaleString()}L = ${waterPerLitre.toFixed(6)} L/L`);
+      return waterPerLitre;
+    } catch (error) {
+      console.error('Error calculating water usage per litre:', error);
+      return 0;
+    }
+  }
+
+  /**
    * Calculate Carbon Intensity per Litre (kg CO2e per litre of liquid produced)  
    * Total emissions ÷ Total litres produced across all products
    */
@@ -1413,6 +1479,20 @@ export class EnhancedKPIService {
         return await calcService.calculateTotalCarbonFootprint(companyId);
       case 'totalWaterUsage':
         return await calcService.calculateTotalWaterConsumption(companyId);
+      case 'totalWaterFootprint':
+        // Fetch water footprint directly from dashboard metrics
+        try {
+          const response = await fetch(`http://localhost:5000/api/dashboard/metrics`);
+          if (response.ok) {
+            const dashboardData = await response.json();
+            return dashboardData?.waterUsage || 0;
+          }
+        } catch (error) {
+          console.error('Error fetching water footprint:', error);
+        }
+        return 0;
+      case 'totalUnitsProduced':
+        return await calcService.calculateTotalCompanyProductionUnits(companyId);
       case 'renewableEnergyConsumption / totalEnergyConsumption * 100':
         const renewable = await calcService.calculateRenewableEnergyKwh(companyId);
         const total = await calcService.calculateTotalEnergyKwh(companyId);
