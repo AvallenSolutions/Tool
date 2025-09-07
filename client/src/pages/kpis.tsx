@@ -638,15 +638,15 @@ export function KPIsPage() {
                                 <div className="space-y-4">
                                   <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Current:</span>
-                                    <span className="font-medium">{goal.currentValue.toFixed(2)} {goal.unit}</span>
+                                    <span className="font-medium">{goal.currentValue?.toFixed(2) ?? 'N/A'} {goal.unit}</span>
                                   </div>
                                   <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Target:</span>
-                                    <span className="font-medium">{goal.targetValue.toFixed(2)} {goal.unit}</span>
+                                    <span className="font-medium">{goal.targetValue?.toFixed(2) ?? 'N/A'} {goal.unit}</span>
                                   </div>
-                                  <Progress value={goal.progress} className="h-2" />
+                                  <Progress value={goal.progress || 0} className="h-2" />
                                   <div className="flex justify-between text-xs text-gray-500">
-                                    <span>Progress: {goal.progress.toFixed(1)}%</span>
+                                    <span>Progress: {(goal.progress || 0).toFixed(1)}%</span>
                                     <span>Due: {format(new Date(goal.targetDate), 'MMM dd, yyyy')}</span>
                                   </div>
                                   
