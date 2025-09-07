@@ -87,7 +87,7 @@ export function FeedbackWidget() {
         <Button
           variant="outline"
           size="sm" 
-          className="fixed bottom-4 left-4 z-[9999] bg-white dark:bg-black shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-300 dark:border-gray-600"
+          className="fixed bottom-4 left-4 z-[9999] bg-white hover:!bg-white dark:bg-black dark:hover:!bg-black shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-300 dark:border-gray-600"
           style={{
             position: 'fixed',
             bottom: '16px',
