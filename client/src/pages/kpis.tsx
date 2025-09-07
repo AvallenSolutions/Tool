@@ -472,37 +472,111 @@ export function KPIsPage() {
                   </div>
 
                   <TabsContent value="traditional" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {definitions.filter((kpi: KpiDefinition) => kpi.kpiCategory === selectedMainCategory).map((kpi: KpiDefinition) => (
-                        <Card key={kpi.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start">
-                              <div className="space-y-1">
-                                <CardTitle className="text-base">{kpi.kpiName}</CardTitle>
+                    {selectedMainCategory === 'Environmental' ? (
+                      // Group Environmental KPIs by subcategory
+                      <div className="space-y-8">
+                        {(() => {
+                          const categoryKPIs = definitions.filter((kpi: KpiDefinition) => kpi.kpiCategory === selectedMainCategory);
+                          
+                          // Group KPIs by subcategory
+                          const carbonKPIs = categoryKPIs.filter((kpi: KpiDefinition) => 
+                            kpi.kpiName.toLowerCase().includes('carbon') || kpi.kpiName.toLowerCase().includes('emissions')
+                          );
+                          const waterKPIs = categoryKPIs.filter((kpi: KpiDefinition) => 
+                            kpi.kpiName.toLowerCase().includes('water')
+                          );
+                          const wasteKPIs = categoryKPIs.filter((kpi: KpiDefinition) => 
+                            kpi.kpiName.toLowerCase().includes('waste')
+                          );
+                          const energyKPIs = categoryKPIs.filter((kpi: KpiDefinition) => 
+                            kpi.kpiName.toLowerCase().includes('energy') || kpi.kpiName.toLowerCase().includes('renewable')
+                          );
+
+                          const subcategories = [
+                            { name: 'Carbon', icon: '🌍', kpis: carbonKPIs, color: 'border-l-red-500' },
+                            { name: 'Water', icon: '💧', kpis: waterKPIs, color: 'border-l-blue-500' },
+                            { name: 'Waste', icon: '♻️', kpis: wasteKPIs, color: 'border-l-amber-500' },
+                            { name: 'Energy', icon: '⚡', kpis: energyKPIs, color: 'border-l-green-500' }
+                          ].filter(sub => sub.kpis.length > 0);
+
+                          return subcategories.map((subcategory) => (
+                            <div key={subcategory.name} className="space-y-4">
+                              <div className="flex items-center space-x-3 pb-2 border-b border-gray-200">
+                                <span className="text-2xl">{subcategory.icon}</span>
+                                <h3 className="text-xl font-semibold text-gray-900">{subcategory.name} KPIs</h3>
+                                <Badge variant="secondary" className="ml-2">
+                                  {subcategory.kpis.length} KPI{subcategory.kpis.length !== 1 ? 's' : ''}
+                                </Badge>
                               </div>
-                              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                                {kpi.unit}
-                              </span>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {subcategory.kpis.map((kpi: KpiDefinition) => (
+                                  <Card key={kpi.id} className={`hover:shadow-lg transition-shadow border-l-4 ${subcategory.color}`}>
+                                    <CardHeader className="pb-3">
+                                      <div className="flex justify-between items-start">
+                                        <div className="space-y-1">
+                                          <CardTitle className="text-base">{kpi.kpiName}</CardTitle>
+                                        </div>
+                                        <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                          {kpi.unit}
+                                        </span>
+                                      </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                      <CardDescription className="text-sm leading-relaxed line-clamp-2">
+                                        {kpi.description}
+                                      </CardDescription>
+                                      
+                                      <Button 
+                                        onClick={() => handleSetGoal(kpi)}
+                                        className="w-full"
+                                        size="sm"
+                                        data-testid={`button-set-goal-${kpi.id}`}
+                                      >
+                                        <Target className="w-4 h-4 mr-2" />
+                                        Set Goal
+                                      </Button>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
                             </div>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <CardDescription className="text-sm leading-relaxed line-clamp-2">
-                              {kpi.description}
-                            </CardDescription>
-                            
-                            <Button 
-                              onClick={() => handleSetGoal(kpi)}
-                              className="w-full"
-                              size="sm"
-                              data-testid={`button-set-goal-${kpi.id}`}
-                            >
-                              <Target className="w-4 h-4 mr-2" />
-                              Set Goal
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                          ));
+                        })()}
+                      </div>
+                    ) : (
+                      // Default layout for non-Environmental categories
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {definitions.filter((kpi: KpiDefinition) => kpi.kpiCategory === selectedMainCategory).map((kpi: KpiDefinition) => (
+                          <Card key={kpi.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+                            <CardHeader className="pb-3">
+                              <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                  <CardTitle className="text-base">{kpi.kpiName}</CardTitle>
+                                </div>
+                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                  {kpi.unit}
+                                </span>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <CardDescription className="text-sm leading-relaxed line-clamp-2">
+                                {kpi.description}
+                              </CardDescription>
+                              
+                              <Button 
+                                onClick={() => handleSetGoal(kpi)}
+                                className="w-full"
+                                size="sm"
+                                data-testid={`button-set-goal-${kpi.id}`}
+                              >
+                                <Target className="w-4 h-4 mr-2" />
+                                Set Goal
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
                     {definitions.filter((kpi: KpiDefinition) => kpi.kpiCategory === selectedMainCategory).length === 0 && (
                       <Card className="bg-gray-50">
                         <CardContent className="p-8 text-center">
