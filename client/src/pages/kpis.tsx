@@ -237,7 +237,7 @@ export function KPIsPage() {
       });
       const data = await response.json();
       if (data.success) {
-        setCalculatedBaseline(data.baselineValue);
+        setCalculatedBaseline(data.baseline);
       } else {
         setCalculatedBaseline(0);
       }
