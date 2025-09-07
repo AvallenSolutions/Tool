@@ -165,9 +165,9 @@ export default function LCAApprovals() {
                           Review Report
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-3xl">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
+                      <DialogContent className="max-w-3xl bg-gradient-to-br from-white to-gray-50 border shadow-2xl">
+                        <DialogHeader className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-6 -m-6 mb-0 rounded-t-lg">
+                          <DialogTitle className="flex items-center gap-2 text-white font-bold">
                             <FileCheck className="h-5 w-5" />
                             Review LCA Report: {selectedReport?.productName}
                           </DialogTitle>

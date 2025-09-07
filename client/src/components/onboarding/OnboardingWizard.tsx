@@ -158,12 +158,13 @@ export function OnboardingWizard({ isOpen, onComplete }: OnboardingWizardProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="bg-white border shadow-lg max-w-2xl" aria-describedby="onboarding-description">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-center">
+      <DialogContent className="bg-gradient-to-br from-white to-gray-50 border shadow-2xl max-w-2xl" aria-describedby="onboarding-description">
+        <DialogHeader className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-6 -m-6 mb-0 rounded-t-lg">
+          <DialogTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+            <Target className="h-6 w-6" />
             {STEPS[currentStep - 1].title}
           </DialogTitle>
-          <div className="text-center text-gray-600" id="onboarding-description">
+          <div className="text-center text-green-100 mt-2" id="onboarding-description">
             {STEPS[currentStep - 1].description}
           </div>
         </DialogHeader>

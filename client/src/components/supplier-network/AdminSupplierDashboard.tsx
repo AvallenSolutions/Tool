@@ -271,10 +271,13 @@ function CreateSupplierDialog({ onSubmit, isLoading }: { onSubmit: (data: any) =
           Add Supplier
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Add New Verified Supplier</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-2xl bg-gradient-to-br from-white to-gray-50 border shadow-2xl">
+        <DialogHeader className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-6 -m-6 mb-0 rounded-t-lg">
+          <DialogTitle className="text-white font-bold flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            Add New Verified Supplier
+          </DialogTitle>
+          <DialogDescription className="text-green-100 mt-2">
             Create a new supplier in the verified network
           </DialogDescription>
         </DialogHeader>

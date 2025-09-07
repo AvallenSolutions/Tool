@@ -102,9 +102,12 @@ export function FeedbackWidget() {
           Beta Feedback
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-black border border-gray-200 dark:border-gray-800 shadow-lg">
-        <DialogHeader>
-          <DialogTitle className="text-gray-900 dark:text-white">Share Your Feedback</DialogTitle>
+      <DialogContent className="sm:max-w-md bg-gradient-to-br from-white to-gray-50 border shadow-2xl">
+        <DialogHeader className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-6 -m-6 mb-0 rounded-t-lg">
+          <DialogTitle className="text-white font-bold flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            Share Your Feedback
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
