@@ -45,14 +45,14 @@ export const TourButton: React.FC<TourButtonProps> = ({
       size={size}
       className={`
         flex items-center gap-2 
-        bg-gradient-to-r from-green-50 to-green-100
-        hover:from-green-100 hover:to-green-200
-        border-green-200 hover:border-green-300
-        text-green-700 hover:text-green-800
+        bg-gradient-to-r from-green-100 to-green-200
+        hover:from-green-200 hover:to-green-300
+        border-green-300 hover:border-green-400
+        text-green-800 hover:text-green-900
         font-semibold transition-all duration-500
         shadow-md hover:shadow-lg
         transform hover:scale-105
-        ${isPulsing ? 'animate-bounce shadow-xl shadow-green-200' : ''}
+        ${isPulsing ? 'animate-bounce shadow-xl shadow-green-300' : ''}
         ${className}
       `}
     >
@@ -60,7 +60,7 @@ export const TourButton: React.FC<TourButtonProps> = ({
       <span className="relative">
         Take Guided Tour
         {isPulsing && (
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-600 rounded-full animate-ping"></span>
         )}
       </span>
     </Button>

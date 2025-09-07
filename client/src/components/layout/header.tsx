@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export default function Header({ title, subtitle, onGenerateReport }: HeaderProps) {
   return (
-    <header className="bg-gradient-to-r from-green-500 to-blue-600 text-white px-6 py-6 shadow-xl">
+    <header className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-6 shadow-xl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">{title}</h1>
@@ -21,7 +21,7 @@ export default function Header({ title, subtitle, onGenerateReport }: HeaderProp
           {onGenerateReport && (
             <Button 
               onClick={onGenerateReport}
-              className="bg-avallen-green text-white hover:bg-avallen-green-light"
+              className="bg-green-600 text-white hover:bg-green-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               Generate Report
