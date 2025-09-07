@@ -38,7 +38,7 @@ export default function Welcome() {
 
   if (authLoading || companyLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-green-600/5 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-green-500/5 flex items-center justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <img 
@@ -47,7 +47,7 @@ export default function Welcome() {
               className="h-16 w-auto"
             />
           </div>
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-green-600" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-green-500" />
           <h2 className="text-xl font-semibold text-slate-gray mb-2">Setting up your account...</h2>
           <p className="text-gray-600">This should only take a moment.</p>
         </div>

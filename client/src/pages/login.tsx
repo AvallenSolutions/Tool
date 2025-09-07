@@ -22,7 +22,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-green-600/5">
+    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-green-500/5">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,7 +37,7 @@ export default function Login() {
               </div>
             </Link>
             <Link href="/">
-              <Button variant="ghost" className="text-slate-gray hover:text-green-600">
+              <Button variant="ghost" className="text-slate-gray hover:text-green-500">
                 ← Back to Home
               </Button>
             </Link>
@@ -54,7 +54,7 @@ export default function Login() {
               <Card className="bg-white border shadow-xl">
                 <CardHeader className="text-center space-y-4">
                   <div className="flex justify-center">
-                    <Badge className="bg-green-600/10 text-green-600 border-green-600/20 px-4 py-2">
+                    <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
                       <Award className="w-4 h-4 mr-2" />
                       Pioneers Program
                     </Badge>
@@ -69,19 +69,19 @@ export default function Login() {
                 
                 <CardContent className="space-y-6">
                   {/* Security Features */}
-                  <div className="bg-green-600/5 rounded-lg p-4 space-y-3">
+                  <div className="bg-green-500/5 rounded-lg p-4 space-y-3">
                     <p className="font-medium text-slate-gray text-sm">🔒 Secure Authentication</p>
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-gray-600">
-                        <Shield className="w-4 h-4 text-green-600 mr-2" />
+                        <Shield className="w-4 h-4 text-green-500 mr-2" />
                         Enterprise-grade security with OpenID Connect
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
-                        <Lock className="w-4 h-4 text-green-600 mr-2" />
+                        <Lock className="w-4 h-4 text-green-500 mr-2" />
                         CAPTCHA verification and rate limiting protection
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
-                        <Globe className="w-4 h-4 text-green-600 mr-2" />
+                        <Globe className="w-4 h-4 text-green-500 mr-2" />
                         Your data is encrypted and protected
                       </div>
                     </div>
@@ -105,11 +105,11 @@ export default function Login() {
                     />
                     <label htmlFor="terms-agreement" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
                       I acknowledge that I have read and agree to the{" "}
-                      <Link href="/app/terms-of-service" className="text-green-600 hover:underline font-medium">
+                      <Link href="/app/terms-of-service" className="text-green-500 hover:underline font-medium">
                         Terms of Service
                       </Link>
                       {" "}and{" "}
-                      <Link href="/app/privacy-policy" className="text-green-600 hover:underline font-medium">
+                      <Link href="/app/privacy-policy" className="text-green-500 hover:underline font-medium">
                         Privacy Policy
                       </Link>
                     </label>
@@ -119,12 +119,12 @@ export default function Login() {
                   <Button 
                     onClick={handleLogin}
                     disabled={isLoading || !agreedToTerms}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                    className="w-full bg-green-500 hover:bg-green-600 text-white py-6 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                     data-testid="button-login"
                   >
                     <div className="flex items-center justify-center">
                       <div className="w-6 h-6 bg-white rounded mr-3 flex items-center justify-center">
-                        <span className="text-green-600 font-bold text-sm">R</span>
+                        <span className="text-green-500 font-bold text-sm">R</span>
                       </div>
                       {isLoading ? "Verifying..." : "Sign in with Replit"}
                       {!isLoading && <ArrowRight className="ml-3 w-5 h-5" />}
@@ -146,9 +146,9 @@ export default function Login() {
                       <div className="text-xs text-gray-600">
                         <p className="font-medium text-gray-700 mb-2">Account Access Help:</p>
                         <div className="space-y-1 text-left">
-                          <p>• Password reset is managed by Replit - visit <a href="https://replit.com/reset" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline font-medium">replit.com/reset</a></p>
-                          <p>• Need a Replit account? <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline font-medium">Sign up free</a></p>
-                          <p>• For beta access support: <a href="mailto:tim@avallen.solutions" className="text-green-600 hover:underline font-medium">tim@avallen.solutions</a></p>
+                          <p>• Password reset is managed by Replit - visit <a href="https://replit.com/reset" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline font-medium">replit.com/reset</a></p>
+                          <p>• Need a Replit account? <a href="https://replit.com/signup" target="_blank" rel="noopener noreferrer" className="text-green-500 hover:underline font-medium">Sign up free</a></p>
+                          <p>• For beta access support: <a href="mailto:tim@avallen.solutions" className="text-green-500 hover:underline font-medium">tim@avallen.solutions</a></p>
                         </div>
                       </div>
                     </div>
@@ -187,15 +187,15 @@ export default function Login() {
                   <div className="border-t pt-4">
                     <div className="flex justify-center items-center space-x-6 text-xs text-gray-500">
                       <div className="flex items-center">
-                        <Shield className="w-3 h-3 mr-1 text-green-600" />
+                        <Shield className="w-3 h-3 mr-1 text-green-500" />
                         DEFRA 2024 Factors
                       </div>
                       <div className="flex items-center">
-                        <Globe className="w-3 h-3 mr-1 text-green-600" />
+                        <Globe className="w-3 h-3 mr-1 text-green-500" />
                         OpenLCA Integration
                       </div>
                       <div className="flex items-center">
-                        <Leaf className="w-3 h-3 mr-1 text-green-600" />
+                        <Leaf className="w-3 h-3 mr-1 text-green-500" />
                         Beta Testing
                       </div>
                     </div>
@@ -208,7 +208,7 @@ export default function Login() {
             <div className="order-1 lg:order-2 space-y-6">
               <div className="text-center lg:text-left">
                 <h1 className="text-4xl lg:text-5xl font-bold text-slate-gray mb-4">
-                  <span className="text-green-600">Pioneers Program</span>
+                  <span className="text-green-500">Pioneers Program</span>
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed mb-6">
                   The conversation around sustainability in the drinks industry is changing. With new legislation, increased reporting demands from customers, and growing supply chain pressures, compliance is no longer optional. The time to get your house in order is now.
@@ -221,8 +221,8 @@ export default function Login() {
               {/* Key Features */}
               <div className="space-y-4">
                 <div className="flex items-start space-x-4 p-4 bg-white/60 rounded-lg border border-light-gray">
-                  <div className="p-2 bg-green-600/10 rounded-lg">
-                    <BarChart3 className="w-5 h-5 text-green-600" />
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <BarChart3 className="w-5 h-5 text-green-500" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-gray">Complete Sustainability Mapping</h3>
@@ -258,10 +258,10 @@ export default function Login() {
               </div>
 
               {/* Pioneers program info */}
-              <div className="bg-green-600/5 rounded-lg p-6 border border-green-600/20">
+              <div className="bg-green-500/5 rounded-lg p-6 border border-green-500/20">
                 <div className="flex items-center space-x-2 mb-3">
                   <div className="flex -space-x-2">
-                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-bold">20</span>
                     </div>
                     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -280,7 +280,7 @@ export default function Login() {
                 <div className="mb-4">
                   <Link href="/pioneers/test">
                     <Button 
-                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                       data-testid="button-join-pioneers"
                     >
                       <Award className="mr-2 w-5 h-5" />
@@ -308,15 +308,15 @@ export default function Login() {
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
             <p>© 2025 Avallen Solutions Ltd. All rights reserved.</p>
             <div className="flex items-center space-x-4 mt-2 sm:mt-0">
-              <Link href="/app/privacy-policy" className="text-green-600 hover:underline" data-testid="login-privacy-link">
+              <Link href="/app/privacy-policy" className="text-green-500 hover:underline" data-testid="login-privacy-link">
                 Privacy Policy
               </Link>
               <span className="text-gray-400">|</span>
-              <Link href="/app/terms-of-service" className="text-green-600 hover:underline" data-testid="login-terms-link">
+              <Link href="/app/terms-of-service" className="text-green-500 hover:underline" data-testid="login-terms-link">
                 Terms of Service
               </Link>
               <span className="text-gray-400">|</span>
-              <a href="mailto:tim@avallen.solutions" className="text-green-600 hover:underline">
+              <a href="mailto:tim@avallen.solutions" className="text-green-500 hover:underline">
                 Support
               </a>
             </div>

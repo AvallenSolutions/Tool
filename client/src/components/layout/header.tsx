@@ -21,7 +21,7 @@ export default function Header({ title, subtitle, onGenerateReport }: HeaderProp
           {onGenerateReport && (
             <Button 
               onClick={onGenerateReport}
-              className="bg-green-600 text-white hover:bg-green-700"
+              className="bg-green-500 text-white hover:bg-green-600"
             >
               <Plus className="w-4 h-4 mr-2" />
               Generate Report
