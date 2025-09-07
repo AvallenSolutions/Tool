@@ -2,6 +2,7 @@ import { db } from "../db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { 
   companyKpiGoals,
+  kpiDefinitions,
   companies,
   products,
   companyFootprintData,
@@ -95,20 +96,28 @@ export class IntelligentInsightsService {
   }
 
   /**
-   * Get active goals for a specific category
+   * Get active goals for a specific category (using KPI definition names as category filter)
    */
   private async getActiveGoalsByCategory(companyId: number, category: string): Promise<CompanyKpiGoal[]> {
-    return await db
+    // Query goals with their KPI definitions to filter by category-like names
+    const goals = await db
       .select()
       .from(companyKpiGoals)
-      .where(
-        and(
-          eq(companyKpiGoals.companyId, companyId),
-          eq(companyKpiGoals.category, category),
-          eq(companyKpiGoals.isActive, true)
-        )
-      )
+      .leftJoin(kpiDefinitions, eq(companyKpiGoals.kpiDefinitionId, kpiDefinitions.id))
+      .where(eq(companyKpiGoals.companyId, companyId))
       .orderBy(desc(companyKpiGoals.createdAt));
+
+    // Filter by category in the goal name or KPI definition name
+    return goals
+      .filter(result => {
+        const goal = result.company_kpi_goals;
+        const kpiDef = result.kpi_definitions;
+        const categoryLower = category.toLowerCase();
+        
+        return kpiDef?.name?.toLowerCase().includes(categoryLower) ||
+               kpiDef?.description?.toLowerCase().includes(categoryLower);
+      })
+      .map(result => result.company_kpi_goals);
   }
 
   /**
@@ -137,7 +146,7 @@ export class IntelligentInsightsService {
     const [goalsResult] = await db
       .select({ 
         count: sql<number>`count(*)`,
-        avgProgress: sql<number>`avg(${companyKpiGoals.progress})`
+        avgProgress: sql<number>`coalesce(avg(progress), 0)`
       })
       .from(companyKpiGoals)
       .where(
