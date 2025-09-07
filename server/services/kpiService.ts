@@ -554,15 +554,33 @@ export class KPICalculationService {
   }
 
   /**
-   * Use exact dashboard value: 1,132.289 tonnes
+   * Use EXACT same calculation as dashboard Total CO2e box
+   * Fetches from the comprehensive footprint endpoint that the dashboard uses
    */
   async calculateTotalCarbonFootprint(companyId: number): Promise<number> {
-    // EXACT dashboard value: 1,132.289585 tonnes
-    const dashboardValueTonnes = 1132.289585;
-    const dashboardValueKg = dashboardValueTonnes * 1000;
-    
-    console.log(`🎯 KPI SERVICE: Using DASHBOARD value: ${dashboardValueKg.toFixed(0)} kg CO₂e (${dashboardValueTonnes.toFixed(3)} tonnes)`);
-    return dashboardValueKg;
+    try {
+      // Use the EXACT same comprehensive endpoint that the Dashboard Total CO2e box uses
+      const response = await fetch(`http://localhost:5000/api/company/footprint/comprehensive`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to get comprehensive footprint data');
+      }
+      
+      const comprehensiveData = await response.json();
+      
+      if (comprehensiveData?.data?.totalFootprint?.co2e_tonnes) {
+        const dashboardValueTonnes = comprehensiveData.data.totalFootprint.co2e_tonnes;
+        const dashboardValueKg = dashboardValueTonnes * 1000;
+        
+        console.log(`🎯 KPI SERVICE: Using LIVE DASHBOARD comprehensive value: ${dashboardValueKg.toFixed(0)} kg CO₂e (${dashboardValueTonnes.toFixed(3)} tonnes)`);
+        return dashboardValueKg;
+      } else {
+        throw new Error('No comprehensive footprint data available');
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard comprehensive footprint:', error);
+      return 0;
+    }
   }
 
   /**
