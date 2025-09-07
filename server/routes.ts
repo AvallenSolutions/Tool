@@ -7981,6 +7981,216 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     }
   });
 
+  // ==== METRIC-BASED PROGRESS TRACKING API ENDPOINTS ====
+  
+  // POST /api/smart-goals/:goalId/metrics - Create a new metric for a goal
+  app.post('/api/smart-goals/:goalId/metrics', isAuthenticated, async (req, res) => {
+    try {
+      const { goalId } = req.params;
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      // Verify goal belongs to user's company
+      const { goalMetrics } = await import('@shared/schema');
+      const goal = await db.select().from(smartGoals)
+        .where(and(eq(smartGoals.id, goalId), eq(smartGoals.companyId, company.id)))
+        .limit(1);
+        
+      if (!goal.length) {
+        return res.status(404).json({ error: 'Goal not found or access denied' });
+      }
+      
+      // Create new metric
+      const [newMetric] = await db.insert(goalMetrics).values({
+        goalId,
+        metricName: req.body.metricName,
+        unit: req.body.unit,
+        baselineValue: req.body.baselineValue,
+        targetValue: req.body.targetValue,
+        currentValue: req.body.currentValue || req.body.baselineValue,
+        isHigherBetter: req.body.isHigherBetter || false,
+      }).returning();
+      
+      // Update goal to indicate it has quantitative metrics
+      await db.update(smartGoals)
+        .set({ hasQuantitativeMetrics: true, updatedAt: new Date() })
+        .where(eq(smartGoals.id, goalId));
+      
+      res.json({ success: true, metric: newMetric });
+    } catch (error) {
+      console.error('Error creating metric:', error);
+      res.status(500).json({ error: 'Failed to create metric' });
+    }
+  });
+  
+  // GET /api/smart-goals/:goalId/metrics - Get all metrics for a goal
+  app.get('/api/smart-goals/:goalId/metrics', isAuthenticated, async (req, res) => {
+    try {
+      const { goalId } = req.params;
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      // Verify goal belongs to user's company
+      const goal = await db.select().from(smartGoals)
+        .where(and(eq(smartGoals.id, goalId), eq(smartGoals.companyId, company.id)))
+        .limit(1);
+        
+      if (!goal.length) {
+        return res.status(404).json({ error: 'Goal not found or access denied' });
+      }
+      
+      const { goalMetrics } = await import('@shared/schema');
+      const metrics = await db.select().from(goalMetrics)
+        .where(eq(goalMetrics.goalId, goalId))
+        .orderBy(asc(goalMetrics.createdAt));
+      
+      res.json({ metrics });
+    } catch (error) {
+      console.error('Error getting metrics:', error);
+      res.status(500).json({ error: 'Failed to get metrics' });
+    }
+  });
+  
+  // POST /api/smart-goals/:goalId/metrics/:metricId/snapshots - Record a measurement
+  app.post('/api/smart-goals/:goalId/metrics/:metricId/snapshots', isAuthenticated, async (req, res) => {
+    try {
+      const { goalId, metricId } = req.params;
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      // Verify goal and metric belong to user's company
+      const { goalMetrics, metricSnapshots } = await import('@shared/schema');
+      const goal = await db.select().from(smartGoals)
+        .where(and(eq(smartGoals.id, goalId), eq(smartGoals.companyId, company.id)))
+        .limit(1);
+        
+      if (!goal.length) {
+        return res.status(404).json({ error: 'Goal not found or access denied' });
+      }
+      
+      const metric = await db.select().from(goalMetrics)
+        .where(and(eq(goalMetrics.id, metricId), eq(goalMetrics.goalId, goalId)))
+        .limit(1);
+        
+      if (!metric.length) {
+        return res.status(404).json({ error: 'Metric not found' });
+      }
+      
+      // Create snapshot
+      const [newSnapshot] = await db.insert(metricSnapshots).values({
+        goalId,
+        metricId,
+        value: req.body.value,
+        recordedDate: req.body.recordedDate,
+        notes: req.body.notes || null,
+        source: req.body.source || 'manual',
+        verifiedBy: req.body.verifiedBy || null,
+      }).returning();
+      
+      // Update metric current value and goal progress
+      const newValue = parseFloat(req.body.value);
+      await db.update(goalMetrics)
+        .set({ 
+          currentValue: newValue.toString(),
+          lastUpdated: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(goalMetrics.id, metricId));
+      
+      // Calculate progress percentage for the goal
+      const metricData = metric[0];
+      const baseline = parseFloat(metricData.baselineValue.toString());
+      const target = parseFloat(metricData.targetValue.toString());
+      const current = newValue;
+      
+      let progressPercentage = 0;
+      if (metricData.isHigherBetter) {
+        // Higher is better (e.g., efficiency metrics)
+        progressPercentage = Math.max(0, Math.min(100, ((current - baseline) / (target - baseline)) * 100));
+      } else {
+        // Lower is better (e.g., emissions metrics)
+        progressPercentage = Math.max(0, Math.min(100, ((baseline - current) / (baseline - target)) * 100));
+      }
+      
+      await db.update(smartGoals)
+        .set({ 
+          progressPercentage: progressPercentage.toFixed(2),
+          lastProgressUpdate: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(smartGoals.id, goalId));
+      
+      res.json({ success: true, snapshot: newSnapshot, progressPercentage });
+    } catch (error) {
+      console.error('Error recording measurement:', error);
+      res.status(500).json({ error: 'Failed to record measurement' });
+    }
+  });
+  
+  // GET /api/smart-goals/:goalId/metrics/:metricId/snapshots - Get measurement history
+  app.get('/api/smart-goals/:goalId/metrics/:metricId/snapshots', isAuthenticated, async (req, res) => {
+    try {
+      const { goalId, metricId } = req.params;
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(400).json({ error: 'User not associated with a company' });
+      }
+      
+      // Verify access
+      const goal = await db.select().from(smartGoals)
+        .where(and(eq(smartGoals.id, goalId), eq(smartGoals.companyId, company.id)))
+        .limit(1);
+        
+      if (!goal.length) {
+        return res.status(404).json({ error: 'Goal not found or access denied' });
+      }
+      
+      const { metricSnapshots } = await import('@shared/schema');
+      const snapshots = await db.select().from(metricSnapshots)
+        .where(and(eq(metricSnapshots.goalId, goalId), eq(metricSnapshots.metricId, metricId)))
+        .orderBy(desc(metricSnapshots.recordedDate));
+      
+      res.json({ snapshots });
+    } catch (error) {
+      console.error('Error getting measurement history:', error);
+      res.status(500).json({ error: 'Failed to get measurement history' });
+    }
+  });
+
   // GET /api/goals - Get all goals for the company
   app.get('/api/goals', isAuthenticated, async (req, res) => {
     try {
