@@ -6,12 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Target, CheckCircle, Clock, Pause, Filter, Calendar, Flag } from 'lucide-react';
+import { Target, CheckCircle, Clock, Pause, Filter, Calendar, Flag, Plus, Trash2 } from 'lucide-react';
 import AIWritingAssistant from '@/components/ai-writing-assistant';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useMutation } from '@tanstack/react-query';
 
 interface SmartGoal {
   id: string;
@@ -49,6 +53,20 @@ export default function InitiativesPage() {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreateGoalOpen, setIsCreateGoalOpen] = useState(false);
+  const [newGoal, setNewGoal] = useState({
+    title: '',
+    description: '',
+    specific: '',
+    measurable: '',
+    achievable: '',
+    relevant: '',
+    timeBound: '',
+    priority: 'medium',
+    targetDate: '',
+    category: 'sustainability',
+    status: 'active'
+  });
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -60,6 +78,62 @@ export default function InitiativesPage() {
   
   const goals = smartGoalsResponse?.goals || [];
   const summary = smartGoalsResponse?.summary;
+
+  // Create Goal Mutation
+  const createGoalMutation = useMutation({
+    mutationFn: async (goalData: typeof newGoal) => {
+      return await apiRequest('POST', '/api/smart-goals', goalData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
+      setIsCreateGoalOpen(false);
+      setNewGoal({
+        title: '',
+        description: '',
+        specific: '',
+        measurable: '',
+        achievable: '',
+        relevant: '',
+        timeBound: '',
+        priority: 'medium',
+        targetDate: '',
+        category: 'sustainability',
+        status: 'active'
+      });
+      toast({
+        title: "Goal Created",
+        description: "Your SMART goal has been successfully created.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create goal. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete Goal Mutation
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (goalId: string) => {
+      return await apiRequest('DELETE', `/api/smart-goals/${goalId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
+      toast({
+        title: "Goal Deleted",
+        description: "The goal has been successfully deleted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete goal. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Initialize selected goals and narratives from database data
   useEffect(() => {
@@ -343,6 +417,15 @@ export default function InitiativesPage() {
                     <Button variant="outline" size="sm" onClick={selectAllVisible}>
                       Select All Visible
                     </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => setIsCreateGoalOpen(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      data-testid="button-add-smart-goal"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add SMART Goal
+                    </Button>
                     <Button variant="outline" size="sm" onClick={clearSelection}>
                       Clear Selection
                     </Button>
@@ -418,6 +501,21 @@ export default function InitiativesPage() {
                                   </Badge>
                                 </div>
                               </div>
+                              
+                              {/* Delete Button */}
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  if (window.confirm('Are you sure you want to delete this goal?')) {
+                                    deleteGoalMutation.mutate(goal.id);
+                                  }
+                                }}
+                                className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                                data-testid={`button-delete-goal-${goal.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </div>
                             
                             {/* Goal Description */}
@@ -537,23 +635,24 @@ export default function InitiativesPage() {
                   
                   <div className="flex gap-3">
                     <Button 
-                      onClick={saveSelectedGoals}
-                      disabled={isSaving || selectedGoals.size === 0}
+                      onClick={() => {
+                        toast({
+                          title: "This feature is coming later",
+                          description: "Save for Report Builder functionality will be available in a future update.",
+                        });
+                      }}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
-                      {isSaving ? (
-                        <>
-                          <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        'Save for Report Builder'
-                      )}
+                      Save for Report Builder
                     </Button>
                     <Button 
                       variant="outline"
-                      onClick={() => window.location.href = '/report-builder'}
-                      disabled={selectedGoals.size === 0}
+                      onClick={() => {
+                        toast({
+                          title: "This feature is coming later",
+                          description: "Report Builder will be available in a future update.",
+                        });
+                      }}
                     >
                       Open Report Builder
                     </Button>
@@ -565,6 +664,193 @@ export default function InitiativesPage() {
           </div>
         </main>
       </div>
+
+      {/* Goal Creation Dialog */}
+      <Dialog open={isCreateGoalOpen} onOpenChange={setIsCreateGoalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Create New SMART Goal</DialogTitle>
+            <DialogDescription>
+              Define a specific, measurable, achievable, relevant, and time-bound goal for your sustainability initiatives.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 mt-4">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Goal Title *</Label>
+                <Input
+                  id="title"
+                  value={newGoal.title}
+                  onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+                  placeholder="Enter goal title"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="targetDate">Target Date *</Label>
+                <Input
+                  id="targetDate"
+                  type="date"
+                  value={newGoal.targetDate}
+                  onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newGoal.description}
+                onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
+                placeholder="Describe your goal"
+                rows={3}
+                className="mt-1"
+              />
+            </div>
+
+            {/* SMART Framework */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">SMART Framework</h3>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="specific">Specific *</Label>
+                  <Textarea
+                    id="specific"
+                    value={newGoal.specific}
+                    onChange={(e) => setNewGoal({ ...newGoal, specific: e.target.value })}
+                    placeholder="What exactly will be accomplished?"
+                    rows={2}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="measurable">Measurable *</Label>
+                  <Textarea
+                    id="measurable"
+                    value={newGoal.measurable}
+                    onChange={(e) => setNewGoal({ ...newGoal, measurable: e.target.value })}
+                    placeholder="How will progress be measured?"
+                    rows={2}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="achievable">Achievable *</Label>
+                  <Textarea
+                    id="achievable"
+                    value={newGoal.achievable}
+                    onChange={(e) => setNewGoal({ ...newGoal, achievable: e.target.value })}
+                    placeholder="Is this goal realistic and attainable?"
+                    rows={2}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="relevant">Relevant *</Label>
+                  <Textarea
+                    id="relevant"
+                    value={newGoal.relevant}
+                    onChange={(e) => setNewGoal({ ...newGoal, relevant: e.target.value })}
+                    placeholder="Why is this goal important?"
+                    rows={2}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="timeBound">Time-Bound *</Label>
+                  <Textarea
+                    id="timeBound"
+                    value={newGoal.timeBound}
+                    onChange={(e) => setNewGoal({ ...newGoal, timeBound: e.target.value })}
+                    placeholder="What is the timeline and deadline?"
+                    rows={2}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Goal Properties */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={newGoal.priority} onValueChange={(value) => setNewGoal({ ...newGoal, priority: value })}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border shadow-lg">
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select value={newGoal.category} onValueChange={(value) => setNewGoal({ ...newGoal, category: value })}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border shadow-lg">
+                    <SelectItem value="emissions">Emissions</SelectItem>
+                    <SelectItem value="efficiency">Efficiency</SelectItem>
+                    <SelectItem value="sustainability">Sustainability</SelectItem>
+                    <SelectItem value="compliance">Compliance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select value={newGoal.status} onValueChange={(value) => setNewGoal({ ...newGoal, status: value })}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border shadow-lg">
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCreateGoalOpen(false)}
+              disabled={createGoalMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => createGoalMutation.mutate(newGoal)}
+              disabled={createGoalMutation.isPending || !newGoal.title || !newGoal.specific || !newGoal.measurable || !newGoal.achievable || !newGoal.relevant || !newGoal.timeBound || !newGoal.targetDate}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {createGoalMutation.isPending ? (
+                <>
+                  <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creating...
+                </>
+              ) : (
+                'Create Goal'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
