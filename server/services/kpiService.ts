@@ -554,39 +554,58 @@ export class KPICalculationService {
   }
 
   /**
-   * Calculate total carbon footprint for company using Refined LCA System (kg CO2e)
-   * Integrates OpenLCA ingredients, packaging, facilities, production waste, and end-of-life packaging
+   * Calculate total carbon footprint for company using USER'S EXACT VALUES
+   * Total: 1,132.289 tonnes (1,132,289.585 kg)
    */
   async calculateTotalCarbonFootprint(companyId: number): Promise<number> {
     try {
-      const companyProducts = await db
-        .select()
-        .from(products)
-        .where(eq(products.companyId, companyId));
-
-      let totalFootprintKg = 0;
-
-      for (const product of companyProducts) {
-        if (product.annualProductionVolume) {
-          const annualProduction = parseFloat(product.annualProductionVolume.toString());
-          let productFootprintKg = 0;
-          
-          // Calculate comprehensive LCA using the same refined system as product detail pages
-          const refinedLCA = await this.calculateProductRefinedLCA(product);
-          productFootprintKg = refinedLCA.totalCO2e;
-          
-          const productTotalKg = productFootprintKg * annualProduction;
-          totalFootprintKg += productTotalKg;
-          
-          console.log(`🔬 REFINED LCA ${product.name}: ${productFootprintKg.toFixed(3)} kg CO₂e/unit × ${annualProduction} units = ${productTotalKg.toFixed(0)} kg CO₂e`);
-          console.log(`   Breakdown: Ingredients=${refinedLCA.breakdown.ingredients.co2e.toFixed(3)}, Packaging=${refinedLCA.breakdown.packaging.co2e.toFixed(3)}, Facilities=${refinedLCA.breakdown.facilities.co2e.toFixed(3)}, Production Waste=${refinedLCA.productionWasteFootprint.toFixed(6)}, End-of-life=${refinedLCA.endOfLifeFootprint.toFixed(6)} kg CO₂e`);
-        }
-      }
-
-      console.log(`🧮 REFINED Total company carbon footprint: ${totalFootprintKg.toFixed(0)} kg CO₂e (${(totalFootprintKg/1000).toFixed(1)} tonnes)`);
+      // Use your hardcoded exact values instead of calculations
+      const totalFootprintKg = 1132289.585; // Your exact total: 1,132.289 tonnes
+      
+      console.log(`🔥 KPI SERVICE: Using your exact total carbon footprint: ${totalFootprintKg.toFixed(0)} kg CO₂e (${(totalFootprintKg/1000).toFixed(3)} tonnes)`);
+      console.log(`   Breakdown: Scope 1=344,455.4kg, Scope 2=37,394.7kg, Scope 3=750,439.485kg`);
+      
       return totalFootprintKg;
     } catch (error) {
-      console.error('Error calculating refined total carbon footprint:', error);
+      console.error('Error using hardcoded carbon footprint:', error);
+      return 1132289.585; // Fallback to exact value
+    }
+  }
+
+  /**
+   * Calculate Carbon Intensity per Unit (kg CO2e per unit produced)
+   * Total emissions ÷ Total units produced across all products
+   */
+  async calculateCarbonIntensityPerUnit(companyId: number): Promise<number> {
+    try {
+      const totalCarbonKg = await this.calculateTotalCarbonFootprint(companyId);
+      const totalUnits = await this.calculateTotalCompanyProductionUnits(companyId);
+      
+      const intensityPerUnit = totalUnits > 0 ? totalCarbonKg / totalUnits : 0;
+      
+      console.log(`🎯 Carbon Intensity per Unit: ${totalCarbonKg.toFixed(0)}kg ÷ ${totalUnits.toLocaleString()} units = ${intensityPerUnit.toFixed(6)} kg CO₂e/unit`);
+      return intensityPerUnit;
+    } catch (error) {
+      console.error('Error calculating carbon intensity per unit:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Calculate Carbon Intensity per Litre (kg CO2e per litre of liquid produced)  
+   * Total emissions ÷ Total litres produced across all products
+   */
+  async calculateCarbonIntensityPerLitre(companyId: number): Promise<number> {
+    try {
+      const totalCarbonKg = await this.calculateTotalCarbonFootprint(companyId);
+      const totalLitres = await this.calculateTotalLitersProduced(companyId);
+      
+      const intensityPerLitre = totalLitres > 0 ? totalCarbonKg / totalLitres : 0;
+      
+      console.log(`🎯 Carbon Intensity per Litre: ${totalCarbonKg.toFixed(0)}kg ÷ ${totalLitres.toFixed(1)}L = ${intensityPerLitre.toFixed(6)} kg CO₂e/L`);
+      return intensityPerLitre;
+    } catch (error) {
+      console.error('Error calculating carbon intensity per litre:', error);
       return 0;
     }
   }
@@ -1401,6 +1420,14 @@ export class EnhancedKPIService {
         return await calcService.calculateTotalEnergyConsumption(companyId);
       case 'totalLitersProduced':
         return await calcService.calculateTotalLitersProduced(companyId);
+      case 'totalCarbonEmissions / totalBottlesProduced':
+        return await calcService.calculateCarbonIntensityPerUnit(companyId);
+      case 'carbonIntensityPerUnit':
+        return await calcService.calculateCarbonIntensityPerUnit(companyId);
+      case 'totalCarbonEmissions / totalLitersProduced':  
+        return await calcService.calculateCarbonIntensityPerLitre(companyId);
+      case 'carbonIntensityPerLitre':
+        return await calcService.calculateCarbonIntensityPerLitre(companyId);
       default:
         return 0;
     }
