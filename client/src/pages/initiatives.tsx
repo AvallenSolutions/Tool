@@ -64,11 +64,12 @@ export default function InitiativesPage() {
     timeBound: '',
     priority: 'medium',
     targetDate: '',
-    category: 'sustainability',
+    category: 'Environmental',
     status: 'active',
     hasQuantitativeMetrics: false,
     metricName: '',
     metricUnit: '',
+    customUnit: '',
     baselineValue: '',
     targetValue: '',
     isHigherBetter: false
@@ -131,11 +132,12 @@ export default function InitiativesPage() {
         timeBound: '',
         priority: 'medium',
         targetDate: '',
-        category: 'sustainability',
+        category: 'Environmental',
         status: 'active',
         hasQuantitativeMetrics: false,
         metricName: '',
         metricUnit: '',
+        customUnit: '',
         baselineValue: '',
         targetValue: '',
         isHigherBetter: false
@@ -457,10 +459,16 @@ export default function InitiativesPage() {
                       </SelectTrigger>
                       <SelectContent className="bg-white border shadow-lg">
                         <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="emissions">Emissions</SelectItem>
-                        <SelectItem value="efficiency">Efficiency</SelectItem>
-                        <SelectItem value="sustainability">Sustainability</SelectItem>
-                        <SelectItem value="compliance">Compliance</SelectItem>
+                        <SelectItem value="Environmental">Environmental</SelectItem>
+                        <SelectItem value="Supply Chain">Supply Chain</SelectItem>
+                        <SelectItem value="Production">Production</SelectItem>
+                        <SelectItem value="Purpose & Stakeholder Governance">Purpose & Stakeholder Governance</SelectItem>
+                        <SelectItem value="Worker Engagement">Worker Engagement</SelectItem>
+                        <SelectItem value="Human Rights">Human Rights</SelectItem>
+                        <SelectItem value="JEDI">JEDI</SelectItem>
+                        <SelectItem value="Climate Action">Climate Action</SelectItem>
+                        <SelectItem value="Risk Standards">Risk Standards</SelectItem>
+                        <SelectItem value="Circularity">Circularity</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -824,6 +832,125 @@ export default function InitiativesPage() {
                     rows={2}
                     className="mt-1"
                   />
+                  
+                  {/* Quantitative Metrics within Measurable section */}
+                  <div className="mt-4 space-y-4 p-4 border rounded-lg bg-blue-50">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-blue-900">📊 Quantitative Tracking (Optional)</h4>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="hasMetrics"
+                          checked={newGoal.hasQuantitativeMetrics || false}
+                          onChange={(e) => setNewGoal({ ...newGoal, hasQuantitativeMetrics: e.target.checked })}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor="hasMetrics" className="text-xs text-blue-800">
+                          Enable data-driven progress tracking
+                        </Label>
+                      </div>
+                    </div>
+                    
+                    {(newGoal.hasQuantitativeMetrics) && (
+                      <div className="space-y-4 pl-4 border-l-2 border-blue-300">
+                        <div className="text-xs text-blue-700 mb-3">
+                          Define specific measurements to track your goal's progress with real sustainability data.
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="metricName" className="text-xs">Measurement Name *</Label>
+                            <Input
+                              id="metricName"
+                              value={newGoal.metricName || ''}
+                              onChange={(e) => setNewGoal({ ...newGoal, metricName: e.target.value })}
+                              placeholder="e.g., Carbon Emissions, Energy Usage"
+                              className="mt-1 text-sm"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="metricUnit" className="text-xs">Unit *</Label>
+                            <div className="space-y-2">
+                              <Select value={newGoal.metricUnit || ''} onValueChange={(value) => {
+                                setNewGoal({ ...newGoal, metricUnit: value });
+                                if (value !== 'custom') {
+                                  setNewGoal({ ...newGoal, metricUnit: value, customUnit: '' });
+                                }
+                              }}>
+                                <SelectTrigger className="mt-1 text-sm">
+                                  <SelectValue placeholder="Select unit" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white border shadow-lg">
+                                  <SelectItem value="kg">kg (Kilograms)</SelectItem>
+                                  <SelectItem value="tonnes">tonnes (Metric Tons)</SelectItem>
+                                  <SelectItem value="kWh">kWh (Kilowatt Hours)</SelectItem>
+                                  <SelectItem value="L">L (Liters)</SelectItem>
+                                  <SelectItem value="m3">m³ (Cubic Meters)</SelectItem>
+                                  <SelectItem value="%">% (Percentage)</SelectItem>
+                                  <SelectItem value="ppm">ppm (Parts Per Million)</SelectItem>
+                                  <SelectItem value="custom">Custom Unit</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {newGoal.metricUnit === 'custom' && (
+                                <Input
+                                  value={newGoal.customUnit || ''}
+                                  onChange={(e) => setNewGoal({ ...newGoal, customUnit: e.target.value })}
+                                  placeholder="Enter custom unit (e.g., bottles, employees)"
+                                  className="text-sm"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label htmlFor="baselineValue" className="text-xs">Baseline Value *</Label>
+                            <Input
+                              id="baselineValue"
+                              type="number"
+                              step="0.01"
+                              value={newGoal.baselineValue || ''}
+                              onChange={(e) => setNewGoal({ ...newGoal, baselineValue: e.target.value })}
+                              placeholder="Current value"
+                              className="mt-1 text-sm"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="targetValue" className="text-xs">Target Value *</Label>
+                            <Input
+                              id="targetValue"
+                              type="number"
+                              step="0.01"
+                              value={newGoal.targetValue || ''}
+                              onChange={(e) => setNewGoal({ ...newGoal, targetValue: e.target.value })}
+                              placeholder="Goal target"
+                              className="mt-1 text-sm"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="isHigherBetter" className="text-xs">Improvement Direction</Label>
+                            <Select value={newGoal.isHigherBetter ? 'true' : 'false'} onValueChange={(value) => setNewGoal({ ...newGoal, isHigherBetter: value === 'true' })}>
+                              <SelectTrigger className="mt-1 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white border shadow-lg">
+                                <SelectItem value="false">Lower is Better (e.g., emissions)</SelectItem>
+                                <SelectItem value="true">Higher is Better (e.g., efficiency)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+                          💡 <strong>Tip:</strong> Quantitative metrics enable automatic progress calculation based on your actual data measurements.
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div>
@@ -864,108 +991,6 @@ export default function InitiativesPage() {
               </div>
             </div>
 
-            {/* Quantitative Metrics Section */}
-            <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-blue-900">Quantitative Metrics (Optional)</h3>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="hasMetrics"
-                    checked={newGoal.hasQuantitativeMetrics || false}
-                    onChange={(e) => setNewGoal({ ...newGoal, hasQuantitativeMetrics: e.target.checked })}
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor="hasMetrics" className="text-sm text-blue-800">
-                    Enable data-driven progress tracking
-                  </Label>
-                </div>
-              </div>
-              
-              {(newGoal.hasQuantitativeMetrics) && (
-                <div className="space-y-4 pl-4 border-l-4 border-blue-300">
-                  <div className="text-sm text-blue-700 mb-3">
-                    Define specific measurements to track your goal's progress with real sustainability data.
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="metricName">Measurement Name *</Label>
-                      <Input
-                        id="metricName"
-                        value={newGoal.metricName || ''}
-                        onChange={(e) => setNewGoal({ ...newGoal, metricName: e.target.value })}
-                        placeholder="e.g., Carbon Emissions, Energy Usage"
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="metricUnit">Unit *</Label>
-                      <Select value={newGoal.metricUnit || ''} onValueChange={(value) => setNewGoal({ ...newGoal, metricUnit: value })}>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select unit" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border shadow-lg">
-                          <SelectItem value="kg">kg (Kilograms)</SelectItem>
-                          <SelectItem value="tonnes">tonnes (Metric Tons)</SelectItem>
-                          <SelectItem value="kWh">kWh (Kilowatt Hours)</SelectItem>
-                          <SelectItem value="L">L (Liters)</SelectItem>
-                          <SelectItem value="m3">m³ (Cubic Meters)</SelectItem>
-                          <SelectItem value="%">% (Percentage)</SelectItem>
-                          <SelectItem value="ppm">ppm (Parts Per Million)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="baselineValue">Baseline Value *</Label>
-                      <Input
-                        id="baselineValue"
-                        type="number"
-                        step="0.01"
-                        value={newGoal.baselineValue || ''}
-                        onChange={(e) => setNewGoal({ ...newGoal, baselineValue: e.target.value })}
-                        placeholder="Current value"
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="targetValue">Target Value *</Label>
-                      <Input
-                        id="targetValue"
-                        type="number"
-                        step="0.01"
-                        value={newGoal.targetValue || ''}
-                        onChange={(e) => setNewGoal({ ...newGoal, targetValue: e.target.value })}
-                        placeholder="Goal target"
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="isHigherBetter">Improvement Direction</Label>
-                      <Select value={newGoal.isHigherBetter ? 'true' : 'false'} onValueChange={(value) => setNewGoal({ ...newGoal, isHigherBetter: value === 'true' })}>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border shadow-lg">
-                          <SelectItem value="false">Lower is Better (e.g., emissions)</SelectItem>
-                          <SelectItem value="true">Higher is Better (e.g., efficiency)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
-                    💡 <strong>Tip:</strong> Quantitative metrics enable automatic progress calculation based on your actual data measurements.
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Goal Properties */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -990,10 +1015,16 @@ export default function InitiativesPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="emissions">Emissions</SelectItem>
-                    <SelectItem value="efficiency">Efficiency</SelectItem>
-                    <SelectItem value="sustainability">Sustainability</SelectItem>
-                    <SelectItem value="compliance">Compliance</SelectItem>
+                    <SelectItem value="Environmental">Environmental</SelectItem>
+                    <SelectItem value="Supply Chain">Supply Chain</SelectItem>
+                    <SelectItem value="Production">Production</SelectItem>
+                    <SelectItem value="Purpose & Stakeholder Governance">Purpose & Stakeholder Governance</SelectItem>
+                    <SelectItem value="Worker Engagement">Worker Engagement</SelectItem>
+                    <SelectItem value="Human Rights">Human Rights</SelectItem>
+                    <SelectItem value="JEDI">JEDI</SelectItem>
+                    <SelectItem value="Climate Action">Climate Action</SelectItem>
+                    <SelectItem value="Risk Standards">Risk Standards</SelectItem>
+                    <SelectItem value="Circularity">Circularity</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
