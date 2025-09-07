@@ -159,16 +159,16 @@ export default function Sidebar() {
   ];
 
   return (
-    <nav className="w-64 bg-[#209d50] border-r border-green-600 flex flex-col" id="sidebar-nav">
+    <nav className="w-64 bg-gradient-to-b from-green-500 to-blue-600 border-r border-blue-600/30 flex flex-col shadow-xl" id="sidebar-nav">
       {/* Company Logo */}
-      <div className="p-6 border-b border-green-600">
+      <div className="p-6 border-b border-white/20">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-[#209d50] font-bold text-sm">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-lg">
+            <span className="text-green-600 font-bold text-sm">
               {company?.name ? company.name.charAt(0).toUpperCase() : 'A'}
             </span>
           </div>
-          <span className="text-xl font-headline text-white">
+          <span className="text-xl font-headline text-white font-bold">
             {company?.name || 'Loading...'}
           </span>
         </div>
@@ -192,8 +192,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/dashboard"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/dashboard")}
             >
@@ -208,8 +208,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/company"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/company")}
             >
@@ -224,8 +224,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/products"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/products")}
             >
@@ -239,8 +239,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location.startsWith('/app/reports')
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => setReportsExpanded(!reportsExpanded)}
             >
@@ -267,8 +267,8 @@ export default function Sidebar() {
                         size="sm"
                         className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
                           isSubActive
-                            ? "bg-white text-[#209d50] hover:bg-gray-100"
-                            : "text-white/80 hover:bg-green-600 hover:text-white"
+                            ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                            : "text-white/80 hover:bg-white/10 hover:text-white"
                         }`}
                         onClick={() => navigate(subItem.path)}
                       >
@@ -332,8 +332,8 @@ export default function Sidebar() {
                         size="sm"
                         className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
                           isSubActive
-                            ? "bg-white text-[#209d50] hover:bg-gray-100"
-                            : "text-white/80 hover:bg-green-600 hover:text-white"
+                            ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                            : "text-white/80 hover:bg-white/10 hover:text-white"
                         }`}
                         onClick={() => navigate(subItem.path)}
                       >
@@ -418,8 +418,8 @@ export default function Sidebar() {
                 variant="ghost"
                 className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                   location.startsWith('/app/admin')
-                    ? "bg-white text-[#209d50] hover:bg-gray-100"
-                    : "text-white hover:bg-green-600"
+                    ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                    : "text-white hover:bg-white/10"
                 }`}
                 onClick={() => setAdminExpanded(!adminExpanded)}
               >
@@ -446,8 +446,8 @@ export default function Sidebar() {
                           size="sm"
                           className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
                             isSubActive
-                              ? "bg-white text-[#209d50] font-semibold hover:bg-gray-100 border border-green-200 shadow-sm"
-                              : "text-white/80 hover:bg-green-600 hover:text-white"
+                              ? "bg-white text-green-600 font-semibold hover:bg-gray-100 border border-green-200 shadow-lg"
+                              : "text-white/80 hover:bg-white/10 hover:text-white"
                           }`}
                           onClick={() => navigate(subItem.path)}
                         >
@@ -469,8 +469,8 @@ export default function Sidebar() {
                 variant="ghost"
                 className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                   location.startsWith('/app/admin/supplier-management')
-                    ? "bg-white text-[#209d50] hover:bg-gray-100"
-                    : "text-white hover:bg-green-600"
+                    ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                    : "text-white hover:bg-white/10"
                 }`}
                 onClick={() => setSupplierManagementExpanded(!supplierManagementExpanded)}
               >
@@ -497,8 +497,8 @@ export default function Sidebar() {
                           size="sm"
                           className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
                             isSubActive
-                              ? "bg-white text-[#209d50] font-semibold hover:bg-gray-100 border border-green-200 shadow-sm"
-                              : "text-white/80 hover:bg-green-600 hover:text-white"
+                              ? "bg-white text-green-600 font-semibold hover:bg-gray-100 border border-green-200 shadow-lg"
+                              : "text-white/80 hover:bg-white/10 hover:text-white"
                           }`}
                           onClick={() => handleSupplierNavigation(subItem.path)}
                         >
