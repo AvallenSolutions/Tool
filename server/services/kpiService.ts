@@ -554,21 +554,86 @@ export class KPICalculationService {
   }
 
   /**
-   * Calculate total carbon footprint for company using USER'S EXACT VALUES
-   * Total: 1,132.289 tonnes (1,132,289.585 kg)
+   * Calculate total carbon footprint using LIVE DASHBOARD CALCULATION METHOD
+   * Uses the same refined LCA methodology as the comprehensive footprint endpoint
    */
   async calculateTotalCarbonFootprint(companyId: number): Promise<number> {
     try {
-      // Use your hardcoded exact values instead of calculations
-      const totalFootprintKg = 1132289.585; // Your exact total: 1,132.289 tonnes
+      // LIVE CALCULATION: Use same method as /api/company/footprint/comprehensive
+      const companyProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.companyId, companyId));
+
+      let totalCompanyCO2e = 0;
       
-      console.log(`🔥 KPI SERVICE: Using your exact total carbon footprint: ${totalFootprintKg.toFixed(0)} kg CO₂e (${(totalFootprintKg/1000).toFixed(3)} tonnes)`);
-      console.log(`   Breakdown: Scope 1=344,455.4kg, Scope 2=37,394.7kg, Scope 3=750,439.485kg`);
+      console.log(`🔥 KPI SERVICE: Live calculation for ${companyProducts.length} products`);
       
-      return totalFootprintKg;
+      for (const product of companyProducts) {
+        const annualProduction = parseFloat(product.annualProductionVolume?.toString() || '0');
+        if (annualProduction === 0) continue;
+        
+        let productEmissions = 0;
+        
+        // 1. Calculate OpenLCA-based ingredient emissions
+        if (product.ingredients && Array.isArray(product.ingredients)) {
+          for (const ingredient of product.ingredients) {
+            if (ingredient.name && ingredient.amount > 0) {
+              try {
+                const carbonFootprint = await OpenLCAService.calculateCarbonFootprint(
+                  ingredient.name,
+                  ingredient.amount,
+                  ingredient.unit || 'kg'
+                );
+                if (carbonFootprint > 0) {
+                  productEmissions += carbonFootprint;
+                }
+              } catch (error) {
+                console.warn(`Error calculating OpenLCA for ${ingredient.name}:`, error);
+              }
+            }
+          }
+        }
+        
+        // 2. Add packaging emissions (glass bottles)
+        if (product.bottleWeight) {
+          const bottleWeightKg = parseFloat(product.bottleWeight) / 1000;
+          const recycledContent = parseFloat(product.bottleRecycledContent || '0') / 100;
+          const glassEmissions = bottleWeightKg * (
+            (1 - recycledContent) * 0.7 + recycledContent * 0.35
+          );
+          productEmissions += glassEmissions;
+        }
+        
+        // 3. Add facility impacts per unit
+        const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, companyId));
+        for (const facility of facilities) {
+          if (facility.totalElectricityKwhPerYear) {
+            const electricityKwh = parseFloat(facility.totalElectricityKwhPerYear);
+            const renewablePercent = facility.renewableEnergyPercent ? parseFloat(facility.renewableEnergyPercent) / 100 : 0;
+            const gridElectricity = electricityKwh * (1 - renewablePercent);
+            const co2eFromElectricity = (gridElectricity * 0.233) / annualProduction;
+            productEmissions += co2eFromElectricity;
+          }
+          
+          if (facility.totalGasM3PerYear) {
+            const gasM3 = parseFloat(facility.totalGasM3PerYear);
+            const co2eFromGas = (gasM3 * 1.8514) / annualProduction;
+            productEmissions += co2eFromGas;
+          }
+        }
+        
+        const productTotalKg = productEmissions * annualProduction;
+        totalCompanyCO2e += productTotalKg;
+        
+        console.log(`🔬 LIVE LCA ${product.name}: ${productEmissions.toFixed(6)} kg CO₂e/unit × ${annualProduction} = ${productTotalKg.toFixed(0)} kg CO₂e`);
+      }
+
+      console.log(`🔥 KPI SERVICE: Live total carbon footprint: ${totalCompanyCO2e.toFixed(0)} kg CO₂e (${(totalCompanyCO2e/1000).toFixed(3)} tonnes)`);
+      return totalCompanyCO2e;
     } catch (error) {
-      console.error('Error using hardcoded carbon footprint:', error);
-      return 1132289.585; // Fallback to exact value
+      console.error('Error calculating live carbon footprint:', error);
+      return 0;
     }
   }
 
