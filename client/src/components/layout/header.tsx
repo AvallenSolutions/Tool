@@ -9,12 +9,12 @@ interface HeaderProps {
 
 export default function Header({ title, subtitle, onGenerateReport }: HeaderProps) {
   return (
-    <header className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-6 shadow-xl">
+    <header className="bg-gradient-to-r from-avallen-green to-blue-600 text-white px-6 py-6 shadow-xl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">{title}</h1>
           {subtitle && (
-            <p className="text-sm text-green-100">{subtitle}</p>
+            <p className="text-sm text-avallen-green-light">{subtitle}</p>
           )}
         </div>
         <div className="flex items-center space-x-4">
