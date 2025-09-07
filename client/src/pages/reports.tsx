@@ -105,7 +105,7 @@ export default function Reports() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-lightest-gray flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-avallen-green border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -232,7 +232,7 @@ export default function Reports() {
             
             {guidedReportsLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full" />
               </div>
             ) : (
               <div className="grid gap-4">
@@ -260,7 +260,7 @@ export default function Reports() {
                               onClick={() => setLocation(`/app/guided-report/${report.id}`)}
                               variant="outline"
                               size="sm"
-                              className="border-green-500 text-green-600 hover:bg-green-50"
+                              className="border-green-600 text-green-600 hover:bg-green-50"
                             >
                               Continue Editing
                             </Button>

@@ -150,7 +150,7 @@ export default function ProductsPage() {
         />
         <main className="flex-1 p-6 overflow-y-auto">
           {/* Header Section */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-avallen-green/10 to-avallen-green/5 border border-avallen-green/20 rounded-lg">
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-600/10 to-green-600/5 border border-green-600/20 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-gray mb-2">Product Management</h3>
@@ -161,7 +161,7 @@ export default function ProductsPage() {
               <div className="flex items-center gap-3">
                 <Button 
                   onClick={() => navigate('/app/products/create/enhanced')}
-                  style={{ backgroundColor: '#209d50', borderColor: '#209d50' }}
+                  style={{ backgroundColor: 'rgb(34 197 94)', borderColor: 'rgb(34 197 94)' }}
                   className="hover:bg-green-600 text-white font-medium px-6 py-2 shadow-md border-2"
                 >
                   <Package className="w-4 h-4 mr-2" />
@@ -212,7 +212,7 @@ export default function ProductsPage() {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-avallen-green mx-auto"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                   <p className="text-sm text-gray-500 mt-2">Loading products...</p>
                 </div>
               ) : confirmedProducts.length === 0 && draftProducts.length === 0 ? (
@@ -224,7 +224,7 @@ export default function ProductsPage() {
                   </p>
                   <Button 
                     onClick={() => navigate('/app/products/create/enhanced')}
-                    className="bg-avallen-green hover:bg-avallen-green-light text-white"
+                    className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First Product
@@ -294,7 +294,7 @@ export default function ProductsPage() {
                       {draftProducts.length > 0 && (
                         <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                           <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                            <Package className="w-4 h-4 text-avallen-green" />
+                            <Package className="w-4 h-4 text-green-600" />
                             Confirmed Products ({confirmedProducts.length})
                           </h4>
                         </div>
@@ -302,11 +302,11 @@ export default function ProductsPage() {
                       
                       {/* Main Product (if any) */}
                       {confirmedProducts.filter(p => p.isMainProduct).map((product) => (
-                    <Card key={product.id} className="border-2 border-avallen-green bg-gradient-to-r from-green-50 to-green-25 overflow-hidden">
+                    <Card key={product.id} className="border-2 border-green-600 bg-gradient-to-r from-green-50 to-green-25 overflow-hidden">
                       <CardContent className="p-0">
                         <div className="flex">
                           {/* Product Image */}
-                          <div className="w-40 h-40 bg-gradient-to-br from-avallen-green/10 to-avallen-green/5 flex items-center justify-center flex-shrink-0 relative overflow-hidden rounded-l-lg m-4 ml-6">
+                          <div className="w-40 h-40 bg-gradient-to-br from-green-600/10 to-green-600/5 flex items-center justify-center flex-shrink-0 relative overflow-hidden rounded-l-lg m-4 ml-6">
                             {product.productImages && product.productImages.length > 0 && (
                               <img 
                                 src={`/simple-image/objects/uploads/${product.productImages[0].split('/').pop()}`}
@@ -321,8 +321,8 @@ export default function ProductsPage() {
                               />
                             )}
                             <div className={`fallback-icon flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
-                              <Package className="w-12 h-12 text-avallen-green mb-2" />
-                              <span className="text-xs text-avallen-green font-medium">No Image</span>
+                              <Package className="w-12 h-12 text-green-600 mb-2" />
+                              <span className="text-xs text-green-600 font-medium">No Image</span>
                             </div>
                           </div>
                           
@@ -332,7 +332,7 @@ export default function ProductsPage() {
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
                                   <h3 className="text-xl font-bold text-slate-gray">{product.name}</h3>
-                                  <Badge className="bg-avallen-green text-white">Main Product</Badge>
+                                  <Badge className="bg-green-600 text-white">Main Product</Badge>
                                   <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
                                     {product.status}
                                   </Badge>

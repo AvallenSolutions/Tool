@@ -49,7 +49,7 @@ export default function PioneersNoStripe() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-avallen-green/5">
+    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-green-600/5">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-light-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -64,7 +64,7 @@ export default function PioneersNoStripe() {
               </div>
             </Link>
             <Link href="/login">
-              <Button variant="ghost" className="text-slate-gray hover:text-avallen-green">
+              <Button variant="ghost" className="text-slate-gray hover:text-green-600">
                 ← Back to Login
               </Button>
             </Link>
@@ -79,7 +79,7 @@ export default function PioneersNoStripe() {
             <Card className="bg-white border shadow-xl">
               <CardHeader className="text-center space-y-4">
                 <div className="flex justify-center">
-                  <Badge className="bg-avallen-green/10 text-avallen-green border-avallen-green/20 px-4 py-2">
+                  <Badge className="bg-green-600/10 text-green-600 border-green-600/20 px-4 py-2">
                     <Award className="w-4 h-4 mr-2" />
                     Pioneers Program Registration
                   </Badge>
@@ -125,7 +125,7 @@ export default function PioneersNoStripe() {
                   <Button 
                     type="submit"
                     disabled={!email || isLoading}
-                    className="w-full bg-avallen-green hover:bg-avallen-green-light text-white py-6 text-lg font-semibold"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold"
                     data-testid="button-start-registration"
                   >
                     {isLoading ? (
@@ -193,7 +193,7 @@ export default function PioneersNoStripe() {
                 
                 <Button 
                   onClick={handleDeploymentComplete}
-                  className="w-full bg-avallen-green hover:bg-avallen-green-light text-white py-6 text-lg font-semibold"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold"
                   data-testid="button-deployment-complete"
                 >
                   <div className="flex items-center justify-center">

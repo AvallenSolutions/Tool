@@ -190,7 +190,7 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
   const progress = (currentStep / 5) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-avallen-green/5 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-green-600/5 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -202,7 +202,7 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
             />
           </div>
           <div className="flex justify-center mb-4">
-            <Badge className="bg-avallen-green/10 text-avallen-green border-avallen-green/20 px-4 py-2">
+            <Badge className="bg-green-600/10 text-green-600 border-green-600/20 px-4 py-2">
               Beta Program Setup
             </Badge>
           </div>
@@ -230,8 +230,8 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
               <div key={step.id} className="flex flex-col items-center min-w-0 flex-1">
                 <div className={cn(
                   "w-12 h-12 rounded-full border-2 flex items-center justify-center mb-2",
-                  isActive && "border-avallen-green bg-avallen-green text-white",
-                  isCompleted && "border-avallen-green bg-avallen-green text-white",
+                  isActive && "border-green-600 bg-green-600 text-white",
+                  isCompleted && "border-green-600 bg-green-600 text-white",
                   !isActive && !isCompleted && "border-gray-300 text-gray-400"
                 )}>
                   {isCompleted ? (
@@ -445,7 +445,7 @@ export default function EnhancedOnboardingWizard({ onComplete, onCancel }: Enhan
               <Button
                 onClick={handleNext}
                 disabled={!isStepValid() || createCompanyMutation.isPending}
-                className="bg-avallen-green hover:bg-avallen-green-light"
+                className="bg-green-600 hover:bg-green-700"
               >
                 {createCompanyMutation.isPending ? (
                   "Setting up..."

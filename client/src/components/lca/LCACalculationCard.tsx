@@ -257,7 +257,7 @@ export default function LCACalculationCard({ product }: LCACalculationCardProps)
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-avallen-green" />
+          <Calculator className="w-5 h-5 text-green-600" />
           LCA Analysis
         </CardTitle>
       </CardHeader>
