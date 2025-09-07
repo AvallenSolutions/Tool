@@ -515,7 +515,7 @@ export default function Sidebar() {
         </ul>
         
         {/* Avallen Solutions Branding */}
-        <div className="flex items-center justify-center mt-6 pt-4 border-t border-green-600">
+        <div className="flex items-center justify-center mt-6 pt-4 border-t border-white/20">
           <img 
             src={avallenLogo} 
             alt="Powered by Avallen Solutions" 
@@ -525,7 +525,7 @@ export default function Sidebar() {
       </div>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-green-600">
+      <div className="p-4 bg-blue-600">
         <div className="flex items-center space-x-3 mb-4">
           <Avatar className="w-10 h-10">
             <AvatarImage src={user?.profileImageUrl || ''} alt={user?.firstName || 'User'} />
@@ -543,7 +543,7 @@ export default function Sidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-white hover:bg-green-600"
+          className="w-full justify-start text-white hover:bg-white/10"
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4 mr-2" />
