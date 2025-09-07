@@ -139,6 +139,8 @@ export function KPIsPage() {
   const [calculatedBaseline, setCalculatedBaseline] = useState<number | null>(null);
   const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
   const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
+  const [selectedInsight, setSelectedInsight] = useState<any | null>(null);
+  const [isInsightDetailOpen, setIsInsightDetailOpen] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1227,10 +1229,8 @@ export function KPIsPage() {
                                                      rec.type === 'best_practice' ? 'bg-green-600 hover:bg-green-700' : 
                                                      'bg-amber-600 hover:bg-amber-700'} text-white border-0`}
                                           onClick={() => {
-                                            toast({
-                                              title: "Insight Noted",
-                                              description: "This recommendation has been logged for follow-up.",
-                                            });
+                                            setSelectedInsight(rec);
+                                            setIsInsightDetailOpen(true);
                                           }}
                                         >
                                           <span className="text-sm font-medium">View Details</span>
@@ -1423,6 +1423,153 @@ export function KPIsPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Detailed Insight Modal */}
+      <Dialog open={isInsightDetailOpen} onOpenChange={setIsInsightDetailOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-white border shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl font-bold">
+              {selectedInsight?.type === 'optimization' && <div className="p-2 bg-blue-100 rounded-lg"><TrendingUp className="w-6 h-6 text-blue-600" /></div>}
+              {selectedInsight?.type === 'best_practice' && <div className="p-2 bg-green-100 rounded-lg"><Award className="w-6 h-6 text-green-600" /></div>}
+              {selectedInsight?.type === 'alert' && <div className="p-2 bg-amber-100 rounded-lg"><Clock className="w-6 h-6 text-amber-600" /></div>}
+              {selectedInsight?.title}
+            </DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Detailed analysis and recommendations for {selectedMainCategory} sustainability improvements
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedInsight && (
+            <div className="space-y-6 mt-4">
+              {/* Impact Badge */}
+              <div className="flex items-center gap-3">
+                <Badge 
+                  variant="secondary" 
+                  className={`text-sm px-3 py-1.5 font-medium ${
+                    selectedInsight.potentialImpact === 'high' ? 'bg-red-100 text-red-700 border-red-200' : 
+                    selectedInsight.potentialImpact === 'medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
+                    'bg-gray-100 text-gray-700 border-gray-200'
+                  }`}
+                >
+                  {selectedInsight.potentialImpact?.toUpperCase()} IMPACT POTENTIAL
+                </Badge>
+                <Badge 
+                  variant="outline" 
+                  className={`text-sm px-3 py-1.5 font-medium ${
+                    selectedInsight.type === 'optimization' ? 'border-blue-200 text-blue-700' :
+                    selectedInsight.type === 'best_practice' ? 'border-green-200 text-green-700' :
+                    'border-amber-200 text-amber-700'
+                  }`}
+                >
+                  {selectedInsight.type?.toUpperCase().replace('_', ' ')} 
+                </Badge>
+              </div>
+
+              {/* Full Description */}
+              <Card className="border-2 border-gray-100">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-gray-800">Recommendation Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {selectedInsight.description?.split('.').filter(sentence => sentence.trim().length > 0).map((sentence, index) => (
+                      <div key={index} className="flex items-start space-x-3">
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                          selectedInsight.type === 'optimization' ? 'bg-blue-500' :
+                          selectedInsight.type === 'best_practice' ? 'bg-green-500' :
+                          'bg-amber-500'
+                        }`}></div>
+                        <p className="text-gray-700 leading-relaxed">{sentence.trim()}.</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Key Benefits Section */}
+              <Card className="border-2 border-green-100 bg-green-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-green-800 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Expected Benefits
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-green-800">Environmental Impact</h4>
+                      <p className="text-sm text-green-700">
+                        Reduces carbon footprint through optimized {selectedMainCategory.toLowerCase()} practices
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-green-800">Cost Savings</h4>
+                      <p className="text-sm text-green-700">
+                        {selectedInsight.potentialImpact === 'high' ? 'Significant' : 
+                         selectedInsight.potentialImpact === 'medium' ? 'Moderate' : 'Initial'} cost reduction potential
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Next Steps */}
+              <Card className="border-2 border-blue-100 bg-blue-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-blue-800 flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Recommended Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">1</div>
+                      <p className="text-sm text-blue-700">Review current {selectedMainCategory.toLowerCase()} processes and identify improvement opportunities</p>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">2</div>
+                      <p className="text-sm text-blue-700">Implement recommended changes gradually and monitor impact</p>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">3</div>
+                      <p className="text-sm text-blue-700">Track progress using KPI dashboard and adjust strategy as needed</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-6 border-t">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsInsightDetailOpen(false)}
+              className="px-6"
+              data-testid="button-close-insight-detail"
+            >
+              Close
+            </Button>
+            <Button 
+              className={`px-6 ${
+                selectedInsight?.type === 'optimization' ? 'bg-blue-600 hover:bg-blue-700' :
+                selectedInsight?.type === 'best_practice' ? 'bg-green-600 hover:bg-green-700' :
+                'bg-amber-600 hover:bg-amber-700'
+              } text-white`}
+              onClick={() => {
+                toast({
+                  title: "Action Plan Created",
+                  description: "This recommendation has been added to your action plan for implementation.",
+                });
+                setIsInsightDetailOpen(false);
+              }}
+              data-testid="button-add-to-action-plan"
+            >
+              Add to Action Plan
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
