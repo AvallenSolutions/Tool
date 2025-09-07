@@ -966,7 +966,12 @@ export function KPIsPage() {
                     {isCalculatingBaseline ? (
                       <span className="text-blue-600">Calculating...</span>
                     ) : (
-                      calculatedBaseline !== null && calculatedBaseline !== undefined && selectedKpi ? `${calculatedBaseline.toFixed(2)} ${selectedKpi.unit}` : 'Not available'
+                      calculatedBaseline !== null && calculatedBaseline !== undefined && selectedKpi ? 
+                        // Convert kg to tonnes for carbon emissions KPIs
+                        selectedKpi.kpiName === 'Total Carbon Emissions' ? 
+                          `${(calculatedBaseline / 1000).toFixed(3)} tonnes` : 
+                          `${calculatedBaseline.toFixed(2)} ${selectedKpi.unit}` 
+                        : 'Not available'
                     )}
                   </span>
                 </div>
@@ -990,7 +995,9 @@ export function KPIsPage() {
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Target: {calculatedBaseline !== null && calculatedBaseline !== undefined && selectedKpi ? 
-                      (calculatedBaseline * (1 - goalFormData.targetReductionPercentage / 100)).toFixed(2) + ' ' + selectedKpi.unit : 
+                      selectedKpi.kpiName === 'Total Carbon Emissions' ?
+                        ((calculatedBaseline / 1000) * (1 - goalFormData.targetReductionPercentage / 100)).toFixed(3) + ' tonnes' :
+                        (calculatedBaseline * (1 - goalFormData.targetReductionPercentage / 100)).toFixed(2) + ' ' + selectedKpi.unit :
                       'Calculating...'
                     }
                   </p>
