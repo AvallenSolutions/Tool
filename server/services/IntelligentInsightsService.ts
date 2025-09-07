@@ -146,7 +146,7 @@ export class IntelligentInsightsService {
     const [goalsResult] = await db
       .select({ 
         count: sql<number>`count(*)`,
-        avgProgress: sql<number>`coalesce(avg(progress), 0)`
+        avgTargetReduction: sql<number>`coalesce(avg(target_reduction_percentage), 0)`
       })
       .from(companyKpiGoals)
       .where(
@@ -171,10 +171,10 @@ export class IntelligentInsightsService {
     const recentImprovements: string[] = [];
     const concernAreas: string[] = [];
 
-    if (goalsResult.avgProgress > 70) {
-      recentImprovements.push("Strong goal achievement rate");
-    } else if (goalsResult.avgProgress < 30) {
-      concernAreas.push("Low goal achievement rate");
+    if (goalsResult.avgTargetReduction > 15) {
+      recentImprovements.push("Ambitious sustainability targets set");
+    } else if (goalsResult.avgTargetReduction < 5) {
+      concernAreas.push("Conservative reduction targets");
     }
 
     if (productsResult.count > 3) {
@@ -191,7 +191,7 @@ export class IntelligentInsightsService {
       wasteGenerated: 0, // TODO: Calculate from actual data  
       productsCount: productsResult.count,
       goalsCount: goalsResult.count,
-      averageGoalProgress: goalsResult.avgProgress || 0,
+      averageGoalProgress: goalsResult.avgTargetReduction || 0,
       recentImprovements,
       concernAreas
     };
@@ -212,7 +212,7 @@ export class IntelligentInsightsService {
 
     const [goalStats] = await db
       .select({ 
-        avgProgress: sql<number>`avg(${companyKpiGoals.progress})`,
+        avgProgress: sql<number>`coalesce(avg(target_reduction_percentage), 0)`,
         count: sql<number>`count(*)`
       })
       .from(companyKpiGoals)
