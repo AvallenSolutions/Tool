@@ -136,6 +136,7 @@ export class IntelligentInsightsService {
    * Analyze company performance across key metrics
    */
   private async getCompanyPerformanceData(companyId: number): Promise<CompanyPerformanceData> {
+    console.log('🔍 DEBUG: Starting company performance data collection for company:', companyId);
     // Get products count
     const [productsResult] = await db
       .select({ count: sql<number>`count(*)` })
@@ -258,7 +259,7 @@ export class IntelligentInsightsService {
     category: string
   ): string {
     const goalsContext = goals.map(goal => 
-      `- ${goal.kpiName}: ${goal.progress}% complete (Target: ${goal.targetReductionPercentage}% reduction by ${goal.targetDate})`
+      `- ${goal.kpiName}: Target ${goal.targetReductionPercentage}% reduction by ${goal.targetDate}`
     ).join('\n');
 
     return `You are a sustainability expert advisor analyzing ${company.name || 'a company'}'s ${category} performance. 
@@ -281,7 +282,7 @@ CURRENT PERFORMANCE:
 - Areas of concern: ${performance.concernAreas.join(', ') || 'None identified'}
 
 PLATFORM BENCHMARKS:
-- Platform average goal achievement: ${benchmarks.avgGoalAchievementRate.toFixed(1)}%
+- Platform average goal achievement: ${Number(benchmarks.avgGoalAchievementRate || 0).toFixed(1)}%
 - Top ${benchmarks.topPerformingCompanies} companies show best practices
 
 REQUIREMENTS:
