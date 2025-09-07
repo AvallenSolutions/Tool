@@ -11,6 +11,7 @@ import {
   companyKpiGoals,
   verifiedSuppliers,
   monthlyFacilityData,
+  smartGoals,
   type KpiDefinition,
   type CompanyKpiGoal,
   type InsertCompanyKpiGoal
@@ -415,15 +416,40 @@ export class KPICalculationService {
         .from(companyGoals)
         .where(eq(companyGoals.companyId, companyId));
 
-      // Only process KPIs that have actual company goals set
+      // ALSO get smart goals (environmental goals created in the environment section)
+      const smartGoals = await db
+        .select()
+        .from(smartGoals)
+        .where(eq(smartGoals.companyId, companyId));
+
+      // Only process KPIs that have actual company goals set OR matching smart goals
       const relevantKPIs = allKPIs.filter(kpi => {
         // Include custom KPIs (company-specific)
         if (kpi.companyId !== null) return true;
         
-        // For preset KPIs, only include if there's a matching company goal
-        return goals.some(goal => 
+        // For preset KPIs, check if there's a matching company goal
+        const hasCompanyGoal = goals.some(goal => 
           goal.kpiName.toLowerCase().includes(kpi.kpiName.toLowerCase())
         );
+        
+        // OR check if there's a matching smart goal (environmental goals)
+        const hasSmartGoal = smartGoals.some(smartGoal => {
+          const goalTitle = smartGoal.title.toLowerCase();
+          const kpiName = kpi.kpiName.toLowerCase();
+          
+          // Match Carbon Intensity KPI to carbon emission goals
+          if (kpiName.includes('carbon') && goalTitle.includes('carbon')) return true;
+          
+          // Match Water Intensity KPI to water goals
+          if (kpiName.includes('water') && goalTitle.includes('water')) return true;
+          
+          // Match Energy KPIs to energy goals  
+          if (kpiName.includes('energy') && goalTitle.includes('energy')) return true;
+          
+          return false;
+        });
+        
+        return hasCompanyGoal || hasSmartGoal;
       });
 
       // Get project goals
@@ -438,12 +464,39 @@ export class KPICalculationService {
         // Calculate current value using formula
         const currentValue = await this.evaluateKPIFormula(kpi.formulaJson, companyId);
         
-        // Find matching goal for target
+        // Find matching goal for target (check both company goals and smart goals)
         const matchingGoal = goals.find(goal => 
           goal.kpiName.toLowerCase().includes(kpi.kpiName.toLowerCase())
         );
         
-        const target = matchingGoal ? parseFloat(matchingGoal.targetValue.toString()) : this.getDefaultTarget(kpi.kpiName);
+        // If no company goal, try to find a matching smart goal  
+        const matchingSmartGoal = !matchingGoal ? smartGoals.find(smartGoal => {
+          const goalTitle = smartGoal.title.toLowerCase();
+          const kpiName = kpi.kpiName.toLowerCase();
+          
+          if (kpiName.includes('carbon') && goalTitle.includes('carbon')) return true;
+          if (kpiName.includes('water') && goalTitle.includes('water')) return true;
+          if (kpiName.includes('energy') && goalTitle.includes('energy')) return true;
+          
+          return false;
+        }) : null;
+        
+        // Extract target value (25% reduction = 75% of current, etc.)
+        let target: number;
+        if (matchingGoal) {
+          target = parseFloat(matchingGoal.targetValue.toString());
+        } else if (matchingSmartGoal) {
+          // For smart goals like "Reduce Carbon Emissions by 25%", set target as 75% of current
+          if (matchingSmartGoal.title.toLowerCase().includes('25%')) {
+            target = currentValue * 0.75; // 25% reduction
+          } else if (matchingSmartGoal.title.toLowerCase().includes('30%')) {
+            target = currentValue * 0.70; // 30% reduction  
+          } else {
+            target = this.getDefaultTarget(kpi.kpiName);
+          }
+        } else {
+          target = this.getDefaultTarget(kpi.kpiName);
+        }
         const progress = target > 0 ? (currentValue / target) * 100 : 0;
         
         // Determine status and trend
