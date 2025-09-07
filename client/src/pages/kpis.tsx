@@ -77,6 +77,53 @@ const statusConfig = {
   'achieved': { color: 'bg-blue-500', label: 'Achieved', icon: Award },
 };
 
+// Generate mock historical data for trend visualization
+const generateMockHistoricalData = (goal: KpiGoalData) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+  const currentProgress = goal.progress || 0;
+  
+  return months.map((month, index) => {
+    const progressIncrement = currentProgress / months.length;
+    const variance = Math.random() * 8 - 4; // ±4% variance for realism
+    const baseProgress = progressIncrement * (index + 1) + variance;
+    
+    return {
+      month,
+      progress: Math.max(0, Math.min(100, baseProgress)),
+      value: goal.baselineValue ? goal.baselineValue * (1 - (baseProgress / 100) * (goal.targetReductionPercentage / 100)) : 0,
+      target: goal.targetValue || 0
+    };
+  });
+};
+
+// Generate milestones for a goal
+const generateMilestones = (goal: KpiGoalData) => [
+  { 
+    date: '2024-01-15', 
+    title: 'Baseline Established', 
+    impact: `${goal.baselineValue?.toFixed(1)} ${goal.unit} baseline measurement completed`, 
+    type: 'info' as const
+  },
+  { 
+    date: '2024-03-20', 
+    title: 'Process Optimization', 
+    impact: '12% improvement through efficiency measures', 
+    type: 'success' as const
+  },
+  { 
+    date: '2024-05-10', 
+    title: 'Technology Upgrade', 
+    impact: 'Sustainable technology implementation', 
+    type: 'success' as const
+  },
+  { 
+    date: '2024-07-01', 
+    title: 'Mid-Year Review', 
+    impact: 'Goal progress assessed and strategy refined', 
+    type: 'info' as const
+  }
+];
+
 export function KPIsPage() {
   const [viewMode, setViewMode] = useState<'categories' | 'category-detail'>('categories');
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
@@ -91,6 +138,7 @@ export function KPIsPage() {
   });
   const [calculatedBaseline, setCalculatedBaseline] = useState<number | null>(null);
   const [isCalculatingBaseline, setIsCalculatingBaseline] = useState(false);
+  const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -608,122 +656,317 @@ export function KPIsPage() {
 
                   <TabsContent value="dashboard" className="space-y-6">
                     {!kpiGoals || kpiGoals.filter((goal: KpiGoalData) => goal.category === selectedMainCategory).length === 0 ? (
-                      <Card>
-                        <CardContent className="p-8 text-center">
-                          <Target className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No Goals Set Yet</h3>
-                          <p className="text-gray-600 mb-4">
-                            Start tracking your progress in {selectedMainCategory} by setting goals from the KPIs above.
+                      <Card className="bg-gradient-to-br from-gray-50 to-blue-50 border-blue-100">
+                        <CardContent className="p-12 text-center">
+                          <div className="w-20 h-20 bg-blue-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                            <Target className="w-10 h-10 text-blue-600" />
+                          </div>
+                          <h3 className="text-2xl font-semibold text-gray-900 mb-4">No Goals Set Yet</h3>
+                          <p className="text-gray-600 text-lg mb-6 max-w-2xl mx-auto">
+                            Transform your {selectedMainCategory.toLowerCase()} performance by setting ambitious sustainability goals. Track progress, identify trends, and celebrate achievements.
                           </p>
+                          <div className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors cursor-pointer">
+                            <Target className="w-4 h-4 mr-2" />
+                            Set Your First Goal
+                          </div>
                         </CardContent>
                       </Card>
                     ) : (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {(kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory).map((goal: KpiGoalData) => {
-                          const statusInfo = statusConfig[goal.status];
-                          const Icon = statusInfo.icon;
-                          
-                          return (
-                            <Card key={goal.id} className="overflow-hidden">
-                              <CardHeader className="pb-3">
-                                <div className="flex justify-between items-start">
+                      <div className="space-y-6">
+                        {/* Goals Overview Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                          {[
+                            { 
+                              label: 'Active Goals', 
+                              value: (kpiGoals || []).filter((g: KpiGoalData) => g.category === selectedMainCategory).length,
+                              icon: Target,
+                              color: 'text-blue-600 bg-blue-100'
+                            },
+                            { 
+                              label: 'On Track', 
+                              value: (kpiGoals || []).filter((g: KpiGoalData) => g.category === selectedMainCategory && g.status === 'on-track').length,
+                              icon: TrendingUp,
+                              color: 'text-green-600 bg-green-100'
+                            },
+                            { 
+                              label: 'At Risk', 
+                              value: (kpiGoals || []).filter((g: KpiGoalData) => g.category === selectedMainCategory && g.status === 'at-risk').length,
+                              icon: Clock,
+                              color: 'text-yellow-600 bg-yellow-100'
+                            },
+                            { 
+                              label: 'Achieved', 
+                              value: (kpiGoals || []).filter((g: KpiGoalData) => g.category === selectedMainCategory && g.status === 'achieved').length,
+                              icon: Award,
+                              color: 'text-purple-600 bg-purple-100'
+                            }
+                          ].map((stat, index) => (
+                            <Card key={index} className="bg-white">
+                              <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
                                   <div>
-                                    <CardTitle className="text-lg">{goal.name}</CardTitle>
-                                    <Badge variant="outline" className="mt-1 text-xs">
-                                      {goal.category}
-                                    </Badge>
+                                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                                    <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    <Icon className={`w-4 h-4 ${goal.status === 'on-track' ? 'text-green-500' : 
-                                      goal.status === 'at-risk' ? 'text-yellow-500' : 
-                                      goal.status === 'behind' ? 'text-red-500' : 'text-blue-500'}`} />
-                                    <Badge variant="outline" className={cn("text-xs", 
-                                      goal.status === 'on-track' ? 'text-green-700 bg-green-50' : 
-                                      goal.status === 'at-risk' ? 'text-yellow-700 bg-yellow-50' : 
-                                      goal.status === 'behind' ? 'text-red-700 bg-red-50' : 'text-blue-700 bg-blue-50'
-                                    )}>
-                                      {statusInfo.label}
-                                    </Badge>
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`button-goal-menu-${goal.id}`}>
-                                          <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="bg-white border shadow-lg">
-                                        <DropdownMenuItem 
-                                          onClick={() => {
-                                            // TODO: Implement goal editing
-                                            toast({
-                                              title: "Coming Soon",
-                                              description: "Goal editing will be available in the next update.",
-                                            });
-                                          }}
-                                          className="cursor-pointer"
-                                          data-testid={`menu-edit-goal-${goal.id}`}
-                                        >
-                                          <Edit className="mr-2 h-4 w-4" />
-                                          Edit Goal
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem 
-                                          onClick={() => handleDeleteGoal(goal.id)}
-                                          className="cursor-pointer text-red-600 focus:text-red-600"
-                                          data-testid={`menu-delete-goal-${goal.id}`}
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" />
-                                          Delete Goal
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                </div>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-4">
-                                  <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600">Current:</span>
-                                    <span className="font-medium">{goal.currentValue?.toFixed(2) ?? 'N/A'} {goal.unit}</span>
-                                  </div>
-                                  <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600">Target:</span>
-                                    <span className="font-medium">{goal.targetValue?.toFixed(2) ?? 'N/A'} {goal.unit}</span>
-                                  </div>
-                                  <Progress value={goal.progress || 0} className="h-2" />
-                                  <div className="flex justify-between text-xs text-gray-500">
-                                    <span>Progress: {(goal.progress || 0).toFixed(1)}%</span>
-                                    <span>Due: {format(new Date(goal.targetDate), 'MMM dd, yyyy')}</span>
-                                  </div>
-                                  
-                                  {/* Progress Trend Indicator */}
-                                  <div className="flex items-center justify-between pt-2 border-t">
-                                    <div className="flex items-center text-xs text-gray-500">
-                                      <span className="mr-2">Trend:</span>
-                                      {goal.progress > 50 ? (
-                                        <div className="flex items-center text-green-600">
-                                          <TrendingUp className="w-3 h-3 mr-1" />
-                                          <span>Improving</span>
-                                        </div>
-                                      ) : goal.progress > 25 ? (
-                                        <div className="flex items-center text-yellow-600">
-                                          <Clock className="w-3 h-3 mr-1" />
-                                          <span>Steady</span>
-                                        </div>
-                                      ) : (
-                                        <div className="flex items-center text-red-600">
-                                          <TrendingDown className="w-3 h-3 mr-1" />
-                                          <span>Needs Focus</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-gray-400">
-                                      {Math.ceil((new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
-                                    </div>
+                                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color}`}>
+                                    <stat.icon className="w-6 h-6" />
                                   </div>
                                 </div>
                               </CardContent>
                             </Card>
-                          );
-                        })}
+                          ))}
+                        </div>
+
+                        {/* Enhanced Goal Cards */}
+                        <div className="space-y-4">
+                          {(kpiGoals || []).filter((goal: KpiGoalData) => goal.category === selectedMainCategory).map((goal: KpiGoalData) => {
+                            const statusInfo = statusConfig[goal.status];
+                            const Icon = statusInfo.icon;
+                            const isExpanded = expandedGoalId === goal.id;
+                            const historicalData = generateMockHistoricalData(goal);
+                            const milestones = generateMilestones(goal);
+                            
+                            return (
+                              <Card key={goal.id} className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'ring-2 ring-blue-200' : 'hover:shadow-lg'}`}>
+                                {/* Main Goal Card */}
+                                <div 
+                                  className="cursor-pointer"
+                                  onClick={() => setExpandedGoalId(isExpanded ? null : goal.id)}
+                                  data-testid={`goal-card-${goal.id}`}
+                                >
+                                  <CardHeader className="pb-4">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-3 mb-2">
+                                          <CardTitle className="text-xl font-semibold">{goal.name}</CardTitle>
+                                          <Badge variant="outline" className={cn("text-xs font-medium", 
+                                            goal.status === 'on-track' ? 'text-green-700 bg-green-50 border-green-200' : 
+                                            goal.status === 'at-risk' ? 'text-yellow-700 bg-yellow-50 border-yellow-200' : 
+                                            goal.status === 'behind' ? 'text-red-700 bg-red-50 border-red-200' : 'text-blue-700 bg-blue-50 border-blue-200'
+                                          )}>
+                                            <Icon className="w-3 h-3 mr-1" />
+                                            {statusInfo.label}
+                                          </Badge>
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                          Target {goal.targetReductionPercentage}% reduction by {format(new Date(goal.targetDate), 'MMM dd, yyyy')}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <div className="text-right">
+                                          <p className="text-2xl font-bold text-gray-900">{(goal.progress || 0).toFixed(0)}%</p>
+                                          <p className="text-xs text-gray-500">Complete</p>
+                                        </div>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`button-goal-menu-${goal.id}`}>
+                                              <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="bg-white border shadow-lg">
+                                            <DropdownMenuItem 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toast({
+                                                  title: "Coming Soon",
+                                                  description: "Goal editing will be available in the next update.",
+                                                });
+                                              }}
+                                              className="cursor-pointer"
+                                              data-testid={`menu-edit-goal-${goal.id}`}
+                                            >
+                                              <Edit className="mr-2 h-4 w-4" />
+                                              Edit Goal
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteGoal(goal.id);
+                                              }}
+                                              className="cursor-pointer text-red-600 focus:text-red-600"
+                                              data-testid={`menu-delete-goal-${goal.id}`}
+                                            >
+                                              <Trash2 className="mr-2 h-4 w-4" />
+                                              Delete Goal
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent className="pt-0">
+                                    <div className="space-y-4">
+                                      {/* Key Metrics Row */}
+                                      <div className="grid grid-cols-3 gap-4">
+                                        <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                          <p className="text-sm text-gray-600">Baseline</p>
+                                          <p className="text-lg font-semibold text-gray-900">{goal.baselineValue?.toFixed(1)} {goal.unit}</p>
+                                        </div>
+                                        <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                          <p className="text-sm text-gray-600">Current</p>
+                                          <p className="text-lg font-semibold text-gray-900">{goal.currentValue?.toFixed(1)} {goal.unit}</p>
+                                        </div>
+                                        <div className="text-center p-3 bg-green-50 rounded-lg">
+                                          <p className="text-sm text-green-600">Target</p>
+                                          <p className="text-lg font-semibold text-green-700">{goal.targetValue?.toFixed(1)} {goal.unit}</p>
+                                        </div>
+                                      </div>
+
+                                      {/* Progress Bar with Mini Chart */}
+                                      <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-sm font-medium text-gray-700">Progress</span>
+                                          <span className="text-sm text-gray-500">{(goal.progress || 0).toFixed(1)}% complete</span>
+                                        </div>
+                                        <Progress value={goal.progress || 0} className="h-3" />
+                                        
+                                        {/* Mini Trend Chart */}
+                                        <div className="mt-4">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs text-gray-500">8-Month Trend</span>
+                                            <span className={`text-xs flex items-center ${goal.progress > 50 ? 'text-green-600' : goal.progress > 25 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                              {goal.progress > 50 ? <TrendingUp className="w-3 h-3 mr-1" /> : 
+                                               goal.progress > 25 ? <Clock className="w-3 h-3 mr-1" /> : 
+                                               <TrendingDown className="w-3 h-3 mr-1" />}
+                                              {goal.progress > 50 ? 'Improving' : goal.progress > 25 ? 'Steady' : 'Needs Focus'}
+                                            </span>
+                                          </div>
+                                          <ResponsiveContainer width="100%" height={60}>
+                                            <LineChart data={historicalData}>
+                                              <Line 
+                                                type="monotone" 
+                                                dataKey="progress" 
+                                                stroke="#3b82f6" 
+                                                strokeWidth={2} 
+                                                dot={false} 
+                                              />
+                                            </LineChart>
+                                          </ResponsiveContainer>
+                                        </div>
+                                      </div>
+
+                                      {/* Expand Indicator */}
+                                      <div className="flex items-center justify-center pt-2 border-t">
+                                        <span className="text-xs text-gray-400 flex items-center">
+                                          {isExpanded ? 'Click to collapse' : 'Click to view detailed analytics'}
+                                          {isExpanded ? <TrendingUp className="w-3 h-3 ml-1 rotate-180" /> : <TrendingDown className="w-3 h-3 ml-1" />}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </div>
+
+                                {/* Expanded Details */}
+                                {isExpanded && (
+                                  <div className="border-t bg-gray-50">
+                                    <CardContent className="p-6">
+                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Historical Performance Chart */}
+                                        <div className="space-y-4">
+                                          <h4 className="font-semibold text-gray-900">Performance Over Time</h4>
+                                          <ResponsiveContainer width="100%" height={200}>
+                                            <LineChart data={historicalData}>
+                                              <CartesianGrid strokeDasharray="3 3" />
+                                              <XAxis dataKey="month" />
+                                              <YAxis />
+                                              <Tooltip 
+                                                formatter={(value, name) => [
+                                                  name === 'progress' ? `${Number(value).toFixed(1)}%` : `${Number(value).toFixed(1)} ${goal.unit}`,
+                                                  name === 'progress' ? 'Progress' : name === 'value' ? 'Current Value' : 'Target'
+                                                ]}
+                                              />
+                                              <Line type="monotone" dataKey="progress" stroke="#3b82f6" name="progress" />
+                                              <Line type="monotone" dataKey="value" stroke="#10b981" name="value" />
+                                              <Line type="monotone" dataKey="target" stroke="#f59e0b" strokeDasharray="5 5" name="target" />
+                                            </LineChart>
+                                          </ResponsiveContainer>
+                                        </div>
+
+                                        {/* Key Milestones */}
+                                        <div className="space-y-4">
+                                          <h4 className="font-semibold text-gray-900">Key Milestones</h4>
+                                          <div className="space-y-3">
+                                            {milestones.map((milestone, index) => (
+                                              <div key={index} className="flex items-start space-x-3">
+                                                <div className={`w-3 h-3 rounded-full mt-1 ${milestone.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`} />
+                                                <div className="flex-1">
+                                                  <div className="flex justify-between items-start">
+                                                    <h5 className="font-medium text-gray-900">{milestone.title}</h5>
+                                                    <span className="text-xs text-gray-500">{format(new Date(milestone.date), 'MMM dd')}</span>
+                                                  </div>
+                                                  <p className="text-sm text-gray-600 mt-1">{milestone.impact}</p>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        {/* Advanced Metrics */}
+                                        <div className="space-y-4">
+                                          <h4 className="font-semibold text-gray-900">Advanced Metrics</h4>
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div className="p-3 bg-white rounded-lg border">
+                                              <p className="text-sm text-gray-600">Reduction Achieved</p>
+                                              <p className="text-xl font-semibold text-green-600">
+                                                {goal.baselineValue && goal.currentValue ? 
+                                                  ((goal.baselineValue - goal.currentValue) / goal.baselineValue * 100).toFixed(1) : '0.0'}%
+                                              </p>
+                                            </div>
+                                            <div className="p-3 bg-white rounded-lg border">
+                                              <p className="text-sm text-gray-600">Days Remaining</p>
+                                              <p className="text-xl font-semibold text-blue-600">
+                                                {Math.max(0, Math.ceil((new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))}
+                                              </p>
+                                            </div>
+                                            <div className="p-3 bg-white rounded-lg border">
+                                              <p className="text-sm text-gray-600">Monthly Rate</p>
+                                              <p className="text-xl font-semibold text-purple-600">
+                                                {((goal.progress || 0) / 8).toFixed(1)}%
+                                              </p>
+                                            </div>
+                                            <div className="p-3 bg-white rounded-lg border">
+                                              <p className="text-sm text-gray-600">Projected Finish</p>
+                                              <p className="text-xl font-semibold text-indigo-600">
+                                                {(goal.progress || 0) > 0 ? 
+                                                  format(new Date(Date.now() + (100 - (goal.progress || 0)) / (goal.progress || 1) * 8 * 30 * 24 * 60 * 60 * 1000), 'MMM yyyy') : 
+                                                  'TBD'}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Action Items */}
+                                        <div className="space-y-4">
+                                          <h4 className="font-semibold text-gray-900">Recommended Actions</h4>
+                                          <div className="space-y-2">
+                                            {[
+                                              { action: 'Review monthly progress reports', priority: 'high' },
+                                              { action: 'Implement efficiency optimization measures', priority: 'medium' },
+                                              { action: 'Schedule quarterly team review meeting', priority: 'low' }
+                                            ].map((item, index) => (
+                                              <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
+                                                <span className="text-sm text-gray-900">{item.action}</span>
+                                                <Badge 
+                                                  variant="outline" 
+                                                  className={`text-xs ${
+                                                    item.priority === 'high' ? 'text-red-600 border-red-200' :
+                                                    item.priority === 'medium' ? 'text-yellow-600 border-yellow-200' :
+                                                    'text-gray-600 border-gray-200'
+                                                  }`}
+                                                >
+                                                  {item.priority}
+                                                </Badge>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </div>
+                                )}
+                              </Card>
+                            );
+                          })}
                       </div>
                     )}
                   </TabsContent>
