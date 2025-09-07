@@ -39,7 +39,7 @@ const ProgressBar = ({ currentStep, totalSteps }: { currentStep: number; totalSt
         <div
           key={i}
           className={`h-2 flex-1 rounded-full ${
-            i + 1 <= currentStep ? 'bg-green-600' : 'bg-gray-200'
+            i + 1 <= currentStep ? 'bg-avallen-green' : 'bg-gray-200'
           }`}
         />
       ))}
@@ -172,7 +172,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <User className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              <User className="w-16 h-16 text-avallen-green mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-gray mb-2">
                 Welcome to your sustainability journey!
               </h3>
@@ -199,7 +199,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <Building2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              <Building2 className="w-16 h-16 text-avallen-green mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-gray mb-2">
                 Tell us about your company
               </h3>
@@ -246,7 +246,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <Building2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              <Building2 className="w-16 h-16 text-avallen-green mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-gray mb-2">
                 More about {formData.companyName}
               </h3>
@@ -298,7 +298,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <CheckCircle className="w-12 h-12 text-avallen-green mx-auto mb-4" />
               <h3 className="text-xl font-bold text-slate-gray mb-2">
                 What are your sustainability goals?
               </h3>
@@ -352,7 +352,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              <CheckCircle className="w-16 h-16 text-avallen-green mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-slate-gray mb-2">
                 Set your reporting period
               </h3>
@@ -435,7 +435,7 @@ function CleanOnboardingWizard({ onComplete, onCancel }: CleanOnboardingWizardPr
               <Button
                 onClick={handleNext}
                 disabled={!isStepValid() || createCompanyMutation.isPending}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-avallen-green hover:bg-avallen-green-light text-white"
               >
                 {createCompanyMutation.isPending ? (
                   <>
