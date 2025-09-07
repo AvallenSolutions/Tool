@@ -41,6 +41,7 @@ import { WebSocketService } from "./services/websocketService";
 import { supplierIntegrityService } from "./services/SupplierIntegrityService";
 import { WasteIntensityCalculationService } from "./services/WasteIntensityCalculationService";
 import { MonthlyDataAggregationService, monthlyDataAggregationService } from "./services/MonthlyDataAggregationService";
+import { intelligentInsightsService } from "./services/IntelligentInsightsService";
 import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities, verifiedSuppliers, monthlyFacilityData } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
@@ -7535,41 +7536,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         return res.status(400).json({ error: 'User not associated with a company' });
       }
 
-      // TODO: Implement intelligent insights using Anthropic API
-      // For now, return structured recommendations
-      const insights = {
-        recommendations: [
-          {
-            type: 'optimization',
-            title: 'Optimization Opportunity',
-            description: `Based on your current ${category.toLowerCase()} metrics, implementing energy-efficient equipment could reduce carbon intensity by 15-20%.`,
-            confidence: 0.85,
-            potentialImpact: 'high',
-            actionable: true
-          },
-          {
-            type: 'best_practice',
-            title: 'Best Practice',
-            description: `Companies in your industry typically see 12% improvement when setting quarterly milestones for ${category.toLowerCase()} goals.`,
-            confidence: 0.92,
-            potentialImpact: 'medium',
-            actionable: true
-          },
-          {
-            type: 'warning',
-            title: 'Action Needed',
-            description: `Your current trajectory suggests missing 2 of 3 ${category.toLowerCase()} goals. Consider adjusting targets or increasing resources.`,
-            confidence: 0.78,
-            potentialImpact: 'high',
-            actionable: true
-          }
-        ],
-        predictiveAnalytics: {
-          projectedOutcome: Math.round(Math.random() * 40 + 50), // 50-90%
-          confidenceLevel: Math.round(Math.random() * 30 + 70), // 70-100%
-          timeToTarget: Math.round(Math.random() * 12 + 6) // 6-18 months
-        }
-      };
+      // Generate AI-powered insights using the IntelligentInsightsService
+      console.log(`🤖 Generating AI insights for company ${company.id}, category: ${category}`);
+      const insights = await intelligentInsightsService.generateCategoryInsights(company.id, category);
 
       res.json({ success: true, insights });
     } catch (error) {
