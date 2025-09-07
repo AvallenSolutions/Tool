@@ -1560,8 +1560,8 @@ export function KPIsPage() {
               } text-white`}
               onClick={() => {
                 toast({
-                  title: "Action Plan Created",
-                  description: "This recommendation has been added to your action plan for implementation.",
+                  title: "This feature is coming later",
+                  description: "Action plan management will be available in a future update.",
                 });
                 setIsInsightDetailOpen(false);
               }}
