@@ -288,8 +288,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/greenwash-guardian"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/greenwash-guardian")}
             >
@@ -304,8 +304,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location.startsWith('/app/facility-updates') || location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => setKpiGoalsExpanded(!kpiGoalsExpanded)}
             >
@@ -353,8 +353,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/supplier-network"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/supplier-network")}
             >
@@ -369,8 +369,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/collaboration"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/collaboration")}
             >
@@ -385,8 +385,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/settings"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/settings")}
             >
@@ -401,8 +401,8 @@ export default function Sidebar() {
               variant="ghost"
               className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
                 location === "/app/test"
-                  ? "bg-white text-[#209d50] hover:bg-gray-100"
-                  : "text-white hover:bg-green-600"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
               }`}
               onClick={() => navigate("/app/test")}
             >
