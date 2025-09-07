@@ -164,7 +164,8 @@ export class IntelligentInsightsService {
       });
       const comprehensiveData = await comprehensiveResponse.json();
       var totalEmissions = comprehensiveData.success ? 
-        (comprehensiveData.data.totalEmissions || 0) : 0;
+        (comprehensiveData.data.totalFootprint.co2e_kg || 0) : 0;
+      console.log('🔍 DEBUG: Fetched emissions data:', totalEmissions, 'kg CO2e');
     } catch (error) {
       console.warn('Failed to fetch comprehensive emissions, using fallback:', error);
       var totalEmissions = 1132289; // Your actual emissions in kg as fallback
