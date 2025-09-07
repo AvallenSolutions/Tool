@@ -404,11 +404,15 @@ export class KPICalculationService {
    */
   async getKPIDashboardData(companyId: number): Promise<DashboardResponse> {
     try {
+      console.log(`🔍 KPI DEBUG: Starting getKPIDashboardData for company ${companyId}`);
+      
       // Get all KPIs (preset + custom for this company)
       const allKPIs = await db
         .select()
         .from(kpis)
         .where(or(isNull(kpis.companyId), eq(kpis.companyId, companyId)));
+
+      console.log(`🔍 KPI DEBUG: Found ${allKPIs.length} total KPIs:`, allKPIs.map(k => k.kpiName));
 
       // Get company goals for targets
       const goals = await db
@@ -416,41 +420,69 @@ export class KPICalculationService {
         .from(companyGoals)
         .where(eq(companyGoals.companyId, companyId));
 
+      console.log(`🔍 KPI DEBUG: Found ${goals.length} company goals:`, goals.map(g => g.kpiName));
+
       // ALSO get smart goals (environmental goals created in the environment section)
-      const smartGoals = await db
+      const companySmartGoals = await db
         .select()
         .from(smartGoals)
         .where(eq(smartGoals.companyId, companyId));
 
+      console.log(`🔍 KPI DEBUG: Found ${companySmartGoals.length} smart goals:`, companySmartGoals.map(g => g.title));
+
       // Only process KPIs that have actual company goals set OR matching smart goals
       const relevantKPIs = allKPIs.filter(kpi => {
+        console.log(`🔍 KPI DEBUG: Checking KPI "${kpi.kpiName}" (company: ${kpi.companyId})`);
+        
         // Include custom KPIs (company-specific)
-        if (kpi.companyId !== null) return true;
+        if (kpi.companyId !== null) {
+          console.log(`  ✅ Custom KPI - included`);
+          return true;
+        }
         
         // For preset KPIs, check if there's a matching company goal
         const hasCompanyGoal = goals.some(goal => 
           goal.kpiName.toLowerCase().includes(kpi.kpiName.toLowerCase())
         );
         
+        console.log(`  📋 Company goal match: ${hasCompanyGoal}`);
+        
         // OR check if there's a matching smart goal (environmental goals)
-        const hasSmartGoal = smartGoals.some(smartGoal => {
+        const hasSmartGoal = companySmartGoals.some(smartGoal => {
           const goalTitle = smartGoal.title.toLowerCase();
           const kpiName = kpi.kpiName.toLowerCase();
           
+          console.log(`    🎯 Checking "${kpiName}" vs "${goalTitle}"`);
+          
           // Match Carbon Intensity KPI to carbon emission goals
-          if (kpiName.includes('carbon') && goalTitle.includes('carbon')) return true;
+          if (kpiName.includes('carbon') && goalTitle.includes('carbon')) {
+            console.log(`      ✅ Carbon match found!`);
+            return true;
+          }
           
           // Match Water Intensity KPI to water goals
-          if (kpiName.includes('water') && goalTitle.includes('water')) return true;
+          if (kpiName.includes('water') && goalTitle.includes('water')) {
+            console.log(`      ✅ Water match found!`);
+            return true;
+          }
           
           // Match Energy KPIs to energy goals  
-          if (kpiName.includes('energy') && goalTitle.includes('energy')) return true;
+          if (kpiName.includes('energy') && goalTitle.includes('energy')) {
+            console.log(`      ✅ Energy match found!`);
+            return true;
+          }
           
           return false;
         });
         
-        return hasCompanyGoal || hasSmartGoal;
+        console.log(`  🎯 Smart goal match: ${hasSmartGoal}`);
+        const included = hasCompanyGoal || hasSmartGoal;
+        console.log(`  📊 Final result for "${kpi.kpiName}": ${included ? 'INCLUDED' : 'EXCLUDED'}`);
+        
+        return included;
       });
+
+      console.log(`🔍 KPI DEBUG: Relevant KPIs after filtering: ${relevantKPIs.length}`, relevantKPIs.map(k => k.kpiName));
 
       // Get project goals
       const projectGoalsData = await db
@@ -470,7 +502,7 @@ export class KPICalculationService {
         );
         
         // If no company goal, try to find a matching smart goal  
-        const matchingSmartGoal = !matchingGoal ? smartGoals.find(smartGoal => {
+        const matchingSmartGoal = !matchingGoal ? companySmartGoals.find(smartGoal => {
           const goalTitle = smartGoal.title.toLowerCase();
           const kpiName = kpi.kpiName.toLowerCase();
           
