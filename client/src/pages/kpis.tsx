@@ -194,7 +194,9 @@ export function KPIsPage() {
       return await response.json();
     },
     enabled: !!selectedMainCategory && viewMode === 'category-detail',
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always fetch fresh AI insights
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
 
   // Create goal mutation
@@ -205,6 +207,7 @@ export function KPIsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/analytics', selectedMainCategory] });
+      queryClient.invalidateQueries({ queryKey: ['/api/enhanced-kpis/ai-insights', selectedMainCategory] });
       setIsGoalDialogOpen(false);
       setCalculatedBaseline(null);
       toast({
