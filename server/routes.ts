@@ -2154,23 +2154,19 @@ Be precise and quote actual text from the content, not generic terms.`;
           console.log(`🏭 YOUR PRODUCT METHOD: Per unit: ${facilityImpacts.co2e.toFixed(3)}kg CO2e ÷ ${totalCompanyUnits.toLocaleString()} units`);
         }
         
-        // Water consumption using YOUR EXACT METHODOLOGY (same as CO2e)
-        // Step 1: Sum all facility water footprints first
-        let totalAllFacilitiesWater = 0;
+        // Water consumption (keep existing logic for water)
         const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
-        
         for (const facility of facilities) {
-          const facilityWater = 
+          const totalFacilityWater = 
             (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
             (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
             (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
-          totalAllFacilitiesWater += facilityWater;
-        }
-        
-        // Step 2: Total annual water footprint ÷ total units of ALL products
-        if (totalAllFacilitiesWater > 0) {
-          facilityImpacts.water = totalAllFacilitiesWater / totalCompanyUnits;
-          console.log(`💧 FACILITY 1 + FACILITY 2 = TOTAL ANNUAL WATER: ${totalAllFacilitiesWater.toFixed(0)}L/year ÷ ${totalCompanyUnits.toLocaleString()} units = ${facilityImpacts.water.toFixed(1)}L per unit`);
+          
+          if (totalFacilityWater > 0) {
+            const waterPerUnit = totalFacilityWater / totalCompanyUnits;
+            facilityImpacts.water += waterPerUnit;
+            console.log(`💧 PRODUCT WATER: ${totalFacilityWater.toFixed(0)}L/year ÷ ${totalCompanyUnits.toLocaleString()} units = ${waterPerUnit.toFixed(1)}L per unit`);
+          }
         }
       } catch (error) {
         console.error('Error calculating facility impacts using your product method:', error);
