@@ -1227,25 +1227,6 @@ export function KPIsPage() {
                               </div>
                             )}
                             
-                            {insightsData?.success && (
-                              <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                                <div className="text-sm font-medium text-gray-900 mb-2">Predictive Analytics</div>
-                                <div className="grid grid-cols-3 gap-4 text-xs">
-                                  <div className="text-center">
-                                    <div className="text-lg font-bold text-green-600">{insightsData.insights.predictiveAnalytics.projectedOutcome}%</div>
-                                    <div className="text-gray-600">Projected Success</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-lg font-bold text-blue-600">{insightsData.insights.predictiveAnalytics.confidenceLevel}%</div>
-                                    <div className="text-gray-600">Confidence</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-lg font-bold text-purple-600">{insightsData.insights.predictiveAnalytics.timeToTarget}mo</div>
-                                    <div className="text-gray-600">Est. Timeline</div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </CardContent>
                       </Card>
