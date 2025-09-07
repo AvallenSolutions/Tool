@@ -159,9 +159,9 @@ export default function Sidebar() {
   ];
 
   return (
-    <nav className="w-64 bg-gradient-to-b from-green-500 to-blue-600 border-r border-blue-600/30 flex flex-col shadow-xl" id="sidebar-nav">
-      {/* Company Logo */}
-      <div className="p-6 border-b border-white/20">
+    <nav className="w-64 flex flex-col shadow-xl relative" id="sidebar-nav">
+      {/* Header-level section - solid green to match header left edge */}
+      <div className="bg-green-500 p-6 border-b border-white/20">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-lg">
             <span className="text-green-600 font-bold text-sm">
@@ -174,10 +174,10 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - gradient starts here */}
       <div 
         ref={navContainerRef} 
-        className="flex-1 p-4 overflow-y-auto" 
+        className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-green-500 to-blue-600" 
         style={{ 
           scrollBehavior: 'auto',
           overflowBehavior: 'contain',
