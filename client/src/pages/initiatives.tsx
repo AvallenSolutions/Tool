@@ -65,7 +65,13 @@ export default function InitiativesPage() {
     priority: 'medium',
     targetDate: '',
     category: 'sustainability',
-    status: 'active'
+    status: 'active',
+    hasQuantitativeMetrics: false,
+    metricName: '',
+    metricUnit: '',
+    baselineValue: '',
+    targetValue: '',
+    isHigherBetter: false
   });
 
   const queryClient = useQueryClient();
@@ -82,7 +88,35 @@ export default function InitiativesPage() {
   // Create Goal Mutation
   const createGoalMutation = useMutation({
     mutationFn: async (goalData: typeof newGoal) => {
-      return await apiRequest('POST', '/api/smart-goals', goalData);
+      // First create the SMART goal
+      const goalResponse = await apiRequest('POST', '/api/smart-goals', {
+        title: goalData.title,
+        description: goalData.description,
+        specific: goalData.specific,
+        measurable: goalData.measurable,
+        achievable: goalData.achievable,
+        relevant: goalData.relevant,
+        timeBound: goalData.timeBound,
+        priority: goalData.priority,
+        targetDate: goalData.targetDate,
+        category: goalData.category,
+        status: goalData.status,
+        hasQuantitativeMetrics: goalData.hasQuantitativeMetrics
+      });
+      
+      // If quantitative metrics are enabled, create the metric
+      if (goalData.hasQuantitativeMetrics && goalData.metricName && goalData.metricUnit) {
+        await apiRequest('POST', `/api/smart-goals/${goalResponse.goal.id}/metrics`, {
+          metricName: goalData.metricName,
+          unit: goalData.metricUnit,
+          baselineValue: parseFloat(goalData.baselineValue),
+          targetValue: parseFloat(goalData.targetValue),
+          currentValue: parseFloat(goalData.baselineValue), // Start with baseline as current
+          isHigherBetter: goalData.isHigherBetter
+        });
+      }
+      
+      return goalResponse;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/smart-goals'] });
@@ -98,17 +132,24 @@ export default function InitiativesPage() {
         priority: 'medium',
         targetDate: '',
         category: 'sustainability',
-        status: 'active'
+        status: 'active',
+        hasQuantitativeMetrics: false,
+        metricName: '',
+        metricUnit: '',
+        baselineValue: '',
+        targetValue: '',
+        isHigherBetter: false
       });
       toast({
         title: "Goal Created",
-        description: "Your SMART goal has been successfully created.",
+        description: "Your SMART goal has been successfully created with quantitative metrics.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Goal creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create goal. Please try again.",
+        description: `Failed to create goal: ${error?.message || 'Please try again.'}`,
         variant: "destructive",
       });
     },
@@ -823,6 +864,109 @@ export default function InitiativesPage() {
               </div>
             </div>
 
+            {/* Quantitative Metrics Section */}
+            <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-blue-900">Quantitative Metrics (Optional)</h3>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="hasMetrics"
+                    checked={newGoal.hasQuantitativeMetrics || false}
+                    onChange={(e) => setNewGoal({ ...newGoal, hasQuantitativeMetrics: e.target.checked })}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="hasMetrics" className="text-sm text-blue-800">
+                    Enable data-driven progress tracking
+                  </Label>
+                </div>
+              </div>
+              
+              {(newGoal.hasQuantitativeMetrics) && (
+                <div className="space-y-4 pl-4 border-l-4 border-blue-300">
+                  <div className="text-sm text-blue-700 mb-3">
+                    Define specific measurements to track your goal's progress with real sustainability data.
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="metricName">Measurement Name *</Label>
+                      <Input
+                        id="metricName"
+                        value={newGoal.metricName || ''}
+                        onChange={(e) => setNewGoal({ ...newGoal, metricName: e.target.value })}
+                        placeholder="e.g., Carbon Emissions, Energy Usage"
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="metricUnit">Unit *</Label>
+                      <Select value={newGoal.metricUnit || ''} onValueChange={(value) => setNewGoal({ ...newGoal, metricUnit: value })}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border shadow-lg">
+                          <SelectItem value="kg">kg (Kilograms)</SelectItem>
+                          <SelectItem value="tonnes">tonnes (Metric Tons)</SelectItem>
+                          <SelectItem value="kWh">kWh (Kilowatt Hours)</SelectItem>
+                          <SelectItem value="L">L (Liters)</SelectItem>
+                          <SelectItem value="m3">m³ (Cubic Meters)</SelectItem>
+                          <SelectItem value="%">% (Percentage)</SelectItem>
+                          <SelectItem value="ppm">ppm (Parts Per Million)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="baselineValue">Baseline Value *</Label>
+                      <Input
+                        id="baselineValue"
+                        type="number"
+                        step="0.01"
+                        value={newGoal.baselineValue || ''}
+                        onChange={(e) => setNewGoal({ ...newGoal, baselineValue: e.target.value })}
+                        placeholder="Current value"
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="targetValue">Target Value *</Label>
+                      <Input
+                        id="targetValue"
+                        type="number"
+                        step="0.01"
+                        value={newGoal.targetValue || ''}
+                        onChange={(e) => setNewGoal({ ...newGoal, targetValue: e.target.value })}
+                        placeholder="Goal target"
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="isHigherBetter">Improvement Direction</Label>
+                      <Select value={newGoal.isHigherBetter ? 'true' : 'false'} onValueChange={(value) => setNewGoal({ ...newGoal, isHigherBetter: value === 'true' })}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border shadow-lg">
+                          <SelectItem value="false">Lower is Better (e.g., emissions)</SelectItem>
+                          <SelectItem value="true">Higher is Better (e.g., efficiency)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+                    💡 <strong>Tip:</strong> Quantitative metrics enable automatic progress calculation based on your actual data measurements.
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Goal Properties */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -880,7 +1024,17 @@ export default function InitiativesPage() {
             </Button>
             <Button 
               onClick={() => createGoalMutation.mutate(newGoal)}
-              disabled={createGoalMutation.isPending || !newGoal.title || !newGoal.specific || !newGoal.measurable || !newGoal.achievable || !newGoal.relevant || !newGoal.timeBound || !newGoal.targetDate}
+              disabled={
+                createGoalMutation.isPending || 
+                !newGoal.title || 
+                !newGoal.specific || 
+                !newGoal.measurable || 
+                !newGoal.achievable || 
+                !newGoal.relevant || 
+                !newGoal.timeBound || 
+                !newGoal.targetDate ||
+                (newGoal.hasQuantitativeMetrics && (!newGoal.metricName || !newGoal.metricUnit || !newGoal.baselineValue || !newGoal.targetValue))
+              }
               className="bg-green-600 hover:bg-green-700"
             >
               {createGoalMutation.isPending ? (
