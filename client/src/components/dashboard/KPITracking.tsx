@@ -358,7 +358,70 @@ export function KPITracking() {
         </CardContent>
       </Card>
 
+      {/* Individual KPIs */}
+      {kpis.length > 0 && (
+        <Card className="bg-white border shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Key Performance Indicators
+            </CardTitle>
+            <CardDescription>Monitor your individual KPIs and their progress</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {kpis.map((kpi) => (
+                <div key={kpi.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedKPI(kpi)}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">{kpi.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge className={categoryConfig[kpi.category].color}>
+                          {categoryConfig[kpi.category].label}
+                        </Badge>
+                        <Badge className={statusConfig[kpi.status].color}>
+                          {statusConfig[kpi.status].label}
+                        </Badge>
+                      </div>
+                    </div>
+                    {kpi.trend === 'up' && <TrendingUp className="w-4 h-4 text-green-600" />}
+                    {kpi.trend === 'down' && <TrendingDown className="w-4 h-4 text-red-600" />}
+                    {kpi.status === 'achieved' && <Award className="w-4 h-4 text-yellow-600" />}
+                  </div>
 
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Current: <strong>{kpi.current.toLocaleString()} {kpi.unit}</strong></span>
+                      <span>Target: <strong>{kpi.target.toLocaleString()} {kpi.unit}</strong></span>
+                    </div>
+                    
+                    <Progress 
+                      value={Math.min((kpi.current / kpi.target) * 100, 100)} 
+                      className="h-2" 
+                    />
+                    
+                    <div className="flex justify-between items-center text-xs text-gray-600">
+                      <span>{((kpi.current / kpi.target) * 100).toFixed(1)}% of target</span>
+                      {kpi.deadline && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(kpi.deadline).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+
+                    {kpi.trendValue !== 0 && (
+                      <div className="text-xs text-gray-500">
+                        {kpi.trend === 'up' ? '+' : ''}{kpi.trendValue.toFixed(1)}% vs last period
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Project Goals */}
       {projectGoals.length > 0 && (
