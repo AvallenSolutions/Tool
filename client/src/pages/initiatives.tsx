@@ -358,6 +358,19 @@ export default function InitiativesPage() {
               </div>
             )}
 
+            {/* Add SMART Goal Action */}
+            <div className="mb-6">
+              <Button 
+                onClick={() => setIsCreateGoalOpen(true)}
+                className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                size="lg"
+                data-testid="button-add-smart-goal"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add New SMART Goal
+              </Button>
+            </div>
+
             {/* Filter Controls */}
             <Card className="mb-6">
               <CardHeader>
@@ -417,15 +430,6 @@ export default function InitiativesPage() {
                     <Button variant="outline" size="sm" onClick={selectAllVisible}>
                       Select All Visible
                     </Button>
-                    <Button 
-                      size="sm" 
-                      onClick={() => setIsCreateGoalOpen(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      data-testid="button-add-smart-goal"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add SMART Goal
-                    </Button>
                     <Button variant="outline" size="sm" onClick={clearSelection}>
                       Clear Selection
                     </Button>
@@ -464,7 +468,7 @@ export default function InitiativesPage() {
                   const timeProgress = getTimeProgress(goal.targetDate);
                   
                   return (
-                    <Card key={goal.id} className={`hover:shadow-md transition-all ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
+                    <Card key={goal.id} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50 border-l-blue-500' : goal.status === 'completed' ? 'border-l-green-500' : goal.status === 'paused' ? 'border-l-yellow-500' : 'border-l-gray-300'} bg-white`}>
                       <CardHeader className="pb-4">
                         <div className="flex items-start gap-4">
                           {/* Selection Checkbox */}
@@ -526,39 +530,79 @@ export default function InitiativesPage() {
                             )}
                             
                             {/* SMART Framework Details */}
+                            {/* Progress Section - Placeholder for now */}
+                            <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-700">Progress Tracking</span>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    toast({
+                                      title: "Progress tracking coming soon",
+                                      description: "Full progress measurement functionality will be available in a future update.",
+                                    });
+                                  }}
+                                  className="text-xs px-3 py-1 h-8"
+                                >
+                                  Update Progress
+                                </Button>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-blue-600 h-2 rounded-full" style={{width: '0%'}}></div>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">0% Complete</div>
+                            </div>
+                            
+                            {/* SMART Framework Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-sm">
                               {goal.specific && (
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <div className="font-semibold text-gray-700 mb-1">Specific</div>
-                                  <div className="text-gray-600">{goal.specific}</div>
+                                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg border border-green-100">
+                                  <div className="font-semibold text-green-800 mb-1 flex items-center gap-2">
+                                    <Target className="w-4 h-4" />
+                                    Specific
+                                  </div>
+                                  <div className="text-green-700 text-sm">{goal.specific}</div>
                                 </div>
                               )}
                               {goal.measurable && (
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <div className="font-semibold text-gray-700 mb-1">Measurable</div>
-                                  <div className="text-gray-600">{goal.measurable}</div>
+                                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-3 rounded-lg border border-blue-100">
+                                  <div className="font-semibold text-blue-800 mb-1 flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Measurable
+                                  </div>
+                                  <div className="text-blue-700 text-sm">{goal.measurable}</div>
                                 </div>
                               )}
                               {goal.achievable && (
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <div className="font-semibold text-gray-700 mb-1">Achievable</div>
-                                  <div className="text-gray-600">{goal.achievable}</div>
+                                <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-3 rounded-lg border border-purple-100">
+                                  <div className="font-semibold text-purple-800 mb-1 flex items-center gap-2">
+                                    <Flag className="w-4 h-4" />
+                                    Achievable
+                                  </div>
+                                  <div className="text-purple-700 text-sm">{goal.achievable}</div>
                                 </div>
                               )}
                               {goal.relevant && (
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <div className="font-semibold text-gray-700 mb-1">Relevant</div>
-                                  <div className="text-gray-600">{goal.relevant}</div>
+                                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 rounded-lg border border-orange-100">
+                                  <div className="font-semibold text-orange-800 mb-1 flex items-center gap-2">
+                                    <Clock className="w-4 h-4" />
+                                    Relevant
+                                  </div>
+                                  <div className="text-orange-700 text-sm">{goal.relevant}</div>
                                 </div>
                               )}
                             </div>
                             
                             {/* Time Bound */}
                             {goal.timeBound && (
-                              <div className="bg-blue-50 p-3 rounded mb-4 text-sm">
-                                <div className="font-semibold text-blue-700 mb-1">Time-bound</div>
-                                <div className="text-blue-600">{goal.timeBound}</div>
-                                <div className="text-xs text-blue-500 mt-1">
+                              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-3 rounded-lg border border-indigo-100 mb-4 text-sm">
+                                <div className="font-semibold text-indigo-800 mb-1 flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  Time-bound
+                                </div>
+                                <div className="text-indigo-700 text-sm">{goal.timeBound}</div>
+                                <div className="text-xs text-indigo-600 mt-2 bg-indigo-100 px-2 py-1 rounded">
                                   Target Date: {new Date(goal.targetDate).toLocaleDateString()}
                                 </div>
                               </div>
