@@ -109,7 +109,7 @@ export function FeedbackWidget() {
             Share Your Feedback
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 mt-6">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Feedback Type
