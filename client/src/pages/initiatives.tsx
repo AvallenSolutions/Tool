@@ -760,65 +760,98 @@ export default function InitiativesPage() {
 
       {/* Goal Creation Dialog */}
       <Dialog open={isCreateGoalOpen} onOpenChange={setIsCreateGoalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border shadow-xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Create New SMART Goal</DialogTitle>
-            <DialogDescription>
-              Define a specific, measurable, achievable, relevant, and time-bound goal for your sustainability initiatives.
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50 border shadow-2xl">
+          <DialogHeader className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-6 -m-6 mb-0 rounded-t-lg">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+              <Target className="h-7 w-7" />
+              Create New SMART Goal
+            </DialogTitle>
+            <DialogDescription className="text-green-100 mt-2">
+              🎯 Define a specific, measurable, achievable, relevant, and time-bound goal for your sustainability initiatives.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 mt-4">
+          <div className="space-y-8 mt-6 px-2">
             {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="title">Goal Title *</Label>
-                <Input
-                  id="title"
-                  value={newGoal.title}
-                  onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
-                  placeholder="Enter goal title"
-                  className="mt-1"
-                />
+            <div className="bg-gradient-to-r from-slate-50 to-zinc-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-bold text-sm">1</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">📋 Basic Information</h3>
               </div>
-              <div>
-                <Label htmlFor="targetDate">Target Date *</Label>
-                <Input
-                  id="targetDate"
-                  type="date"
-                  value={newGoal.targetDate}
-                  onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
-                  className="mt-1"
-                />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    ✏️ Goal Title *
+                  </Label>
+                  <Input
+                    id="title"
+                    value={newGoal.title}
+                    onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+                    placeholder="Enter goal title"
+                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="targetDate" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    🗓️ Target Date *
+                  </Label>
+                  <Input
+                    id="targetDate"
+                    type="date"
+                    value={newGoal.targetDate}
+                    onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
+                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={newGoal.description}
-                onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
-                placeholder="Describe your goal"
-                rows={3}
-                className="mt-1"
-              />
+              <div className="mt-4">
+                <Label htmlFor="description" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                  📝 Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={newGoal.description}
+                  onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
+                  placeholder="Describe your goal in detail..."
+                  rows={3}
+                  className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
             </div>
 
             {/* SMART Framework */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">SMART Framework</h3>
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 font-bold text-sm">2</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">🎯 SMART Framework</h3>
+                <div className="ml-auto flex gap-1">
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">S</span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">M</span>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">A</span>
+                  <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">R</span>
+                  <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full font-medium">T</span>
+                </div>
+              </div>
               
               <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="specific">Specific *</Label>
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <Label htmlFor="specific" className="text-sm font-medium text-green-800 flex items-center gap-2">
+                    <Target className="w-4 h-4" />
+                    Specific * <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">(What exactly?)</span>
+                  </Label>
                   <Textarea
                     id="specific"
                     value={newGoal.specific}
                     onChange={(e) => setNewGoal({ ...newGoal, specific: e.target.value })}
-                    placeholder="What exactly will be accomplished?"
+                    placeholder="What exactly will be accomplished? Be clear and detailed..."
                     rows={2}
-                    className="mt-1"
+                    className="mt-1 border-green-300 focus:border-green-500 focus:ring-green-500"
                   />
                 </div>
                 
@@ -834,7 +867,7 @@ export default function InitiativesPage() {
                   />
                   
                   {/* Quantitative Metrics within Measurable section */}
-                  <div className="mt-4 space-y-4 p-4 border rounded-lg bg-blue-50">
+                  <div className="mt-4 space-y-4 p-4 border-2 border-blue-300 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 shadow-sm">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-semibold text-blue-900">📊 Quantitative Tracking (Optional)</h4>
                       <div className="flex items-center space-x-2">
@@ -953,39 +986,48 @@ export default function InitiativesPage() {
                   </div>
                 </div>
                 
-                <div>
-                  <Label htmlFor="achievable">Achievable *</Label>
+                <div className="bg-white p-4 rounded-lg border border-purple-200">
+                  <Label htmlFor="achievable" className="text-sm font-medium text-purple-800 flex items-center gap-2">
+                    <Flag className="w-4 h-4" />
+                    Achievable * <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">(Is it realistic?)</span>
+                  </Label>
                   <Textarea
                     id="achievable"
                     value={newGoal.achievable}
                     onChange={(e) => setNewGoal({ ...newGoal, achievable: e.target.value })}
-                    placeholder="Is this goal realistic and attainable?"
+                    placeholder="Is this goal realistic and attainable? Consider your resources and constraints..."
                     rows={2}
-                    className="mt-1"
+                    className="mt-1 border-purple-300 focus:border-purple-500 focus:ring-purple-500"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="relevant">Relevant *</Label>
+                <div className="bg-white p-4 rounded-lg border border-orange-200">
+                  <Label htmlFor="relevant" className="text-sm font-medium text-orange-800 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Relevant * <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">(Why important?)</span>
+                  </Label>
                   <Textarea
                     id="relevant"
                     value={newGoal.relevant}
                     onChange={(e) => setNewGoal({ ...newGoal, relevant: e.target.value })}
-                    placeholder="Why is this goal important?"
+                    placeholder="Why is this goal important? How does it align with your broader objectives?..."
                     rows={2}
-                    className="mt-1"
+                    className="mt-1 border-orange-300 focus:border-orange-500 focus:ring-orange-500"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="timeBound">Time-Bound *</Label>
+                <div className="bg-white p-4 rounded-lg border border-indigo-200">
+                  <Label htmlFor="timeBound" className="text-sm font-medium text-indigo-800 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Time-Bound * <span className="text-xs text-indigo-600 bg-indigo-100 px-2 py-1 rounded">(When completed?)</span>
+                  </Label>
                   <Textarea
                     id="timeBound"
                     value={newGoal.timeBound}
                     onChange={(e) => setNewGoal({ ...newGoal, timeBound: e.target.value })}
-                    placeholder="What is the timeline and deadline?"
+                    placeholder="What is the timeline and deadline? Include key milestones..."
                     rows={2}
-                    className="mt-1"
+                    className="mt-1 border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -993,81 +1035,98 @@ export default function InitiativesPage() {
 
 
             {/* Goal Properties */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="priority">Priority</Label>
-                <Select value={newGoal.priority} onValueChange={(value) => setNewGoal({ ...newGoal, priority: value })}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 font-bold text-sm">3</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">⚙️ Goal Configuration</h3>
               </div>
               
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select value={newGoal.category} onValueChange={(value) => setNewGoal({ ...newGoal, category: value })}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="Environmental">Environmental</SelectItem>
-                    <SelectItem value="Supply Chain">Supply Chain</SelectItem>
-                    <SelectItem value="Production">Production</SelectItem>
-                    <SelectItem value="Purpose & Stakeholder Governance">Purpose & Stakeholder Governance</SelectItem>
-                    <SelectItem value="Worker Engagement">Worker Engagement</SelectItem>
-                    <SelectItem value="Human Rights">Human Rights</SelectItem>
-                    <SelectItem value="JEDI">JEDI</SelectItem>
-                    <SelectItem value="Climate Action">Climate Action</SelectItem>
-                    <SelectItem value="Risk Standards">Risk Standards</SelectItem>
-                    <SelectItem value="Circularity">Circularity</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={newGoal.status} onValueChange={(value) => setNewGoal({ ...newGoal, status: value })}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border shadow-lg">
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <Label htmlFor="priority" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    🔥 Priority
+                  </Label>
+                  <Select value={newGoal.priority} onValueChange={(value) => setNewGoal({ ...newGoal, priority: value })}>
+                    <SelectTrigger className="mt-1 border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-lg">
+                      <SelectItem value="low">🟢 Low</SelectItem>
+                      <SelectItem value="medium">🟡 Medium</SelectItem>
+                      <SelectItem value="high">🔴 High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <Label htmlFor="category" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    📁 B Corp Category
+                  </Label>
+                  <Select value={newGoal.category} onValueChange={(value) => setNewGoal({ ...newGoal, category: value })}>
+                    <SelectTrigger className="mt-1 border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-lg max-h-60 overflow-y-auto">
+                      <SelectItem value="Environmental">🌱 Environmental</SelectItem>
+                      <SelectItem value="Supply Chain">🔗 Supply Chain</SelectItem>
+                      <SelectItem value="Production">🏢 Production</SelectItem>
+                      <SelectItem value="Purpose & Stakeholder Governance">🏦 Governance</SelectItem>
+                      <SelectItem value="Worker Engagement">👥 Worker Engagement</SelectItem>
+                      <SelectItem value="Human Rights">⚖️ Human Rights</SelectItem>
+                      <SelectItem value="JEDI">🤝 JEDI</SelectItem>
+                      <SelectItem value="Climate Action">🌍 Climate Action</SelectItem>
+                      <SelectItem value="Risk Standards">🛡️ Risk Standards</SelectItem>
+                      <SelectItem value="Circularity">♾️ Circularity</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <Label htmlFor="status" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    🟢 Status
+                  </Label>
+                  <Select value={newGoal.status} onValueChange={(value) => setNewGoal({ ...newGoal, status: value })}>
+                    <SelectTrigger className="mt-1 border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-lg">
+                      <SelectItem value="active">▶️ Active</SelectItem>
+                      <SelectItem value="paused">⏸️ Paused</SelectItem>
+                      <SelectItem value="completed">✅ Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-6 border-t mt-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsCreateGoalOpen(false)}
-              disabled={createGoalMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => createGoalMutation.mutate(newGoal)}
-              disabled={
-                createGoalMutation.isPending || 
-                !newGoal.title || 
-                !newGoal.specific || 
-                !newGoal.measurable || 
-                !newGoal.achievable || 
-                !newGoal.relevant || 
-                !newGoal.timeBound || 
-                !newGoal.targetDate ||
-                (newGoal.hasQuantitativeMetrics && (!newGoal.metricName || !newGoal.metricUnit || !newGoal.baselineValue || !newGoal.targetValue))
-              }
-              className="bg-green-600 hover:bg-green-700"
-            >
+          <div className="bg-gradient-to-r from-gray-50 to-white p-6 -m-6 mt-8 rounded-b-lg border-t">
+            <div className="flex justify-end space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsCreateGoalOpen(false)}
+                disabled={createGoalMutation.isPending}
+                className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+              >
+                ❌ Cancel
+              </Button>
+              <Button 
+                onClick={() => createGoalMutation.mutate(newGoal)}
+                disabled={
+                  createGoalMutation.isPending || 
+                  !newGoal.title || 
+                  !newGoal.specific || 
+                  !newGoal.measurable || 
+                  !newGoal.achievable || 
+                  !newGoal.relevant || 
+                  !newGoal.timeBound || 
+                  !newGoal.targetDate ||
+                  (newGoal.hasQuantitativeMetrics && (!newGoal.metricName || !newGoal.metricUnit || !newGoal.baselineValue || !newGoal.targetValue))
+                }
+                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-8 py-2 font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
+              >
               {createGoalMutation.isPending ? (
                 <>
                   <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1078,6 +1137,7 @@ export default function InitiativesPage() {
               )}
             </Button>
           </div>
+        </div>
         </DialogContent>
       </Dialog>
     </div>
