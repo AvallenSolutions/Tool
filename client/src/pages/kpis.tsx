@@ -448,7 +448,7 @@ export function KPIsPage() {
                 <Tabs defaultValue="traditional" className="space-y-6">
                   <div className="flex justify-between items-center">
                     <TabsList className="grid w-full max-w-2xl grid-cols-5">
-                      <TabsTrigger value="traditional">Traditional</TabsTrigger>
+                      <TabsTrigger value="traditional">KPIs</TabsTrigger>
                       <TabsTrigger value="b-corp">B Corp</TabsTrigger>
                       <TabsTrigger value="dashboard">Goals</TabsTrigger>
                       <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -589,51 +589,21 @@ export function KPIsPage() {
                   </TabsContent>
 
                   <TabsContent value="b-corp" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {bCorpKPIsData?.success && bCorpKPIsData.kpis[selectedMainCategory] && 
-                        (bCorpKPIsData.kpis[selectedMainCategory] as KpiDefinition[]).map((kpi) => (
-                        <Card key={kpi.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start">
-                              <div className="space-y-1">
-                                <CardTitle className="text-base">{kpi.kpiName}</CardTitle>
-                              </div>
-                              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                                {kpi.unit}
-                              </span>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <CardDescription className="text-sm leading-relaxed line-clamp-2">
-                              {kpi.description}
-                            </CardDescription>
-                            
-                            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                              <strong>Method:</strong> {kpi.formulaJson.calculation_type}
-                            </div>
-                            
-                            <Button 
-                              onClick={() => handleSetGoal(kpi)}
-                              size="sm" 
-                              className="w-full"
-                              data-testid={`button-set-goal-${kpi.id}`}
-                            >
-                              <Target className="w-4 h-4 mr-2" />
-                              Set Goal
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                    {(!bCorpKPIsData?.success || !bCorpKPIsData.kpis[selectedMainCategory] || (bCorpKPIsData.kpis[selectedMainCategory] as KpiDefinition[]).length === 0) && (
-                      <Card className="bg-gray-50">
-                        <CardContent className="p-8 text-center">
-                          <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No B Corp KPIs</h3>
-                          <p className="text-gray-600">No B Corp KPIs available for {selectedMainCategory} category.</p>
-                        </CardContent>
-                      </Card>
-                    )}
+                    <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
+                      <CardContent className="p-12 text-center">
+                        <div className="w-20 h-20 bg-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center">
+                          <span className="text-3xl text-white">🚀</span>
+                        </div>
+                        <h3 className="text-2xl font-semibold text-gray-900 mb-4">B Corp KPIs Coming Soon</h3>
+                        <p className="text-gray-600 text-lg mb-6 max-w-2xl mx-auto">
+                          We're developing a comprehensive set of B Corp certification metrics specifically tailored for {selectedMainCategory} sustainability reporting.
+                        </p>
+                        <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                          <Clock className="w-4 h-4 mr-2" />
+                          Feature in Development
+                        </div>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
 
                   <TabsContent value="dashboard" className="space-y-6">
@@ -814,17 +784,88 @@ export function KPIsPage() {
                       {/* Performance Comparison */}
                       <Card>
                         <CardHeader>
-                          <CardTitle>Category Performance</CardTitle>
-                          <CardDescription>Average progress across all categories</CardDescription>
+                          <CardTitle>
+                            {selectedMainCategory === 'Environmental' ? 'Environmental KPI Performance' : 'Category Performance'}
+                          </CardTitle>
+                          <CardDescription>
+                            {selectedMainCategory === 'Environmental' 
+                              ? 'Average progress across Carbon, Water, Waste & Energy KPIs' 
+                              : 'Average progress across all categories'
+                            }
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={Object.keys(categoryColors).map(category => ({
-                              category: category.length > 15 ? category.substring(0, 12) + '...' : category,
-                              fullCategory: category,
-                              progress: 0, // Real data will show actual progress
-                              goals: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === category).length
-                            }))}>
+                            <BarChart data={
+                              selectedMainCategory === 'Environmental' ? (
+                                // Environmental subcategory data
+                                (() => {
+                                  const categoryKPIs = definitions.filter((kpi: KpiDefinition) => kpi.kpiCategory === selectedMainCategory);
+                                  
+                                  const subcategoryGoals = {
+                                    Carbon: (kpiGoals || []).filter((goal: KpiGoalData) => 
+                                      goal.category === selectedMainCategory && 
+                                      (goal.name.toLowerCase().includes('carbon') || goal.name.toLowerCase().includes('emissions'))
+                                    ),
+                                    Water: (kpiGoals || []).filter((goal: KpiGoalData) => 
+                                      goal.category === selectedMainCategory && 
+                                      goal.name.toLowerCase().includes('water')
+                                    ),
+                                    Waste: (kpiGoals || []).filter((goal: KpiGoalData) => 
+                                      goal.category === selectedMainCategory && 
+                                      goal.name.toLowerCase().includes('waste')
+                                    ),
+                                    Energy: (kpiGoals || []).filter((goal: KpiGoalData) => 
+                                      goal.category === selectedMainCategory && 
+                                      (goal.name.toLowerCase().includes('energy') || goal.name.toLowerCase().includes('renewable'))
+                                    )
+                                  };
+
+                                  return [
+                                    { 
+                                      category: 'Carbon', 
+                                      fullCategory: 'Carbon KPIs',
+                                      progress: subcategoryGoals.Carbon.length > 0 
+                                        ? Math.round(subcategoryGoals.Carbon.reduce((acc, goal) => acc + goal.progress, 0) / subcategoryGoals.Carbon.length)
+                                        : 0,
+                                      goals: subcategoryGoals.Carbon.length
+                                    },
+                                    { 
+                                      category: 'Water', 
+                                      fullCategory: 'Water KPIs',
+                                      progress: subcategoryGoals.Water.length > 0 
+                                        ? Math.round(subcategoryGoals.Water.reduce((acc, goal) => acc + goal.progress, 0) / subcategoryGoals.Water.length)
+                                        : 0,
+                                      goals: subcategoryGoals.Water.length
+                                    },
+                                    { 
+                                      category: 'Waste', 
+                                      fullCategory: 'Waste KPIs',
+                                      progress: subcategoryGoals.Waste.length > 0 
+                                        ? Math.round(subcategoryGoals.Waste.reduce((acc, goal) => acc + goal.progress, 0) / subcategoryGoals.Waste.length)
+                                        : 0,
+                                      goals: subcategoryGoals.Waste.length
+                                    },
+                                    { 
+                                      category: 'Energy', 
+                                      fullCategory: 'Energy KPIs',
+                                      progress: subcategoryGoals.Energy.length > 0 
+                                        ? Math.round(subcategoryGoals.Energy.reduce((acc, goal) => acc + goal.progress, 0) / subcategoryGoals.Energy.length)
+                                        : 0,
+                                      goals: subcategoryGoals.Energy.length
+                                    }
+                                  ].filter(item => item.goals > 0); // Only show subcategories with goals
+                                })()
+                              ) : (
+                                // Default data for other categories
+                                Object.keys(categoryColors).map(category => ({
+                                  category: category.length > 15 ? category.substring(0, 12) + '...' : category,
+                                  fullCategory: category,
+                                  progress: 0, // Real data will show actual progress
+                                  goals: (kpiGoals || []).filter((goal: KpiGoalData) => goal.category === category).length
+                                }))
+                              )
+                            }>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="category" angle={-45} textAnchor="end" height={80} />
                               <YAxis />
