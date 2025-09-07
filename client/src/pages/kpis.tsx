@@ -967,6 +967,7 @@ export function KPIsPage() {
                               </Card>
                             );
                           })}
+                        </div>
                       </div>
                     )}
                   </TabsContent>
