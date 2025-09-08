@@ -647,6 +647,33 @@
       line-height: 1.5;
     }
 
+    /* Product Image Styling */
+    .product-image-container {
+      text-align: center;
+      margin: 30px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .product-image {
+      max-width: 200px;
+      max-height: 200px;
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 2px solid var(--avallen-green);
+    }
+    
+    .product-image-caption {
+      margin-top: 12px;
+      font-size: 10pt;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
     /* Utility Classes */
     .text-center { text-align: center; }
     .text-right { text-align: right; }
@@ -676,13 +703,19 @@
       </div>
     </div>
 
-    <div style="text-align: center; margin-top: 60px;">
+    <div style="text-align: center; margin-top: 40px;">
       <h1 style="font-size: 28pt; color: var(--avallen-green); margin-bottom: 20px;">
         {{PRODUCT_NAME}}
       </h1>
-      <p style="font-size: 14pt; color: var(--text-secondary); margin-bottom: 40px;">
+      <p style="font-size: 14pt; color: var(--text-secondary); margin-bottom: 30px;">
         Environmental Impact Assessment
       </p>
+      
+      <!-- Product Image -->
+      <div class="product-image-container">
+        <img src="{{PRODUCT_IMAGE_URL}}" alt="{{PRODUCT_NAME}}" class="product-image" />
+        <div class="product-image-caption">{{PRODUCT_NAME}} - Subject of Environmental Assessment</div>
+      </div>
       
       <div class="results-box">
         <h3>Key Environmental Impact Results</h3>
