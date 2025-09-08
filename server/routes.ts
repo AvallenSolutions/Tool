@@ -8882,6 +8882,384 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     }
   });
 
+  // Generate LCA report for selected products
+  app.post('/api/reports/generate-lca', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { productIds } = req.body;
+      
+      if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+        return res.status(400).json({ error: 'Product IDs array is required' });
+      }
+
+      // Generate a unique job ID for the LCA report
+      const jobId = `lca_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Create initial report record
+      const { reports } = await import('@shared/schema');
+      
+      const reportData = {
+        companyId: company.id,
+        reportType: 'lca',
+        reportingPeriodStart: company.currentReportingPeriodStart,
+        reportingPeriodEnd: company.currentReportingPeriodEnd,
+        status: 'generating',
+        jobId,
+        totalScope1: '0',
+        totalScope2: '0', 
+        totalScope3: '0',
+        totalWaterUsage: '0',
+        totalWasteGenerated: '0'
+      };
+
+      const [newReport] = await db
+        .insert(reports)
+        .values(reportData)
+        .returning();
+
+      // Start LCA report generation with progress tracking
+      const progressKey = `lca_progress_${newReport.id}`;
+      
+      setTimeout(async () => {
+        try {
+          console.log(`🧮 Starting LCA report generation for report ${newReport.id}, products:`, productIds);
+          
+          // Initialize progress tracking
+          (global as any)[progressKey] = { 
+            reportId: newReport.id,
+            progress: 0, 
+            stage: 'Initializing LCA report generation...',
+            startTime: Date.now(),
+            completed: false,
+            error: false
+          };
+          console.log(`🧮 Initialized LCA progress for report ${newReport.id}`);
+          
+          // Step 1: Fetch selected products (20% progress)
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 20, stage: 'Fetching selected products...' };
+          console.log(`🧮 LCA Report ${newReport.id}: Fetching selected products... (20%)`);
+          
+          const { products } = await import('@shared/schema');
+          const { eq, inArray } = await import('drizzle-orm');
+          
+          const selectedProducts = await db
+            .select()
+            .from(products)
+            .where(inArray(products.id, productIds.map(id => parseInt(id))));
+          
+          if (selectedProducts.length !== productIds.length) {
+            throw new Error(`Some products not found. Expected ${productIds.length}, found ${selectedProducts.length}`);
+          }
+
+          // Step 2: Calculate aggregated LCA data (50% progress)
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 50, stage: 'Calculating environmental impacts...' };
+          console.log(`🧮 LCA Report ${newReport.id}: Calculating environmental impacts... (50%)`);
+          
+          const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
+          
+          let totalCarbon = 0;
+          let totalWater = 0; 
+          let totalWaste = 0;
+          const productResults = [];
+
+          for (const product of selectedProducts) {
+            // Use stored environmental data for consistency
+            const carbonFootprint = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
+            const waterFootprint = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
+            const wasteFootprint = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
+            const annualVolume = product.annualProductionVolume ? parseFloat(product.annualProductionVolume.toString()) : 1;
+
+            // Calculate total impacts based on annual production volume
+            const productTotalCarbon = carbonFootprint * annualVolume;
+            const productTotalWater = waterFootprint * annualVolume;
+            const productTotalWaste = wasteFootprint * annualVolume;
+
+            totalCarbon += productTotalCarbon;
+            totalWater += productTotalWater;
+            totalWaste += productTotalWaste;
+
+            productResults.push({
+              id: product.id,
+              name: product.name,
+              sku: product.sku || '',
+              volume: product.volume,
+              type: product.type,
+              description: product.description,
+              annualProductionVolume: annualVolume,
+              productionUnit: product.productionUnit || 'units',
+              bottleWeight: product.bottleWeight ? parseFloat(product.bottleWeight.toString()) : 0,
+              labelWeight: product.labelWeight ? parseFloat(product.labelWeight.toString()) : 0,
+              bottleMaterial: product.bottleMaterial || 'glass',
+              labelMaterial: product.labelMaterial || 'paper',
+              ingredients: product.ingredients || [],
+              carbonFootprint: carbonFootprint,
+              waterFootprint: waterFootprint, 
+              wasteFootprint: wasteFootprint,
+              totalCarbonFootprint: productTotalCarbon,
+              totalWaterFootprint: productTotalWater,
+              totalWasteFootprint: productTotalWaste
+            });
+
+            console.log(`🧮 Product ${product.name}: ${productTotalCarbon}kg CO₂e, ${productTotalWater}L water, ${productTotalWaste}kg waste (annual)`);
+          }
+
+          // Step 3: Generate PDF report (80% progress)
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 80, stage: 'Generating PDF report...' };
+          console.log(`🧮 LCA Report ${newReport.id}: Generating PDF report... (80%)`);
+          
+          const { UnifiedPDFService } = await import('./services/UnifiedPDFService');
+          
+          const lcaReportData = {
+            company: {
+              name: company.companyName,
+              industry: company.industryType || 'Beverages',
+              size: company.companySize || 'SME',
+              address: company.address,
+              country: company.country,
+              website: company.website,
+              reportingPeriodStart: company.currentReportingPeriodStart,
+              reportingPeriodEnd: company.currentReportingPeriodEnd
+            },
+            products: productResults,
+            aggregatedResults: {
+              totalCarbonFootprint: totalCarbon,
+              totalWaterFootprint: totalWater,
+              totalWasteFootprint: totalWaste,
+              productCount: selectedProducts.length
+            },
+            lcaResults: {
+              totalCarbonFootprint: totalCarbon / 1000, // Convert to tonnes
+              totalWaterFootprint: totalWater,
+              impactsByCategory: [
+                {
+                  category: 'Carbon Footprint',
+                  impact: totalCarbon / 1000,
+                  unit: 'tonnes CO₂e'
+                },
+                {
+                  category: 'Water Footprint', 
+                  impact: totalWater,
+                  unit: 'litres'
+                },
+                {
+                  category: 'Waste Generated',
+                  impact: totalWaste / 1000,
+                  unit: 'tonnes'
+                }
+              ],
+              calculationDate: new Date().toISOString(),
+              systemName: 'Avallen Sustainability Platform',
+              systemId: `lca_${newReport.id}`
+            }
+          };
+
+          const pdfService = UnifiedPDFService.getInstance();
+          const pdfBuffer = await pdfService.generateLCAPDF(lcaReportData as any);
+          
+          // Store PDF in database or file system (simplified for now)
+          const fs = await import('fs');
+          const path = await import('path');
+          const reportsDir = path.join(process.cwd(), 'generated_reports');
+          
+          // Ensure directory exists
+          if (!fs.existsSync(reportsDir)) {
+            fs.mkdirSync(reportsDir, { recursive: true });
+          }
+          
+          const pdfPath = path.join(reportsDir, `lca_report_${newReport.id}.pdf`);
+          fs.writeFileSync(pdfPath, pdfBuffer);
+          
+          console.log(`🧮 LCA PDF generated: ${pdfPath}`);
+
+          // Step 4: Finalize report (100% progress)
+          (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 100, stage: 'LCA report generation completed successfully' };
+          console.log(`🧮 LCA Report ${newReport.id}: Generation completed successfully (100%)`);
+          
+          // Update report in database
+          await db
+            .update(reports)
+            .set({ 
+              status: 'completed',
+              updatedAt: new Date(),
+              totalScope1: '0', // LCA reports don't use scope categories
+              totalScope2: '0',
+              totalScope3: totalCarbon.toString(),
+              totalWaterUsage: Math.round(totalWater).toString(),
+              totalWasteGenerated: Math.round(totalWaste).toString(),
+              totalCarbonFootprint: (totalCarbon / 1000).toString(), // Convert to tonnes
+              filePath: pdfPath
+            })
+            .where(eq(reports.id, newReport.id));
+            
+          // Mark as completed
+          (global as any)[progressKey] = { 
+            ...(global as any)[progressKey], 
+            progress: 100, 
+            stage: 'LCA report generation completed successfully',
+            completed: true,
+            completedAt: Date.now(),
+            pdfPath: pdfPath
+          };
+          
+          // Clean up progress after 2 minutes
+          setTimeout(() => {
+            console.log(`🧮 Cleaning up LCA progress data for report ${newReport.id}`);
+            delete (global as any)[progressKey];
+          }, 120000);
+          
+        } catch (error) {
+          console.error(`🧮 LCA Report ${newReport.id}: Generation failed:`, error);
+          
+          // Update progress with error
+          (global as any)[progressKey] = { 
+            ...(global as any)[progressKey], 
+            progress: 0, 
+            stage: `Error: ${(error as Error).message}`,
+            error: true,
+            completed: true
+          };
+          
+          await db
+            .update(reports)
+            .set({ 
+              status: 'failed',
+              updatedAt: new Date()
+            })
+            .where(eq(reports.id, newReport.id));
+            
+          // Clean up progress after 30 seconds
+          setTimeout(() => {
+            delete (global as any)[progressKey];
+          }, 30000);
+        }
+      }, 1000); // Start processing after 1 second
+
+      res.json({ 
+        success: true, 
+        reportId: newReport.id,
+        jobId: jobId,
+        report: newReport,
+        message: 'LCA report generation started'
+      });
+    } catch (error) {
+      console.error('Error generating LCA report:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get LCA report progress
+  app.get('/api/reports/:id/lca-progress', async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const progressKey = `lca_progress_${reportId}`;
+      
+      console.log(`🧮 LCA Progress API called for report ${reportId}`);
+      const progress = (global as any)[progressKey] || null;
+      
+      if (!progress) {
+        // Check if the report exists and is completed in the database
+        const { reports } = await import('@shared/schema');
+        const [report] = await db
+          .select()
+          .from(reports)
+          .where(eq(reports.id, reportId));
+        
+        if (report && report.reportType === 'lca') {
+          if (report.status === 'completed') {
+            return res.json({
+              reportId: reportId,
+              progress: 100,
+              stage: 'LCA report generation completed successfully',
+              completed: true,
+              error: false,
+              pdfPath: report.filePath
+            });
+          } else if (report.status === 'failed') {
+            return res.json({
+              reportId: reportId,
+              progress: 0,
+              stage: 'LCA report generation failed',
+              completed: true,
+              error: true
+            });
+          }
+        }
+        
+        return res.json({ 
+          progress: null,
+          message: 'No active LCA generation process found' 
+        });
+      }
+      
+      res.json({
+        reportId: progress.reportId,
+        progress: progress.progress,
+        stage: progress.stage,
+        completed: progress.completed || false,
+        error: progress.error || false,
+        startTime: progress.startTime,
+        completedAt: progress.completedAt || null,
+        elapsedTime: Date.now() - progress.startTime,
+        pdfPath: progress.pdfPath || null
+      });
+    } catch (error) {
+      console.error('Error getting LCA report progress:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Download LCA report PDF
+  app.get('/api/reports/:id/download-lca', async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      
+      // Get report from database
+      const { reports } = await import('@shared/schema');
+      const [report] = await db
+        .select()
+        .from(reports)
+        .where(eq(reports.id, reportId));
+      
+      if (!report || report.reportType !== 'lca') {
+        return res.status(404).json({ error: 'LCA report not found' });
+      }
+      
+      if (report.status !== 'completed' || !report.filePath) {
+        return res.status(400).json({ error: 'LCA report not ready for download' });
+      }
+      
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      if (!fs.existsSync(report.filePath)) {
+        return res.status(404).json({ error: 'LCA report file not found' });
+      }
+      
+      const fileName = `LCA_Report_${report.id}_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      const pdfBuffer = fs.readFileSync(report.filePath);
+      res.send(pdfBuffer);
+      
+    } catch (error) {
+      console.error('Error downloading LCA report:', error);
+      res.status(500).json({ error: 'Failed to download LCA report' });
+    }
+  });
+
   // === DYNAMIC REPORT BUILDER API ENDPOINTS ===
   
   // Company Story Management
