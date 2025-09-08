@@ -9328,8 +9328,18 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               
               console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (includes all components), Water=${totalWater.toFixed(1)}L (excludes dilution), Waste=${totalWaste.toFixed(3)}kg`);
               
-            } catch (error) {
-              console.error(`❌ Comprehensive LCA calculation failed for ${product.name}:`, error);
+              } catch (fallbackError) {
+                console.error(`❌ Fallback LCA calculation failed for ${product.name}:`, fallbackError);
+                // Use stored footprints as final fallback
+                totalCO2e = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
+                totalWater = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
+                totalWaste = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
+              }
+            } // End of outer lcaError catch
+            
+            // Final fallback outside all try-catch blocks
+            if (totalCO2e === 0 && totalWater === 0 && totalWaste === 0) {
+              console.warn(`⚠️ All LCA calculations failed for ${product.name}, using stored values`);
               // Fallback to stored values
               totalCO2e = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
               totalWater = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
