@@ -30,7 +30,7 @@ class PDFGenerator {
       const htmlTemplate = await this.loadTemplate();
       
       // Inject data into template
-      const htmlContent = this.injectDataIntoTemplate(htmlTemplate, data);
+      const htmlContent = await this.injectDataIntoTemplate(htmlTemplate, data);
       
       // Launch Puppeteer with optimized settings
       browser = await puppeteer.launch({
@@ -112,9 +112,9 @@ class PDFGenerator {
    * Inject data into HTML template using string replacement
    * @param {string} template - HTML template
    * @param {Object} data - Data to inject
-   * @returns {string} HTML with data injected
+   * @returns {Promise<string>} HTML with data injected
    */
-  injectDataIntoTemplate(template, data) {
+  async injectDataIntoTemplate(template, data) {
     console.log('🎯 Injecting data into template...');
     
     const primaryProduct = data.products?.[0] || {};
