@@ -9098,7 +9098,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               totalWaterUsage: Math.round(totalWater).toString(),
               totalWasteGenerated: Math.round(totalWaste).toString(),
               totalCarbonFootprint: (totalCarbon / 1000).toString(), // Convert to tonnes
-              filePath: pdfPath
+              pdfFilePath: pdfPath
             })
             .where(eq(reports.id, newReport.id));
             
@@ -9235,14 +9235,14 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         return res.status(404).json({ error: 'LCA report not found' });
       }
       
-      if (report.status !== 'completed' || !report.filePath) {
+      if (report.status !== 'completed' || !report.pdfFilePath) {
         return res.status(400).json({ error: 'LCA report not ready for download' });
       }
       
       const fs = await import('fs');
       const path = await import('path');
       
-      if (!fs.existsSync(report.filePath)) {
+      if (!fs.existsSync(report.pdfFilePath)) {
         return res.status(404).json({ error: 'LCA report file not found' });
       }
       
@@ -9251,7 +9251,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       
-      const pdfBuffer = fs.readFileSync(report.filePath);
+      const pdfBuffer = fs.readFileSync(report.pdfFilePath);
       res.send(pdfBuffer);
       
     } catch (error) {
