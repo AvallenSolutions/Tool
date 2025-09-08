@@ -196,6 +196,10 @@ class PDFGenerator {
       '{{PACKAGING_TABLE}}': packagingTable,
       '{{IMPACT_BREAKDOWN_TABLE}}': impactBreakdownTable,
       '{{GHG_BREAKDOWN_TABLE}}': ghgBreakdownTable,
+      
+      // Phase 3: Advanced analytics placeholders
+      '{{DATA_VERIFICATION_SECTION}}': this.createDataVerificationSection(data),
+      '{{UNCERTAINTY_ANALYSIS}}': this.createUncertaintyAnalysisSection(data),
 
       // Facility info
       '{{FACILITY_LOCATION}}': company.address || 'Primary Production Facility',
@@ -337,11 +341,15 @@ class PDFGenerator {
   }
   
   /**
-   * Create GHG breakdown table HTML with ISO 14064-1 compliant gas analysis
+   * Create GHG breakdown table HTML with Phase 3 advanced gas-by-gas analysis
    */
   createGHGBreakdownTable(data) {
-    // For Phase 2, create a structured GHG breakdown based on typical ingredient emissions
-    // This will be enhanced in future phases with actual OpenLCA gas-by-gas data
+    // Phase 3: Advanced GHG analysis with authentic gas-by-gas data and verification
+    if (data.phase3Analytics?.advancedGHGBreakdown) {
+      return this.createAdvancedGHGTable(data.phase3Analytics.advancedGHGBreakdown);
+    }
+    
+    // Fallback to Phase 2 implementation for backward compatibility
     
     const primaryProduct = data.products?.[0] || {};
     const carbonPerUnit = ((data.lcaResults?.totalCarbonFootprint || 0) * 1000) / (primaryProduct.annualProductionVolume || 1);
@@ -400,9 +408,198 @@ class PDFGenerator {
           <strong>Total GHG Impact:</strong> ${carbonPerUnit.toFixed(3)} kg CO₂eq per unit
         </p>
         <p style="font-size: 9pt; color: #64748b; margin: 4px 0 0 0;">
-          Based on IPCC AR5 GWP factors (100-year horizon) • ISO 14064-1 compliant methodology
+          Phase 2 estimate • Upgrade to Phase 3 for advanced gas-by-gas analysis
         </p>
       </div>`;
+  }
+  
+  /**
+   * Phase 3: Create advanced GHG table with authentic gas analysis, uncertainty, and benchmarks
+   */
+  createAdvancedGHGTable(advancedBreakdown) {
+    const { gasAnalysis, dataQualityScore, uncertaintyAssessment, industryComparison, complianceLevel } = advancedBreakdown;
+    
+    let html = `
+      <div class="phase3-analytics-header">
+        <h4 style="color: #0d9488; margin-bottom: 12px;">🧬 Phase 3: Advanced Gas-by-Gas Analysis</h4>
+        <div class="analytics-badges">
+          <span class="quality-badge quality-${this.getQualityLevel(dataQualityScore)}">Data Quality: ${dataQualityScore}%</span>
+          <span class="uncertainty-badge">Uncertainty: ±${uncertaintyAssessment.overallUncertainty}%</span>
+          <span class="benchmark-badge">Industry: ${industryComparison.percentile}th percentile</span>
+        </div>
+      </div>
+      
+      <div class="advanced-ghg-breakdown">`;    
+    
+    // Gas-by-gas analysis with uncertainty
+    gasAnalysis.forEach(gas => {
+      html += `
+        <div class="advanced-gas-item">
+          <div class="gas-info">
+            <div class="gas-name">${gas.gasName} (${gas.chemicalFormula})</div>
+            <div class="gas-details">
+              <span class="data-quality-indicator ${gas.dataQuality}">${gas.dataQuality}</span> |
+              ${gas.massKg.toFixed(4)} kg × GWP ${gas.gwpFactor} |
+              ${gas.contributionPercent}% of total
+            </div>
+            <div class="uncertainty-info">
+              Uncertainty: ${((gas.uncertaintyRange.max - gas.uncertaintyRange.min) / 2 * 100).toFixed(1)}% 
+              (${gas.uncertaintyRange.confidenceLevel}% confidence)
+            </div>
+          </div>
+          <div class="gas-impact">
+            <div class="co2e-value">${gas.co2eKg.toFixed(3)}</div>
+            <div class="co2e-unit">kg CO₂eq</div>
+            <div class="uncertainty-range">±${(gas.uncertaintyRange.max - gas.uncertaintyRange.min).toFixed(3)}</div>
+          </div>
+        </div>`;
+    });
+    
+    // Summary section with benchmarks and compliance
+    html += `
+      </div>
+      
+      <div class="phase3-summary">
+        <div class="benchmark-comparison">
+          <h5>Industry Benchmark Comparison</h5>
+          <p><strong>Your Product:</strong> ${advancedBreakdown.totalCO2eKg.toFixed(3)} kg CO₂eq per unit</p>
+          <p><strong>Industry Average:</strong> ${industryComparison.industryAverage} kg CO₂eq (${industryComparison.benchmarkCategory})</p>
+          <p><strong>Performance:</strong> ${industryComparison.percentile}th percentile - ${
+            industryComparison.percentile >= 80 ? 'Excellent performance' :
+            industryComparison.percentile >= 60 ? 'Above average' :
+            industryComparison.percentile >= 40 ? 'Average performance' : 'Below average - improvement opportunities'
+          }</p>
+        </div>
+        
+        <div class="uncertainty-analysis">
+          <h5>Uncertainty Assessment</h5>
+          <p><strong>Overall Uncertainty:</strong> ±${uncertaintyAssessment.overallUncertainty}% (${uncertaintyAssessment.confidenceLevel}% confidence)</p>
+          <p><strong>Key Uncertainty Sources:</strong></p>
+          <ul>
+            ${uncertaintyAssessment.keyUncertainties.map(source => `<li>${source}</li>`).join('')}
+          </ul>
+        </div>
+        
+        <div class="compliance-status">
+          <h5>Standards Compliance</h5>
+          <div class="compliance-indicators">
+            <span class="compliance-indicator ${complianceLevel.iso14064 ? 'compliant' : 'non-compliant'}">
+              ISO 14064-1: ${complianceLevel.iso14064 ? '✓' : '✗'}
+            </span>
+            <span class="compliance-indicator ${complianceLevel.ghgProtocol ? 'compliant' : 'non-compliant'}">
+              GHG Protocol: ${complianceLevel.ghgProtocol ? '✓' : '✗'}
+            </span>
+            <span class="compliance-indicator ${complianceLevel.ipccCompliant ? 'compliant' : 'non-compliant'}">
+              IPCC Compliant: ${complianceLevel.ipccCompliant ? '✓' : '✗'}
+            </span>
+          </div>
+        </div>
+      </div>`;
+    
+    return html;
+  }
+  
+  /**
+   * Get quality level based on score for styling
+   */
+  getQualityLevel(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 75) return 'good';
+    if (score >= 60) return 'fair';
+    return 'poor';
+  }
+  
+  /**
+   * Phase 3: Create data verification section
+   */
+  createDataVerificationSection(data) {
+    if (!data.phase3Analytics?.dataVerification) {
+      return '<div class="verification-placeholder">Phase 3 data verification available with advanced analytics upgrade</div>';
+    }
+    
+    const verification = data.phase3Analytics.dataVerification;
+    
+    return `
+      <div class="data-verification-section">
+        <h4>📊 Data Verification & Quality Assessment</h4>
+        <div class="verification-summary">
+          <div class="score-indicator score-${this.getScoreLevel(verification.validationScore)}">
+            Validation Score: ${verification.validationScore}%
+          </div>
+          <div class="completeness-indicator">
+            Data Completeness: ${verification.dataCompletenesss}%
+          </div>
+          <div class="accuracy-indicator accuracy-${verification.accuracyAssessment.level}">
+            Accuracy Level: ${verification.accuracyAssessment.level.toUpperCase()} (${verification.accuracyAssessment.confidence}% confidence)
+          </div>
+        </div>
+        
+        ${verification.issues.length > 0 ? `
+          <div class="validation-issues">
+            <h5>Validation Results:</h5>
+            ${verification.issues.slice(0, 3).map(issue => `
+              <div class="issue-item severity-${issue.severity}">
+                <strong>${issue.category}:</strong> ${issue.message}
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p class="no-issues">✅ All validation checks passed successfully</p>'}
+        
+        ${verification.recommendations.length > 0 ? `
+          <div class="recommendations">
+            <h5>Recommendations:</h5>
+            <ul>
+              ${verification.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+      </div>`;
+  }
+  
+  /**
+   * Phase 3: Create uncertainty analysis section
+   */
+  createUncertaintyAnalysisSection(data) {
+    if (!data.phase3Analytics?.advancedGHGBreakdown?.uncertaintyAssessment) {
+      return '<div class="uncertainty-placeholder">Advanced uncertainty analysis available with Phase 3 upgrade</div>';
+    }
+    
+    const uncertainty = data.phase3Analytics.advancedGHGBreakdown.uncertaintyAssessment;
+    
+    return `
+      <div class="uncertainty-analysis-section">
+        <h4>🎯 Uncertainty Analysis</h4>
+        <div class="uncertainty-summary">
+          <p>The overall uncertainty of the carbon footprint calculation is estimated at 
+          <strong>±${uncertainty.overallUncertainty}%</strong> with a confidence level of 
+          <strong>${uncertainty.confidenceLevel}%</strong>.</p>
+        </div>
+        
+        <div class="uncertainty-interpretation">
+          <p><strong>Interpretation:</strong> ${
+            uncertainty.overallUncertainty <= 10 ? 'Very high precision - results are highly reliable for decision-making.' :
+            uncertainty.overallUncertainty <= 20 ? 'Good precision - results are suitable for most applications.' :
+            uncertainty.overallUncertainty <= 35 ? 'Moderate precision - consider improving data quality for critical decisions.' :
+            'Lower precision - significant data quality improvements recommended.'
+          }</p>
+        </div>
+        
+        <div class="methodology-note">
+          <p><strong>Methodology:</strong> Uncertainty calculated using Monte Carlo error propagation methods 
+          following ISO 14040 guidelines. Individual component uncertainties combined using statistical 
+          methods to estimate overall system uncertainty.</p>
+        </div>
+      </div>`;
+  }
+  
+  /**
+   * Get score level for styling
+   */
+  getScoreLevel(score) {
+    if (score >= 85) return 'excellent';
+    if (score >= 70) return 'good';
+    if (score >= 55) return 'fair';
+    return 'poor';
   }
 }
 
