@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag, Factory, Database, Globe, Upload } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag, Factory, Database, Globe, Upload, Rocket } from "lucide-react";
 import avallenLogo from "@/assets/avallen-logo.png";
 
 export default function Sidebar() {
@@ -233,6 +233,55 @@ export default function Sidebar() {
               <span className="font-body font-medium">Products</span>
             </Button>
           </li>
+          {/* KPIs & Goals Section with Sub-items */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location.startsWith('/app/facility-updates') || location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
+              }`}
+              onClick={() => setKpiGoalsExpanded(!kpiGoalsExpanded)}
+            >
+              <Factory className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium flex-1 text-left">KPIs & Goals</span>
+              {kpiGoalsExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </Button>
+            
+            {/* KPI & Goals Sub-items */}
+            {kpiGoalsExpanded && (
+              <ul className="mt-2 ml-4 space-y-1">
+                {kpiGoalsSubItems.map((subItem) => {
+                  const SubIcon = subItem.icon;
+                  const isSubActive = location === subItem.path;
+                  
+                  return (
+                    <li key={subItem.path}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
+                          isSubActive
+                            ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                            : "text-white/80 hover:bg-white/10 hover:text-white"
+                        }`}
+                        onClick={() => navigate(subItem.path)}
+                      >
+                        <SubIcon className="w-4 h-4 mr-2" />
+                        <span className="font-body text-sm">{subItem.label}</span>
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </li>
+
           {/* Reports Section with Sub-items */}
           <li>
             <Button
@@ -298,55 +347,6 @@ export default function Sidebar() {
             </Button>
           </li>
 
-          {/* Operations Section with Sub-items */}
-          <li>
-            <Button
-              variant="ghost"
-              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
-                location.startsWith('/app/facility-updates') || location.startsWith('/app/kpis') || location.startsWith('/app/initiatives')
-                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
-                  : "text-white hover:bg-white/10"
-              }`}
-              onClick={() => setKpiGoalsExpanded(!kpiGoalsExpanded)}
-            >
-              <Factory className="w-5 h-5 mr-3" />
-              <span className="font-body font-medium flex-1 text-left">KPIs & Goals</span>
-              {kpiGoalsExpanded ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </Button>
-            
-            {/* KPI & Goals Sub-items */}
-            {kpiGoalsExpanded && (
-              <ul className="mt-2 ml-4 space-y-1">
-                {kpiGoalsSubItems.map((subItem) => {
-                  const SubIcon = subItem.icon;
-                  const isSubActive = location === subItem.path;
-                  
-                  return (
-                    <li key={subItem.path}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`w-full justify-start px-3 py-2 rounded-md transition-colors ${
-                          isSubActive
-                            ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
-                            : "text-white/80 hover:bg-white/10 hover:text-white"
-                        }`}
-                        onClick={() => navigate(subItem.path)}
-                      >
-                        <SubIcon className="w-4 h-4 mr-2" />
-                        <span className="font-body text-sm">{subItem.label}</span>
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </li>
-
           {/* Supplier Network */}
           <li>
             <Button
@@ -379,6 +379,22 @@ export default function Sidebar() {
             </Button>
           </li>
 
+          {/* Coming Soon */}
+          <li>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
+                location === "/app/coming-soon"
+                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
+                  : "text-white hover:bg-white/10"
+              }`}
+              onClick={() => navigate("/app/coming-soon")}
+            >
+              <Rocket className="w-5 h-5 mr-3" />
+              <span className="font-body font-medium">Coming Soon...</span>
+            </Button>
+          </li>
+
           {/* Settings */}
           <li>
             <Button
@@ -392,22 +408,6 @@ export default function Sidebar() {
             >
               <Settings className="w-5 h-5 mr-3" />
               <span className="font-body font-medium">Settings</span>
-            </Button>
-          </li>
-
-          {/* Test Runner */}
-          <li>
-            <Button
-              variant="ghost"
-              className={`w-full justify-start px-4 py-3 rounded-lg transition-colors ${
-                location === "/app/test"
-                  ? "bg-white text-green-600 hover:bg-gray-100 shadow-lg"
-                  : "text-white hover:bg-white/10"
-              }`}
-              onClick={() => navigate("/app/test")}
-            >
-              <TestTube className="w-5 h-5 mr-3" />
-              <span className="font-body font-medium">Test Runner</span>
             </Button>
           </li>
           
