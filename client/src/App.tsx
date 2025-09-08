@@ -52,6 +52,7 @@ import { KPIsPage } from "@/pages/kpis";
 import InitiativesPage from "@/pages/initiatives";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
+import ComingSoon from "@/pages/ComingSoon";
 // Monthly facility updates now integrated into Production Facility popup
 // Company story now integrated into Company page
 // Initiatives functionality now integrated into Report Builder and SMART Goals
@@ -195,6 +196,7 @@ function Router() {
       <Route path="/app/admin/supplier-management" component={SupplierManagement} />
       <Route path="/app/admin/products" component={AdminProductManagement} />
       <Route path="/app/collaboration" component={CollaborationHub} />
+      <Route path="/app/coming-soon" component={ComingSoon} />
       <Route path="/app/admin/product-management" component={AdminProductManagement} />
       <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
       <Route path="/app/admin/lca-jobs" component={LCAJobsMonitoring} />
