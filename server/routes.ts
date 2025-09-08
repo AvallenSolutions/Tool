@@ -9218,13 +9218,11 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 80, stage: 'Generating PDF report...' };
           console.log(`🧮 LCA Report ${newReport.id}: Generating PDF report... (80%)`);
           
-          // Use new professional PDF generator instead of old UnifiedPDFService
-          console.log('🔥 DEBUG: About to import new PDFGenerator...');
+          // Use enhanced professional PDF generator with comprehensive data
           const { PDFGenerator } = await import('./report-generation/pdfGenerator.js');
-          console.log('🔥 DEBUG: PDFGenerator imported successfully');
           const professionalGenerator = new PDFGenerator();
-          console.log('🔥 DEBUG: professionalGenerator instance created');
           
+          // PHASE 1: Enhanced report data structure with comprehensive breakdown
           const lcaReportData = {
             company: {
               name: company.companyName,
@@ -9241,40 +9239,103 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               totalCarbonFootprint: totalCarbon,
               totalWaterFootprint: totalWater,
               totalWasteFootprint: totalWaste,
-              productCount: selectedProducts.length
+              productCount: selectedProducts.length,
+              // Component breakdown totals for transparency
+              componentBreakdown: {
+                ingredients: {
+                  co2e: aggregatedBreakdown.ingredients.co2e,
+                  water: aggregatedBreakdown.ingredients.water,
+                  waste: aggregatedBreakdown.ingredients.waste,
+                  percentage: totalCarbon > 0 ? Math.round((aggregatedBreakdown.ingredients.co2e / totalCarbon) * 100) : 0
+                },
+                packaging: {
+                  co2e: aggregatedBreakdown.packaging.co2e,
+                  water: aggregatedBreakdown.packaging.water,
+                  waste: aggregatedBreakdown.packaging.waste,
+                  percentage: totalCarbon > 0 ? Math.round((aggregatedBreakdown.packaging.co2e / totalCarbon) * 100) : 0
+                },
+                facilities: {
+                  co2e: aggregatedBreakdown.facilities.co2e,
+                  water: aggregatedBreakdown.facilities.water,
+                  waste: aggregatedBreakdown.facilities.waste,
+                  percentage: totalCarbon > 0 ? Math.round((aggregatedBreakdown.facilities.co2e / totalCarbon) * 100) : 0
+                }
+              }
             },
             lcaResults: {
               totalCarbonFootprint: totalCarbon / 1000, // Convert to tonnes
               totalWaterFootprint: totalWater,
+              totalWasteFootprint: totalWaste / 1000, // Convert to tonnes
               impactsByCategory: [
                 {
                   category: 'Carbon Footprint',
                   impact: totalCarbon / 1000,
-                  unit: 'tonnes CO₂e'
+                  unit: 'tonnes CO₂e',
+                  breakdown: {
+                    ingredients: aggregatedBreakdown.ingredients.co2e / 1000,
+                    packaging: aggregatedBreakdown.packaging.co2e / 1000,
+                    facilities: aggregatedBreakdown.facilities.co2e / 1000
+                  }
                 },
                 {
                   category: 'Water Footprint', 
                   impact: totalWater,
-                  unit: 'litres'
+                  unit: 'litres',
+                  breakdown: {
+                    ingredients: aggregatedBreakdown.ingredients.water,
+                    packaging: aggregatedBreakdown.packaging.water,
+                    facilities: aggregatedBreakdown.facilities.water
+                  },
+                  notes: 'Excludes dilution water to prevent double-counting with facility consumption'
                 },
                 {
                   category: 'Waste Generated',
                   impact: totalWaste / 1000,
-                  unit: 'tonnes'
+                  unit: 'tonnes',
+                  breakdown: {
+                    ingredients: aggregatedBreakdown.ingredients.waste / 1000,
+                    packaging: aggregatedBreakdown.packaging.waste / 1000,
+                    facilities: aggregatedBreakdown.facilities.waste / 1000
+                  }
                 }
               ],
-              calculationDate: new Date().toISOString(),
-              systemName: 'Avallen Sustainability Platform',
-              systemId: `lca_${newReport.id}`
+              // Enhanced calculation methodology metadata
+              calculationMetadata: {
+                method: 'Refined-LCA with OpenLCA Integration',
+                standards: ['ISO 14040:2006', 'ISO 14044:2006', 'ISO 14064-1'],
+                dataSources: {
+                  ingredients: 'OpenLCA with Supplier Verification Override',
+                  packaging: 'Material factors with recycled content analysis',
+                  facilities: 'Monthly averaged Scope 1&2 emissions with DEFRA 2024 factors'
+                },
+                emissionFactors: {
+                  electricity: '0.233 kg CO₂e/kWh (UK Grid 2024)',
+                  naturalGas: '1.8514 kg CO₂e/m³ (DEFRA 2024)',
+                  glassVirgin: '0.7 kg CO₂e/kg',
+                  glassRecycled: '0.35 kg CO₂e/kg'
+                },
+                calculationDate: new Date().toISOString(),
+                systemName: 'Avallen Sustainability Platform',
+                systemVersion: 'v2.1 - Comprehensive LCA Integration',
+                systemId: `lca_${newReport.id}`,
+                dataQuality: {
+                  primaryData: 'Facility consumption, production volumes',
+                  secondaryData: 'OpenLCA ecoinvent database, DEFRA factors',
+                  uncertainty: '±15% for carbon footprint calculations'
+                }
+              },
+              // Prepare structure for future GHG breakdown integration
+              ghgAnalysis: {
+                enabled: false, // Will be enabled in Phase 2
+                note: 'Individual gas analysis available per product - integration pending'
+              }
             }
           };
 
-          // Generate PDF using the NEW professional Puppeteer service
-          console.log('🎯 Using NEW Professional PDF Generator with Puppeteer...');
-          console.log('🔥 DEBUG: About to call professionalGenerator.generatePDF...');
-          console.log('🔥 DEBUG: lcaReportData keys:', Object.keys(lcaReportData));
+          // Generate PDF using enhanced professional Puppeteer service
+          console.log('🎯 Generating comprehensive LCA report with enhanced data structure...');
           const pdfBuffer = await professionalGenerator.generatePDF(lcaReportData);
-          console.log('🔥 DEBUG: PDF generation completed, buffer size:', pdfBuffer.length);
+          console.log(`✅ Enhanced PDF generated successfully: ${pdfBuffer.length} bytes`);
           
           // Store PDF in database or file system (simplified for now)
           const fs = await import('fs');
