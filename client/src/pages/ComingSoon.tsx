@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import Sidebar from '@/components/layout/sidebar';
+import Header from '@/components/layout/header';
+import Footer from '@/components/layout/footer';
 import { 
   Sparkles, 
   TreePine, 
@@ -25,66 +27,50 @@ import { apiRequest } from '@/lib/queryClient';
 interface FeatureRequest {
   title: string;
   description: string;
-  priority: 'Low' | 'Medium' | 'High';
 }
 
 const upcomingFeatures = [
   {
     icon: TreePine,
     title: "Biodiversity Impact Reporting",
-    description: "Comprehensive biodiversity assessment and impact measurement tools",
-    timeline: "Q2 2025",
-    priority: "High"
+    description: "Comprehensive biodiversity assessment and impact measurement tools"
   },
   {
     icon: FileBarChart,
     title: "CSRD-Compliant Metrics",
-    description: "Full Corporate Sustainability Reporting Directive compliance framework",
-    timeline: "Q1 2025",
-    priority: "High"
+    description: "Full Corporate Sustainability Reporting Directive compliance framework"
   },
   {
     icon: Target,
     title: "SBTI Alignment Module",
-    description: "Science Based Targets initiative validation and tracking system",
-    timeline: "Q2 2025",
-    priority: "High"
+    description: "Science Based Targets initiative validation and tracking system"
   },
   {
     icon: Building2,
     title: "International Standard Reporting",
-    description: "GRI, TCFD, and other international sustainability standards support",
-    timeline: "Q3 2025",
-    priority: "Medium"
+    description: "GRI, TCFD, and other international sustainability standards support"
   },
   {
     icon: Calculator,
     title: "Accounting Software Integration",
-    description: "Direct integration with Xero, QuickBooks, and other accounting platforms",
-    timeline: "Q2 2025",
-    priority: "Medium"
+    description: "Direct integration with Xero, QuickBooks, and other accounting platforms"
   },
   {
     icon: Calendar,
     title: "Monthly Reporting Cadence",
-    description: "Automated monthly sustainability reports and progress tracking",
-    timeline: "Q1 2025",
-    priority: "High"
+    description: "Automated monthly sustainability reports and progress tracking"
   },
   {
     icon: Award,
     title: "B Corp Certification Support",
-    description: "Complete B Corporation assessment and certification preparation tools",
-    timeline: "Q3 2025",
-    priority: "High"
+    description: "Complete B Corporation assessment and certification preparation tools"
   }
 ];
 
 export default function ComingSoon() {
   const [featureRequest, setFeatureRequest] = useState<FeatureRequest>({
     title: '',
-    description: '',
-    priority: 'Medium'
+    description: ''
   });
   const { toast } = useToast();
 
@@ -100,7 +86,7 @@ export default function ComingSoon() {
         title: "Feature Request Submitted!",
         description: "Thank you for your input! We'll review your suggestion and consider it for our roadmap.",
       });
-      setFeatureRequest({ title: '', description: '', priority: 'Medium' });
+      setFeatureRequest({ title: '', description: '' });
     },
     onError: () => {
       toast({
@@ -124,36 +110,28 @@ export default function ComingSoon() {
     submitFeatureRequestMutation.mutate(featureRequest);
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High':
-        return 'bg-red-500/10 text-red-600 border-red-500/20';
-      case 'Medium':
-        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-      case 'Low':
-        return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
-      default:
-        return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-lightest-gray via-white to-green-500/5">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white px-6 py-12">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-white/10 rounded-full">
-              <Rocket className="w-8 h-8 text-white" />
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-lightest-gray via-white to-green-500/5">
+          {/* Page Header */}
+          <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white px-6 py-8">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-white/10 rounded-full">
+                  <Rocket className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h1 className="text-4xl font-bold mb-4">Coming Soon...</h1>
+              <p className="text-xl text-green-100 mb-2">Exciting new features on the horizon</p>
+              <p className="text-green-200">We're constantly evolving to meet your sustainability needs</p>
             </div>
           </div>
-          <h1 className="text-4xl font-bold mb-4">Coming Soon...</h1>
-          <p className="text-xl text-green-100 mb-2">Exciting new features on the horizon</p>
-          <p className="text-green-200">We're constantly evolving to meet your sustainability needs</p>
-        </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+          <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
         {/* Upcoming Features */}
         <section>
           <div className="text-center mb-8">
@@ -174,19 +152,11 @@ export default function ComingSoon() {
                       <div className="p-3 bg-green-500/10 rounded-lg">
                         <IconComponent className="w-6 h-6 text-green-500" />
                       </div>
-                      <Badge className={getPriorityColor(feature.priority)}>
-                        {feature.priority}
-                      </Badge>
                     </div>
                     <CardTitle className="text-lg text-slate-gray">{feature.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
                     <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">
-                        {feature.timeline}
-                      </span>
-                    </div>
                   </CardContent>
                 </Card>
               );
@@ -247,27 +217,6 @@ export default function ComingSoon() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Priority Level
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {(['Low', 'Medium', 'High'] as const).map((priority) => (
-                  <Button
-                    key={priority}
-                    variant={featureRequest.priority === priority ? "default" : "outline"}
-                    className={featureRequest.priority === priority ? 
-                      "bg-green-500 hover:bg-green-600" : 
-                      "hover:bg-green-50"
-                    }
-                    onClick={() => setFeatureRequest(prev => ({ ...prev, priority }))}
-                    data-testid={`priority-${priority.toLowerCase()}`}
-                  >
-                    {priority}
-                  </Button>
-                ))}
-              </div>
-            </div>
 
             <Button
               onClick={handleSubmitFeatureRequest}
@@ -299,6 +248,9 @@ export default function ComingSoon() {
             Explore Current Features
           </Button>
         </section>
+          </div>
+        </main>
+        <Footer />
       </div>
     </div>
   );
