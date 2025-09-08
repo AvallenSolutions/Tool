@@ -9058,8 +9058,11 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           console.log(`🧮 LCA Report ${newReport.id}: Generating PDF report... (80%)`);
           
           // Use new professional PDF generator instead of old UnifiedPDFService
+          console.log('🔥 DEBUG: About to import new PDFGenerator...');
           const { PDFGenerator } = require('./report-generation/pdfGenerator.js');
+          console.log('🔥 DEBUG: PDFGenerator imported successfully');
           const professionalGenerator = new PDFGenerator();
+          console.log('🔥 DEBUG: professionalGenerator instance created');
           
           const lcaReportData = {
             company: {
@@ -9107,7 +9110,10 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
 
           // Generate PDF using the NEW professional Puppeteer service
           console.log('🎯 Using NEW Professional PDF Generator with Puppeteer...');
+          console.log('🔥 DEBUG: About to call professionalGenerator.generatePDF...');
+          console.log('🔥 DEBUG: lcaReportData keys:', Object.keys(lcaReportData));
           const pdfBuffer = await professionalGenerator.generatePDF(lcaReportData);
+          console.log('🔥 DEBUG: PDF generation completed, buffer size:', pdfBuffer.length);
           
           // Store PDF in database or file system (simplified for now)
           const fs = await import('fs');
