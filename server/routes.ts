@@ -9088,6 +9088,18 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
             .from(products)
             .where(inArray(products.id, productIds.map(id => parseInt(id))));
           
+          // CRITICAL DEBUG: Check if products have image data from database
+          console.log('🖼️ CRITICAL DEBUG - selectedProducts from database:');
+          selectedProducts.forEach(product => {
+            console.log(`  Product ${product.name}:`, {
+              id: product.id,
+              packShotUrl: product.packShotUrl, 
+              productImages: product.productImages,
+              packShotUrlType: typeof product.packShotUrl,
+              productImagesType: typeof product.productImages
+            });
+          });
+          
           if (selectedProducts.length !== productIds.length) {
             throw new Error(`Some products not found. Expected ${productIds.length}, found ${selectedProducts.length}`);
           }
