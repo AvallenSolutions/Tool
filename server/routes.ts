@@ -8972,61 +8972,198 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           let totalWater = 0; 
           let totalWaste = 0;
           const productResults = [];
+          
+          // Component breakdown aggregation
+          const aggregatedBreakdown = {
+            ingredients: { co2e: 0, water: 0, waste: 0 },
+            packaging: { co2e: 0, water: 0, waste: 0 },
+            facilities: { co2e: 0, water: 0, waste: 0 }
+          };
+
+          // Get total company production for proper facility allocation
+          const companyProducts = await db.select().from(products).where(eq(products.companyId, company.id));
+          let totalCompanyUnits = 0;
+          for (const companyProduct of companyProducts) {
+            const annualProduction = parseFloat(companyProduct.annualProductionVolume?.toString() || '0');
+            totalCompanyUnits += annualProduction;
+          }
+          console.log(`🧮 Total company production for facility allocation: ${totalCompanyUnits.toLocaleString()} units`);
 
           for (const product of selectedProducts) {
-            console.log(`🧮 Calculating LCA for product: ${product.name} (ID: ${product.id})`);
+            console.log(`🧮 Calculating comprehensive LCA for product: ${product.name} (ID: ${product.id})`);
             
             const annualVolume = product.annualProductionVolume ? parseFloat(product.annualProductionVolume.toString()) : 1;
             
-            // Calculate real-time environmental impacts using EnhancedLCACalculationService
-            let carbonFootprint = 0;
-            let waterFootprint = 0; 
-            let wasteFootprint = 0;
+            // PHASE 1: Use comprehensive refined-LCA calculation logic instead of simple EnhancedLCACalculationService
+            let totalCO2e = 0;
+            let totalWater = 0;
+            let totalWaste = 0;
+            
+            const breakdown = {
+              ingredients: { co2e: 0, water: 0, waste: 0 },
+              packaging: { co2e: 0, water: 0, waste: 0 },
+              facilities: { co2e: 0, water: 0, waste: 0 },
+              dilutionRecorded: { amount: 0, unit: '', excluded: true }
+            };
             
             try {
-              // Use the enhanced calculation service for accurate impacts
-              const lcaInputs = {
-                ingredients: product.ingredients || [],
-                packaging: {
-                  bottleWeight: product.bottleWeight ? parseFloat(product.bottleWeight.toString()) : 0,
-                  bottleMaterial: product.bottleMaterial || 'glass',
-                  labelWeight: product.labelWeight ? parseFloat(product.labelWeight.toString()) : 0,
-                  labelMaterial: product.labelMaterial || 'paper'
-                },
-                productionProcesses: {},
-                transport: {},
-                endOfLife: {}
-              };
+              // 1. Calculate ingredient impacts using OpenLCA with supplier verification override
+              if (product.ingredients && Array.isArray(product.ingredients)) {
+                console.log(`🌱 Calculating ingredient impacts for ${product.ingredients.length} ingredients`);
+                
+                for (const ingredient of product.ingredients) {
+                  if (ingredient.name && ingredient.amount > 0) {
+                    try {
+                      // Check for verified supplier data first
+                      const verifiedData = await getVerifiedSupplierData(ingredient.name, product);
+                      
+                      if (verifiedData) {
+                        const verifiedCarbon = verifiedData.carbon_footprint_kg_co2_eq * ingredient.amount;
+                        const verifiedWater = verifiedData.water_footprint_liters * ingredient.amount;
+                        breakdown.ingredients.co2e += verifiedCarbon;
+                        breakdown.ingredients.water += verifiedWater;
+                        console.log(`🏆 ${ingredient.name} using VERIFIED data: ${verifiedCarbon.toFixed(3)}kg CO₂e, ${verifiedWater.toFixed(1)}L`);
+                      } else {
+                        // Use OpenLCA calculations
+                        const { OpenLCAService } = await import('./services/OpenLCAService');
+                        const impactData = await OpenLCAService.calculateIngredientImpact(
+                          ingredient.name,
+                          ingredient.amount,
+                          ingredient.unit || 'kg'
+                        );
+                        
+                        if (impactData) {
+                          breakdown.ingredients.co2e += impactData.carbonFootprint;
+                          breakdown.ingredients.water += impactData.waterFootprint;
+                          console.log(`✅ OpenLCA ${ingredient.name}: ${impactData.carbonFootprint.toFixed(3)}kg CO₂e, ${impactData.waterFootprint.toFixed(1)}L`);
+                        }
+                      }
+                    } catch (error) {
+                      console.error(`Calculation failed for ${ingredient.name}:`, error);
+                    }
+                  }
+                }
+              }
               
-              // Calculate per-unit impacts using EnhancedLCACalculationService
-              const lcaResults = await EnhancedLCACalculationService.calculateEnhancedLCA(
-                product,
-                lcaInputs,
-                1 // Calculate per unit first
-              );
+              // 2. Calculate packaging impacts using comprehensive material analysis
+              if (product.bottleWeight) {
+                const bottleWeightKg = parseFloat(product.bottleWeight) / 1000;
+                const recycledContent = parseFloat(product.bottleRecycledContent || '0') / 100;
+                
+                const virginGlassEmissionFactor = 0.7; // kg CO2e per kg
+                const recycledGlassEmissionFactor = 0.35;
+                const glassEmissions = bottleWeightKg * (
+                  (1 - recycledContent) * virginGlassEmissionFactor + 
+                  recycledContent * recycledGlassEmissionFactor
+                );
+                
+                breakdown.packaging.co2e += glassEmissions;
+                breakdown.packaging.water += bottleWeightKg * 10; // ~10L water per kg glass
+                console.log(`🍾 Glass bottle: ${product.bottleWeight}g = ${glassEmissions.toFixed(3)} kg CO₂e`);
+              }
               
-              carbonFootprint = lcaResults.totalCarbonFootprint || 0;
-              waterFootprint = lcaResults.totalWaterFootprint || 0;
-              wasteFootprint = lcaResults.totalWasteFootprint || 0;
+              // Add label and closure impacts
+              if (product.labelWeight) {
+                const labelWeightKg = parseFloat(product.labelWeight) / 1000;
+                breakdown.packaging.co2e += labelWeightKg * 1.8;
+                breakdown.packaging.water += labelWeightKg * 15;
+              }
               
-              console.log(`🌱 ${product.name} per-unit impacts: ${carbonFootprint}kg CO₂e, ${waterFootprint}L water, ${wasteFootprint}kg waste`);
+              if (product.closureWeight) {
+                const closureWeightKg = parseFloat(product.closureWeight) / 1000;
+                breakdown.packaging.co2e += closureWeightKg * 3.2;
+                breakdown.packaging.water += closureWeightKg * 8;
+              }
+              
+              // 3. Calculate facility impacts using monthly data aggregation
+              const monthlyData = await db
+                .select({
+                  month: monthlyFacilityData.month,
+                  electricityKwh: sql<number>`SUM(CAST(${monthlyFacilityData.electricityKwh} AS NUMERIC))`,
+                  naturalGasM3: sql<number>`SUM(CAST(${monthlyFacilityData.naturalGasM3} AS NUMERIC))`,
+                })
+                .from(monthlyFacilityData)
+                .where(eq(monthlyFacilityData.companyId, product.companyId))
+                .groupBy(monthlyFacilityData.month);
+
+              if (monthlyData.length > 0) {
+                let totalMonthlyScope1 = 0;
+                let totalMonthlyScope2 = 0;
+                
+                monthlyData.forEach(month => {
+                  const monthlyScope2 = (month.electricityKwh || 0) * 0.233; // kg CO2e
+                  const monthlyScope1 = (month.naturalGasM3 || 0) * 1.8514; // kg CO2e
+                  totalMonthlyScope1 += monthlyScope1;
+                  totalMonthlyScope2 += monthlyScope2;
+                });
+                
+                const avgMonthlyScope1 = totalMonthlyScope1 / monthlyData.length;
+                const avgMonthlyScope2 = totalMonthlyScope2 / monthlyData.length;
+                const totalFacilityEmissions = (avgMonthlyScope1 + avgMonthlyScope2) * 12;
+                
+                breakdown.facilities.co2e = totalFacilityEmissions / totalCompanyUnits;
+                console.log(`🏭 Facility CO₂e per unit: ${breakdown.facilities.co2e.toFixed(3)}kg`);
+              }
+              
+              // Add facility water consumption
+              const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
+              for (const facility of facilities) {
+                const totalFacilityWater = 
+                  (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
+                  (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
+                  (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
+                
+                if (totalFacilityWater > 0) {
+                  breakdown.facilities.water += totalFacilityWater / totalCompanyUnits;
+                }
+              }
+              
+              // Record dilution water (excluded from calculations per requirements)
+              if (product.waterDilutionMl) {
+                breakdown.dilutionRecorded = {
+                  amount: parseFloat(product.waterDilutionMl),
+                  unit: 'ml per bottle',
+                  excluded: true
+                };
+                console.log(`💧 Water dilution recorded: ${product.waterDilutionMl}ml per bottle (excluded from product footprint)`);
+              }
+              
+              // Calculate comprehensive per-unit totals
+              totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + breakdown.facilities.co2e;
+              totalWater = breakdown.ingredients.water + breakdown.packaging.water + breakdown.facilities.water;
+              totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste + breakdown.facilities.waste;
+              
+              console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (includes all components), Water=${totalWater.toFixed(1)}L (excludes dilution), Waste=${totalWaste.toFixed(3)}kg`);
               
             } catch (error) {
-              console.error(`❌ Error calculating LCA for ${product.name}:`, error);
-              // Fallback to stored values if calculation fails
-              carbonFootprint = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
-              waterFootprint = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
-              wasteFootprint = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
+              console.error(`❌ Comprehensive LCA calculation failed for ${product.name}:`, error);
+              // Fallback to stored values
+              totalCO2e = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
+              totalWater = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
+              totalWaste = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
             }
 
-            // Calculate total impacts based on annual production volume
-            const productTotalCarbon = carbonFootprint * annualVolume;
-            const productTotalWater = waterFootprint * annualVolume;
-            const productTotalWaste = wasteFootprint * annualVolume;
+            // Calculate annual totals
+            const productTotalCarbon = totalCO2e * annualVolume;
+            const productTotalWater = totalWater * annualVolume;
+            const productTotalWaste = totalWaste * annualVolume;
 
             totalCarbon += productTotalCarbon;
             totalWater += productTotalWater;
             totalWaste += productTotalWaste;
+            
+            // Aggregate component breakdowns
+            aggregatedBreakdown.ingredients.co2e += breakdown.ingredients.co2e * annualVolume;
+            aggregatedBreakdown.ingredients.water += breakdown.ingredients.water * annualVolume;
+            aggregatedBreakdown.ingredients.waste += breakdown.ingredients.waste * annualVolume;
+            
+            aggregatedBreakdown.packaging.co2e += breakdown.packaging.co2e * annualVolume;
+            aggregatedBreakdown.packaging.water += breakdown.packaging.water * annualVolume;
+            aggregatedBreakdown.packaging.waste += breakdown.packaging.waste * annualVolume;
+            
+            aggregatedBreakdown.facilities.co2e += breakdown.facilities.co2e * annualVolume;
+            aggregatedBreakdown.facilities.water += breakdown.facilities.water * annualVolume;
+            aggregatedBreakdown.facilities.waste += breakdown.facilities.waste * annualVolume;
 
             productResults.push({
               id: product.id,
@@ -9042,15 +9179,39 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               bottleMaterial: product.bottleMaterial || 'glass',
               labelMaterial: product.labelMaterial || 'paper',
               ingredients: product.ingredients || [],
-              carbonFootprint: carbonFootprint,
-              waterFootprint: waterFootprint, 
-              wasteFootprint: wasteFootprint,
+              // Per-unit impacts (comprehensive)
+              carbonFootprint: totalCO2e,
+              waterFootprint: totalWater,
+              wasteFootprint: totalWaste,
+              // Annual totals
               totalCarbonFootprint: productTotalCarbon,
               totalWaterFootprint: productTotalWater,
-              totalWasteFootprint: productTotalWaste
+              totalWasteFootprint: productTotalWaste,
+              // Component breakdown for transparency
+              breakdown: {
+                ingredients: {
+                  co2e: breakdown.ingredients.co2e,
+                  water: breakdown.ingredients.water,
+                  waste: breakdown.ingredients.waste,
+                  percentage: totalCO2e > 0 ? Math.round((breakdown.ingredients.co2e / totalCO2e) * 100) : 0
+                },
+                packaging: {
+                  co2e: breakdown.packaging.co2e,
+                  water: breakdown.packaging.water,
+                  waste: breakdown.packaging.waste,
+                  percentage: totalCO2e > 0 ? Math.round((breakdown.packaging.co2e / totalCO2e) * 100) : 0
+                },
+                facilities: {
+                  co2e: breakdown.facilities.co2e,
+                  water: breakdown.facilities.water,
+                  waste: breakdown.facilities.waste,
+                  percentage: totalCO2e > 0 ? Math.round((breakdown.facilities.co2e / totalCO2e) * 100) : 0
+                },
+                dilutionRecorded: breakdown.dilutionRecorded
+              }
             });
 
-            console.log(`🧮 Product ${product.name}: ${productTotalCarbon}kg CO₂e, ${productTotalWater}L water, ${productTotalWaste}kg waste (annual)`);
+            console.log(`🧮 Product ${product.name}: ${productTotalCarbon.toFixed(1)}kg CO₂e, ${productTotalWater.toFixed(0)}L water, ${productTotalWaste.toFixed(3)}kg waste (annual)`);
           }
 
           // Step 3: Generate PDF report (80% progress)
