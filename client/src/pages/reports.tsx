@@ -38,11 +38,9 @@ export default function Reports() {
   // Ensure reports is always an array to prevent TypeScript errors
   const reportsData = Array.isArray(reports) ? reports : [];
 
-  // Fetch LCA calculation reports
-  const { data: lcaReports, isLoading: lcaReportsLoading } = useQuery({
-    queryKey: ["/api/lca/reports"],
-    retry: false,
-  });
+  // Filter different report types from the main reports data
+  const lcaReports = reportsData.filter((report: any) => report.reportType === 'lca');
+  const lcaReportsData = lcaReports; // For compatibility with existing code
 
 
   // Generate new report mutation
@@ -144,10 +142,9 @@ export default function Reports() {
     }
   };
 
-  // Separate reports by type with proper null checks
-  const lcaReportsData = reportsData.filter((report: any) => report.reportType === 'lca') || [];
-  const productLcaReports = Array.isArray(lcaReports) ? lcaReports : [];
+  // Separate reports by type with proper null checks  
   const guidedReportsData = Array.isArray(guidedReports) ? guidedReports : [];
+  const productLcaReports = Array.isArray(lcaReports) ? lcaReports : [];
   
 
   return (
@@ -181,7 +178,7 @@ export default function Reports() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-blue-600">LCA Reports</p>
-                    <p className="text-2xl font-bold text-blue-900">{lcaReportsData.length}</p>
+                    <p className="text-2xl font-bold text-blue-900">{lcaReports.length}</p>
                   </div>
                 </div>
               </CardContent>
@@ -305,50 +302,106 @@ export default function Reports() {
               <h2 className="text-xl font-semibold text-gray-900">Life Cycle Assessment Reports</h2>
             </div>
             
-            <div className="grid gap-4">
-              {lcaReportsData.length > 0 ? (
-                lcaReportsData.map((report: any) => (
-                  <Card key={report.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-blue-300">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-4">
-                          <div className="p-3 bg-blue-50 rounded-full">
-                            <BarChart3 className="w-5 h-5 text-blue-600" />
+            {lcaReportsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {lcaReports.length > 0 ? (
+                  lcaReports.map((report: any) => (
+                    <Card key={report.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-blue-300">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-blue-50 rounded-full">
+                              <BarChart3 className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg text-gray-900">
+                                LCA Report #{report.id}
+                              </h3>
+                              <p className="text-sm text-gray-500 flex items-center mt-1">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                Created {new Date(report.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-lg text-gray-900">LCA Report</h3>
-                            <p className="text-sm text-gray-500 flex items-center mt-1">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              Created {new Date(report.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
+                          {getStatusBadge(report.status)}
                         </div>
-                        {getStatusBadge(report.status)}
+
+                        {/* Environmental Metrics */}
+                        {report.status === 'completed' && (
+                          <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                              <div className="text-lg font-bold text-green-700">
+                                {parseFloat(report.totalCarbonFootprint || 0).toFixed(2)}
+                              </div>
+                              <div className="text-sm text-green-600">tonnes CO₂e</div>
+                            </div>
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                              <div className="text-lg font-bold text-blue-700">
+                                {Math.round(parseFloat(report.totalWaterUsage || 0)).toLocaleString()}
+                              </div>
+                              <div className="text-sm text-blue-600">L water</div>
+                            </div>
+                            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                              <div className="text-lg font-bold text-amber-700">
+                                {Math.round(parseFloat(report.totalWasteGenerated || 0)).toLocaleString()}
+                              </div>
+                              <div className="text-sm text-amber-600">kg waste</div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Action Buttons */}
+                        <div className="flex space-x-2 pt-4 border-t border-gray-100">
+                          {report.status === 'completed' && report.pdfFilePath && (
+                            <Button
+                              onClick={() => window.open(`/api/reports/${report.id}/download-lca`, '_blank')}
+                              variant="outline"
+                              size="sm"
+                              className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download PDF
+                            </Button>
+                          )}
+                          <Button
+                            onClick={() => setLocation('/app/reports/create')}
+                            variant="outline"
+                            size="sm"
+                            className="border-green-500 text-green-600 hover:bg-green-50"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Generate New LCA
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="border-2 border-dashed border-gray-300">
+                    <CardContent className="py-12 text-center">
+                      <div className="p-4 bg-blue-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                        <BarChart3 className="w-10 h-10 text-blue-600" />
                       </div>
-                      
-                      <div className="pt-4 border-t border-gray-100">
-                        <EnhancedReportButton 
-                          reportId={report.id} 
-                          reportStatus={report.status} 
-                        />
-                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No LCA Reports Yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        Generate detailed life cycle assessment reports for your products.
+                      </p>
+                      <Button
+                        onClick={() => setLocation('/app/reports/create')}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Your First LCA Report
+                      </Button>
                     </CardContent>
                   </Card>
-                ))
-              ) : (
-                <Card className="border-2 border-dashed border-gray-300">
-                  <CardContent className="py-12 text-center">
-                    <div className="p-4 bg-blue-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                      <BarChart3 className="w-10 h-10 text-blue-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No LCA Reports Yet</h3>
-                    <p className="text-gray-600 mb-4">
-                      Generate detailed life cycle assessment reports for your products.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Product LCA Section */}
