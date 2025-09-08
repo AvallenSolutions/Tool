@@ -86,19 +86,20 @@
     .footer {
       position: fixed;
       bottom: 15mm;
-      left: 20mm;
-      right: 20mm;
+      left: 10mm;
+      right: 10mm;
       height: 15mm;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
+      padding: 8px 16px;
       border-top: 2px solid transparent;
       background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue));
       background-clip: padding-box;
       border-image: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue)) 1;
       font-size: 9pt;
       color: white;
+      border-radius: 4px;
     }
 
     .footer .footer-left {
@@ -677,10 +678,10 @@
 
     <h3>Key Findings</h3>
     <ul style="margin-left: 20px; margin-bottom: 20px;">
-      <li>Primary environmental impacts stem from raw material production ({{INGREDIENTS_IMPACT}}%)</li>
-      <li>Packaging materials contribute {{PACKAGING_IMPACT}}% to total climate impacts</li>
-      <li>Facility operations account for {{FACILITIES_IMPACT}}% of carbon footprint</li>
-      <li>Transportation and other logistics represent {{TRANSPORT_IMPACT}}% of total impacts</li>
+      <li>Primary environmental impacts stem from raw material production ({{INGREDIENTS_PERCENTAGE}}%)</li>
+      <li>Packaging materials contribute {{PACKAGING_PERCENTAGE}}% to total climate impacts</li>
+      <li>Facility operations account for {{FACILITIES_PERCENTAGE}}% of carbon footprint</li>
+      <li>End-of-life impacts represent {{END_OF_LIFE_PERCENTAGE}}% of total environmental footprint</li>
     </ul>
 
     <h2>Methodology & Standards Compliance</h2>
