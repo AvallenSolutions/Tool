@@ -8999,7 +8999,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               };
               
               // Calculate per-unit impacts using EnhancedLCACalculationService
-              const lcaResults = await EnhancedLCACalculationService.calculateLCA(
+              const lcaResults = await EnhancedLCACalculationService.calculateEnhancedLCA(
                 product,
                 lcaInputs,
                 1 // Calculate per unit first
