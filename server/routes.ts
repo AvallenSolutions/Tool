@@ -9059,7 +9059,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           
           // Use new professional PDF generator instead of old UnifiedPDFService
           console.log('🔥 DEBUG: About to import new PDFGenerator...');
-          const { PDFGenerator } = require('./report-generation/pdfGenerator.js');
+          const { PDFGenerator } = await import('./report-generation/pdfGenerator.js');
           console.log('🔥 DEBUG: PDFGenerator imported successfully');
           const professionalGenerator = new PDFGenerator();
           console.log('🔥 DEBUG: professionalGenerator instance created');
