@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -73,11 +73,26 @@ export default function ComingSoon() {
   });
   const { toast } = useToast();
 
+  // Get user's company info for messaging
+  const { data: company } = useQuery({
+    queryKey: ['/api/company'],
+    retry: false,
+  });
+
   const submitFeatureRequestMutation = useMutation({
     mutationFn: async (data: FeatureRequest) => {
-      return apiRequest('/api/feature-requests', {
+      const messageData = {
+        companyId: company?.id || 1,
+        toUserId: 'admin', // Send to admin
+        subject: `Feature Request: ${data.title}`,
+        message: data.description,
+        messageType: 'feature_request',
+        priority: 'normal'
+      };
+      
+      return apiRequest('/api/messages', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(messageData),
       });
     },
     onSuccess: () => {
