@@ -9124,12 +9124,12 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
             
             const annualVolume = product.annualProductionVolume ? parseFloat(product.annualProductionVolume.toString()) : 1;
             
-            // PHASE 1: Use comprehensive refined-LCA calculation logic instead of simple EnhancedLCACalculationService
+            // Use the refined LCA endpoint that already calculates everything correctly
             let totalCO2e = 0;
             let totalWater = 0;
             let totalWaste = 0;
             
-            const breakdown = {
+            let breakdown = {
               ingredients: { co2e: 0, water: 0, waste: 0 },
               packaging: { co2e: 0, water: 0, waste: 0 },
               facilities: { co2e: 0, water: 0, waste: 0 },
@@ -9137,6 +9137,44 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
             };
             
             try {
+              // Make internal call to refined LCA endpoint to get accurate values
+              const fetch = (await import('node-fetch')).default;
+              const lcaResponse = await fetch(`http://localhost:5000/api/products/${product.id}/refined-lca`, {
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (lcaResponse.ok) {
+                const lcaData = await lcaResponse.json();
+                
+                if (lcaData.success && lcaData.data) {
+                  // Use the exact values from refined LCA endpoint
+                  totalCO2e = lcaData.data.perUnit.co2e_kg;
+                  totalWater = lcaData.data.perUnit.water_liters;
+                  totalWaste = lcaData.data.perUnit.waste_kg;
+                  
+                  // Use the breakdown from refined LCA
+                  if (lcaData.data.breakdown) {
+                    breakdown.ingredients = lcaData.data.breakdown.ingredients || { co2e: 0, water: 0, waste: 0 };
+                    breakdown.packaging = lcaData.data.breakdown.packaging || { co2e: 0, water: 0, waste: 0 };
+                    breakdown.facilities = lcaData.data.breakdown.facilities || { co2e: 0, water: 0, waste: 0 };
+                    breakdown.dilutionRecorded = lcaData.data.breakdown.dilutionRecorded || { amount: 0, unit: '', excluded: true };
+                  }
+                  
+                  console.log(`✅ Using refined LCA values for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg, Water=${totalWater.toFixed(1)}L, Waste=${totalWaste.toFixed(3)}kg`);
+                } else {
+                  throw new Error('Invalid LCA response data');
+                }
+              } else {
+                throw new Error(`LCA endpoint returned ${lcaResponse.status}`);
+              }
+              
+            } catch (lcaError) {
+              console.warn(`⚠️ Refined LCA call failed for ${product.name}, falling back to manual calculation:`, lcaError);
+              
+              // Fallback to manual calculation if API call fails
+              try {
               // 1. Calculate ingredient impacts using OpenLCA with supplier verification override
               if (product.ingredients && Array.isArray(product.ingredients)) {
                 console.log(`🌱 Calculating ingredient impacts for ${product.ingredients.length} ingredients`);
