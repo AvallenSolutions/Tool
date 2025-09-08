@@ -405,7 +405,7 @@ export default function Reports() {
           </div>
 
           {/* Product LCA Section */}
-          {lcaReportsLoading ? (
+          {reportsLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin w-6 h-6 border-4 border-purple-500 border-t-transparent rounded-full" />
             </div>
