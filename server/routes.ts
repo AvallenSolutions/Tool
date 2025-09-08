@@ -8974,11 +8974,50 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           const productResults = [];
 
           for (const product of selectedProducts) {
-            // Use stored environmental data for consistency
-            const carbonFootprint = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
-            const waterFootprint = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
-            const wasteFootprint = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
+            console.log(`🧮 Calculating LCA for product: ${product.name} (ID: ${product.id})`);
+            
             const annualVolume = product.annualProductionVolume ? parseFloat(product.annualProductionVolume.toString()) : 1;
+            
+            // Calculate real-time environmental impacts using EnhancedLCACalculationService
+            let carbonFootprint = 0;
+            let waterFootprint = 0; 
+            let wasteFootprint = 0;
+            
+            try {
+              // Use the enhanced calculation service for accurate impacts
+              const lcaInputs = {
+                ingredients: product.ingredients || [],
+                packaging: {
+                  bottleWeight: product.bottleWeight ? parseFloat(product.bottleWeight.toString()) : 0,
+                  bottleMaterial: product.bottleMaterial || 'glass',
+                  labelWeight: product.labelWeight ? parseFloat(product.labelWeight.toString()) : 0,
+                  labelMaterial: product.labelMaterial || 'paper'
+                },
+                productionProcesses: {},
+                transport: {},
+                endOfLife: {}
+              };
+              
+              // Calculate per-unit impacts using EnhancedLCACalculationService
+              const lcaResults = await EnhancedLCACalculationService.calculateLCA(
+                product,
+                lcaInputs,
+                1 // Calculate per unit first
+              );
+              
+              carbonFootprint = lcaResults.totalCarbonFootprint || 0;
+              waterFootprint = lcaResults.totalWaterFootprint || 0;
+              wasteFootprint = lcaResults.totalWasteFootprint || 0;
+              
+              console.log(`🌱 ${product.name} per-unit impacts: ${carbonFootprint}kg CO₂e, ${waterFootprint}L water, ${wasteFootprint}kg waste`);
+              
+            } catch (error) {
+              console.error(`❌ Error calculating LCA for ${product.name}:`, error);
+              // Fallback to stored values if calculation fails
+              carbonFootprint = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
+              waterFootprint = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
+              wasteFootprint = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
+            }
 
             // Calculate total impacts based on annual production volume
             const productTotalCarbon = carbonFootprint * annualVolume;
