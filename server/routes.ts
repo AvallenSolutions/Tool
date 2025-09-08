@@ -2231,6 +2231,19 @@ Be precise and quote actual text from the content, not generic terms.`;
         waste: 0 // Waste excluded per requirements
       };
       
+      // Add waste footprint components to breakdown for complete transparency
+      breakdown.productionWaste = {
+        co2e: productionWasteFootprint,
+        water: 0, // Only CO2e tracked for production waste
+        waste: 0 // Waste quantity excluded per requirements  
+      };
+      
+      breakdown.endOfLifeWaste = {
+        co2e: endOfLifePackagingFootprint,
+        water: 0, // Only CO2e tracked for end-of-life waste
+        waste: 0 // Waste quantity excluded per requirements
+      };
+      
       console.log(`⚡ Facility impacts: ${facilityImpacts.co2e.toFixed(6)}kg CO2e per unit (INCLUDED in product footprint)`);
 
       // 4. Record water dilution but exclude from product water footprint

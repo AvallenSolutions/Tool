@@ -147,6 +147,22 @@ export function transformRefinedLCAToBreakdown(refinedLCA: RefinedLCAData | unde
         value: refinedLCA.breakdown.packaging.co2e,
         percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.packaging.co2e / totalCO2e) * 100) : 0
       },
+      {
+        stage: 'Facilities',
+        value: refinedLCA.breakdown.facilities?.co2e || 0,
+        percentage: totalCO2e > 0 ? Math.round(((refinedLCA.breakdown.facilities?.co2e || 0) / totalCO2e) * 100) : 0
+      },
+      // Add waste footprint components if they exist
+      ...(refinedLCA.breakdown.productionWaste?.co2e > 0 ? [{
+        stage: 'Production Waste',
+        value: refinedLCA.breakdown.productionWaste.co2e,
+        percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.productionWaste.co2e / totalCO2e) * 100) : 0
+      }] : []),
+      ...(refinedLCA.breakdown.endOfLifeWaste?.co2e > 0 ? [{
+        stage: 'End-of-Life Waste',
+        value: refinedLCA.breakdown.endOfLifeWaste.co2e,
+        percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.endOfLifeWaste.co2e / totalCO2e) * 100) : 0
+      }] : [])
     ],
     waterBreakdown: [
       {

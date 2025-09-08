@@ -15,21 +15,37 @@ interface PrimaryBreakdownChartsProps {
 
 // Chart configuration for consistent theming
 const chartConfig = {
-  Liquid: {
-    label: "Liquid",
+  Ingredients: {
+    label: "Ingredients",
     color: "hsl(142, 76%, 36%)", // Green
-  },
-  Process: {
-    label: "Process", 
-    color: "hsl(221, 83%, 53%)", // Blue
   },
   Packaging: {
     label: "Packaging",
     color: "hsl(48, 96%, 53%)", // Yellow
   },
+  Facilities: {
+    label: "Facilities", 
+    color: "hsl(221, 83%, 53%)", // Blue
+  },
+  "Production Waste": {
+    label: "Production Waste",
+    color: "hsl(16, 84%, 60%)", // Orange
+  },
+  "End-of-Life Waste": {
+    label: "End-of-Life Waste",
+    color: "hsl(0, 84%, 60%)", // Red
+  },
+  Liquid: {
+    label: "Liquid",
+    color: "hsl(142, 76%, 36%)", // Green (legacy)
+  },
+  Process: {
+    label: "Process", 
+    color: "hsl(221, 83%, 53%)", // Blue (legacy)
+  },
   Waste: {
     label: "Waste",
-    color: "hsl(0, 84%, 60%)", // Red
+    color: "hsl(0, 84%, 60%)", // Red (legacy)
   },
 };
 
