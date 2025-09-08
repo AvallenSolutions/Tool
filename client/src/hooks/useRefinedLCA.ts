@@ -135,12 +135,6 @@ export function transformRefinedLCAToBreakdown(refinedLCA: RefinedLCAData | unde
   const totalCO2e = refinedLCA.perUnit.co2e_kg;
   const totalWater = refinedLCA.perUnit.water_liters;
 
-  // Debug logging for breakdown components
-  console.log('🔍 Transform Debug - Total CO2e:', totalCO2e);
-  console.log('🔍 Transform Debug - Breakdown:', refinedLCA.breakdown);
-  console.log('🔍 Transform Debug - endOfLifeWaste CO2e:', refinedLCA.breakdown.endOfLifeWaste?.co2e);
-  console.log('🔍 Transform Debug - productionWaste CO2e:', refinedLCA.breakdown.productionWaste?.co2e);
-
   const carbonBreakdown = [
     {
       stage: 'Ingredients',
@@ -169,9 +163,6 @@ export function transformRefinedLCAToBreakdown(refinedLCA: RefinedLCAData | unde
       percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.endOfLifeWaste.co2e / totalCO2e) * 100) : 0
     }] : [])
   ];
-
-  console.log('🔍 Transform Debug - Final carbonBreakdown:', carbonBreakdown);
-  console.log('🔍 Transform Debug - carbonBreakdown length:', carbonBreakdown.length);
 
   return {
     carbonBreakdown,

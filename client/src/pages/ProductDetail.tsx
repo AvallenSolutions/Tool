@@ -1314,6 +1314,18 @@ function EnvironmentalImpactDetails({ productId }: { productId: number }) {
                     <span className="text-sm font-bold text-blue-600">{breakdown.facilities.co2e.toFixed(3)} kg</span>
                   </div>
                 )}
+                {breakdown.productionWaste && breakdown.productionWaste.co2e > 0 && (
+                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <span className="text-sm font-medium">Production Waste</span>
+                    <span className="text-sm font-bold text-orange-600">{breakdown.productionWaste.co2e.toFixed(3)} kg</span>
+                  </div>
+                )}
+                {breakdown.endOfLifeWaste && breakdown.endOfLifeWaste.co2e > 0 && (
+                  <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                    <span className="text-sm font-medium">End-of-Life Waste</span>
+                    <span className="text-sm font-bold text-red-600">{breakdown.endOfLifeWaste.co2e.toFixed(3)} kg</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
                   <span className="text-sm font-bold">Total</span>
                   <span className="text-sm font-bold text-slate-700">{refinedLCA.perUnit.co2e_kg.toFixed(3)} kg</span>
