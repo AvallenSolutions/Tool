@@ -8,11 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers, Eye, FileText, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers, Eye } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { ProductLCAMetricsDisplay } from '@/components/products/ProductLCAMetricsDisplay';
 import { usePortfolioMetrics } from '@/hooks/usePortfolioMetrics';
-import { LCAProductSelector } from '@/components/products/LCAProductSelector';
 
 interface ClientProduct {
   id: number;
@@ -37,10 +36,6 @@ export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   
-  // LCA Report Generation State
-  const [showLCASection, setShowLCASection] = useState(false);
-  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
-  const [generatingLCA, setGeneratingLCA] = useState(false);
 
   // Move mutation hook to top level to ensure stable hook order
   const deleteProductMutation = useMutation({
@@ -146,52 +141,6 @@ export default function ProductsPage() {
     window.location.reload();
   };
 
-  // LCA Report Generation Functions
-  const handleGenerateLCAReport = async () => {
-    if (selectedProductIds.length === 0) {
-      toast({
-        title: "No Products Selected",
-        description: "Please select at least one product to generate an LCA report.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setGeneratingLCA(true);
-    try {
-      // TODO: Phase 2 - Implement actual LCA report generation API call
-      console.log('🔬 Generating LCA report for products:', selectedProductIds);
-      
-      // Placeholder - simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "LCA Report Generated",
-        description: `Professional LCA report created for ${selectedProductIds.length} product${selectedProductIds.length > 1 ? 's' : ''}.`,
-      });
-      
-      // Reset selection
-      setSelectedProductIds([]);
-      setShowLCASection(false);
-    } catch (error) {
-      console.error('❌ LCA report generation failed:', error);
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate LCA report. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setGeneratingLCA(false);
-    }
-  };
-
-  const toggleLCASection = () => {
-    setShowLCASection(!showLCASection);
-    if (!showLCASection) {
-      // Reset selection when opening
-      setSelectedProductIds([]);
-    }
-  };
 
   return (
     <div className="flex h-screen bg-lightest-gray overflow-hidden">
@@ -213,16 +162,6 @@ export default function ProductsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Button 
-                  onClick={toggleLCASection}
-                  variant="outline"
-                  className="border-blue-500 text-blue-600 hover:bg-blue-50 font-medium px-6 py-2"
-                  disabled={confirmedProducts.length === 0}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Generate LCA Report
-                  {showLCASection ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
-                </Button>
-                <Button 
                   onClick={() => navigate('/app/products/create/enhanced')}
                   style={{ backgroundColor: '#209d50', borderColor: '#209d50' }}
                   className="hover:bg-green-600 text-white font-medium px-6 py-2 shadow-md border-2"
@@ -234,76 +173,6 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* LCA Report Generation Section */}
-          {showLCASection && confirmedProducts.length > 0 && (
-            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-blue-25 mb-6">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                      Generate Life Cycle Assessment Report
-                    </CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Select products to include in a comprehensive LCA report following industry standards
-                    </p>
-                  </div>
-                  <Button
-                    onClick={toggleLCASection}
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Product Selection */}
-                <LCAProductSelector
-                  products={confirmedProducts}
-                  selectedProductIds={selectedProductIds}
-                  onSelectionChange={setSelectedProductIds}
-                />
-
-                {/* Generation Actions */}
-                {selectedProductIds.length > 0 && (
-                  <div className="flex items-center justify-between p-4 bg-white border border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">
-                          Ready to Generate LCA Report
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {selectedProductIds.length} product{selectedProductIds.length > 1 ? 's' : ''} selected for comprehensive life cycle assessment
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleGenerateLCAReport}
-                      disabled={generatingLCA}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-                    >
-                      {generatingLCA ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4 mr-2" />
-                          Generate Report
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Products Section */}
           <Card className="border-light-gray">
