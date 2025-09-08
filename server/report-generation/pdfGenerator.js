@@ -228,37 +228,68 @@ class PDFGenerator {
         }
         
         if (uuid) {
-          // Use ObjectStorageService to get the image and convert to base64
-          const { ObjectStorageService } = await import('../objectStorage.js');
-          const objectStorageService = new ObjectStorageService();
+          console.log(`🖼️ Starting image conversion for UUID: ${uuid}`);
           
-          const objectPath = `/objects/uploads/${uuid}`;
-          console.log(`🖼️ Fetching image for base64 conversion: ${objectPath}`);
-          
-          const file = await objectStorageService.getObjectEntityFile(objectPath);
-          
-          // Read file data into buffer
-          const chunks = [];
-          const stream = file.createReadStream();
-          
-          for await (const chunk of stream) {
-            chunks.push(chunk);
+          try {
+            // Use ObjectStorageService to get the image and convert to base64
+            const { ObjectStorageService } = await import('../objectStorage.js');
+            const objectStorageService = new ObjectStorageService();
+            
+            const objectPath = `/objects/uploads/${uuid}`;
+            console.log(`🖼️ Fetching image for base64 conversion: ${objectPath}`);
+            
+            const file = await objectStorageService.getObjectEntityFile(objectPath);
+            console.log(`🖼️ File object obtained successfully`);
+            
+            // Get content type from file metadata first
+            const [metadata] = await file.getMetadata();
+            const contentType = metadata.contentType || 'image/jpeg';
+            console.log(`🖼️ Image metadata - Content Type: ${contentType}, Size: ${metadata.size} bytes`);
+            
+            // Read file data into buffer
+            console.log(`🖼️ Reading file stream...`);
+            const chunks = [];
+            const stream = file.createReadStream();
+            
+            for await (const chunk of stream) {
+              chunks.push(chunk);
+            }
+            
+            const buffer = Buffer.concat(chunks);
+            console.log(`🖼️ Buffer created with ${buffer.length} bytes`);
+            
+            // Convert to base64 data URL
+            const base64 = buffer.toString('base64');
+            console.log(`🖼️ Base64 conversion completed: ${base64.length} characters`);
+            
+            // Handle WebP images specifically
+            let finalContentType = contentType;
+            if (contentType === 'image/webp') {
+              console.log(`🖼️ WebP image detected - ensuring compatibility`);
+              finalContentType = 'image/webp';
+            }
+            
+            productImageUrl = `data:${finalContentType};base64,${base64}`;
+            
+            console.log(`🖼️ SUCCESS: Product image converted to base64: ${rawImageUrl} → data:${finalContentType};base64,[${base64.length} chars]`);
+            
+          } catch (conversionError) {
+            console.error(`❌ DETAILED ERROR in image conversion:`, {
+              error: conversionError.message,
+              stack: conversionError.stack,
+              uuid: uuid,
+              rawImageUrl: rawImageUrl
+            });
+            throw conversionError; // Re-throw to be caught by outer try-catch
           }
-          
-          const buffer = Buffer.concat(chunks);
-          
-          // Get content type from file metadata
-          const [metadata] = await file.getMetadata();
-          const contentType = metadata.contentType || 'image/jpeg';
-          
-          // Convert to base64 data URL
-          const base64 = buffer.toString('base64');
-          productImageUrl = `data:${contentType};base64,${base64}`;
-          
-          console.log(`🖼️ Product image converted to base64: ${rawImageUrl} → data:${contentType};base64,[${base64.length} chars]`);
         }
       } catch (error) {
-        console.error(`❌ Error converting image to base64:`, error);
+        console.error(`❌ CRITICAL ERROR converting image to base64:`, {
+          message: error.message,
+          stack: error.stack,
+          rawImageUrl: rawImageUrl,
+          errorType: error.constructor.name
+        });
         productImageUrl = null;
       }
     }
