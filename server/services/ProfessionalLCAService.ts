@@ -97,10 +97,16 @@ export class ProfessionalLCAService {
   }
 
   public async generateLCAPDF(data: LCAReportData): Promise<Buffer> {
+    console.log('📄 ProfessionalLCAService.generateLCAPDF called');
+    console.log('📄 PdfPrinter available:', !!PdfPrinter);
+    console.log('📄 this.printer available:', !!this.printer);
+    
     if (PdfPrinter && this.printer) {
+      console.log('📄 Using pdfmake for professional PDF generation');
       // Use pdfmake if available
       return this.generatePdfMakeReport(data);
     } else {
+      console.log('📄 Using enhanced PDFKit for professional PDF generation');
       // Fallback to enhanced PDFKit implementation
       return this.generatePDFKitReport(data);
     }
@@ -126,8 +132,10 @@ export class ProfessionalLCAService {
   }
 
   private async generatePDFKitReport(data: LCAReportData): Promise<Buffer> {
+    console.log('📄 generatePDFKitReport starting...');
     return new Promise((resolve, reject) => {
       try {
+        console.log('📄 Creating PDFDocument with professional settings');
         const doc = new PDFDocument({
           size: 'A4',
           margins: { top: 80, bottom: 80, left: 60, right: 60 },
@@ -140,13 +148,19 @@ export class ProfessionalLCAService {
 
         const chunks: Buffer[] = [];
         doc.on('data', chunk => chunks.push(chunk));
-        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('end', () => {
+          const result = Buffer.concat(chunks);
+          console.log(`📄 Professional PDF generation completed: ${result.length} bytes`);
+          resolve(result);
+        });
         doc.on('error', reject);
 
+        console.log('📄 Rendering professional content...');
         this.renderProfessionalPDFKitContent(doc, data);
         doc.end();
 
       } catch (error) {
+        console.error('📄 Error in generatePDFKitReport:', error);
         reject(error);
       }
     });
