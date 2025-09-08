@@ -9103,6 +9103,17 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           let totalWaste = 0;
           const productResults = [];
           
+          // DEBUG: Log selected products image data
+          console.log('🖼️ Selected products with image data:');
+          selectedProducts.forEach(product => {
+            console.log(`  Product ${product.name}:`, {
+              packShotUrl: product.packShotUrl,
+              productImages: product.productImages,
+              hasPackShot: !!product.packShotUrl,
+              hasProductImages: !!product.productImages
+            });
+          });
+          
           // Component breakdown aggregation
           const aggregatedBreakdown = {
             ingredients: { co2e: 0, water: 0, waste: 0 },
@@ -9384,8 +9395,14 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               productionUnit: product.productionUnit || 'units',
               bottleWeight: product.bottleWeight ? parseFloat(product.bottleWeight.toString()) : 0,
               labelWeight: product.labelWeight ? parseFloat(product.labelWeight.toString()) : 0,
+              // Include image data for PDF generation
+              packShotUrl: product.packShotUrl,
+              productImages: product.productImages,
+              // Include packaging material data for PDF generation
               bottleMaterial: product.bottleMaterial || 'glass',
               labelMaterial: product.labelMaterial || 'paper',
+              closureWeight: product.closureWeight ? parseFloat(product.closureWeight.toString()) : 0,
+              closureMaterial: product.closureMaterial || 'aluminum closure',
               ingredients: product.ingredients || [],
               // Per-unit impacts (comprehensive)
               carbonFootprint: productCO2e,
