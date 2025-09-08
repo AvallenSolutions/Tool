@@ -191,11 +191,38 @@ class PDFGenerator {
     const reductionOpportunity = ingredientsImpact === maxImpact ? 'sustainable sourcing' :
                                packagingImpact === maxImpact ? 'packaging optimization' : 'renewable energy';
     
-    // Get product image URL (use packShotUrl or first productImage)
-    const productImageUrl = primaryProduct.packShotUrl || 
-                           (primaryProduct.productImages && primaryProduct.productImages[0]) || 
-                           (primaryProduct.product_images && primaryProduct.product_images[0]) || 
-                           'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkF2YWxsZW4gUHJvZHVjdDwvdGV4dD48L3N2Zz4=';
+    // Get product image URL and convert to local route format
+    let rawImageUrl = primaryProduct.packShotUrl || 
+                     (primaryProduct.productImages && primaryProduct.productImages[0]) || 
+                     (primaryProduct.product_images && primaryProduct.product_images[0]) || 
+                     null;
+    
+    let productImageUrl = null;
+    
+    if (rawImageUrl) {
+      // Convert Google Cloud Storage URLs to local image route format
+      let uuid = '';
+      if (rawImageUrl.includes('storage.googleapis.com')) {
+        // Extract UUID from full URL: https://storage.googleapis.com/bucket/.private/uploads/UUID
+        const parts = rawImageUrl.split('/');
+        uuid = parts[parts.length - 1].split('?')[0]; // Remove query params if present
+      } else if (rawImageUrl.includes('uploads/')) {
+        uuid = rawImageUrl.split('uploads/')[1] || rawImageUrl.split('uploads/').pop() || '';
+      } else {
+        uuid = rawImageUrl.split('/').pop() || '';
+      }
+      
+      if (uuid) {
+        productImageUrl = `http://localhost:5000/simple-image/objects/uploads/${uuid}`;
+        console.log(`🖼️ Product image converted: ${rawImageUrl} → ${productImageUrl}`);
+      }
+    }
+    
+    // Fallback if no image found
+    if (!productImageUrl) {
+      productImageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OTk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlIEF2YWlsYWJsZTwvdGV4dD48L3N2Zz4=';
+      console.log('⚠️ No product image found, using fallback placeholder');
+    }
 
     // Template replacements
     const replacements = {
