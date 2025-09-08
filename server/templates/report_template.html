@@ -82,33 +82,9 @@
       opacity: 0.9;
     }
 
-    /* Professional Footer */
-    .footer {
-      position: fixed;
-      bottom: 15mm;
-      left: 10mm;
-      right: 10mm;
-      height: 15mm;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 16px;
-      border-top: 2px solid transparent;
-      background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue));
-      background-clip: padding-box;
-      border-image: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue)) 1;
-      font-size: 9pt;
-      color: white;
-      border-radius: 4px;
-    }
+    /* Footer styles removed - using Puppeteer footer template */
 
-    .footer .footer-left {
-      font-weight: 500;
-    }
-
-    .footer .footer-right {
-      font-weight: 400;
-    }
+    /* Footer classes removed - using Puppeteer footer template */
 
     /* Typography */
     h1, h2, h3 {
@@ -777,7 +753,7 @@
     
     <p>This assessment adheres to the four phases of LCA methodology as defined by ISO standards:</p>
     
-    <div class="data-table">
+    <table class="data-table">
       <thead>
         <tr>
           <th>LCA Phase</th>
@@ -807,7 +783,7 @@
           <td>Platform analytics</td>
         </tr>
       </tbody>
-    </div>
+    </table>
 
     <div class="methodology-note">
       <strong>Functional Unit:</strong> The functional unit is defined as 1 {{FUNCTIONAL_UNIT}} of {{PRODUCT_NAME}}, 
@@ -899,7 +875,7 @@
     </div>
 
     <h3>Impact Breakdown by Life Cycle Stage</h3>
-    <div class="data-table">
+    <table class="data-table">
       <thead>
         <tr>
           <th>Life Cycle Stage</th>
@@ -911,7 +887,7 @@
       <tbody>
         {{IMPACT_BREAKDOWN_TABLE}}
       </tbody>
-    </div>
+    </table>
 
     <div style="page-break-inside: avoid;">
       <h3>Greenhouse Gas Analysis</h3>
@@ -975,10 +951,6 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    <div class="footer-left">{{COMPANY_NAME}} - Sustainability Report</div>
-    <div class="footer-right">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
-  </div>
+  <!-- Footer handled by Puppeteer footer template -->
 </body>
 </html>
