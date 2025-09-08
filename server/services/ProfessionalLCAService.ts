@@ -67,14 +67,8 @@ export class ProfessionalLCAService {
   private printer: any;
 
   private constructor() {
-    // Initialize fonts for professional appearance
+    // Initialize fonts for professional appearance - use system fonts for ES modules compatibility
     const fonts = {
-      Roboto: {
-        normal: path.join(__dirname, '../fonts/Roboto-Regular.ttf'),
-        bold: path.join(__dirname, '../fonts/Roboto-Bold.ttf'),
-        italics: path.join(__dirname, '../fonts/Roboto-Italic.ttf'),
-        bolditalics: path.join(__dirname, '../fonts/Roboto-BoldItalic.ttf')
-      },
       Helvetica: {
         normal: 'Helvetica',
         bold: 'Helvetica-Bold',
@@ -83,10 +77,14 @@ export class ProfessionalLCAService {
       }
     };
 
-    // Use system fonts if custom fonts are not available
-    this.printer = new PdfPrinter({
-      Helvetica: fonts.Helvetica
-    });
+    // Use system fonts (avoiding __dirname issues in ES modules)
+    if (PdfPrinter) {
+      this.printer = new PdfPrinter({
+        Helvetica: fonts.Helvetica
+      });
+    } else {
+      this.printer = null;
+    }
   }
 
   public static getInstance(): ProfessionalLCAService {
