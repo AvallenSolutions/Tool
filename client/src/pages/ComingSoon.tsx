@@ -90,10 +90,7 @@ export default function ComingSoon() {
         priority: 'normal'
       };
       
-      return apiRequest('/api/messages', {
-        method: 'POST',
-        body: JSON.stringify(messageData),
-      });
+      return apiRequest('POST', '/api/messages', messageData);
     },
     onSuccess: () => {
       toast({
