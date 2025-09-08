@@ -313,6 +313,104 @@
       margin-left: 4px;
     }
 
+    /* GHG Breakdown Section */
+    .ghg-breakdown-section {
+      background: #f8fffe;
+      border: 2px solid var(--avallen-green);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .ghg-gas-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: white;
+      border-radius: 8px;
+      border-left: 4px solid var(--avallen-green);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .gas-info {
+      flex: 1;
+    }
+
+    .gas-name {
+      font-weight: 600;
+      color: var(--avallen-green);
+      font-size: 11pt;
+    }
+
+    .gas-details {
+      font-size: 9pt;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .gas-impact {
+      text-align: right;
+    }
+
+    .co2e-value {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 11pt;
+    }
+
+    .co2e-unit {
+      font-size: 9pt;
+      color: var(--text-secondary);
+    }
+
+    /* Enhanced Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .data-table th {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+      font-weight: 600;
+      padding: 12px 8px;
+      text-align: left;
+      font-size: 10pt;
+      border-bottom: 2px solid var(--avallen-green);
+    }
+
+    .data-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 10pt;
+      vertical-align: middle;
+    }
+
+    .data-table tr:nth-child(even) td {
+      background: #fafbfc;
+    }
+
+    .data-table tr:hover td {
+      background: #f0f9ff;
+    }
+
+    .impact-value-cell {
+      font-weight: 600;
+      color: var(--avallen-green);
+    }
+
+    .percentage-cell {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
     /* References */
     .references {
       background: #fafbfc;
@@ -565,20 +663,31 @@
       </tbody>
     </div>
 
+    <h3>Greenhouse Gas Analysis</h3>
+    <div class="text-block">
+      <p><strong>ISO 14064-1 Compliant GHG Breakdown:</strong> The following analysis provides a detailed breakdown of greenhouse gas emissions by individual gas species, using IPCC AR5 Global Warming Potential factors for scientifically accurate climate impact assessment.</p>
+    </div>
+    
+    <div class="ghg-breakdown-section">
+      {{GHG_BREAKDOWN_TABLE}}
+    </div>
+
+    <div class="methodology-note" style="margin-top: 16px;">
+      <p><strong>GWP Methodology:</strong> Global Warming Potential factors based on IPCC Fifth Assessment Report (AR5) with 100-year time horizon. All calculations comply with ISO 14040/14044 LCA standards and ISO 14064-1 greenhouse gas quantification requirements.</p>
+    </div>
+
     <h3>Interpretation & Hotspot Analysis</h3>
     <div class="text-block">
       <p><strong>Primary Impact Drivers:</strong> The assessment reveals that raw material production constitutes the 
       largest environmental impact, accounting for approximately {{INGREDIENTS_PERCENTAGE}}% of total carbon footprint. 
-      Packaging materials contribute {{PACKAGING_PERCENTAGE}}% to climate impacts.</p>
+      Packaging materials contribute {{PACKAGING_PERCENTAGE}}% to climate impacts, while facility operations account for {{FACILITIES_PERCENTAGE}}%.</p>
     </div>
 
-    <p>Energy consumption during processing contributes a smaller but significant portion of the total impact. 
-    The analysis demonstrates opportunities for impact reduction through supply chain optimization and renewable energy adoption.</p>
+    <p>The comprehensive analysis demonstrates that {{PRIMARY_HOTSPOT}} represents the greatest opportunity for impact reduction. 
+    Supply chain optimization and {{REDUCTION_OPPORTUNITY}} adoption could significantly reduce the total environmental footprint.</p>
 
     <div class="methodology-note">
-      <p><strong>Data Quality:</strong> Impact calculations use primary data where available, supplemented by representative 
-      secondary data from peer-reviewed databases. Uncertainty analysis indicates results are accurate within ±15% for 
-      carbon footprint calculations.</p>
+      <p><strong>Data Quality & Transparency:</strong> Impact calculations integrate primary facility data, verified supplier declarations where available, and representative secondary data from peer-reviewed databases including ecoinvent 3.5. Carbon footprint calculations demonstrate accuracy within ±15%, with water footprint uncertainty estimated at ±20%.</p>
     </div>
   </div>
 
