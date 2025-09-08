@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
-import Footer from '@/components/layout/footer';
 import { 
   Sparkles, 
   TreePine, 
@@ -250,7 +249,6 @@ export default function ComingSoon() {
         </section>
           </div>
         </main>
-        <Footer />
       </div>
     </div>
   );
