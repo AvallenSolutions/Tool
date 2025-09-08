@@ -229,6 +229,51 @@ export class StreamingPDFService {
   }
 
   /**
+   * Generate PDF as Buffer (for non-streaming use cases)
+   * This method was missing and being called by pdfGenerationProcessor
+   */
+  async generatePDF(
+    data: ReportData | LCAReportData, 
+    options: PDFGenerationOptions = { type: 'modern' }
+  ): Promise<Buffer> {
+    // Special handling for LCA reports - use ProfessionalLCAService
+    if ('lcaResults' in data || 'products' in data) {
+      try {
+        console.log('🎯 Detected LCA data, using ProfessionalLCAService...');
+        const { ProfessionalLCAService } = await import('./ProfessionalLCAService');
+        const professionalService = ProfessionalLCAService.getInstance();
+        console.log('🎯 Using ProfessionalLCAService for LCA report generation');
+        return await professionalService.generateLCAPDF(data as any);
+      } catch (error) {
+        console.error('⚠️ ProfessionalLCAService failed, falling back to streaming method:', error);
+        // Continue with existing logic as fallback
+      }
+    }
+
+    // Fallback to existing buffer generation method
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({
+          size: options.format || 'A4',
+          margins: options.margins || { top: 50, bottom: 50, left: 50, right: 50 }
+        });
+
+        const chunks: Buffer[] = [];
+        doc.on('data', chunk => chunks.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', reject);
+
+        // Generate content using existing method
+        this.generatePDFKitContent(doc, data, options);
+        
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
    * Create memory-efficient PDF stream from large data
    */
   async createDataStream(data: any[], processor: (item: any) => Promise<Buffer>): Promise<Readable> {
