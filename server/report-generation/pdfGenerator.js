@@ -77,7 +77,8 @@ class PDFGenerator {
         },
         preferCSSPageSize: false,
         // Enable high quality rendering
-        scale: 1.0
+        scale: 1.0,
+        timeout: 60000 // Increase timeout for large images
       });
 
       console.log(`🎯 PDF generated successfully: ${pdfBuffer.length} bytes`);
@@ -258,9 +259,12 @@ class PDFGenerator {
             const buffer = Buffer.concat(chunks);
             console.log(`🖼️ Buffer created with ${buffer.length} bytes`);
             
+            // Check if image is too large for browser handling  
+            console.log(`🖼️ Image size check: ${buffer.length} bytes`);
+            
             // Convert to base64 data URL
             const base64 = buffer.toString('base64');
-            console.log(`🖼️ Base64 conversion completed: ${base64.length} characters`);
+            console.log(`🖼️ Base64 conversion completed: ${base64.length} characters, ${buffer.length} bytes`);
             
             // Handle WebP images specifically
             let finalContentType = contentType;
