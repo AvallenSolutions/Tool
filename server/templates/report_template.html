@@ -324,6 +324,62 @@
       border-radius: 12px;
       padding: 20px;
       margin: 16px 0;
+      page-break-inside: avoid;
+    }
+    
+    /* Enhanced Packaging Table */
+    .enhanced-packaging-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .enhanced-packaging-table thead {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+    }
+    
+    .enhanced-packaging-table th {
+      padding: 16px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .enhanced-packaging-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 10pt;
+      vertical-align: middle;
+    }
+    
+    .enhanced-packaging-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    
+    .enhanced-packaging-table tbody tr:hover {
+      background: #f0f9ff;
+    }
+    
+    .packaging-component {
+      font-weight: 600;
+      color: var(--avallen-green);
+    }
+    
+    .packaging-weight {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .packaging-impact {
+      color: var(--text-secondary);
+      font-size: 9pt;
     }
 
     .ghg-gas-item {
@@ -742,19 +798,23 @@
     </div>
 
     <h3>Packaging Specifications</h3>
-    <div class="data-table">
+    <div class="text-block" style="margin-bottom: 16px;">
+      <p><strong>Environmental Packaging Analysis:</strong> Comprehensive assessment of packaging materials including recycled content, recyclability, and end-of-life impact calculations based on regional waste management data.</p>
+    </div>
+    
+    <table class="enhanced-packaging-table">
       <thead>
         <tr>
-          <th>Component</th>
-          <th>Material</th>
-          <th>Weight (g)</th>
-          <th>Environmental Impact</th>
+          <th style="width: 25%;">Component</th>
+          <th style="width: 30%;">Material & Properties</th>
+          <th style="width: 15%;">Weight (g)</th>
+          <th style="width: 30%;">Environmental Profile</th>
         </tr>
       </thead>
       <tbody>
         {{PACKAGING_TABLE}}
       </tbody>
-    </div>
+    </table>
 
     <h3>Production Facilities</h3>
     <div class="text-block">
@@ -820,13 +880,15 @@
       </tbody>
     </div>
 
-    <h3>Greenhouse Gas Analysis</h3>
-    <div class="text-block">
-      <p><strong>ISO 14064-1 Compliant GHG Breakdown:</strong> The following analysis provides a detailed breakdown of greenhouse gas emissions by individual gas species, using IPCC AR5 Global Warming Potential factors for scientifically accurate climate impact assessment.</p>
-    </div>
-    
-    <div class="ghg-breakdown-section" style="margin-bottom: 40px;">
-      {{GHG_BREAKDOWN_TABLE}}
+    <div style="page-break-inside: avoid;">
+      <h3>Greenhouse Gas Analysis</h3>
+      <div class="text-block">
+        <p><strong>ISO 14064-1 Compliant GHG Breakdown:</strong> The following analysis provides a detailed breakdown of greenhouse gas emissions by individual gas species, using IPCC AR5 Global Warming Potential factors for scientifically accurate climate impact assessment.</p>
+      </div>
+      
+      <div class="ghg-breakdown-section" style="margin-bottom: 40px;">
+        {{GHG_BREAKDOWN_TABLE}}
+      </div>
     </div>
 
     <div class="methodology-note" style="margin-top: 16px;">
