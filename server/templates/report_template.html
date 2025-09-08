@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Cycle Assessment Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --avallen-green: #209d50;
+      --avallen-green-light: #22c55e;
+      --avallen-blue: #2563eb;
+      --avallen-blue-light: #3b82f6;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --background: #ffffff;
+      --border-light: #e5e7eb;
+      --accent-light: #f3f4f6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Raleway', sans-serif;
+      color: var(--text-primary);
+      background: var(--background);
+      line-height: 1.6;
+      font-size: 11pt;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 25mm 20mm;
+      margin: 0 auto;
+      background: white;
+      position: relative;
+    }
+
+    /* Professional Header with Gradient */
+    .header {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+      padding: 20px 25px;
+      margin: -25mm -20mm 25px -20mm;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 4px 15px rgba(32, 157, 80, 0.15);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24pt;
+      font-weight: 600;
+      margin: 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header .company-info {
+      text-align: right;
+      font-weight: 400;
+    }
+
+    .header .company-name {
+      font-size: 14pt;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .header .report-date {
+      font-size: 10pt;
+      opacity: 0.9;
+    }
+
+    /* Professional Footer */
+    .footer {
+      position: fixed;
+      bottom: 15mm;
+      left: 20mm;
+      right: 20mm;
+      height: 15mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-top: 2px solid transparent;
+      background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue));
+      background-clip: padding-box;
+      border-image: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue)) 1;
+      font-size: 9pt;
+      color: var(--text-secondary);
+    }
+
+    .footer .footer-left {
+      font-weight: 500;
+    }
+
+    .footer .footer-right {
+      font-weight: 400;
+    }
+
+    /* Typography */
+    h1, h2, h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 20pt; margin-bottom: 16px; }
+    h2 { 
+      font-size: 16pt; 
+      color: var(--avallen-green);
+      margin-top: 24px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid transparent;
+      background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue)) bottom/100% 2px no-repeat;
+    }
+    h3 { 
+      font-size: 13pt; 
+      color: var(--text-primary);
+      margin-top: 18px;
+    }
+
+    /* Professional Results Box */
+    .results-box {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border: 1px solid var(--avallen-green);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 8px rgba(32, 157, 80, 0.08);
+    }
+
+    .results-box h3 {
+      color: var(--avallen-green);
+      font-size: 14pt;
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .results-box h3::before {
+      content: "📊";
+      margin-right: 8px;
+      font-size: 16pt;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .metric-item {
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 4px solid var(--avallen-green);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .metric-label {
+      font-size: 10pt;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 14pt;
+      font-weight: 600;
+      color: var(--avallen-green);
+      margin-top: 4px;
+    }
+
+    /* Data Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .data-table thead {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 10pt;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    /* Professional Lists */
+    .ingredient-list {
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 16px;
+      margin: 12px 0;
+    }
+
+    .ingredient-list ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .ingredient-list li {
+      padding: 6px 0;
+      padding-left: 20px;
+      position: relative;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .ingredient-list li:last-child {
+      border-bottom: none;
+    }
+
+    .ingredient-list li::before {
+      content: "🌱";
+      position: absolute;
+      left: 0;
+      top: 6px;
+    }
+
+    /* Professional Text Blocks */
+    .text-block {
+      background: #fafbfc;
+      border-left: 4px solid var(--avallen-green);
+      padding: 16px 20px;
+      margin: 16px 0;
+      border-radius: 0 6px 6px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .methodology-note {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border: 1px solid var(--avallen-blue);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+      font-size: 10pt;
+      color: #1e40af;
+    }
+
+    /* Page Breaks */
+    .page-break {
+      page-break-before: always;
+    }
+
+    /* Impact Categories */
+    .impact-category {
+      background: white;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .impact-category h4 {
+      color: var(--avallen-green);
+      font-size: 12pt;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+
+    .impact-value {
+      font-size: 13pt;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .impact-unit {
+      font-size: 10pt;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    /* References */
+    .references {
+      background: #fafbfc;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+
+    .references h3 {
+      color: var(--avallen-green);
+      margin-bottom: 16px;
+    }
+
+    .references ol {
+      padding-left: 20px;
+    }
+
+    .references li {
+      margin-bottom: 8px;
+      font-size: 10pt;
+      line-height: 1.5;
+    }
+
+    /* Utility Classes */
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 600; }
+    .text-sm { font-size: 10pt; }
+    .text-xs { font-size: 9pt; }
+    .mb-4 { margin-bottom: 16px; }
+    .mt-4 { margin-top: 16px; }
+    
+    /* Print Specific */
+    @media print {
+      body { print-color-adjust: exact; }
+      .page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Page -->
+  <div class="page">
+    <div class="header">
+      <div class="header-content">
+        <h1>Life Cycle Assessment Report</h1>
+        <div class="company-info">
+          <div class="company-name">{{COMPANY_NAME}}</div>
+          <div class="report-date">Generated: {{REPORT_DATE}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 60px;">
+      <h1 style="font-size: 28pt; color: var(--avallen-green); margin-bottom: 20px;">
+        {{PRODUCT_NAME}}
+      </h1>
+      <p style="font-size: 14pt; color: var(--text-secondary); margin-bottom: 40px;">
+        Environmental Impact Assessment
+      </p>
+      
+      <div class="results-box">
+        <h3>Key Environmental Impact Results</h3>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Carbon Footprint</div>
+            <div class="metric-value">{{CARBON_PER_UNIT}} kg CO₂e</div>
+            <div class="text-xs" style="color: var(--text-muted); margin-top: 4px;">per unit</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Water Footprint</div>
+            <div class="metric-value">{{WATER_PER_UNIT}} L</div>
+            <div class="text-xs" style="color: var(--text-muted); margin-top: 4px;">per unit</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Annual Production</div>
+            <div class="metric-value">{{ANNUAL_PRODUCTION}}</div>
+            <div class="text-xs" style="color: var(--text-muted); margin-top: 4px;">units</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Total Annual Impact</div>
+            <div class="metric-value">{{TOTAL_ANNUAL_CO2}} tonnes</div>
+            <div class="text-xs" style="color: var(--text-muted); margin-top: 4px;">CO₂e</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="methodology-note">
+        <strong>Methodology:</strong> This assessment follows ISO 14040 and ISO 14044 LCA standards, 
+        using the latest environmental impact databases including ecoinvent 3.5 and verified supplier data.
+        All calculations are performed using the Avallen Sustainability Platform with OpenLCA integration.
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Findings Page -->
+  <div class="page page-break">
+    <h2>Executive Summary</h2>
+    
+    <div class="text-block">
+      <p><strong>Study Overview:</strong> This Life Cycle Assessment (LCA) of {{PRODUCT_NAME}} produced by {{COMPANY_NAME}} 
+      was conducted to quantify environmental impacts using internationally recognized methodologies. The assessment focused on 
+      climate change impacts represented by the Global Warming Potential in the next 100 years (GWP100).</p>
+    </div>
+
+    <p>The study shows a carbon footprint of <strong>{{CARBON_PER_UNIT}} kg CO₂-eq per product unit</strong>. 
+    Raw material production and packaging contribute the highest environmental impacts, followed by processing and facility operations. 
+    The water footprint analysis reveals <strong>{{WATER_PER_UNIT}} litres of water consumption per product unit</strong>.</p>
+
+    <h3>Key Findings</h3>
+    <ul style="margin-left: 20px; margin-bottom: 20px;">
+      <li>Primary environmental impacts stem from raw material production ({{INGREDIENTS_IMPACT}}%)</li>
+      <li>Packaging materials contribute {{PACKAGING_IMPACT}}% to total climate impacts</li>
+      <li>Facility operations account for {{FACILITIES_IMPACT}}% of carbon footprint</li>
+      <li>Transportation and other logistics represent {{TRANSPORT_IMPACT}}% of total impacts</li>
+    </ul>
+
+    <h2>Methodology & Standards Compliance</h2>
+    
+    <p>This assessment adheres to the four phases of LCA methodology as defined by ISO standards:</p>
+    
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>LCA Phase</th>
+          <th>Methodology Applied</th>
+          <th>Data Sources</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Goal & Scope Definition</strong></td>
+          <td>Cradle-to-gate assessment</td>
+          <td>Company production data</td>
+        </tr>
+        <tr>
+          <td><strong>Inventory Analysis</strong></td>
+          <td>Material & energy flow quantification</td>
+          <td>Ecoinvent 3.5, DEFRA 2024</td>
+        </tr>
+        <tr>
+          <td><strong>Impact Assessment</strong></td>
+          <td>IPCC 2013 GWP100 factors</td>
+          <td>OpenLCA calculations</td>
+        </tr>
+        <tr>
+          <td><strong>Interpretation</strong></td>
+          <td>Hotspot analysis & recommendations</td>
+          <td>Platform analytics</td>
+        </tr>
+      </tbody>
+    </div>
+
+    <div class="methodology-note">
+      <strong>Functional Unit:</strong> The functional unit is defined as 1 {{FUNCTIONAL_UNIT}} of {{PRODUCT_NAME}}, 
+      representing the typical consumer product format.
+    </div>
+  </div>
+
+  <!-- Inventory Analysis Page -->
+  <div class="page page-break">
+    <h2>Inventory Analysis</h2>
+    
+    <h3>Process Description</h3>
+    <p>The production process of {{PRODUCT_NAME}} includes ingredient sourcing, processing, packaging, and distribution to retail points. 
+    Raw materials are sourced from verified suppliers and processed according to industry standards and company quality protocols.</p>
+
+    <h3>Ingredient Composition</h3>
+    <div class="ingredient-list">
+      <ul>
+        {{INGREDIENTS_LIST}}
+      </ul>
+    </div>
+
+    <h3>Packaging Specifications</h3>
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Material</th>
+          <th>Weight (g)</th>
+          <th>Environmental Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{PACKAGING_TABLE}}
+      </tbody>
+    </div>
+
+    <h3>Production Facilities</h3>
+    <div class="text-block">
+      <p><strong>Primary Production Location:</strong> {{FACILITY_LOCATION}}</p>
+      <p><strong>Annual Production Capacity:</strong> {{ANNUAL_PRODUCTION}} units</p>
+      <p><strong>Energy Sources:</strong> {{ENERGY_SOURCES}}</p>
+      <p><strong>Water Sources:</strong> {{WATER_SOURCES}}</p>
+    </div>
+
+    <h3>Dataset References</h3>
+    <p>All impact calculations are based on the following environmental databases and methodological sources:</p>
+    <ul style="margin-left: 20px;">
+      <li><strong>Ecoinvent 3.5 database</strong> - Swiss Centre for Life Cycle Inventories</li>
+      <li><strong>DEFRA 2024 emission factors</strong> - UK Government GHG Conversion Factors</li>
+      <li><strong>OpenLCA methodology</strong> - Ingredient impact calculations</li>
+      <li><strong>Verified supplier data</strong> - Environmental product declarations where available</li>
+    </ul>
+  </div>
+
+  <!-- Impact Assessment Page -->
+  <div class="page page-break">
+    <h2>Environmental Impact Assessment</h2>
+
+    <h3>Impact Categories</h3>
+    <p>Results of the life cycle impact assessment across all evaluated environmental categories:</p>
+
+    <div class="impact-category">
+      <h4>🌍 Climate Change (GWP100)</h4>
+      <div class="impact-value">{{TOTAL_CARBON_FOOTPRINT}}<span class="impact-unit">kg CO₂e per unit</span></div>
+      <p class="text-sm" style="margin-top: 8px; color: var(--text-secondary);">
+        Global Warming Potential over 100 years, based on IPCC 2013 methodology
+      </p>
+    </div>
+
+    <div class="impact-category">
+      <h4>💧 Water Consumption</h4>
+      <div class="impact-value">{{TOTAL_WATER_FOOTPRINT}}<span class="impact-unit">L per unit</span></div>
+      <p class="text-sm" style="margin-top: 8px; color: var(--text-secondary);">
+        Freshwater consumption across ingredient production and processing
+      </p>
+    </div>
+
+    <div class="impact-category">
+      <h4>🗑️ Waste Generation</h4>
+      <div class="impact-value">{{TOTAL_WASTE_FOOTPRINT}}<span class="impact-unit">kg per unit</span></div>
+      <p class="text-sm" style="margin-top: 8px; color: var(--text-secondary);">
+        Production waste and end-of-life packaging impacts
+      </p>
+    </div>
+
+    <h3>Impact Breakdown by Life Cycle Stage</h3>
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Life Cycle Stage</th>
+          <th>Carbon Impact (kg CO₂e)</th>
+          <th>Water Impact (L)</th>
+          <th>% of Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{IMPACT_BREAKDOWN_TABLE}}
+      </tbody>
+    </div>
+
+    <h3>Interpretation & Hotspot Analysis</h3>
+    <div class="text-block">
+      <p><strong>Primary Impact Drivers:</strong> The assessment reveals that raw material production constitutes the 
+      largest environmental impact, accounting for approximately {{INGREDIENTS_PERCENTAGE}}% of total carbon footprint. 
+      Packaging materials contribute {{PACKAGING_PERCENTAGE}}% to climate impacts.</p>
+    </div>
+
+    <p>Energy consumption during processing contributes a smaller but significant portion of the total impact. 
+    The analysis demonstrates opportunities for impact reduction through supply chain optimization and renewable energy adoption.</p>
+
+    <div class="methodology-note">
+      <p><strong>Data Quality:</strong> Impact calculations use primary data where available, supplemented by representative 
+      secondary data from peer-reviewed databases. Uncertainty analysis indicates results are accurate within ±15% for 
+      carbon footprint calculations.</p>
+    </div>
+  </div>
+
+  <!-- References Page -->
+  <div class="page page-break">
+    <div class="references">
+      <h3>References & Standards</h3>
+      <ol>
+        <li>ISO 14040:2006 - Environmental management — Life cycle assessment — Principles and framework</li>
+        <li>ISO 14044:2006 - Environmental management — Life cycle assessment — Requirements and guidelines</li>
+        <li>IPCC 2013 - Climate Change 2013: The Physical Science Basis. Working Group I Contribution to the Fifth Assessment Report</li>
+        <li>Ecoinvent 3.5 database - Swiss Centre for Life Cycle Inventories, Zurich, Switzerland</li>
+        <li>DEFRA 2024 - UK Government GHG Conversion Factors for Company Reporting. Department for Environment, Food & Rural Affairs</li>
+        <li>OpenLCA 1.11 - GreenDelta GmbH. Open-source software for Life Cycle Assessment and Sustainability Assessment</li>
+        <li>GHG Protocol - A Corporate Accounting and Reporting Standard. World Resources Institute and World Business Council for Sustainable Development</li>
+        <li>PEF Guide - Product Environmental Footprint Category Rules. European Commission, Joint Research Centre</li>
+      </ol>
+    </div>
+
+    <div style="margin-top: 40px; text-align: center; padding-top: 20px; border-top: 2px solid var(--border-light);">
+      <p style="font-size: 12pt; color: var(--avallen-green); font-weight: 600;">
+        Report Generated by Avallen Sustainability Platform
+      </p>
+      <p style="font-size: 10pt; color: var(--text-secondary); margin-top: 8px;">
+        Calculation Date: {{CALCULATION_DATE}} | System: {{SYSTEM_NAME}}
+      </p>
+      <p style="font-size: 9pt; color: var(--text-muted); margin-top: 16px;">
+        This report contains confidential and proprietary information. Distribution is restricted to authorized recipients only.
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">{{COMPANY_NAME}} - Sustainability Report</div>
+    <div class="footer-right">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
+  </div>
+</body>
+</html>

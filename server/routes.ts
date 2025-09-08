@@ -9057,7 +9057,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 80, stage: 'Generating PDF report...' };
           console.log(`🧮 LCA Report ${newReport.id}: Generating PDF report... (80%)`);
           
-          const { UnifiedPDFService } = await import('./services/UnifiedPDFService');
+          // Use new professional PDF generator instead of old UnifiedPDFService
+          const { PDFGenerator } = require('./report-generation/pdfGenerator.js');
+          const professionalGenerator = new PDFGenerator();
           
           const lcaReportData = {
             company: {
@@ -9103,8 +9105,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
             }
           };
 
-          const pdfService = UnifiedPDFService.getInstance();
-          const pdfBuffer = await pdfService.generateLCAPDF(lcaReportData as any);
+          // Generate PDF using the NEW professional Puppeteer service
+          console.log('🎯 Using NEW Professional PDF Generator with Puppeteer...');
+          const pdfBuffer = await professionalGenerator.generatePDF(lcaReportData);
           
           // Store PDF in database or file system (simplified for now)
           const fs = await import('fs');
@@ -12076,6 +12079,47 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     } catch (error) {
       console.error('Error fetching B Corp KPIs:', error);
       res.status(500).json({ error: 'Failed to fetch B Corp KPIs' });
+    }
+  });
+
+  // ===== PROFESSIONAL PDF REPORT GENERATION =====
+
+  // POST /api/generate-report - Generate professional PDF using HTML template + Puppeteer
+  app.post('/api/generate-report', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      console.log('🎯 Professional PDF report generation requested');
+      console.log('📄 Request body keys:', Object.keys(req.body));
+
+      // Import PDF generator
+      const { PDFGenerator } = require('./report-generation/pdfGenerator.js');
+      const pdfGenerator = new PDFGenerator();
+
+      // Validate request data
+      if (!req.body || !req.body.products || !req.body.company) {
+        return res.status(400).json({ 
+          error: 'Invalid request data. Required: products, company, lcaResults' 
+        });
+      }
+
+      // Generate PDF using Puppeteer
+      const pdfBuffer = await pdfGenerator.generatePDF(req.body);
+
+      // Set response headers for PDF
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="Professional_LCA_Report.pdf"');
+      res.setHeader('Content-Length', pdfBuffer.length);
+
+      console.log(`🎯 Professional PDF generated successfully: ${pdfBuffer.length} bytes`);
+      
+      // Send PDF buffer
+      res.end(pdfBuffer);
+
+    } catch (error) {
+      console.error('❌ Professional PDF generation error:', error);
+      res.status(500).json({ 
+        error: 'Professional PDF generation failed',
+        details: error.message 
+      });
     }
   });
 
