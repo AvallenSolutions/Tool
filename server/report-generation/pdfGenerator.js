@@ -1,6 +1,10 @@
-const puppeteer = require('puppeteer');
-const fs = require('fs').promises;
-const path = require('path');
+import puppeteer from 'puppeteer';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Professional PDF Generator using Puppeteer
@@ -293,4 +297,4 @@ class PDFGenerator {
   }
 }
 
-module.exports = { PDFGenerator };
+export { PDFGenerator };
