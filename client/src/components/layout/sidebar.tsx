@@ -177,7 +177,7 @@ export default function Sidebar() {
       {/* Navigation - gradient starts here */}
       <div 
         ref={navContainerRef} 
-        className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-green-500 to-blue-600" 
+        className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-green-500 to-blue-600 scrollbar-hide" 
         style={{ 
           scrollBehavior: 'auto',
           overflowBehavior: 'contain',

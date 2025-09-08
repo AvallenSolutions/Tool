@@ -282,10 +282,6 @@ export default function ComingSoon() {
             While we're building these exciting new features, you can already start your 
             sustainability journey with our comprehensive platform today.
           </p>
-          <Button className="bg-white text-green-600 hover:bg-gray-100">
-            <Plus className="w-4 h-4 mr-2" />
-            Explore Current Features
-          </Button>
         </section>
           </div>
         </main>
