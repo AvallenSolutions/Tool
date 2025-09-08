@@ -70,7 +70,7 @@ export default function ReportsCreate() {
     if (lcaReportId && generatingLCA && !lcaCompleted && !lcaError) {
       interval = setInterval(async () => {
         try {
-          const response = await apiRequest("GET", `/api/reports/${lcaReportId}/lca-progress`, {});
+          const response = await apiRequest("GET", `/api/reports/${lcaReportId}/lca-progress`);
           const progressData = await response.json();
           
           if (progressData.progress !== null) {
@@ -171,7 +171,7 @@ export default function ReportsCreate() {
     }
 
     try {
-      const response = await apiRequest("GET", `/api/reports/${lcaReportId}/download-lca`, {});
+      const response = await apiRequest("GET", `/api/reports/${lcaReportId}/download-lca`);
       
       if (response.ok) {
         const blob = await response.blob();
