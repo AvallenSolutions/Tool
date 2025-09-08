@@ -9182,70 +9182,95 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
                 
                 const virginGlassEmissionFactor = 0.7; // kg CO2e per kg
                 const recycledGlassEmissionFactor = 0.35;
-                const glassEmissions = bottleWeightKg * (
-                  (1 - recycledContent) * virginGlassEmissionFactor + 
-                  recycledContent * recycledGlassEmissionFactor
-                );
                 
+                const glassEmissions = (bottleWeightKg * (1 - recycledContent) * virginGlassEmissionFactor) +
+                                     (bottleWeightKg * recycledContent * recycledGlassEmissionFactor);
                 breakdown.packaging.co2e += glassEmissions;
-                breakdown.packaging.water += bottleWeightKg * 10; // ~10L water per kg glass
-                console.log(`🍾 Glass bottle: ${product.bottleWeight}g = ${glassEmissions.toFixed(3)} kg CO₂e`);
+                breakdown.packaging.water += bottleWeightKg * 5; // Glass production water factor
+                
+                console.log(`🍾 Glass bottle: ${product.bottleWeight}g = ${glassEmissions.toFixed(3)} kg CO2e`);
               }
               
-              // Add label and closure impacts
+              // Add label and closure impacts if available
               if (product.labelWeight) {
                 const labelWeightKg = parseFloat(product.labelWeight) / 1000;
-                breakdown.packaging.co2e += labelWeightKg * 1.8;
-                breakdown.packaging.water += labelWeightKg * 15;
+                breakdown.packaging.co2e += labelWeightKg * 1.8; // Paper label factor
+                breakdown.packaging.water += labelWeightKg * 15; // Paper production water
               }
               
               if (product.closureWeight) {
                 const closureWeightKg = parseFloat(product.closureWeight) / 1000;
-                breakdown.packaging.co2e += closureWeightKg * 3.2;
-                breakdown.packaging.water += closureWeightKg * 8;
+                breakdown.packaging.co2e += closureWeightKg * 3.2; // Cork/plastic factor
+                breakdown.packaging.water += closureWeightKg * 8; // Closure production water
               }
               
-              // 3. Calculate facility impacts using monthly data aggregation
-              const monthlyData = await db
-                .select({
-                  month: monthlyFacilityData.month,
-                  electricityKwh: sql<number>`SUM(CAST(${monthlyFacilityData.electricityKwh} AS NUMERIC))`,
-                  naturalGasM3: sql<number>`SUM(CAST(${monthlyFacilityData.naturalGasM3} AS NUMERIC))`,
-                })
-                .from(monthlyFacilityData)
-                .where(eq(monthlyFacilityData.companyId, product.companyId))
-                .groupBy(monthlyFacilityData.month);
-
-              if (monthlyData.length > 0) {
-                let totalMonthlyScope1 = 0;
-                let totalMonthlyScope2 = 0;
-                
-                monthlyData.forEach(month => {
-                  const monthlyScope2 = (month.electricityKwh || 0) * 0.233; // kg CO2e
-                  const monthlyScope1 = (month.naturalGasM3 || 0) * 1.8514; // kg CO2e
-                  totalMonthlyScope1 += monthlyScope1;
-                  totalMonthlyScope2 += monthlyScope2;
-                });
-                
-                const avgMonthlyScope1 = totalMonthlyScope1 / monthlyData.length;
-                const avgMonthlyScope2 = totalMonthlyScope2 / monthlyData.length;
-                const totalFacilityEmissions = (avgMonthlyScope1 + avgMonthlyScope2) * 12;
-                
-                breakdown.facilities.co2e = totalFacilityEmissions / totalCompanyUnits;
-                console.log(`🏭 Facility CO₂e per unit: ${breakdown.facilities.co2e.toFixed(3)}kg`);
-              }
+              // 3. Add facility impacts using monthly data aggregation
+              let facilityImpacts = { co2e: 0, water: 0, waste: 0 };
+              let productionWasteFootprint = 0;
+              let endOfLifePackagingFootprint = 0;
               
-              // Add facility water consumption
-              const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
-              for (const facility of facilities) {
-                const totalFacilityWater = 
-                  (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
-                  (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
-                  (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
+              try {
+                // Get monthly facility data
+                const { monthlyFacilityData } = await import('@shared/schema');
+                const monthlyData = await db
+                  .select({
+                    month: monthlyFacilityData.month,
+                    electricityKwh: sql<number>`SUM(CAST(${monthlyFacilityData.electricityKwh} AS NUMERIC))`,
+                    naturalGasM3: sql<number>`SUM(CAST(${monthlyFacilityData.naturalGasM3} AS NUMERIC))`,
+                    waterUsage: sql<number>`SUM(CAST(${monthlyFacilityData.waterUsage} AS NUMERIC))`
+                  })
+                  .from(monthlyFacilityData)
+                  .where(eq(monthlyFacilityData.companyId, product.companyId))
+                  .groupBy(monthlyFacilityData.month)
+                  .orderBy(desc(monthlyFacilityData.month))
+                  .limit(12);
                 
-                if (totalFacilityWater > 0) {
-                  breakdown.facilities.water += totalFacilityWater / totalCompanyUnits;
+                if (monthlyData.length > 0) {
+                  const avgMonthlyElectricity = monthlyData.reduce((sum, month) => sum + parseFloat(month.electricityKwh?.toString() || '0'), 0) / monthlyData.length;
+                  const avgMonthlyGas = monthlyData.reduce((sum, month) => sum + parseFloat(month.naturalGasM3?.toString() || '0'), 0) / monthlyData.length;
+                  const avgMonthlyWater = monthlyData.reduce((sum, month) => sum + parseFloat(month.waterUsage?.toString() || '0'), 0) / monthlyData.length;
+                  
+                  // Calculate annual facility footprint
+                  const annualElectricity = avgMonthlyElectricity * 12;
+                  const annualGas = avgMonthlyGas * 12;
+                  const annualWater = avgMonthlyWater * 12;
+                  
+                  // Scope 1: Natural gas (2.204 kg CO2e per m³)
+                  const scope1CO2e = annualGas * 2.204;
+                  // Scope 2: Electricity (0.194 kg CO2e per kWh - UK grid 2024)
+                  const scope2CO2e = annualElectricity * 0.194;
+                  
+                  // Allocate facility impacts per unit
+                  if (totalCompanyUnits > 0) {
+                    facilityImpacts.co2e = (scope1CO2e + scope2CO2e) / totalCompanyUnits;
+                    facilityImpacts.water = annualWater / totalCompanyUnits;
+                  }
+                  
+                  breakdown.facilities.co2e = facilityImpacts.co2e;
+                  breakdown.facilities.water = facilityImpacts.water;
+                  
+                  console.log(`🏭 Facility CO₂e per unit: ${facilityImpacts.co2e.toFixed(3)}kg`);
                 }
+              } catch (error) {
+                console.warn('Failed to calculate facility impacts for LCA report:', error);
+              }
+              
+              // 4. Calculate production waste footprint
+              try {
+                const wasteIntensity = await WasteIntensityCalculationService.calculateWasteIntensity(product.companyId);
+                productionWasteFootprint = wasteIntensity * 0.1; // Average waste CO2 factor
+              } catch (error) {
+                console.warn('Production waste calculation failed for LCA report:', error);
+              }
+              
+              // 5. Calculate end-of-life packaging footprint
+              try {
+                const eolFootprint = await WasteIntensityCalculationService.calculatePackagingEndOfLifeFootprint(product);
+                endOfLifePackagingFootprint = eolFootprint.totalEndOfLifeFootprint;
+                
+                console.log(`♻️ End-of-life packaging footprint: ${endOfLifePackagingFootprint.toFixed(6)} kg CO2e per unit`);
+              } catch (error) {
+                console.warn('End-of-life packaging calculation failed for LCA report:', error);
               }
               
               // Record dilution water (excluded from calculations per requirements)
@@ -9258,8 +9283,8 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
                 console.log(`💧 Water dilution recorded: ${product.waterDilutionMl}ml per bottle (excluded from product footprint)`);
               }
               
-              // Calculate comprehensive per-unit totals
-              totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + breakdown.facilities.co2e;
+              // Calculate comprehensive per-unit totals INCLUDING ALL WASTE COMPONENTS
+              totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + breakdown.facilities.co2e + productionWasteFootprint + endOfLifePackagingFootprint;
               totalWater = breakdown.ingredients.water + breakdown.packaging.water + breakdown.facilities.water;
               totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste + breakdown.facilities.waste;
               
