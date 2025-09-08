@@ -1,0 +1,49 @@
+
+> rest-express@1.0.0 dev
+✅ Sentry error tracking initializeddex.ts
+✅ Mixpanel analytics initialized
+✓ Common agricultural ingredients initialized
+[10:20:40] INFO: UnifiedPDFService initialized
+[10:20:40] INFO: Feature routes configured successfully
+[10:20:40] INFO: HTTP server configured with feature routers {"port":"5000"}
+[10:20:54] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[10:21:09] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+[10:21:10] INFO: Auth: development_admin_access {"event":"development_admin_access","userId":"44886248","userEmail":"tim***@avallen.solutions"}
+isAuthenticated middleware check for: /api/company/footprint/scope3/automated {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+isAuthenticated middleware check for: / {
+  isAuthenticated: false,
+  hasUser: false,
+  hasExpiresAt: false,
+  userObject: 'no user'
+}
+Development mode: Creating mock user for testing
+Using admin company with products: Demo Company ID: 1
+isAuthenticated middleware check for: /api/company/footprint {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+🏢 AUTOMATED SCOPE 3 CALCULATION REQUESTED for company ID 1
+🔄 Forcing fresh calculation (no cache)
+🔍 Calculating purchased goods for company 1
+🔧 EXECUTING calculateFuelEnergyUpstreamEmissions for company 1
+📦 Fetching products for company ID: 1
+isAuthenticated middleware check for: /api/company/footprint/comprehensive {
+  isAuthenticated: true,
+  hasUser: true,
+  hasExpiresAt: true,
+  userObject: [ 'claims', 'expires_at', 'access_token', 'refresh_token' ]
+}
+Development mode: Creating mock user for testing
+📦 Found 2 products for emissions calculation
+🧮 Processing product: Rum Blanc (ID: 33)
+🔄 Using REFINED LCA calculation for Rum Blanc...
+🌱 Calculating ingredient impacts for 1 ingredients
