@@ -8328,6 +8328,66 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     }
   });
 
+  // POST /api/conversations/:conversationId/messages - Send message to conversation
+  app.post('/api/conversations/:conversationId/messages', async (req, res) => {
+    let userId = null;
+    if (req.isAuthenticated() && req.user) {
+      userId = (req.user as any).claims?.sub;
+    } else if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode: Bypassing auth for message sending');
+      userId = 'dev-user';
+    } else {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    try {
+      const { conversationId } = req.params;
+      const { content, messageType = 'text', priority = 'normal' } = req.body;
+
+      if (!content?.trim()) {
+        return res.status(400).json({ error: 'Message content is required' });
+      }
+
+      console.log(`User sending message to conversation: ${conversationId}`);
+
+      // Create the message in the messages table (not internalMessages)
+      const [newMessage] = await db
+        .insert(messages)
+        .values({
+          conversationId: parseInt(conversationId),
+          senderId: userId,
+          senderRole: 'user',
+          messageType,
+          content: content.trim(),
+          metadata: { priority },
+        })
+        .returning();
+
+      // Update conversation last message time
+      await db
+        .update(conversations)
+        .set({
+          lastMessageAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(conversations.id, parseInt(conversationId)));
+
+      res.json({
+        success: true,
+        data: newMessage,
+        message: 'Message sent successfully',
+      });
+
+    } catch (error) {
+      console.error('Send message error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to send message',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
   // POST /api/messages/poll - Poll for new messages  
   app.post('/api/messages/poll', async (req, res) => {
     // Development mode authentication bypass

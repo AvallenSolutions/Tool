@@ -81,16 +81,44 @@ export default function ComingSoon() {
 
   const submitFeatureRequestMutation = useMutation({
     mutationFn: async (data: FeatureRequest) => {
+      // Step 1: Create a conversation for the feature request
+      const conversationData = {
+        title: `Feature Request: ${data.title}`,
+        type: 'support'
+      };
+      
+      const conversationResponse = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(conversationData),
+      });
+      
+      if (!conversationResponse.ok) {
+        throw new Error('Failed to create conversation');
+      }
+      
+      const conversation = await conversationResponse.json();
+      
+      // Step 2: Send the feature request message to the conversation
       const messageData = {
-        companyId: company?.id || 1,
-        toUserId: 'admin', // Send to admin
-        subject: `Feature Request: ${data.title}`,
-        message: data.description,
-        messageType: 'feature_request',
+        content: data.description,
+        messageType: 'text',
         priority: 'normal'
       };
       
-      return apiRequest('POST', '/api/messages', messageData);
+      const messageResponse = await fetch(`/api/conversations/${conversation.conversation.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(messageData),
+      });
+      
+      if (!messageResponse.ok) {
+        throw new Error('Failed to send feature request message');
+      }
+      
+      return messageResponse.json();
     },
     onSuccess: () => {
       toast({
