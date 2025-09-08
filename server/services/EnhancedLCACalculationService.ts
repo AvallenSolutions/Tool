@@ -317,8 +317,26 @@ export class EnhancedLCACalculationService {
           agricultureImpact += ingredientCarbon;
           console.log(`${ingredient.name} carbon footprint from OpenLCA: ${ingredientCarbon} kg CO₂e`);
         } else {
-          // No data available
-          console.log(`⚠️ No verified supplier data or OpenLCA data for ${ingredient.name} - manual emission factor required`);
+          // Calculate using OpenLCA service
+          try {
+            const { OpenLCAService } = await import('./OpenLCAService');
+            const ingredientCarbon = await OpenLCAService.calculateCarbonFootprint(
+              ingredient.name,
+              parseFloat(ingredient.amount || 0),
+              ingredient.unit || 'kg'
+            );
+            
+            if (ingredientCarbon > 0) {
+              const scaledCarbon = ingredientCarbon * productionVolume;
+              agricultureImpact += scaledCarbon;
+              console.log(`🌱 ${ingredient.name} calculated via OpenLCA: ${scaledCarbon} kg CO₂e (${ingredientCarbon} kg CO₂e per unit)`);
+            } else {
+              console.log(`⚠️ OpenLCA returned 0 for ${ingredient.name} - may need manual emission factor`);
+            }
+          } catch (error) {
+            console.error(`Error calculating OpenLCA impact for ${ingredient.name}:`, error);
+            console.log(`⚠️ No verified supplier data or OpenLCA data for ${ingredient.name} - manual emission factor required`);
+          }
         }
       }
     }
