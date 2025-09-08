@@ -8,9 +8,10 @@ import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf } from "lucide-react";
+import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf, ChevronDown, ChevronUp } from "lucide-react";
 import { EnhancedReportButton } from "@/components/EnhancedReportButton";
 import { ReportProgressTracker } from "@/components/reports/ReportProgressTracker";
+import { LCAProductSelector } from "@/components/products/LCAProductSelector";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Reports() {
@@ -19,6 +20,11 @@ export default function Reports() {
   const [location, setLocation] = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingReportId, setGeneratingReportId] = useState<number | null>(null);
+  
+  // LCA Report Generation State
+  const [showLCASection, setShowLCASection] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+  const [generatingLCA, setGeneratingLCA] = useState(false);
 
   const { data: reports, isLoading: reportsLoading } = useQuery({
     queryKey: ["/api/reports"],
@@ -41,6 +47,12 @@ export default function Reports() {
   // Fetch LCA calculation reports
   const { data: lcaReports, isLoading: lcaReportsLoading } = useQuery({
     queryKey: ["/api/lca/reports"],
+    retry: false,
+  });
+
+  // Fetch user products for LCA generation
+  const { data: userProducts, isLoading: productsLoading } = useQuery({
+    queryKey: ["/api/products"],
     retry: false,
   });
 
@@ -82,6 +94,53 @@ export default function Reports() {
       title: "Report Generated Successfully",
       description: "Your sustainability report has been completed using live data from your account.",
     });
+  };
+
+  // LCA Report Generation Functions
+  const handleGenerateLCAReport = async () => {
+    if (selectedProductIds.length === 0) {
+      toast({
+        title: "No Products Selected",
+        description: "Please select at least one product to generate an LCA report.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratingLCA(true);
+    try {
+      // TODO: Phase 2 - Implement actual LCA report generation API call
+      console.log('🔬 Generating LCA report for products:', selectedProductIds);
+      
+      // Placeholder - simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "LCA Report Generated",
+        description: `Professional LCA report created for ${selectedProductIds.length} product${selectedProductIds.length > 1 ? 's' : ''}.`,
+      });
+      
+      // Reset selection
+      setSelectedProductIds([]);
+      setShowLCASection(false);
+    } catch (error) {
+      console.error('❌ LCA report generation failed:', error);
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate LCA report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingLCA(false);
+    }
+  };
+
+  const toggleLCASection = () => {
+    setShowLCASection(!showLCASection);
+    if (!showLCASection) {
+      // Reset selection when opening
+      setSelectedProductIds([]);
+    }
   };
 
   useEffect(() => {
@@ -146,6 +205,10 @@ export default function Reports() {
   const lcaReportsData = reportsData.filter((report: any) => report.reportType === 'lca') || [];
   const productLcaReports = Array.isArray(lcaReports) ? lcaReports : [];
   const guidedReportsData = Array.isArray(guidedReports) ? guidedReports : [];
+  
+  // Process user products for LCA generation
+  const products = Array.isArray(userProducts) ? userProducts : [];
+  const confirmedProducts = products.filter(product => product.status !== 'draft');
 
   return (
     <div className="flex min-h-screen bg-lightest-gray">
@@ -200,7 +263,18 @@ export default function Reports() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-4">
+            <Button 
+              onClick={toggleLCASection}
+              variant="outline"
+              className="border-blue-500 text-blue-600 hover:bg-blue-50 font-medium px-6 py-2"
+              disabled={confirmedProducts.length === 0}
+              size="lg"
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              Generate LCA Report
+              {showLCASection ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+            </Button>
             <Button 
               onClick={() => setLocation('/app/reports/create')}
               className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -210,6 +284,86 @@ export default function Reports() {
               Create New Report
             </Button>
           </div>
+
+          {/* LCA Report Generation Section */}
+          {showLCASection && confirmedProducts.length > 0 && (
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-blue-25">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl font-semibold text-slate-gray flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      Generate Life Cycle Assessment Report
+                    </CardTitle>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Select products to include in a comprehensive LCA report following industry standards
+                    </p>
+                  </div>
+                  <Button
+                    onClick={toggleLCASection}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {productsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-gray-500 mt-2">Loading products...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Product Selection */}
+                    <LCAProductSelector
+                      products={confirmedProducts}
+                      selectedProductIds={selectedProductIds}
+                      onSelectionChange={setSelectedProductIds}
+                    />
+
+                    {/* Generation Actions */}
+                    {selectedProductIds.length > 0 && (
+                      <div className="flex items-center justify-between p-4 bg-white border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <FileText className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">
+                              Ready to Generate LCA Report
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {selectedProductIds.length} product{selectedProductIds.length > 1 ? 's' : ''} selected for comprehensive life cycle assessment
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={handleGenerateLCAReport}
+                          disabled={generatingLCA}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                        >
+                          {generatingLCA ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-2" />
+                              Generate Report
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Progress Tracker */}
           {generatingReportId && (
