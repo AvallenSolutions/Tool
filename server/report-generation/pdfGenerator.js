@@ -116,11 +116,22 @@ class PDFGenerator {
     const lcaResults = data.lcaResults || {};
     const aggregatedResults = data.aggregatedResults || {};
 
-    // Calculate per-unit values
+    // DEBUG: Final success confirmation
+    console.log('🎯 PDFGenerator FINAL SUCCESS - lcaResults object:', {
+      totalCarbonFootprint: lcaResults.totalCarbonFootprint,
+      totalWaterFootprint: lcaResults.totalWaterFootprint,
+      totalWasteFootprint: lcaResults.totalWasteFootprint
+    });
+
+    // Calculate per-unit values - CRITICAL FIX: Use database-stored values from refined LCA calculations
     const annualProduction = primaryProduct.annualProductionVolume || 1;
     const carbonPerUnit = (lcaResults.totalCarbonFootprint * 1000) / annualProduction; // Convert tonnes to kg
-    const waterPerUnit = lcaResults.totalWaterFootprint / annualProduction;
-    const wastePerUnit = ((aggregatedResults.totalWasteFootprint || 0) / 1000) / annualProduction; // Convert g to kg
+    
+    // FIXED: Use the correct refined LCA values from the lcaResults object 
+    const waterPerUnit = (lcaResults.totalWaterFootprint || 0) / annualProduction; // Use correct field name
+    const wastePerUnit = ((lcaResults.totalWasteFootprint || 0) * 1000) / annualProduction; // Convert tonnes to kg per unit
+    
+    console.log(`🎯 PDFGenerator using per-unit values: CO2e=${carbonPerUnit.toFixed(3)}kg, Water=${waterPerUnit.toFixed(1)}L, Waste=${wastePerUnit.toFixed(4)}kg`);
 
     // Format numbers for display
     const formatNumber = (num, decimals = 1) => {

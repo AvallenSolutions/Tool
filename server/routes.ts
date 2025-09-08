@@ -9125,9 +9125,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
             const annualVolume = product.annualProductionVolume ? parseFloat(product.annualProductionVolume.toString()) : 1;
             
             // Use the refined LCA endpoint that already calculates everything correctly
-            let totalCO2e = 0;
-            let totalWater = 0;
-            let totalWaste = 0;
+            let productCO2e = 0;
+            let productWater = 0;
+            let productWaste = 0;
             
             let breakdown = {
               ingredients: { co2e: 0, water: 0, waste: 0 },
@@ -9149,10 +9149,10 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
                 const lcaData = await lcaResponse.json();
                 
                 if (lcaData.success && lcaData.data) {
-                  // Use the exact values from refined LCA endpoint
-                  totalCO2e = lcaData.data.perUnit.co2e_kg;
-                  totalWater = lcaData.data.perUnit.water_liters;
-                  totalWaste = lcaData.data.perUnit.waste_kg;
+                  // SIMPLIFIED APPROACH: Direct use of refined LCA values
+                  productCO2e = lcaData.data.perUnit.co2e_kg;
+                  productWater = lcaData.data.perUnit.water_liters;  
+                  productWaste = lcaData.data.perUnit.waste_kg;
                   
                   // Use the breakdown from refined LCA
                   if (lcaData.data.breakdown) {
@@ -9162,7 +9162,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
                     breakdown.dilutionRecorded = lcaData.data.breakdown.dilutionRecorded || { amount: 0, unit: '', excluded: true };
                   }
                   
-                  console.log(`✅ Using refined LCA values for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg, Water=${totalWater.toFixed(1)}L, Waste=${totalWaste.toFixed(3)}kg`);
+                  console.log(`✅ FINAL FIX: Using refined LCA values for ${product.name}: CO2e=${productCO2e.toFixed(3)}kg, Water=${productWater.toFixed(1)}L, Waste=${productWaste.toFixed(4)}kg`);
                 } else {
                   throw new Error('Invalid LCA response data');
                 }
@@ -9322,38 +9322,43 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               }
               
               // Calculate comprehensive per-unit totals INCLUDING ALL WASTE COMPONENTS
-              totalCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + breakdown.facilities.co2e + productionWasteFootprint + endOfLifePackagingFootprint;
-              totalWater = breakdown.ingredients.water + breakdown.packaging.water + breakdown.facilities.water;
-              totalWaste = breakdown.ingredients.waste + breakdown.packaging.waste + breakdown.facilities.waste;
+              productCO2e = breakdown.ingredients.co2e + breakdown.packaging.co2e + breakdown.facilities.co2e + productionWasteFootprint + endOfLifePackagingFootprint;
+              productWater = breakdown.ingredients.water + breakdown.packaging.water + breakdown.facilities.water;
+              productWaste = breakdown.ingredients.waste + breakdown.packaging.waste + breakdown.facilities.waste;
               
-              console.log(`📊 Refined LCA for ${product.name}: CO2e=${totalCO2e.toFixed(3)}kg (includes all components), Water=${totalWater.toFixed(1)}L (excludes dilution), Waste=${totalWaste.toFixed(3)}kg`);
+              console.log(`📊 Refined LCA for ${product.name}: CO2e=${productCO2e.toFixed(3)}kg (includes all components), Water=${productWater.toFixed(1)}L (excludes dilution), Waste=${productWaste.toFixed(3)}kg`);
               
               } catch (fallbackError) {
                 console.error(`❌ Fallback LCA calculation failed for ${product.name}:`, fallbackError);
                 // Use stored footprints as final fallback
-                totalCO2e = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
-                totalWater = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
-                totalWaste = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
+                productCO2e = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
+                productWater = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
+                productWaste = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
               }
             } // End of outer lcaError catch
             
             // Final fallback outside all try-catch blocks
-            if (totalCO2e === 0 && totalWater === 0 && totalWaste === 0) {
+            if (productCO2e === 0 && productWater === 0 && productWaste === 0) {
               console.warn(`⚠️ All LCA calculations failed for ${product.name}, using stored values`);
               // Fallback to stored values
-              totalCO2e = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
-              totalWater = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
-              totalWaste = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
+              productCO2e = product.carbonFootprint ? parseFloat(product.carbonFootprint.toString()) : 0;
+              productWater = product.waterFootprint ? parseFloat(product.waterFootprint.toString()) : 0;
+              productWaste = product.wasteFootprint ? parseFloat(product.wasteFootprint.toString()) : 0;
             }
 
             // Calculate annual totals
-            const productTotalCarbon = totalCO2e * annualVolume;
-            const productTotalWater = totalWater * annualVolume;
-            const productTotalWaste = totalWaste * annualVolume;
+            const productTotalCarbon = productCO2e * annualVolume;
+            const productTotalWater = productWater * annualVolume;
+            const productTotalWaste = productWaste * annualVolume;
 
             totalCarbon += productTotalCarbon;
             totalWater += productTotalWater;
             totalWaste += productTotalWaste;
+            
+            console.log(`🔍 ACCUMULATION DEBUG: Product ${product.name}:`);
+            console.log(`  Per-unit: CO2e=${productCO2e.toFixed(3)}kg, Water=${productWater.toFixed(1)}L, Waste=${productWaste.toFixed(4)}kg`);
+            console.log(`  Annual: Carbon=${productTotalCarbon.toFixed(1)}kg, Water=${productTotalWater.toFixed(0)}L, Waste=${productTotalWaste.toFixed(3)}kg`);
+            console.log(`  Running totals: Carbon=${totalCarbon.toFixed(1)}kg, Water=${totalWater.toFixed(0)}L, Waste=${totalWaste.toFixed(3)}kg`);
             
             // Aggregate component breakdowns
             aggregatedBreakdown.ingredients.co2e += breakdown.ingredients.co2e * annualVolume;
@@ -9383,9 +9388,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
               labelMaterial: product.labelMaterial || 'paper',
               ingredients: product.ingredients || [],
               // Per-unit impacts (comprehensive)
-              carbonFootprint: totalCO2e,
-              waterFootprint: totalWater,
-              wasteFootprint: totalWaste,
+              carbonFootprint: productCO2e,
+              waterFootprint: productWater,
+              wasteFootprint: productWaste,
               // Annual totals
               totalCarbonFootprint: productTotalCarbon,
               totalWaterFootprint: productTotalWater,
@@ -9396,19 +9401,19 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
                   co2e: breakdown.ingredients.co2e,
                   water: breakdown.ingredients.water,
                   waste: breakdown.ingredients.waste,
-                  percentage: totalCO2e > 0 ? Math.round((breakdown.ingredients.co2e / totalCO2e) * 100) : 0
+                  percentage: productCO2e > 0 ? Math.round((breakdown.ingredients.co2e / productCO2e) * 100) : 0
                 },
                 packaging: {
                   co2e: breakdown.packaging.co2e,
                   water: breakdown.packaging.water,
                   waste: breakdown.packaging.waste,
-                  percentage: totalCO2e > 0 ? Math.round((breakdown.packaging.co2e / totalCO2e) * 100) : 0
+                  percentage: productCO2e > 0 ? Math.round((breakdown.packaging.co2e / productCO2e) * 100) : 0
                 },
                 facilities: {
                   co2e: breakdown.facilities.co2e,
                   water: breakdown.facilities.water,
                   waste: breakdown.facilities.waste,
-                  percentage: totalCO2e > 0 ? Math.round((breakdown.facilities.co2e / totalCO2e) * 100) : 0
+                  percentage: productCO2e > 0 ? Math.round((breakdown.facilities.co2e / productCO2e) * 100) : 0
                 },
                 dilutionRecorded: breakdown.dilutionRecorded
               }
