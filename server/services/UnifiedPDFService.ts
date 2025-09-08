@@ -199,7 +199,16 @@ export class UnifiedPDFService {
   }
 
   async generateLCAPDF(data: LCAReportData): Promise<Buffer> {
-    return this.generatePDF(data, { type: 'professional' });
+    // Use the new ProfessionalLCAService for enhanced LCA reports
+    try {
+      const { ProfessionalLCAService } = await import('./ProfessionalLCAService');
+      const professionalService = ProfessionalLCAService.getInstance();
+      return await professionalService.generateLCAPDF(data);
+    } catch (error) {
+      console.error('Error with ProfessionalLCAService, falling back to basic PDF:', error);
+      // Fallback to existing method if professional service fails
+      return this.generatePDF(data, { type: 'professional' });
+    }
   }
 
   async generateEnhancedLCAPDF(data: any): Promise<Buffer> {
