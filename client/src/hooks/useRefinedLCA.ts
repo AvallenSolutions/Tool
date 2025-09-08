@@ -135,35 +135,46 @@ export function transformRefinedLCAToBreakdown(refinedLCA: RefinedLCAData | unde
   const totalCO2e = refinedLCA.perUnit.co2e_kg;
   const totalWater = refinedLCA.perUnit.water_liters;
 
+  // Debug logging for breakdown components
+  console.log('🔍 Transform Debug - Total CO2e:', totalCO2e);
+  console.log('🔍 Transform Debug - Breakdown:', refinedLCA.breakdown);
+  console.log('🔍 Transform Debug - endOfLifeWaste CO2e:', refinedLCA.breakdown.endOfLifeWaste?.co2e);
+  console.log('🔍 Transform Debug - productionWaste CO2e:', refinedLCA.breakdown.productionWaste?.co2e);
+
+  const carbonBreakdown = [
+    {
+      stage: 'Ingredients',
+      value: refinedLCA.breakdown.ingredients.co2e,
+      percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.ingredients.co2e / totalCO2e) * 100) : 0
+    },
+    {
+      stage: 'Packaging',
+      value: refinedLCA.breakdown.packaging.co2e,
+      percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.packaging.co2e / totalCO2e) * 100) : 0
+    },
+    {
+      stage: 'Facilities',
+      value: refinedLCA.breakdown.facilities?.co2e || 0,
+      percentage: totalCO2e > 0 ? Math.round(((refinedLCA.breakdown.facilities?.co2e || 0) / totalCO2e) * 100) : 0
+    },
+    // Add waste footprint components if they exist
+    ...(refinedLCA.breakdown.productionWaste?.co2e > 0 ? [{
+      stage: 'Production Waste',
+      value: refinedLCA.breakdown.productionWaste.co2e,
+      percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.productionWaste.co2e / totalCO2e) * 100) : 0
+    }] : []),
+    ...(refinedLCA.breakdown.endOfLifeWaste?.co2e > 0 ? [{
+      stage: 'End-of-Life Waste',
+      value: refinedLCA.breakdown.endOfLifeWaste.co2e,
+      percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.endOfLifeWaste.co2e / totalCO2e) * 100) : 0
+    }] : [])
+  ];
+
+  console.log('🔍 Transform Debug - Final carbonBreakdown:', carbonBreakdown);
+  console.log('🔍 Transform Debug - carbonBreakdown length:', carbonBreakdown.length);
+
   return {
-    carbonBreakdown: [
-      {
-        stage: 'Ingredients',
-        value: refinedLCA.breakdown.ingredients.co2e,
-        percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.ingredients.co2e / totalCO2e) * 100) : 0
-      },
-      {
-        stage: 'Packaging',
-        value: refinedLCA.breakdown.packaging.co2e,
-        percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.packaging.co2e / totalCO2e) * 100) : 0
-      },
-      {
-        stage: 'Facilities',
-        value: refinedLCA.breakdown.facilities?.co2e || 0,
-        percentage: totalCO2e > 0 ? Math.round(((refinedLCA.breakdown.facilities?.co2e || 0) / totalCO2e) * 100) : 0
-      },
-      // Add waste footprint components if they exist
-      ...(refinedLCA.breakdown.productionWaste?.co2e > 0 ? [{
-        stage: 'Production Waste',
-        value: refinedLCA.breakdown.productionWaste.co2e,
-        percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.productionWaste.co2e / totalCO2e) * 100) : 0
-      }] : []),
-      ...(refinedLCA.breakdown.endOfLifeWaste?.co2e > 0 ? [{
-        stage: 'End-of-Life Waste',
-        value: refinedLCA.breakdown.endOfLifeWaste.co2e,
-        percentage: totalCO2e > 0 ? Math.round((refinedLCA.breakdown.endOfLifeWaste.co2e / totalCO2e) * 100) : 0
-      }] : [])
-    ],
+    carbonBreakdown,
     waterBreakdown: [
       {
         stage: 'Ingredients',
