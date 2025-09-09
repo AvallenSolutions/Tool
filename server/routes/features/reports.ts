@@ -63,12 +63,16 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
     }, 'Report exported successfully');
     
   } catch (error) {
+    console.error('Export error details:', error);
     logger.error({ 
       error, 
       route: '/api/reports/guided/:reportId/export',
       reportId: req.params.reportId 
     }, 'Failed to export report');
-    res.status(500).json({ error: 'Failed to export report' });
+    res.status(500).json({ 
+      error: 'Failed to export report',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
