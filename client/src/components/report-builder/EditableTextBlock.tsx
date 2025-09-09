@@ -96,12 +96,13 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
     justify: AlignJustify
   };
 
-  // Generate CSS classes based on formatting
+  // Generate CSS classes based on formatting - use currentFormatting directly
   const getTextClasses = () => {
     const classes = ['w-full', 'transition-colors', 'duration-200'];
+    const activeFormatting = isEditing ? currentFormatting : (block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' });
     
     // Font size
-    switch (formatting.fontSize) {
+    switch (activeFormatting.fontSize) {
       case 'small':
         classes.push('text-sm');
         break;
@@ -113,7 +114,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
     }
     
     // Text alignment
-    switch (formatting.alignment) {
+    switch (activeFormatting.alignment) {
       case 'center':
         classes.push('text-center');
         break;
@@ -128,7 +129,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
     }
     
     // Font style
-    switch (formatting.style) {
+    switch (activeFormatting.style) {
       case 'bold':
         classes.push('font-bold');
         break;
@@ -158,7 +159,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
           <div className="flex items-center gap-2">
             <Type className="w-4 h-4 text-gray-600" />
             <Select 
-              value={formatting.fontSize || 'medium'} 
+              value={currentFormatting.fontSize || 'medium'} 
               onValueChange={(value) => handleFormattingUpdate('fontSize', value)}
             >
               <SelectTrigger className="w-20 h-8 text-xs">
@@ -177,7 +178,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
             {Object.entries(alignmentIcons).map(([alignment, Icon]) => (
               <Button
                 key={alignment}
-                variant={formatting.alignment === alignment ? "default" : "outline"}
+                variant={currentFormatting.alignment === alignment ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleFormattingUpdate('alignment', alignment)}
                 className="h-8 w-8 p-0"
@@ -190,17 +191,17 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
           {/* Font Style */}
           <div className="flex items-center gap-1">
             <Button
-              variant={formatting.style === 'bold' ? "default" : "outline"}
+              variant={currentFormatting.style === 'bold' ? "default" : "outline"}
               size="sm"
-              onClick={() => handleFormattingUpdate('style', formatting.style === 'bold' ? 'normal' : 'bold')}
+              onClick={() => handleFormattingUpdate('style', currentFormatting.style === 'bold' ? 'normal' : 'bold')}
               className="h-8 w-8 p-0"
             >
               <Bold className="w-4 h-4" />
             </Button>
             <Button
-              variant={formatting.style === 'italic' ? "default" : "outline"}
+              variant={currentFormatting.style === 'italic' ? "default" : "outline"}
               size="sm"
-              onClick={() => handleFormattingUpdate('style', formatting.style === 'italic' ? 'normal' : 'italic')}
+              onClick={() => handleFormattingUpdate('style', currentFormatting.style === 'italic' ? 'normal' : 'italic')}
               className="h-8 w-8 p-0"
             >
               <Italic className="w-4 h-4" />
