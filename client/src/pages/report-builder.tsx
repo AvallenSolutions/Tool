@@ -130,42 +130,39 @@ function CompanyStoryPreview({ block, onUpdate, isPreview = false }: { block?: R
 }
 
 function MetricsSummaryPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
-  // Use the exact same API endpoints as the dashboard
-  const { data: footprintData } = useQuery({
-    queryKey: ['/api/company/footprint'],
-    staleTime: 0,
+  // Use EXACTLY the same queries as the dashboard metrics cards
+  const { data: metrics } = useQuery({
+    queryKey: ["/api/dashboard/metrics"],
+    retry: false,
   });
 
-  const { data: automatedData } = useQuery({
-    queryKey: ['/api/company/footprint/scope3/automated'],
+  // Fetch comprehensive footprint data to match Carbon Footprint Calculator total exactly
+  const { data: comprehensiveData } = useQuery({
+    queryKey: ['/api/company/footprint/comprehensive'],
   });
 
-  const { data: dashboardMetrics } = useQuery({
-    queryKey: ['/api/dashboard/metrics'],
+  // Fetch the exact Carbon Footprint Calculator total via API endpoint
+  const { data: carbonCalculatorTotal } = useQuery({
+    queryKey: ['/api/carbon-calculator-total'],
   });
 
-  // Calculate CO2e exactly the same way as the dashboard
-  const calculateTotalCO2e = () => {
-    if (!footprintData?.data || !automatedData?.data) return 0;
-    
-    // Manual Scope 1 + 2 emissions from footprint data
-    let manualEmissions = 0;
-    for (const entry of footprintData.data) {
-      if (entry.scope === 1 || entry.scope === 2) {
-        manualEmissions += parseFloat(entry.calculatedEmissions) || 0;
-      }
+  // EXACT COPY of dashboard getCarbonCalculatorTotal function
+  const getCarbonCalculatorTotal = () => {
+    // Return the exact number from Carbon Footprint Calculator comprehensive endpoint
+    if (carbonCalculatorTotal?.data?.totalCO2e) {
+      return carbonCalculatorTotal.data.totalCO2e;
     }
-    
-    // Automated Scope 3 emissions
-    const automatedEmissions = automatedData.data.totalEmissions * 1000 || 0; // Convert tonnes to kg
-    
-    const totalKg = manualEmissions + automatedEmissions;
-    return totalKg / 1000; // Convert back to tonnes for display
+    // Fallback: Use the comprehensive data directly (same source as Carbon Calculator)
+    if (comprehensiveData?.data?.totalFootprint?.co2e_tonnes) {
+      return comprehensiveData.data.totalFootprint.co2e_tonnes;
+    }
+    return (metrics?.totalCO2e || 0);
   };
 
-  const totalCO2e = calculateTotalCO2e();
-  const waterUsage = dashboardMetrics?.waterUsage || 11700000; // 11.7M litres (same as dashboard)
-  const wasteGenerated = dashboardMetrics?.wasteGenerated || 0.1;
+  // Use EXACT same values as dashboard
+  const totalCO2e = getCarbonCalculatorTotal();
+  const waterUsage = metrics?.waterUsage || 11700000; // fallback to 11.7M litres
+  const wasteGenerated = metrics?.wasteGenerated || 0.1; // fallback to 0.1 tonnes
 
   const updateCustomText = (field: string, value: string) => {
     if (!block || !onUpdate) return;
@@ -199,18 +196,22 @@ function MetricsSummaryPreview({ block, onUpdate, isPreview = false }: { block?:
         </div>
       )}
 
-      {/* Key Metrics */}
+      {/* Key Metrics - EXACT same formatting as dashboard */}
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 bg-green-50 rounded-lg">
-          <div className="text-2xl font-bold text-green-700">{totalCO2e.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-green-700">
+            {totalCO2e.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+          </div>
           <div className="text-sm text-gray-600">tonnes CO₂e</div>
         </div>
         <div className="text-center p-4 bg-blue-50 rounded-lg">
-          <div className="text-2xl font-bold text-blue-700">{(waterUsage / 1000000).toFixed(1)}M</div>
+          <div className="text-2xl font-bold text-blue-700">
+            {(waterUsage / 1000000).toFixed(1)}M
+          </div>
           <div className="text-sm text-gray-600">litres water</div>
         </div>
         <div className="text-center p-4 bg-purple-50 rounded-lg">
-          <div className="text-2xl font-bold text-purple-700">{wasteGenerated}</div>
+          <div className="text-2xl font-bold text-purple-700">{wasteGenerated.toFixed(1)}</div>
           <div className="text-sm text-gray-600">tonnes waste</div>
         </div>
       </div>
