@@ -8,7 +8,7 @@ import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf } from "lucide-react";
+import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf, Trash2 } from "lucide-react";
 import { EnhancedReportButton } from "@/components/EnhancedReportButton";
 import { ReportProgressTracker } from "@/components/reports/ReportProgressTracker";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -28,15 +28,6 @@ export default function Reports() {
     enabled: isAuthenticated, // Only run when authenticated
   });
 
-  // Debug logging
-  console.log('🔍 Reports Query State:', {
-    isAuthenticated,
-    isLoading,
-    reportsLoading,
-    hasReports: !!reports,
-    reportsError: reportsError?.message,
-    reports: reports
-  });
 
   // Fetch guided sustainability reports
   const { data: guidedReports, isLoading: guidedReportsLoading } = useQuery({
@@ -80,6 +71,35 @@ export default function Reports() {
       setGeneratingReportId(null);
     },
   });
+
+  // Delete report mutation
+  const deleteReportMutation = useMutation({
+    mutationFn: async (reportId: number) => {
+      const response = await apiRequest("DELETE", `/api/reports/${reportId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+      toast({
+        title: "Report Deleted",
+        description: "The report has been successfully deleted.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Error deleting report:', error);
+      toast({
+        title: "Delete Failed",
+        description: "There was an error deleting the report. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteReport = (reportId: number) => {
+    if (window.confirm("Are you sure you want to delete this report? This action cannot be undone.")) {
+      deleteReportMutation.mutate(reportId);
+    }
+  };
 
 
 
@@ -372,6 +392,16 @@ export default function Reports() {
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             Generate New LCA
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteReport(report.id)}
+                            variant="outline"
+                            size="sm"
+                            className="border-red-500 text-red-600 hover:bg-red-50"
+                            disabled={deleteReportMutation.isPending}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {deleteReportMutation.isPending ? 'Deleting...' : 'Delete'}
                           </Button>
                         </div>
                       </CardContent>

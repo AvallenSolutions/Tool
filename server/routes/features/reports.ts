@@ -124,19 +124,7 @@ router.post('/guided/:reportId/export-pdf', isAuthenticated, async (req: any, re
 router.get('/', isAuthenticated, async (req: any, res: any) => {
   try {
     const userId = req.user?.claims?.sub || req.user?.id; // Support both formats
-    console.log('🔍 Feature Reports API Debug:', { 
-      hasUser: !!req.user, 
-      userId, 
-      userClaims: req.user?.claims 
-    });
-    
     const userCompany = await dbStorage.getCompanyByOwner(userId);
-    console.log('🔍 Feature Company lookup:', { 
-      userId, 
-      foundCompany: !!userCompany, 
-      companyId: userCompany?.id,
-      companyName: userCompany?.name 
-    });
     
     if (!userCompany) {
       return res.status(404).json({ error: 'User company not found' });
@@ -215,6 +203,48 @@ router.get('/:id', isAuthenticated, async (req: any, res: any) => {
   } catch (error) {
     logger.error({ error, route: '/api/reports/:id', reportId: req.params.id }, 'Failed to fetch report');
     res.status(500).json({ error: 'Failed to fetch report' });
+  }
+});
+
+// DELETE /api/reports/:id - Delete a specific report
+router.delete('/:id', isAuthenticated, async (req: any, res: any) => {
+  try {
+    const userId = req.user?.claims?.sub || req.user?.id;
+    const reportId = parseInt(req.params.id);
+    
+    if (!reportId) {
+      return res.status(400).json({ error: 'Invalid report ID' });
+    }
+    
+    const userCompany = await dbStorage.getCompanyByOwner(userId);
+    if (!userCompany) {
+      return res.status(404).json({ error: 'User company not found' });
+    }
+    
+    // Verify the report belongs to the user's company
+    const [existingReport] = await db.select()
+      .from(reports)
+      .where(eq(reports.id, reportId))
+      .limit(1);
+    
+    if (!existingReport) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    
+    if (existingReport.companyId !== userCompany.id) {
+      return res.status(403).json({ error: 'Unauthorized to delete this report' });
+    }
+    
+    // Delete the report
+    await db.delete(reports)
+      .where(eq(reports.id, reportId));
+    
+    res.json({ success: true, message: 'Report deleted successfully' });
+    logDatabase('DELETE', 'reports', undefined, { reportId, companyId: userCompany.id });
+    
+  } catch (error) {
+    logger.error({ error, route: '/api/reports/:id', reportId: req.params.id }, 'Failed to delete report');
+    res.status(500).json({ error: 'Failed to delete report' });
   }
 });
 
