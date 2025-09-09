@@ -336,20 +336,43 @@ function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?
     );
   }
 
-  // Calculate scope emissions using the SAME method as dashboard
-  // Scope 1: Use automated scope 1 data
-  const scope1Total = (automatedScope1Data?.data?.totalEmissions || 0) * 1000; // Convert tonnes to kg
+  // DEBUG: Log the actual data to see what we're working with
+  console.log('🔍 Carbon Report Debug:', {
+    automatedScope1Data: automatedScope1Data?.data,
+    comprehensiveData: comprehensiveData?.data,
+    carbonCalculatorTotal: carbonCalculatorTotal?.data
+  });
+
+  // Calculate scope emissions using the EXACT same method as dashboard
+  // Scope 1: Use automated scope 1 data (should be 288.82 tonnes)
+  const scope1Tonnes = automatedScope1Data?.data?.totalEmissions || 0;
+  const scope1Total = scope1Tonnes * 1000; // Convert tonnes to kg
   
   // Scope 2: Calculate from comprehensive facility data (electricity)
-  const scope2Total = ((comprehensiveData?.data?.detailedBreakdown?.facilities || 0) - (automatedScope1Data?.data?.totalEmissions || 0) * 1000) || 0; // Subtract Scope 1 from facilities total
+  const facilitiesTotal = comprehensiveData?.data?.detailedBreakdown?.facilities || 0;
+  const scope2Total = Math.max(0, facilitiesTotal - scope1Total); // Subtract Scope 1 from facilities total
   
-  // Scope 3: Use comprehensive breakdown
+  // Scope 3: Use comprehensive breakdown  
   const scope3Ingredients = comprehensiveData?.data?.detailedBreakdown?.ingredients || 0;
   const scope3Packaging = comprehensiveData?.data?.detailedBreakdown?.packaging || 0;
   const scope3Waste = comprehensiveData?.data?.detailedBreakdown?.waste || 0;
-  const scope3Total = scope3Ingredients + scope3Packaging + scope3Waste;
+  const scope3Other = comprehensiveData?.data?.detailedBreakdown?.transportOther || 0;
+  const scope3Total = scope3Ingredients + scope3Packaging + scope3Waste + scope3Other;
 
   const totalEmissions = scope1Total + scope2Total + scope3Total;
+
+  console.log('🧮 Scope Calculations:', {
+    scope1Tonnes,
+    scope1Total,
+    facilitiesTotal,
+    scope2Total,
+    scope3Ingredients,
+    scope3Packaging,
+    scope3Waste,
+    scope3Other,
+    scope3Total,
+    totalEmissions
+  });
 
   const updateCustomText = (field: string, value: string) => {
     if (!block || !onUpdate) return;
