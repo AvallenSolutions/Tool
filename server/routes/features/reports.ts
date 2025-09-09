@@ -14,7 +14,7 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
   try {
     const { reportId } = req.params;
     const { format = 'pdf' } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?.claims?.sub || req.user?.id;
     
     if (!reportId) {
       return res.status(400).json({ error: 'Report ID is required' });
@@ -76,7 +76,7 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
 router.post('/guided/:reportId/export-pdf', isAuthenticated, async (req: any, res: any) => {
   try {
     const { reportId } = req.params;
-    const userId = req.user?.id;
+    const userId = req.user?.claims?.sub || req.user?.id;
     
     if (!reportId) {
       return res.status(400).json({ error: 'Report ID is required' });
