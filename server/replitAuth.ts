@@ -249,6 +249,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       refresh_token: 'dev-refresh'
     };
     
+    console.log('🔧 Development user set:', {
+      userId: (req as any).user.claims.sub,
+      email: (req as any).user.claims.email,
+      url: req.url
+    });
+    
     // Mark as authenticated in development
     (req as any).session = (req as any).session || {};
     (req as any).session.passport = { user: req.user };

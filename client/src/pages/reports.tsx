@@ -20,11 +20,22 @@ export default function Reports() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingReportId, setGeneratingReportId] = useState<number | null>(null);
 
-  const { data: reports, isLoading: reportsLoading } = useQuery({
+  const { data: reports, isLoading: reportsLoading, error: reportsError } = useQuery({
     queryKey: ["/api/reports"],
     retry: false,
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
+    enabled: isAuthenticated, // Only run when authenticated
+  });
+
+  // Debug logging
+  console.log('🔍 Reports Query State:', {
+    isAuthenticated,
+    isLoading,
+    reportsLoading,
+    hasReports: !!reports,
+    reportsError: reportsError?.message,
+    reports: reports
   });
 
   // Fetch guided sustainability reports
