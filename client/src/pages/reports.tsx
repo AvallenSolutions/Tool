@@ -385,15 +385,6 @@ export default function Reports() {
                             </Button>
                           )}
                           <Button
-                            onClick={() => setLocation('/app/reports/create')}
-                            variant="outline"
-                            size="sm"
-                            className="border-green-500 text-green-600 hover:bg-green-50"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Generate New LCA
-                          </Button>
-                          <Button
                             onClick={() => handleDeleteReport(report.id)}
                             variant="outline"
                             size="sm"
