@@ -16,6 +16,7 @@ import { apiRequest } from '@/lib/queryClient';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { KPIProgressPreview } from "@/components/report-builder/KPIProgressPreview";
+import { EditableTextBlock } from "@/components/report-builder/EditableTextBlock";
 
 // Preview components for each block type
 function CompanyStoryPreview() {
@@ -447,7 +448,8 @@ export default function ReportBuilderPage() {
   }, [currentTemplate]);
 
   // Render preview for each block type
-  const renderBlockPreview = (blockType: string) => {
+  const renderBlockPreview = (block: ReportBlock) => {
+    const blockType = block.type;
     switch (blockType) {
       case 'company_story':
         return <CompanyStoryPreview />;
@@ -473,6 +475,14 @@ export default function ReportBuilderPage() {
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-700">Your custom text content will appear here. Use the settings to edit this content.</p>
           </div>
+        );
+      case 'editable_text':
+        return (
+          <EditableTextBlock
+            block={block}
+            onUpdate={handleBlockContentUpdate}
+            isPreview={true}
+          />
         );
       default:
         return (
@@ -571,6 +581,19 @@ export default function ReportBuilderPage() {
     });
   };
 
+  const handleBlockContentUpdate = (blockId: string, updatedContent: any) => {
+    if (!currentTemplate) return;
+
+    const updatedBlocks = currentTemplate.blocks.map(block =>
+      block.id === blockId ? { ...block, content: updatedContent } : block
+    );
+
+    setCurrentTemplate({
+      ...currentTemplate,
+      blocks: updatedBlocks
+    });
+  };
+
   const createFromAudience = (audience: string) => {
     const blockTypes = AUDIENCE_TEMPLATES[audience as keyof typeof AUDIENCE_TEMPLATES] || [];
     const blocks: ReportBlock[] = blockTypes.map((type, index) => {
@@ -603,6 +626,7 @@ export default function ReportBuilderPage() {
       case 'initiatives': return <Target className="h-4 w-4" />;
       case 'kpi_progress': return <BarChart3 className="h-4 w-4" />;
       case 'custom_text': return <FileText className="h-4 w-4" />;
+      case 'editable_text': return <Edit className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
@@ -841,7 +865,7 @@ export default function ReportBuilderPage() {
                       <h3 className="text-lg font-semibold text-gray-900">{block.title}</h3>
                     </div>
                     <div className="prose prose-sm max-w-none">
-                      {renderBlockPreview(block.type)}
+                      {renderBlockPreview(block)}
                     </div>
                   </div>
                 ))}
