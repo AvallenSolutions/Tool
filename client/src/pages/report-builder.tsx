@@ -299,7 +299,7 @@ function CarbonFootprintPreview() {
 
 interface ReportBlock {
   id: string;
-  type: 'company_story' | 'metrics_summary' | 'initiatives' | 'kpi_progress' | 'carbon_footprint' | 'water_usage' | 'custom_text';
+  type: 'company_story' | 'metrics_summary' | 'initiatives' | 'kpi_progress' | 'carbon_footprint' | 'water_usage' | 'custom_text' | 'editable_text';
   title: string;
   content?: any;
   order: number;
@@ -323,7 +323,8 @@ const AVAILABLE_BLOCKS: Omit<ReportBlock, 'id' | 'order' | 'isVisible'>[] = [
   { type: 'water_usage', title: 'Water Footprint', content: { showBreakdown: true, showSources: true } },
   { type: 'initiatives', title: 'Sustainability Initiatives', content: { showActive: true, showCompleted: false } },
   { type: 'kpi_progress', title: 'KPI Progress Tracking', content: { showCharts: true, showTargets: true } },
-  { type: 'custom_text', title: 'Custom Text Block', content: { text: 'Add your custom content here...' } }
+  { type: 'custom_text', title: 'Custom Text Block', content: { text: 'Add your custom content here...' } },
+  { type: 'editable_text', title: 'Rich Text Block', content: { text: 'Click to edit this text...', formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' } } }
 ];
 
 const AUDIENCE_TEMPLATES = {
