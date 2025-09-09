@@ -36,8 +36,16 @@ const INDUSTRY_BENCHMARKS = {
 export function FootprintSummaryStep({ data, onDataChange, existingData, onSave, isLoading }: FootprintSummaryStepProps) {
   const [, setLocation] = useLocation();
   
-  // Fetch automated Scope 3 data
-  const { data: automatedData } = useQuery({
+  // Fetch automated data for ALL scopes (same as individual tabs)
+  const { data: automatedScope1Data } = useQuery({
+    queryKey: ['/api/company/footprint/scope1/automated'],
+  });
+  
+  const { data: automatedScope2Data } = useQuery({
+    queryKey: ['/api/company/footprint/scope2/automated'],
+  });
+  
+  const { data: automatedScope3Data } = useQuery({
     queryKey: ['/api/company/footprint/scope3/automated'],
   });
   
@@ -46,28 +54,42 @@ export function FootprintSummaryStep({ data, onDataChange, existingData, onSave,
     queryKey: ['/api/company/footprint/comprehensive'],
   });
 
-  // Calculate emissions by scope including automated Scope 3
+  // Calculate emissions by scope - SAME LOGIC as individual tabs (manual + automated)
   const scopeEmissions = useMemo(() => {
-    const scope1 = existingData.filter(item => item.scope === 1)
+    // Manual emissions from user input
+    const scope1Manual = existingData.filter(item => item.scope === 1)
       .reduce((sum, item) => sum + parseFloat(item.calculatedEmissions || '0'), 0);
-    const scope2 = existingData.filter(item => item.scope === 2)
+    const scope2Manual = existingData.filter(item => item.scope === 2)
       .reduce((sum, item) => sum + parseFloat(item.calculatedEmissions || '0'), 0);
     const scope3Manual = existingData.filter(item => item.scope === 3)
       .reduce((sum, item) => sum + parseFloat(item.calculatedEmissions || '0'), 0);
     
-    // Add automated Scope 3 emissions (already in kg, sum the individual product emissions)
-    const scope3Automated = automatedData?.data?.totalEmissions ? (automatedData.data.totalEmissions * 1000) : 0;
-    const scope3Total = scope3Automated; // Only use automated for now, manual entries would add to this
+    // Automated emissions from facility and product data (converted to kg)
+    const scope1Automated = automatedScope1Data?.data?.totalEmissions ? (automatedScope1Data.data.totalEmissions * 1000) : 0;
+    const scope2Automated = automatedScope2Data?.data?.totalEmissions ? (automatedScope2Data.data.totalEmissions * 1000) : 0;
+    const scope3Automated = automatedScope3Data?.data?.totalEmissions ? (automatedScope3Data.data.totalEmissions * 1000) : 0;
+    
+    // Combined totals (SAME as individual tabs)
+    const scope1Total = scope1Manual + scope1Automated;
+    const scope2Total = scope2Manual + scope2Automated;
+    const scope3Total = scope3Manual + scope3Automated;
+    
+    console.log('🧮 Summary Scope Calculations (FIXED):', {
+      scope1: { manual: scope1Manual, automated: scope1Automated, total: scope1Total },
+      scope2: { manual: scope2Manual, automated: scope2Automated, total: scope2Total },
+      scope3: { manual: scope3Manual, automated: scope3Automated, total: scope3Total },
+      grandTotal: scope1Total + scope2Total + scope3Total
+    });
     
     return { 
-      scope1, 
-      scope2, 
+      scope1: scope1Total, 
+      scope2: scope2Total, 
       scope3: scope3Total, 
       scope3Manual, 
       scope3Automated,
-      total: scope1 + scope2 + scope3Total 
+      total: scope1Total + scope2Total + scope3Total 
     };
-  }, [existingData, automatedData]);
+  }, [existingData, automatedScope1Data, automatedScope2Data, automatedScope3Data]);
 
   // Prepare chart data (convert to tonnes for better readability)
   const barChartData = [
