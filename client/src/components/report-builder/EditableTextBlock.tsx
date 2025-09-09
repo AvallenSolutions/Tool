@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, Settings } from 'lucide-react';
-import { TextFormatting } from './TextFormatting';
+import { Edit, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type, Bold, Italic } from 'lucide-react';
 
 interface EditableTextBlockProps {
   block: {
@@ -24,7 +23,7 @@ interface EditableTextBlockProps {
 export function EditableTextBlock({ block, onUpdate, isPreview = false }: EditableTextBlockProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(block.content.text);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Remove modal state since we're doing inline formatting
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const formatting = block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' };
@@ -66,11 +65,19 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
     }
   };
 
-  const handleFormattingUpdate = (newFormatting: any) => {
+  const handleFormattingUpdate = (field: string, value: any) => {
+    const newFormatting = { ...formatting, [field]: value };
     onUpdate(block.id, {
       ...block.content,
-      formatting: { ...formatting, ...newFormatting }
+      formatting: newFormatting
     });
+  };
+
+  const alignmentIcons = {
+    left: AlignLeft,
+    center: AlignCenter,
+    right: AlignRight,
+    justify: AlignJustify
   };
 
   // Generate CSS classes based on formatting
@@ -128,15 +135,74 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
 
   if (isEditing) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 border rounded-lg p-4 bg-white">
+        {/* Inline Formatting Controls */}
+        <div className="flex items-center gap-4 p-2 bg-gray-50 rounded border">
+          {/* Font Size */}
+          <div className="flex items-center gap-2">
+            <Type className="w-4 h-4 text-gray-600" />
+            <Select 
+              value={formatting.fontSize || 'medium'} 
+              onValueChange={(value) => handleFormattingUpdate('fontSize', value)}
+            >
+              <SelectTrigger className="w-20 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">Small</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="large">Large</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Text Alignment */}
+          <div className="flex items-center gap-1">
+            {Object.entries(alignmentIcons).map(([alignment, Icon]) => (
+              <Button
+                key={alignment}
+                variant={formatting.alignment === alignment ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFormattingUpdate('alignment', alignment)}
+                className="h-8 w-8 p-0"
+              >
+                <Icon className="w-4 h-4" />
+              </Button>
+            ))}
+          </div>
+
+          {/* Font Style */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant={formatting.style === 'bold' ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFormattingUpdate('style', formatting.style === 'bold' ? 'normal' : 'bold')}
+              className="h-8 w-8 p-0"
+            >
+              <Bold className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={formatting.style === 'italic' ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFormattingUpdate('style', formatting.style === 'italic' ? 'normal' : 'italic')}
+              className="h-8 w-8 p-0"
+            >
+              <Italic className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Text Area */}
         <Textarea
           ref={textareaRef}
           value={editText}
           onChange={(e) => setEditText(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="min-h-[100px] resize-y"
+          className={`min-h-[100px] resize-y ${getTextClasses().replace('hover:bg-gray-50 cursor-pointer rounded p-2 border-2 border-transparent hover:border-blue-200', '')}`}
           placeholder="Enter your text content..."
         />
+
+        {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Button
             onClick={handleSaveText}
@@ -162,41 +228,19 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        {!isPreview && (
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleStartEditing}
-              size="sm"
-              variant="outline"
-              className="h-8"
-            >
-              <Edit className="w-3 h-3 mr-1" />
-              Edit
-            </Button>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="h-8">
-                  <Settings className="w-3 h-3 mr-1" />
-                  Format
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Text Formatting</DialogTitle>
-                  <DialogDescription>
-                    Customize the appearance of your text block
-                  </DialogDescription>
-                </DialogHeader>
-                <TextFormatting 
-                  formatting={formatting}
-                  onUpdate={handleFormattingUpdate}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
-      </div>
+      {!isPreview && (
+        <div className="flex items-center gap-2 mb-2">
+          <Button
+            onClick={handleStartEditing}
+            size="sm"
+            variant="outline"
+            className="h-8"
+          >
+            <Edit className="w-3 h-3 mr-1" />
+            Edit Text
+          </Button>
+        </div>
+      )}
       
       <div
         onClick={handleStartEditing}
