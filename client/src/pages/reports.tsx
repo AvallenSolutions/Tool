@@ -144,7 +144,6 @@ export default function Reports() {
 
   // Separate reports by type with proper null checks  
   const guidedReportsData = Array.isArray(guidedReports) ? guidedReports : [];
-  const productLcaReports = Array.isArray(lcaReports) ? lcaReports : [];
   
 
   return (
@@ -155,7 +154,7 @@ export default function Reports() {
         <main className="flex-1 p-6 space-y-8">
           
           {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
@@ -184,19 +183,6 @@ export default function Reports() {
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <Leaf className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-purple-600">Product LCAs</p>
-                    <p className="text-2xl font-bold text-purple-900">{productLcaReports.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Action Buttons */}
@@ -404,66 +390,6 @@ export default function Reports() {
             )}
           </div>
 
-          {/* Product LCA Section */}
-          {reportsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin w-6 h-6 border-4 border-purple-500 border-t-transparent rounded-full" />
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Leaf className="w-5 h-5 text-purple-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">Product Life Cycle Assessments</h2>
-              </div>
-              
-              <div className="grid gap-4">
-                {Array.isArray(productLcaReports) && productLcaReports.length > 0 ? (
-                  productLcaReports.map((product: any, index: number) => (
-                    <Card key={index} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-purple-300">
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="p-3 bg-purple-50 rounded-full">
-                            <Leaf className="w-5 h-5 text-purple-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-lg text-gray-900">{product.name || `Product LCA #${index + 1}`}</h3>
-                            <p className="text-sm text-gray-500 flex items-center mt-1">
-                              <TrendingUp className="w-4 h-4 mr-1" />
-                              Environmental impact assessment
-                            </p>
-                          </div>
-                          <Badge className="bg-purple-100 text-purple-700">Active</Badge>
-                        </div>
-                        
-                        {product.emissions && (
-                          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-100">
-                            <div className="text-xl font-bold text-purple-700">
-                              {parseFloat(product.emissions).toFixed(2)} kg CO₂e
-                            </div>
-                            <div className="text-sm text-purple-600 font-medium">Product Carbon Footprint</div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <Card className="border-2 border-dashed border-gray-300">
-                    <CardContent className="py-12 text-center">
-                      <div className="p-4 bg-purple-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                        <Leaf className="w-10 h-10 text-purple-600" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Product LCAs Yet</h3>
-                      <p className="text-gray-600 mb-4">
-                        Start by adding products and calculating their environmental impact.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>
