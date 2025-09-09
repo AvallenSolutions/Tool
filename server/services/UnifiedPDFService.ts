@@ -161,20 +161,27 @@ export class UnifiedPDFService {
 
       let result: Buffer;
 
+      console.log('🔀 PDF Generation switch - type:', options.type);
+      
       switch (options.type) {
         case 'basic':
+          console.log('📄 Using basic PDF generation');
           result = await this.generateBasicPDF(data, options);
           break;
         case 'modern':
+          console.log('🎨 Using modern PDF generation');
           result = await this.generateModernPDF(data, options);
           break;
         case 'comprehensive':
+          console.log('🚀 Using comprehensive PDF generation');
           result = await this.generateComprehensivePDF(data, options);
           break;
         case 'professional':
+          console.log('💼 Using professional PDF generation');
           result = await this.generateProfessionalPDF(data, options);
           break;
         case 'branded':
+          console.log('🏷️ Using branded PDF generation');
           result = await this.generateBrandedPDF(data, options);
           break;
         default:
@@ -331,12 +338,18 @@ export class UnifiedPDFService {
    * Comprehensive PDF using Puppeteer - full HTML/CSS capabilities
    */
   private async generateComprehensivePDF(data: ReportData | LCAReportData, options: PDFGenerationOptions): Promise<Buffer> {
+    console.log('🎯 generateComprehensivePDF called');
     try {
+      console.log('🔨 Generating HTML...');
       const html = this.generateComprehensiveHTML(data, options);
+      console.log('📝 HTML generated, length:', html.length);
+      console.log('🚀 Converting to PDF...');
       return await this.convertHTMLtoPDF(html, options);
     } catch (error) {
+      console.error('❌ Comprehensive PDF generation failed:', error);
       logger.warn({ error }, 'Puppeteer PDF generation failed, falling back to html-pdf-node');
       // Fallback to html-pdf-node
+      console.log('🔄 Using direct html-pdf-node fallback...');
       const html = this.generateComprehensiveHTML(data, options);
       const file = { content: html };
       const pdfOptions = { 
@@ -344,7 +357,9 @@ export class UnifiedPDFService {
         margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' },
         printBackground: true
       };
-      return await htmlPdf.generatePdf(file, pdfOptions);
+      const fallbackResult = await htmlPdf.generatePdf(file, pdfOptions);
+      console.log('✅ Direct fallback PDF generated, size:', fallbackResult.length, 'bytes');
+      return fallbackResult;
     }
   }
 
@@ -914,25 +929,69 @@ export class UnifiedPDFService {
   }
 
   private async convertHTMLtoPDF(html: string, options: PDFGenerationOptions): Promise<Buffer> {
+    console.log('🔧 Starting Puppeteer HTML-to-PDF conversion...');
+    console.log('📄 HTML length:', html.length);
+    
     try {
+      console.log('🚀 Launching Puppeteer browser...');
       const browser = await puppeteer.launch({ 
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding'
+        ]
       });
-      const page = await browser.newPage();
-      await page.setContent(html);
       
+      console.log('📝 Creating new page...');
+      const page = await browser.newPage();
+      
+      // Set viewport and wait for content to load
+      await page.setViewport({ width: 1200, height: 800 });
+      
+      console.log('🎯 Setting HTML content...');
+      await page.setContent(html, { 
+        waitUntil: 'networkidle0',
+        timeout: 30000 
+      });
+      
+      console.log('📑 Generating PDF...');
       const pdf = await page.pdf({
         format: options.format || 'A4',
         margin: options.margins || { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' },
-        printBackground: true
+        printBackground: true,
+        preferCSSPageSize: false,
+        displayHeaderFooter: false
       });
       
+      console.log('✅ PDF generated successfully, size:', pdf.length, 'bytes');
       await browser.close();
+      
       return pdf;
     } catch (error) {
+      console.error('❌ Puppeteer PDF conversion failed:', error);
       logger.error({ error }, 'Puppeteer PDF conversion failed');
-      throw error;
+      
+      // Fallback to html-pdf-node
+      console.log('🔄 Trying fallback to html-pdf-node...');
+      try {
+        const file = { content: html };
+        const pdfOptions = { 
+          format: options.format || 'A4',
+          margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' },
+          printBackground: true
+        };
+        const fallbackPdf = await htmlPdf.generatePdf(file, pdfOptions);
+        console.log('✅ Fallback PDF generated successfully, size:', fallbackPdf.length, 'bytes');
+        return fallbackPdf;
+      } catch (fallbackError) {
+        console.error('❌ Fallback PDF generation also failed:', fallbackError);
+        throw new Error(`Both Puppeteer and html-pdf-node failed: ${error.message}`);
+      }
     }
   }
 }
