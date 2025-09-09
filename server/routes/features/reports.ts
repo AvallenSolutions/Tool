@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../../replitAuth';
 import { storage as dbStorage } from '../../storage';
-import { reports, insertReportSchema } from '@shared/schema';
+import { reports, insertReportSchema, customReports } from '@shared/schema';
 import { db } from '../../db';
 import { eq, desc } from 'drizzle-orm';
 import { logger, logDatabase } from '../../config/logger';
@@ -283,6 +283,166 @@ router.delete('/:id', isAuthenticated, async (req: any, res: any) => {
   } catch (error) {
     logger.error({ error, route: '/api/reports/:id', reportId: req.params.id }, 'Failed to delete report');
     res.status(500).json({ error: 'Failed to delete report' });
+  }
+});
+
+// GET /api/reports/guided/:reportId/images - Get uploaded images for a guided report
+router.get('/guided/:reportId/images', isAuthenticated, async (req: any, res: any) => {
+  try {
+    const { reportId } = req.params;
+    const userId = req.user?.claims?.sub || req.user?.id;
+    
+    if (!reportId) {
+      return res.status(400).json({ error: 'Report ID is required' });
+    }
+    
+    // Get user's company
+    const userCompany = await dbStorage.getCompanyByOwner(userId);
+    if (!userCompany) {
+      return res.status(404).json({ error: 'User company not found' });
+    }
+    
+    // Get report data
+    const [report] = await db.select()
+      .from(customReports)
+      .where(eq(customReports.id, reportId))
+      .limit(1);
+    
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    
+    // Verify user has access to this report
+    if (report.companyId !== userCompany.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    res.json({ uploadedImages: report.uploadedImages || {} });
+    logDatabase('SELECT', 'customReports', undefined, { reportId, companyId: userCompany.id });
+    
+  } catch (error) {
+    logger.error({ error, route: '/api/reports/guided/:reportId/images', reportId: req.params.reportId }, 'Failed to fetch report images');
+    res.status(500).json({ error: 'Failed to fetch report images' });
+  }
+});
+
+// PUT /api/reports/guided/:reportId/images - Add image to report section
+router.put('/guided/:reportId/images', isAuthenticated, async (req: any, res: any) => {
+  try {
+    const { reportId } = req.params;
+    const { sectionId, imageUrl } = req.body;
+    const userId = req.user?.claims?.sub || req.user?.id;
+    
+    if (!reportId || !sectionId || !imageUrl) {
+      return res.status(400).json({ error: 'Report ID, section ID, and image URL are required' });
+    }
+    
+    // Get user's company
+    const userCompany = await dbStorage.getCompanyByOwner(userId);
+    if (!userCompany) {
+      return res.status(404).json({ error: 'User company not found' });
+    }
+    
+    // Get current report data
+    const [report] = await db.select()
+      .from(customReports)
+      .where(eq(customReports.id, reportId))
+      .limit(1);
+    
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    
+    // Verify user has access to this report
+    if (report.companyId !== userCompany.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    // Update uploaded images
+    const currentImages = report.uploadedImages || {};
+    const sectionImages = currentImages[sectionId] || [];
+    
+    // Add new image if not already present
+    if (!sectionImages.includes(imageUrl)) {
+      sectionImages.push(imageUrl);
+      currentImages[sectionId] = sectionImages;
+      
+      await db.update(customReports)
+        .set({ 
+          uploadedImages: currentImages,
+          updatedAt: new Date()
+        })
+        .where(eq(customReports.id, reportId));
+    }
+    
+    res.json({ success: true, uploadedImages: currentImages });
+    logDatabase('UPDATE', 'customReports', undefined, { reportId, sectionId, companyId: userCompany.id });
+    
+  } catch (error) {
+    logger.error({ error, route: '/api/reports/guided/:reportId/images', reportId: req.params.reportId }, 'Failed to add image to report');
+    res.status(500).json({ error: 'Failed to add image to report' });
+  }
+});
+
+// DELETE /api/reports/guided/:reportId/images - Remove image from report section
+router.delete('/guided/:reportId/images', isAuthenticated, async (req: any, res: any) => {
+  try {
+    const { reportId } = req.params;
+    const { sectionId, imageUrl } = req.body;
+    const userId = req.user?.claims?.sub || req.user?.id;
+    
+    if (!reportId || !sectionId || !imageUrl) {
+      return res.status(400).json({ error: 'Report ID, section ID, and image URL are required' });
+    }
+    
+    // Get user's company
+    const userCompany = await dbStorage.getCompanyByOwner(userId);
+    if (!userCompany) {
+      return res.status(404).json({ error: 'User company not found' });
+    }
+    
+    // Get current report data
+    const [report] = await db.select()
+      .from(customReports)
+      .where(eq(customReports.id, reportId))
+      .limit(1);
+    
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    
+    // Verify user has access to this report
+    if (report.companyId !== userCompany.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    // Update uploaded images - remove the specified image
+    const currentImages = report.uploadedImages || {};
+    const sectionImages = currentImages[sectionId] || [];
+    
+    // Remove image from section
+    const updatedSectionImages = sectionImages.filter((url: string) => url !== imageUrl);
+    
+    if (updatedSectionImages.length === 0) {
+      // Remove the section if no images left
+      delete currentImages[sectionId];
+    } else {
+      currentImages[sectionId] = updatedSectionImages;
+    }
+    
+    await db.update(customReports)
+      .set({ 
+        uploadedImages: currentImages,
+        updatedAt: new Date()
+      })
+      .where(eq(customReports.id, reportId));
+    
+    res.json({ success: true, uploadedImages: currentImages });
+    logDatabase('UPDATE', 'customReports', undefined, { reportId, sectionId, companyId: userCompany.id, action: 'remove_image' });
+    
+  } catch (error) {
+    logger.error({ error, route: '/api/reports/guided/:reportId/images', reportId: req.params.reportId }, 'Failed to remove image from report');
+    res.status(500).json({ error: 'Failed to remove image from report' });
   }
 });
 
