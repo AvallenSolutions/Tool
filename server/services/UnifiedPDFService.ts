@@ -239,7 +239,7 @@ export class UnifiedPDFService {
   async exportReport(data: ReportData, format: string, exportOptions: any = {}): Promise<Buffer> {
     switch (format) {
       case 'pdf':
-        return this.generatePDF(data, { type: 'modern' });
+        return this.generatePDF(data, { type: 'comprehensive' });
       case 'pdf-branded':
         return this.generatePDF(data, { 
           type: 'branded',
@@ -733,9 +733,63 @@ export class UnifiedPDFService {
 
   private generateHTMLContent(data: ReportData | LCAReportData): string {
     if ('content' in data) {
-      return Object.entries(data.content).map(([key, value]) => 
-        `<section><h2>${key}</h2><p>${value}</p></section>`
-      ).join('');
+      // Enhanced HTML generation for guided sustainability reports
+      const sectionTitles: Record<string, string> = {
+        summary: 'Executive Summary',
+        introduction: 'Introduction', 
+        initiatives_narrative: 'Sustainability Initiatives',
+        key_metrics_narrative: 'Key Environmental Metrics',
+        company_info_narrative: 'Company Information',
+        kpi_tracking_narrative: 'KPI Tracking & Progress',
+        carbon_footprint_narrative: 'Carbon Footprint Analysis'
+      };
+
+      const sectionOrder = [
+        'summary', 'introduction', 'company_info_narrative',
+        'key_metrics_narrative', 'carbon_footprint_narrative',
+        'initiatives_narrative', 'kpi_tracking_narrative'
+      ];
+
+      let htmlContent = '';
+
+      // Add metrics section if available
+      if ('metrics' in data && data.metrics) {
+        htmlContent += `
+          <section class="metrics">
+            <h2>Environmental Metrics Overview</h2>
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <h3>Carbon Footprint</h3>
+                <p class="metric-value">${data.metrics.co2e || 0} kg CO₂e</p>
+              </div>
+              <div class="metric-card">
+                <h3>Water Usage</h3>
+                <p class="metric-value">${data.metrics.water || 0} L</p>
+              </div>
+              <div class="metric-card">
+                <h3>Waste Generated</h3>
+                <p class="metric-value">${data.metrics.waste || 0} kg</p>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      // Add content sections in order
+      sectionOrder.forEach(sectionKey => {
+        if (data.content[sectionKey] && String(data.content[sectionKey]).trim()) {
+          const title = sectionTitles[sectionKey] || sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          const content = String(data.content[sectionKey]).trim();
+          htmlContent += `
+            <section class="content-section">
+              <h2>${title}</h2>
+              <div class="content-text">${content}</div>
+            </section>
+          `;
+        }
+      });
+
+      return htmlContent;
     } else {
       const lcaData = data as LCAReportData;
       return `
@@ -756,15 +810,106 @@ export class UnifiedPDFService {
 
   private generateWebCSS(): string {
     return `
-      body { font-family: 'Helvetica', sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; }
-      .container { max-width: 800px; margin: 0 auto; }
-      .header { text-align: center; border-bottom: 3px solid #10b981; padding-bottom: 20px; margin-bottom: 30px; }
-      h1 { color: #10b981; font-size: 2.5em; margin: 0; }
-      .company { font-size: 1.2em; color: #6b7280; margin: 10px 0; }
-      .date { color: #9ca3af; }
-      section { margin: 30px 0; }
-      h2 { color: #1f2937; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; }
-      .footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #9ca3af; }
+      * { box-sizing: border-box; }
+      body { 
+        font-family: 'Helvetica', 'Arial', sans-serif; 
+        line-height: 1.6; 
+        color: #1f2937; 
+        margin: 0; 
+        padding: 20px; 
+        background: white;
+      }
+      .container { max-width: 800px; margin: 0 auto; background: white; }
+      .header { 
+        text-align: center; 
+        border-bottom: 3px solid #10b981; 
+        padding-bottom: 30px; 
+        margin-bottom: 40px; 
+      }
+      h1 { 
+        color: #10b981; 
+        font-size: 2.8em; 
+        margin: 0; 
+        font-weight: bold; 
+        margin-bottom: 10px;
+      }
+      .company { 
+        font-size: 1.4em; 
+        color: #4f46e5; 
+        margin: 15px 0; 
+        font-weight: 600;
+      }
+      .date { color: #6b7280; font-size: 1em; }
+      
+      .metrics {
+        background: #f8fafc;
+        padding: 25px;
+        border-radius: 8px;
+        margin: 30px 0;
+        border: 1px solid #e2e8f0;
+      }
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .metric-card {
+        background: white;
+        padding: 20px;
+        border-radius: 6px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+      }
+      .metric-card h3 {
+        color: #374151;
+        font-size: 0.9em;
+        margin: 0 0 10px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+      }
+      .metric-value {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #10b981;
+        margin: 0;
+      }
+      
+      .content-section { 
+        margin: 40px 0; 
+        page-break-inside: avoid;
+      }
+      h2 { 
+        color: #1f2937; 
+        border-bottom: 2px solid #10b981; 
+        padding-bottom: 12px; 
+        font-size: 1.5em;
+        margin: 0 0 20px 0;
+        font-weight: bold;
+      }
+      .content-text {
+        color: #374151;
+        font-size: 1.1em;
+        line-height: 1.7;
+        text-align: justify;
+        margin-top: 15px;
+      }
+      
+      .footer { 
+        text-align: center; 
+        margin-top: 60px; 
+        padding-top: 30px; 
+        border-top: 2px solid #e5e7eb; 
+        color: #6b7280;
+        font-size: 0.9em;
+      }
+      
+      @media print {
+        body { background: white !important; }
+        .container { box-shadow: none !important; }
+      }
     `;
   }
 
