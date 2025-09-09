@@ -28,13 +28,18 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
 
   const formatting = block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' };
 
-  // Auto-focus when editing starts
+  // Auto-focus when editing starts and sync formatting
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
       textareaRef.current.select();
     }
   }, [isEditing]);
+
+  // Sync text when block content changes
+  useEffect(() => {
+    setEditText(block.content.text);
+  }, [block.content.text]);
 
   const handleStartEditing = () => {
     if (isPreview) return;
@@ -45,7 +50,8 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
   const handleSaveText = () => {
     onUpdate(block.id, {
       ...block.content,
-      text: editText
+      text: editText,
+      formatting: formatting  // Make sure to preserve current formatting
     });
     setIsEditing(false);
   };
@@ -66,9 +72,11 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
   };
 
   const handleFormattingUpdate = (field: string, value: any) => {
+    console.log(`🎨 Formatting update: ${field} = ${value}`, { current: formatting, new: { ...formatting, [field]: value } });
     const newFormatting = { ...formatting, [field]: value };
     onUpdate(block.id, {
       ...block.content,
+      text: editText, // Include current text
       formatting: newFormatting
     });
   };
@@ -192,15 +200,30 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
           </div>
         </div>
 
-        {/* Text Area */}
-        <Textarea
-          ref={textareaRef}
-          value={editText}
-          onChange={(e) => setEditText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className={`min-h-[100px] resize-y ${getTextClasses().replace('hover:bg-gray-50 cursor-pointer rounded p-2 border-2 border-transparent hover:border-blue-200', '')}`}
-          placeholder="Enter your text content..."
-        />
+        {/* Text Area and Live Preview */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1 block">Edit Text</label>
+            <Textarea
+              ref={textareaRef}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="min-h-[100px] resize-y text-sm"
+              placeholder="Enter your text content..."
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-1 block">Live Preview</label>
+            <div 
+              className={`min-h-[100px] p-3 border rounded-md bg-gray-50 ${getTextClasses().replace('hover:bg-gray-50 cursor-pointer rounded p-2 border-2 border-transparent hover:border-blue-200', '')}`}
+            >
+              {editText || (
+                <span className="text-gray-400 italic">Preview will appear here...</span>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
