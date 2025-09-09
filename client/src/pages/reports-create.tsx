@@ -29,29 +29,14 @@ export default function ReportsCreate() {
   const [lcaError, setLcaError] = useState(false);
   const [lcaPdfReady, setLcaPdfReady] = useState(false);
 
-  // Create guided report mutation
-  const createGuidedReportMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/reports/guided/create", {});
-      return response.json();
-    },
-    onSuccess: (data) => {
-      console.log('Guided report creation response:', data);
-      toast({
-        title: "Guided Report Created",
-        description: "Your guided report wizard is ready. Start building your sustainability report.",
-      });
-      setLocation(`/app/guided-report/${data.data.id}`);
-    },
-    onError: (error: any) => {
-      console.error('Error creating guided report:', error);
-      toast({
-        title: "Creation Failed",
-        description: "Failed to create guided report. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Navigate to Report Builder (replaces old guided report)
+  const handleStartReportBuilder = () => {
+    toast({
+      title: "Opening Report Builder",
+      description: "Redirecting to the new drag-and-drop Report Builder interface.",
+    });
+    setLocation('/app/report-builder');
+  };
 
   // Fetch user products for LCA generation
   const { data: userProducts, isLoading: productsLoading } = useQuery({
@@ -256,9 +241,9 @@ export default function ReportsCreate() {
                     <Wand2 className="w-8 h-8 text-purple-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl text-purple-900">Guided Sustainability Report</CardTitle>
+                    <CardTitle className="text-xl text-purple-900">Dynamic Report Builder</CardTitle>
                     <CardDescription className="text-purple-600">
-                      Step-by-step wizard with templates and AI assistance
+                      Drag-and-drop interface with real-time preview and export
                     </CardDescription>
                   </div>
                 </div>
@@ -267,35 +252,25 @@ export default function ReportsCreate() {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Sparkles className="w-4 h-4 text-purple-500" />
-                    <span>Multiple professional templates</span>
+                    <span>Drag-and-drop content blocks</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Target className="w-4 h-4 text-purple-500" />
-                    <span>SMART Goals integration</span>
+                    <span>Real-time preview and editing</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <FileText className="w-4 h-4 text-purple-500" />
-                    <span>PDF, PowerPoint & Google Slides export</span>
+                    <span>PDF, PowerPoint & Web export</span>
                   </div>
                 </div>
                 
                 <Button 
-                  onClick={() => createGuidedReportMutation.mutate()}
-                  disabled={createGuidedReportMutation.isPending}
+                  onClick={handleStartReportBuilder}
                   className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                   size="lg"
                 >
-                  {createGuidedReportMutation.isPending ? (
-                    <>
-                      <Clock className="w-5 h-5 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-5 h-5 mr-2" />
-                      Start Guided Report
-                    </>
-                  )}
+                  <Wand2 className="w-5 h-5 mr-2" />
+                  Start Report Builder
                 </Button>
               </CardContent>
             </Card>
