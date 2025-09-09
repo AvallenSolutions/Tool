@@ -337,6 +337,79 @@ const AUDIENCE_TEMPLATES = {
 export default function ReportBuilderPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Export report using new Report Builder API
+  const handleExportReport = async (format: 'pdf' | 'powerpoint' | 'web') => {
+    if (!currentTemplate) {
+      toast({
+        title: "Error",
+        description: "No report template selected",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const exportData = {
+        reportType: 'sustainability',
+        exportFormat: format,
+        templateOptions: {
+          includeMetrics: true,
+          includeCharts: true,
+          customTitle: currentTemplate.templateName
+        },
+        dataSelections: {
+          timeRange: {
+            startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+            endDate: new Date().toISOString()
+          }
+        },
+        blocks: currentTemplate.blocks
+      };
+
+      const response = await fetch('/api/report/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(exportData)
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: "Export Successful",
+          description: `Your ${format} report has been generated successfully`
+        });
+        
+        if (format === 'web' && result.data.html) {
+          // Open web report in new tab
+          const newWindow = window.open('', '_blank');
+          if (newWindow) {
+            newWindow.document.write(result.data.html);
+            newWindow.document.close();
+          }
+        } else {
+          // Handle PDF/PowerPoint download (placeholder for now)
+          console.log('Download URL:', result.data.downloadUrl);
+          toast({
+            title: "Download Ready",
+            description: `Your ${format} report is ready for download`
+          });
+        }
+      } else {
+        throw new Error('Export failed');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   const [currentTemplate, setCurrentTemplate] = useState<ReportTemplate | null>(null);
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
@@ -607,10 +680,20 @@ export default function ReportBuilderPage() {
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => handleExportReport('pdf')}>
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+            <Button variant="outline" onClick={() => handleExportReport('powerpoint')}>
+              <Download className="h-4 w-4 mr-2" />
+              PowerPoint
+            </Button>
+            <Button variant="outline" onClick={() => handleExportReport('web')}>
+              <Eye className="h-4 w-4 mr-2" />
+              Web Preview
+            </Button>
+          </div>
         </div>
       </div>
 
