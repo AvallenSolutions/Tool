@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { GripVertical, Plus, Eye, Download, Settings, BarChart3, FileText, Users, Leaf, Target, Sparkles } from 'lucide-react';
+import { GripVertical, Plus, Eye, Download, Settings, BarChart3, FileText, Users, Leaf, Target, Sparkles, Edit } from 'lucide-react';
 import AIWritingAssistant from '@/components/ai-writing-assistant';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
