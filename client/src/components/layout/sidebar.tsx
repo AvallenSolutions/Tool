@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag, Factory, Database, Globe, Upload, Rocket } from "lucide-react";
+import { BarChart3, FileText, Users, Settings, LogOut, Package, Shield, Building2, TestTube, UserPlus, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, Activity, Sparkles, Target, Flag, Factory, Database, Globe, Upload, Rocket, Brain } from "lucide-react";
 import avallenLogo from "@/assets/avallen-logo.png";
 
 export default function Sidebar() {
@@ -124,6 +124,7 @@ export default function Sidebar() {
     { path: "/app/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/app/company", label: "Company", icon: Building2 },
     { path: "/app/products", label: "Products", icon: Package },
+    { path: "/app/insights", label: "AI Insights", icon: Brain },
     { path: "/app/greenwash-guardian", label: "GreenwashGuardian", icon: Shield },
     { path: "/app/supplier-network", label: "Supplier Network", icon: Users },
     { path: "/app/collaboration", label: "Collaboration Hub", icon: MessageSquare },

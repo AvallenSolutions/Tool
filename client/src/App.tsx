@@ -50,6 +50,7 @@ import CollaborationHub from "@/pages/CollaborationHub";
 import ProductLcaPage from "@/pages/ProductLcaPage";
 import { KPIsPage } from "@/pages/kpis";
 import InitiativesPage from "@/pages/initiatives";
+import AIInsightsPage from "@/pages/ai-insights";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import ComingSoon from "@/pages/ComingSoon";
@@ -175,6 +176,7 @@ function Router() {
       <Route path="/footprint" component={Company} />
       <Route path="/app/settings" component={Settings} />
       <Route path="/app/kpis" component={KPIsPage} />
+      <Route path="/app/insights" component={AIInsightsPage} />
       <Route path="/app/privacy-policy" component={PrivacyPolicy} />
       <Route path="/app/terms-of-service" component={TermsOfService} />
       {/* Monthly facility updates now integrated into Production Facility popup */}

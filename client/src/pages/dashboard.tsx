@@ -18,6 +18,7 @@ import { WhatsNextModule } from "@/components/dashboard/WhatsNextModule";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { KPITracking } from "@/components/dashboard/KPITracking";
 import { SMARTGoals } from "@/components/dashboard/SMARTGoals";
+import AIInsightsDashboard from "@/components/insights/AIInsightsDashboard";
 import WaterFootprintBreakdownChart from "@/components/dashboard/WaterFootprintBreakdownChart";
 
 export default function Dashboard() {
@@ -164,12 +165,19 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div id="kpi-tracking-section">
               <KPITracking />
             </div>
             <div id="smart-goals-section">
               <SMARTGoals />
+            </div>
+          </div>
+
+          {/* AI Insights Section */}
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div id="ai-insights-section">
+              <AIInsightsDashboard compact={true} />
             </div>
           </div>
 
