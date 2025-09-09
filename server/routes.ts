@@ -142,9 +142,9 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Enhanced export for guided reports - supports multiple formats
-  app.post('/api/reports/guided/:reportId/export', isAuthenticated, async (req: any, res: any) => {
-    try {
+  // Enhanced export for guided reports - DISABLED (now handled by feature router)
+  // app.post('/api/reports/guided/:reportId/export', isAuthenticated, async (req: any, res: any) => {
+  /*  try {
       const { reportId } = req.params;
       const { format = 'pdf', options = {} } = req.body;
       const userId = req.user?.claims?.sub;
@@ -445,14 +445,14 @@ export function registerRoutes(app: Express): Server {
         error: error.message
       });
     }
-  });
+  */  // });
 
-  // Legacy PDF export endpoint (maintained for backward compatibility)
-  app.post('/api/reports/guided/:reportId/export-pdf', isAuthenticated, async (req: any, res: any) => {
-    // Redirect to new enhanced export endpoint
+  // Legacy PDF export endpoint - DISABLED (now handled by feature router)
+  // app.post('/api/reports/guided/:reportId/export-pdf', isAuthenticated, async (req: any, res: any) => {
+  /*  // Redirect to new enhanced export endpoint
     req.body = { format: 'pdf', options: {} };
     return app._router.handle(req, res);
-  });
+  */  // });
 
   function generateReportHTML(report: any, content: any): string {
     const currentDate = new Date().toLocaleDateString();
