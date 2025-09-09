@@ -38,11 +38,13 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
     }
   }, [isEditing]);
 
-  // Sync text and formatting when block content changes
+  // Sync text and formatting when block content changes - but don't override local edits
   useEffect(() => {
-    setEditText(block.content.text);
-    setCurrentFormatting(block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' });
-  }, [block.content.text, block.content.formatting]);
+    if (!isEditing) {
+      setEditText(block.content.text);
+      setCurrentFormatting(block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' });
+    }
+  }, [block.content.text, block.content.formatting, isEditing]);
 
   const handleStartEditing = () => {
     if (isPreview) return;
@@ -75,16 +77,16 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
   };
 
   const handleFormattingUpdate = (field: string, value: any) => {
-    console.log(`🎨 Formatting update: ${field} = ${value}`, { current: formatting, new: { ...formatting, [field]: value } });
-    const newFormatting = { ...formatting, [field]: value };
+    const newFormatting = { ...currentFormatting, [field]: value };
+    console.log(`🎨 Formatting update: ${field} = ${value}`, { current: currentFormatting, new: newFormatting });
     
     // Update local state immediately for instant feedback
     setCurrentFormatting(newFormatting);
     
-    // Update the block content
+    // Update the block content with the new formatting
     onUpdate(block.id, {
       ...block.content,
-      text: editText, // Include current text
+      text: editText,
       formatting: newFormatting
     });
   };
@@ -180,6 +182,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
                 key={alignment}
                 variant={currentFormatting.alignment === alignment ? "default" : "outline"}
                 size="sm"
+                onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
                 onClick={() => handleFormattingUpdate('alignment', alignment)}
                 className="h-8 w-8 p-0"
               >
@@ -193,6 +196,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
             <Button
               variant={currentFormatting.style === 'bold' ? "default" : "outline"}
               size="sm"
+              onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
               onClick={() => handleFormattingUpdate('style', currentFormatting.style === 'bold' ? 'normal' : 'bold')}
               className="h-8 w-8 p-0"
             >
@@ -201,6 +205,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
             <Button
               variant={currentFormatting.style === 'italic' ? "default" : "outline"}
               size="sm"
+              onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
               onClick={() => handleFormattingUpdate('style', currentFormatting.style === 'italic' ? 'normal' : 'italic')}
               className="h-8 w-8 p-0"
             >
