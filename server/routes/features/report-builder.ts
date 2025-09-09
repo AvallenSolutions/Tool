@@ -6,6 +6,9 @@ import { logger } from '../../config/logger';
 import { TimeSeriesEngine } from '../../services/TimeSeriesEngine';
 import { PDFExportService } from '../../services/PDFExportService';
 import { PowerPointExportService } from '../../services/PowerPointExportService';
+import { createReadStream } from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
 
 const router = Router();
 
@@ -288,5 +291,80 @@ function generateWebReport(content: any): string {
     </html>
   `;
 }
+
+/**
+ * Download generated report file
+ */
+router.get('/download/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    
+    // Security: Validate filename to prevent directory traversal
+    if (!filename || !/^[a-zA-Z0-9\-_\.]+$/.test(filename)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid filename' 
+      });
+    }
+    
+    const filePath = path.join(process.cwd(), 'temp', filename);
+    
+    // Check if file exists
+    try {
+      await fs.access(filePath);
+    } catch {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'File not found' 
+      });
+    }
+    
+    // Set appropriate headers based on file type
+    const ext = path.extname(filename).toLowerCase();
+    let contentType = 'application/octet-stream';
+    let downloadName = filename;
+    
+    if (ext === '.pdf') {
+      contentType = 'application/pdf';
+    } else if (ext === '.pptx') {
+      contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    }
+    
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+    res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.setHeader('Expires', '-1');
+    res.setHeader('Pragma', 'no-cache');
+    
+    // Stream the file
+    const fileStream = createReadStream(filePath);
+    fileStream.pipe(res);
+    
+    // Clean up file after sending (with delay to ensure download completes)
+    fileStream.on('end', () => {
+      setTimeout(async () => {
+        try {
+          await fs.unlink(filePath);
+          logger.info({ filename, filePath }, 'Report file cleaned up after download');
+        } catch (error) {
+          logger.warn({ filename, error }, 'Failed to clean up report file');
+        }
+      }, 5000); // 5 second delay
+    });
+    
+    logger.info({ 
+      filename, 
+      contentType,
+      userAgent: req.get('User-Agent') 
+    }, 'Report file download started');
+    
+  } catch (error) {
+    logger.error({ error, filename: req.params.filename }, 'Error downloading report file');
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error' 
+    });
+  }
+});
 
 export default router;

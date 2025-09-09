@@ -13,6 +13,13 @@ import { logger, createRequestLogger, logAPI } from "./config/logger.js";
 initializeSentry();
 initializeMixpanel();
 
+// Initialize file cleanup service
+import('./services/FileCleanupService').then(({ FileCleanupService }) => {
+  FileCleanupService.initialize().catch(error => {
+    logger.error({ error }, 'Failed to initialize file cleanup service');
+  });
+});
+
 const app = express();
 
 // Security middleware with environment-aware CSP
