@@ -412,7 +412,7 @@ export function CompanyInfoStep({ content, onChange, onSave, isSaving, reportId 
 }
 
 // Step 3: Key Metrics Component
-export function KeyMetricsStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function KeyMetricsStep({ content, onChange, onSave, isSaving, reportId }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: footprintData } = useQuery({ queryKey: ['/api/company/footprint'] });
   const { data: automatedData } = useQuery({ queryKey: ['/api/company/footprint/scope3/automated'] });
@@ -547,13 +547,23 @@ export function KeyMetricsStep({ content, onChange, onSave, isSaving }: StepComp
             </div>
           </CardContent>
         </Card>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="key_metrics"
+            sectionTitle="Key Metrics"
+            reportId={reportId}
+            maxImages={3}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 // Step 4: Carbon Footprint Analysis Component
-export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function CarbonFootprintStep({ content, onChange, onSave, isSaving, reportId }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: footprintData } = useQuery({ queryKey: ['/api/company/footprint'] });
   const { data: automatedData } = useQuery({ queryKey: ['/api/company/footprint/scope3/automated'] });
@@ -705,13 +715,23 @@ export function CarbonFootprintStep({ content, onChange, onSave, isSaving }: Ste
             </div>
           </CardContent>
         </Card>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="carbon_footprint"
+            sectionTitle="Carbon Footprint"
+            reportId={reportId}
+            maxImages={3}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 // Step 5: Sustainability Initiatives Component
-export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }: StepComponentProps & { stepKey: string }) {
+export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey, reportId }: StepComponentProps & { stepKey: string }) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: smartGoalsResponse } = useQuery({ queryKey: ['/api/smart-goals'] });
   const [selectedInitiatives, setSelectedInitiatives] = useState<string[]>([]);
@@ -721,8 +741,7 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Get current report ID from URL
-  const reportId = window.location.pathname.split('/').pop();
+  // Get current report ID from props (now passed as parameter)
   
   // Query to get current report data and selected initiatives
   const { data: reportData } = useQuery({ 
@@ -911,21 +930,30 @@ export function InitiativesStep({ content, onChange, onSave, isSaving, stepKey }
             )}
           </CardContent>
         </Card>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="initiatives"
+            sectionTitle="Initiatives"
+            reportId={reportId}
+            maxImages={3}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 // Step 6: KPI Tracking Component
-export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function KPITrackingStep({ content, onChange, onSave, isSaving, reportId }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: kpiData } = useQuery({ queryKey: ['/api/dashboard/kpis'] });
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Get current report ID from URL
-  const reportId = window.location.pathname.split('/').pop();
+  // Get current report ID from props (now passed as parameter)
   
   // Query to get current report data and selected KPIs
   const { data: reportData } = useQuery({ 
@@ -1115,13 +1143,23 @@ export function KPITrackingStep({ content, onChange, onSave, isSaving }: StepCom
             )}
           </CardContent>
         </Card>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="kpi_tracking"
+            sectionTitle="KPI Tracking"
+            reportId={reportId}
+            maxImages={3}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 // Step 7: Summary Component
-export function SummaryStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function SummaryStep({ content, onChange, onSave, isSaving, reportId }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: smartGoalsData } = useQuery({ queryKey: ['/api/smart-goals'] });
   
@@ -1219,12 +1257,22 @@ export function SummaryStep({ content, onChange, onSave, isSaving }: StepCompone
             )}
           </CardContent>
         </Card>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="summary"
+            sectionTitle="Summary"
+            reportId={reportId}
+            maxImages={2}
+          />
+        )}
       </div>
     </div>
   );
 }
 // Step 8: Social Impact Component
-export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function SocialImpactStep({ content, onChange, onSave, isSaving, reportId }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   const { data: sustainabilityData } = useQuery({ queryKey: ['/api/company/sustainability-data'] });
   
@@ -1397,6 +1445,16 @@ export function SocialImpactStep({ content, onChange, onSave, isSaving }: StepCo
             </div>
           </CardContent>
         </Card>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="social_impact"
+            sectionTitle="Social Impact"
+            reportId={reportId}
+            maxImages={3}
+          />
+        )}
       </div>
     </div>
   );

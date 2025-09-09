@@ -641,6 +641,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('carbon_footprint_narrative', content)}
                         onSave={() => handleSaveStep('carbon_footprint_narrative')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                     
@@ -651,6 +652,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('initiatives_narrative', content)}
                         onSave={() => handleSaveStep('initiatives_narrative')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                     
@@ -661,6 +663,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('kpi_tracking_narrative', content)}
                         onSave={() => handleSaveStep('kpi_tracking_narrative')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                     
@@ -671,6 +674,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('social_impact', content)}
                         onSave={() => handleSaveStep('social_impact')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                     
@@ -681,6 +685,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('summary', content)}
                         onSave={() => handleSaveStep('summary')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                   </>
