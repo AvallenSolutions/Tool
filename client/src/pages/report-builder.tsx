@@ -107,37 +107,6 @@ function CompanyStoryPreview({ block, onUpdate, isPreview = false }: { block?: R
         </div>
       )}
       
-      {companyStory?.strategicPillars && companyStory.strategicPillars.length > 0 && (
-        <div>
-          <h4 className="font-semibold text-green-700 mb-2">Strategic Pillars</h4>
-          <div className="space-y-2">
-            {companyStory.strategicPillars.map((pillar: any, index: number) => (
-              <div key={index} className="border-l-4 border-green-500 pl-4">
-                <h5 className="font-medium">{pillar.name}</h5>
-                <p className="text-sm text-gray-600">{pillar.description}</p>
-              </div>
-            ))}
-          </div>
-          
-          {/* Pillars Context */}
-          {block && onUpdate && !isPreview && (
-            <div className="mt-3 bg-green-50 p-3 rounded border border-green-200">
-              <h5 className="font-medium text-green-700 mb-2">📝 Add Analysis</h5>
-              <EditableTextBlock
-                block={{
-                  id: `${block.id}_pillars`,
-                  content: {
-                    text: block.content?.customText?.pillarsContext || 'Add analysis of your strategic pillars...',
-                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
-                  }
-                }}
-                onUpdate={(_, content) => updateCustomText('pillarsContext', content.text)}
-                isPreview={false}
-              />
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Conclusion Section */}
       {block && onUpdate && !isPreview && (

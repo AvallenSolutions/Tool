@@ -78,7 +78,6 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
 
   const handleFormattingUpdate = (field: string, value: any) => {
     const newFormatting = { ...currentFormatting, [field]: value };
-    console.log(`🎨 Formatting update: ${field} = ${value}`, { current: currentFormatting, new: newFormatting });
     
     // Update local state immediately for instant feedback
     setCurrentFormatting(newFormatting);
