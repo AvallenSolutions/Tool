@@ -146,8 +146,18 @@ export class UnifiedPDFService {
       logger.info({ 
         type: options.type, 
         dataType: 'lcaResults' in data ? 'LCA' : 'Report',
-        title: data.title || 'product' in data ? (data as LCAReportData).product?.name : 'Unknown'
+        title: data.title || ('product' in data ? (data as LCAReportData).product?.name : 'Unknown')
       }, 'PDF generation started');
+      
+      // Debug: Log the data structure to understand what we're working with
+      console.log('🔍 PDF Generation Data:', JSON.stringify({
+        title: data.title,
+        hasContent: 'content' in data,
+        contentKeys: 'content' in data ? Object.keys(data.content) : [],
+        hasMetrics: 'metrics' in data,
+        metrics: 'metrics' in data ? data.metrics : null,
+        companyName: 'companyName' in data ? data.companyName : 'company' in data ? data.company?.name : 'not found'
+      }, null, 2));
 
       let result: Buffer;
 
@@ -385,16 +395,26 @@ export class UnifiedPDFService {
    * Helper methods for rendering
    */
   private renderModernLayout(doc: PDFKit.PDFDocument, data: ReportData | LCAReportData, options: PDFGenerationOptions): void {
-    // Header
+    // Header with proper title handling
+    const reportTitle = data.title || ('product' in data ? data.product?.name : 'Sustainability Report');
     doc.fontSize(28).fillColor(this.colors.primary)
-       .text(data.title || ('product' in data ? data.product?.name : 'Sustainability Report'), { align: 'center' });
+       .text(reportTitle, { align: 'center' });
     
     doc.moveDown(1);
     
-    // Company info
-    const companyName = 'company' in data ? data.company?.name : 'companyName' in data ? data.companyName : 'Company';
+    // Company info with proper branding  
+    const companyName = 'company' in data ? data.company?.name : 'companyName' in data ? data.companyName : 'Avallen Solutions Ltd';
     doc.fontSize(14).fillColor(this.colors.text.secondary)
        .text(companyName, { align: 'center' });
+    
+    // Report date and generation info
+    const reportDate = new Date().toLocaleDateString('en-GB', { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+    doc.fontSize(10).fillColor(this.colors.text.light)
+       .text(`Generated on ${reportDate}`, { align: 'center' });
     
     doc.moveDown(2);
 
@@ -630,11 +650,49 @@ export class UnifiedPDFService {
   }
 
   private renderContentSections(doc: PDFKit.PDFDocument, content: Record<string, any>): void {
+    // Define proper section titles for guided sustainability reports
+    const sectionTitles: Record<string, string> = {
+      summary: 'Executive Summary',
+      introduction: 'Introduction', 
+      initiatives_narrative: 'Sustainability Initiatives',
+      key_metrics_narrative: 'Key Environmental Metrics',
+      company_info_narrative: 'Company Information',
+      kpi_tracking_narrative: 'KPI Tracking & Progress',
+      carbon_footprint_narrative: 'Carbon Footprint Analysis'
+    };
+
+    // Render sections in a logical order
+    const sectionOrder = [
+      'summary',
+      'introduction', 
+      'company_info_narrative',
+      'key_metrics_narrative',
+      'carbon_footprint_narrative',
+      'initiatives_narrative',
+      'kpi_tracking_narrative'
+    ];
+
+    sectionOrder.forEach(sectionKey => {
+      if (content[sectionKey] && String(content[sectionKey]).trim()) {
+        const title = sectionTitles[sectionKey] || sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const value = String(content[sectionKey]).trim();
+        
+        doc.fontSize(16).fillColor(this.colors.text.primary).text(title, { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(11).fillColor(this.colors.text.secondary).text(value, { align: 'justify' });
+        doc.moveDown(1.5);
+      }
+    });
+
+    // Render any remaining sections not in the ordered list
     Object.entries(content).forEach(([section, value]) => {
-      doc.fontSize(16).fillColor(this.colors.text.primary).text(section, { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12).fillColor(this.colors.text.secondary).text(String(value));
-      doc.moveDown(1);
+      if (!sectionOrder.includes(section) && value && String(value).trim()) {
+        const title = section.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        doc.fontSize(16).fillColor(this.colors.text.primary).text(title, { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(11).fillColor(this.colors.text.secondary).text(String(value), { align: 'justify' });
+        doc.moveDown(1.5);
+      }
     });
   }
 
