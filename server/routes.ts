@@ -42,7 +42,7 @@ import { supplierIntegrityService } from "./services/SupplierIntegrityService";
 import { WasteIntensityCalculationService } from "./services/WasteIntensityCalculationService";
 import { MonthlyDataAggregationService, monthlyDataAggregationService } from "./services/MonthlyDataAggregationService";
 import { intelligentInsightsService } from "./services/IntelligentInsightsService";
-import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities, verifiedSuppliers, monthlyFacilityData, companySustainabilityData, guidedReports } from "@shared/schema";
+import { conversations, messages, collaborationTasks, supplierCollaborationSessions, notificationPreferences, supplierProducts, productionFacilities, verifiedSuppliers, monthlyFacilityData, companySustainabilityData } from "@shared/schema";
 import { trackEvent, trackUser } from "./config/mixpanel";
 import { Sentry } from "./config/sentry";
 import { calculateTotalScope3Emissions } from "./services/AutomatedEmissionsCalculator";
@@ -142,8 +142,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Enhanced export for guided reports - DISABLED (now handled by feature router)
-  // app.post('/api/reports/guided/:reportId/export', isAuthenticated, async (req: any, res: any) => {
+  // Report Builder export functionality will replace this section
   /*  try {
       const { reportId } = req.params;
       const { format = 'pdf', options = {} } = req.body;
@@ -11792,97 +11791,11 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // ============ GUIDED REPORT WIZARD API ENDPOINTS ============
 
-  // Fetch guided sustainability reports
-  app.get('/api/reports/guided', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user?.claims?.sub;
-      
-      if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
+  // Report Builder will replace guided report functionality
 
-      const company = await dbStorage.getCompanyByOwner(userId);
-      if (!company) {
-        return res.status(404).json({ error: 'Company not found' });
-      }
-
-      // Import the customReports schema
-      const { customReports } = await import('@shared/schema');
-      
-      // Fetch all guided reports for the company
-      const reports = await db
-        .select()
-        .from(customReports)
-        .where(eq(customReports.companyId, company.id))
-        .orderBy(desc(customReports.createdAt));
-
-      res.json(reports);
-    } catch (error) {
-      console.error('Error fetching guided reports:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to fetch guided reports' 
-      });
-    }
-  });
-
-  // Create new guided report
-  app.post('/api/reports/guided/create', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user?.claims?.sub;
-      
-      if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
-
-      const company = await dbStorage.getCompanyByOwner(userId);
-      if (!company) {
-        return res.status(404).json({ error: 'Company not found' });
-      }
-
-      const { reportTitle = `Sustainability Report - ${new Date().toLocaleDateString()}` } = req.body;
-
-      const { customReports } = await import('@shared/schema');
-      
-      // Initialize with empty report content structure
-      const defaultContent = {
-        introduction: "",
-        company_info_narrative: "",
-        key_metrics_narrative: "",
-        carbon_footprint_narrative: "",
-        initiatives_narrative: "",
-        kpi_tracking_narrative: "",
-        summary: ""
-      };
-
-      const [newReport] = await db
-        .insert(customReports)
-        .values({
-          companyId: company.id,
-          reportTitle,
-          reportLayout: {}, // Empty for guided reports
-          reportContent: defaultContent,
-          reportType: 'guided'
-        })
-        .returning();
-
-      res.json({
-        success: true,
-        data: newReport
-      });
-
-    } catch (error) {
-      console.error('Error creating guided report:', error);
-      res.status(500).json({ error: 'Failed to create guided report' });
-    }
-  });
-
-  // Save step content for guided report
-  app.put('/api/reports/guided/:reportId/wizard-data', isAuthenticated, async (req, res) => {
+  // Replaced by Report Builder functionality
+  /*
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub;
@@ -12031,70 +11944,11 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // Get wizard data for guided report
-  app.get('/api/reports/guided/:reportId/wizard-data', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user?.claims?.sub;
-      
-      if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
+  */ 
 
-      const company = await dbStorage.getCompanyByOwner(userId);
-      if (!company) {
-        return res.status(404).json({ error: 'Company not found' });
-      }
-
-      const { reportId } = req.params;
-      const { customReports, reports } = await import('@shared/schema');
-      
-      // Check if this is a custom report (UUID) or regular report (integer)
-      let report;
-      let reportData = null;
-      
-      // Try to parse as integer first (regular reports table)
-      if (/^\d+$/.test(reportId)) {
-        const [regularReport] = await db
-          .select()
-          .from(reports)
-          .where(eq(reports.id, parseInt(reportId)));
-        
-        if (regularReport && regularReport.companyId === company.id) {
-          report = regularReport;
-          reportData = regularReport.reportData || {};
-        }
-      } else {
-        // Try as UUID (custom reports table)
-        const [customReport] = await db
-          .select()
-          .from(customReports)
-          .where(eq(customReports.id, reportId));
-          
-        if (customReport && customReport.companyId === company.id) {
-          report = customReport;
-          reportData = customReport.reportContent || {};
-        }
-      }
-
-      if (!report) {
-        return res.status(404).json({ error: 'Report not found' });
-      }
-
-      res.json({
-        success: true,
-        data: {
-          report,
-          company,
-          selectedInitiatives: reportData?.selectedInitiatives || []
-        }
-      });
-
-    } catch (error) {
-      console.error('Error fetching wizard data:', error);
-      res.status(500).json({ error: 'Failed to fetch wizard data' });
-    }
-  });
+  // ====================================
+  // Report Builder API endpoints will replace all above functionality
+  // ====================================
 
   // ====================================
   // Phase 3: Future-Proofing Monitoring API Endpoints

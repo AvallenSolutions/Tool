@@ -5,7 +5,7 @@ import { logger, logAPI } from '../config/logger';
 // Import feature routers
 import suppliersRouter from './features/suppliers';
 import supplierProductsRouter from './features/supplier-products';
-import reportsRouter from './features/reports';
+// Reports functionality will be replaced by new Report Builder
 import authRouter from './features/auth';
 import greenwashRouter from './features/greenwash';
 
@@ -28,7 +28,7 @@ export function setupFeatureRoutes(app: Express): void {
   app.use('/api/supplier-products', supplierProductsRouter);
   
   // Sustainability reporting routes
-  app.use('/api/reports', reportsRouter);
+  // Report Builder routes will be added here
   
   // Greenwash Guardian routes
   app.use('/api/greenwash-guardian', greenwashRouter);

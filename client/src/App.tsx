@@ -58,7 +58,6 @@ import ComingSoon from "@/pages/ComingSoon";
 // Company story now integrated into Company page
 // Initiatives functionality now integrated into Report Builder and SMART Goals
 import ReportsCreate from "@/pages/reports-create";
-import GuidedReportWizard from "@/pages/guided-report-wizard";
 // import PioneersSubscription from "@/pages/pioneers-subscription"; // Disabled due to Stripe loading issues
 import PioneersSubscriptionSimple from "@/pages/pioneers-subscription-simple";
 import PioneersNoStripe from "@/pages/pioneers-no-stripe";
@@ -215,7 +214,6 @@ function Router() {
       <Route path="/app/initiatives" component={InitiativesPage} />
       <Route path="/app/report-builder" component={() => { window.location.replace('/app/reports/create'); return null; }} />
       <Route path="/app/reports/create" component={ReportsCreate} />
-      <Route path="/app/guided-report/:reportId" component={GuidedReportWizard} />
       <Route path="/app/test" component={TestRunner} />
       <Route path="/supplier-portal/:token" component={SupplierPortal} />
       <Route path="/supplier-onboarding" component={SupplierOnboarding} />
