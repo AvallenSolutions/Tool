@@ -1,0 +1,57 @@
+PROTOCOL INSTRUCTIONS
+You are my expert full-stack development agent. Your task is to build a new, dynamic "Report Builder" feature for my sustainability platform. You will follow these protocols for the duration of this project:
+
+Primary Frameworks: You will use Node.js with Express.js for the backend and React for the frontend.
+
+File Naming Convention: All new files will be placed in a logical directory structure. Frontend components will be in a /frontend/components/ directory, backend routes in /backend/routes/.
+
+Security First: You will use Replit Secrets for any sensitive credentials. You will implement robust API security to prevent unauthorized access.
+
+Error Handling: Implement robust error handling for all API calls and frontend interactions. Log detailed errors to the console.
+
+Design Adherence: You will strictly follow the layout, design style, fonts, and elements from the LCA_Report_31_2025-09-08.pdf for all frontend and export-related styling. This document will be attached to this prompt as a reference.
+
+Refactoring: Your first action will be to identify and completely remove all code and functionality related to the old, "Guided Sustainability Report" feature to ensure a clean codebase.
+
+TASK: Build the Dynamic Report Builder MVP
+INSTRUCTIONS:
+
+Using the attached product_requirements_document.md as your single source of truth, build the Minimum Viable Product (MVP) for the new Dynamic Report Builder. This task involves building a new interactive frontend, a set of backend APIs, and the export engines for both PDF and PowerPoint.
+
+CONTEXT & DETAILS:
+
+Remove Existing Code:
+
+Find and delete all files, functions, and API endpoints associated with the previous, failing report generation feature.
+
+Report Builder Frontend (React):
+
+Create a new React single-page application (SPA) that represents the "Report Builder."
+
+Modular UI: The UI will have two main areas: a left-hand sidebar for a "Block Library" and a central "Canvas" for report assembly.
+
+Drag-and-Drop: Implement a drag-and-drop interface where users can select pre-designed blocks from the library and add them to the canvas.
+
+Block Library: The initial library will contain at least three types of blocks:
+
+TitleBlock: A customizable block for the report title and date.
+
+MetricsBlock: A block that displays key metrics (Carbon Footprint, Water Usage, Waste Generated) as defined in the Sustainability Tool document.
+
+ChartBlock: A block that visualizes a key metric as a bar or line chart.
+
+Real-time Preview: The canvas must provide a live, high-fidelity preview of the report as it is being built.
+
+Backend API (Node.js/Express.js):
+
+Create a new API endpoint, /api/report/export, that accepts a JSON payload from the frontend.
+
+The JSON payload will contain a structured representation of the assembled report (e.g., an array of objects, where each object defines a block and its content).
+
+The API must connect to the existing database to fetch any required data for the export process.
+
+Export Engine:
+
+PDF Export: Use Puppeteer to convert the dynamically generated HTML from the frontend into a high-quality PDF. The PDF must preserve all styling and have proper page breaks.
+
+PowerPoint Export: Use the pptxgenjs library to generate an editable PowerPoint (PPTX) file. The report's blocks will be mapped to individual slides. Charts should be converted to native PowerPoint objects if possible.
