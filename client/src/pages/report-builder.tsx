@@ -1049,11 +1049,12 @@ export default function ReportBuilderPage() {
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className={`p-4 bg-gray-50 border rounded-lg ${
+                                className={`p-6 bg-white border rounded-lg ${
                                   snapshot.isDragging ? 'shadow-lg bg-white' : ''
                                 } ${!block.isVisible ? 'opacity-50' : ''}`}
                               >
-                                <div className="flex items-center justify-between">
+                                {/* Block Header */}
+                                <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
                                     <div {...provided.dragHandleProps}>
                                       <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
@@ -1086,6 +1087,11 @@ export default function ReportBuilderPage() {
                                       Remove
                                     </Button>
                                   </div>
+                                </div>
+                                
+                                {/* Block Content with Embedded Text Editing */}
+                                <div className="prose prose-sm max-w-none">
+                                  {renderBlockPreview(block, false)}
                                 </div>
                               </div>
                             )}
