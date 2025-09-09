@@ -1,4 +1,4 @@
-import pptxgen from 'pptxgenjs';
+const pptxgen = require('pptxgenjs');
 import { logger } from '../config/logger';
 import path from 'path';
 import fs from 'fs/promises';
