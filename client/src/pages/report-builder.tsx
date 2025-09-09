@@ -336,11 +336,18 @@ function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?
     );
   }
 
-  // Use comprehensive data breakdown for scope emissions
-  const breakdown = comprehensiveData?.data?.emissionsBreakdown;
-  const scope1Total = (breakdown?.scope1 || 0) * 1000; // Convert tonnes to kg
-  const scope2Total = (breakdown?.scope2 || 0) * 1000; // Convert tonnes to kg  
-  const scope3Total = (breakdown?.scope3 || 0) * 1000; // Convert tonnes to kg
+  // Calculate scope emissions using the SAME method as dashboard
+  // Scope 1: Use automated scope 1 data
+  const scope1Total = (automatedScope1Data?.data?.totalEmissions || 0) * 1000; // Convert tonnes to kg
+  
+  // Scope 2: Calculate from comprehensive facility data (electricity)
+  const scope2Total = ((comprehensiveData?.data?.detailedBreakdown?.facilities || 0) - (automatedScope1Data?.data?.totalEmissions || 0) * 1000) || 0; // Subtract Scope 1 from facilities total
+  
+  // Scope 3: Use comprehensive breakdown
+  const scope3Ingredients = comprehensiveData?.data?.detailedBreakdown?.ingredients || 0;
+  const scope3Packaging = comprehensiveData?.data?.detailedBreakdown?.packaging || 0;
+  const scope3Waste = comprehensiveData?.data?.detailedBreakdown?.waste || 0;
+  const scope3Total = scope3Ingredients + scope3Packaging + scope3Waste;
 
   const totalEmissions = scope1Total + scope2Total + scope3Total;
 
@@ -464,6 +471,27 @@ function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {comprehensiveData?.data?.detailedBreakdown && scope2Total > 0 && (
+          <div>
+            <h4 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+              Scope 2: Energy Emissions
+            </h4>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div>
+                  <div className="font-medium">ELECTRICITY</div>
+                  <div className="text-sm text-gray-600">Grid electricity consumption</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold">{(scope2Total / 1000).toFixed(1)} t CO₂e</div>
+                  <div className="text-sm text-gray-500">DEFRA 2024</div>
+                </div>
+              </div>
             </div>
           </div>
         )}
