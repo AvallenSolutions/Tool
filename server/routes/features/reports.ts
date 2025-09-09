@@ -36,16 +36,53 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
       return res.status(404).json({ error: 'Report not found' });
     }
     
+    // Transform database row to ReportData interface format
+    const transformedReportData = {
+      id: reportData.id,
+      title: reportData.reportTitle,
+      content: reportData.reportContent || {},
+      companyName: userCompany.name,
+      template: {
+        id: reportData.reportType,
+        name: 'Guided Sustainability Report',
+        category: 'sustainability'
+      },
+      metrics: {
+        co2e: 0, // Will fetch actual data below
+        water: 0,
+        waste: 0
+      },
+      company: {
+        name: userCompany.name,
+        industry: userCompany.industry || 'Manufacturing',
+        country: userCompany.country || 'UK'
+      }
+    };
+    
+    // Fetch actual company metrics for the report
+    try {
+      const sustainabilityData = await dbStorage.getCompanySustainabilityData(userCompany.id);
+      if (sustainabilityData) {
+        transformedReportData.metrics = {
+          co2e: sustainabilityData.totalCO2e || 0,
+          water: sustainabilityData.totalWaterUsage || 0, 
+          waste: sustainabilityData.totalWasteGenerated || 0
+        };
+      }
+    } catch (error) {
+      console.warn('Could not fetch company metrics for PDF:', error);
+    }
+    
     let filename: string;
     let buffer: Buffer;
     let contentType: string;
     
     if (format === 'pdf') {
-      buffer = await unifiedPDFService.exportReport(reportData, 'pdf');
+      buffer = await unifiedPDFService.exportReport(transformedReportData, 'pdf');
       filename = `${reportData.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pdf`;
       contentType = 'application/pdf';
     } else if (format === 'pptx') {
-      buffer = await unifiedPDFService.exportReport(reportData, 'pptx');
+      buffer = await unifiedPDFService.exportReport(transformedReportData, 'pptx');
       filename = `${reportData.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pptx`;
       contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
     } else {
