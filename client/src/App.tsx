@@ -164,6 +164,7 @@ function Router() {
       <Route path="/app/products/:productId/lca" component={ProductLcaPage} />
       <Route path="/app/products/:id" component={ProductDetail} />
       <Route path="/app/reports" component={Reports} />
+      <Route path="/app/reports/guided" component={() => { window.location.replace('/app/reports'); return null; }} />
       <Route path="/app/supplier-network" component={SupplierNetwork} />
       <Route path="/app/supplier-network/supplier/:id" component={SupplierDetail} />
       <Route path="/app/supplier-network/product/:id" component={SupplierProductDetailPage} />
