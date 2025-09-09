@@ -35,24 +35,26 @@ function generateGuidedReportHTML(reportData: any): string {
 
   let htmlContent = '';
 
-  // Add metrics section if available
+  // Add metrics section with inline styles  
   htmlContent += `
-    <section class="metrics">
-      <h2>Environmental Metrics Overview</h2>
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <h3>Carbon Footprint</h3>
-          <p class="metric-value">${metrics.co2e || 0} kg CO₂e</p>
-        </div>
-        <div class="metric-card">
-          <h3>Water Usage</h3>
-          <p class="metric-value">${metrics.water || 0} L</p>
-        </div>
-        <div class="metric-card">
-          <h3>Waste Generated</h3>
-          <p class="metric-value">${metrics.waste || 0} kg</p>
-        </div>
-      </div>
+    <section style="background: #f8fafc; padding: 25px; border-radius: 8px; margin: 30px 0; border: 1px solid #e2e8f0;">
+      <h2 style="color: #1f2937; border-bottom: 2px solid #10b981; padding-bottom: 12px; font-size: 1.5em; margin: 0 0 20px 0; font-weight: bold;">Environmental Metrics Overview</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="width: 33.33%; text-align: center; padding: 20px; background: white; border-radius: 6px; margin: 5px; border: 1px solid #e5e7eb;">
+            <h3 style="color: #374151; font-size: 0.9em; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Carbon Footprint</h3>
+            <p style="font-size: 1.8em; font-weight: bold; color: #10b981; margin: 0;">${metrics.co2e || 0} kg CO₂e</p>
+          </td>
+          <td style="width: 33.33%; text-align: center; padding: 20px; background: white; border-radius: 6px; margin: 5px; border: 1px solid #e5e7eb;">
+            <h3 style="color: #374151; font-size: 0.9em; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Water Usage</h3>
+            <p style="font-size: 1.8em; font-weight: bold; color: #10b981; margin: 0;">${metrics.water || 0} L</p>
+          </td>
+          <td style="width: 33.33%; text-align: center; padding: 20px; background: white; border-radius: 6px; margin: 5px; border: 1px solid #e5e7eb;">
+            <h3 style="color: #374151; font-size: 0.9em; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Waste Generated</h3>
+            <p style="font-size: 1.8em; font-weight: bold; color: #10b981; margin: 0;">${metrics.waste || 0} kg</p>
+          </td>
+        </tr>
+      </table>
     </section>
   `;
 
@@ -62,137 +64,34 @@ function generateGuidedReportHTML(reportData: any): string {
       const sectionTitle = sectionTitles[sectionKey] || sectionKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       const sectionContent = String(content[sectionKey]).trim();
       htmlContent += `
-        <section class="content-section">
-          <h2>${sectionTitle}</h2>
-          <div class="content-text">${sectionContent}</div>
+        <section style="margin: 40px 0; page-break-inside: avoid;">
+          <h2 style="color: #1f2937; border-bottom: 2px solid #10b981; padding-bottom: 12px; font-size: 1.5em; margin: 0 0 20px 0; font-weight: bold;">${sectionTitle}</h2>
+          <div style="color: #374151; font-size: 1.1em; line-height: 1.7; text-align: justify; margin-top: 15px;">${sectionContent}</div>
         </section>
       `;
     }
   });
 
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
-    <style>
-      * { box-sizing: border-box; }
-      body { 
-        font-family: 'Helvetica', 'Arial', sans-serif; 
-        line-height: 1.6; 
-        color: #1f2937; 
-        margin: 0; 
-        padding: 20px; 
-        background: white;
-      }
-      .container { max-width: 800px; margin: 0 auto; background: white; }
-      .header { 
-        text-align: center; 
-        border-bottom: 3px solid #10b981; 
-        padding-bottom: 30px; 
-        margin-bottom: 40px; 
-      }
-      h1 { 
-        color: #10b981; 
-        font-size: 2.8em; 
-        margin: 0; 
-        font-weight: bold; 
-        margin-bottom: 10px;
-      }
-      .company { 
-        font-size: 1.4em; 
-        color: #4f46e5; 
-        margin: 15px 0; 
-        font-weight: 600;
-      }
-      .date { color: #6b7280; font-size: 1em; }
-      
-      .metrics {
-        background: #f8fafc;
-        padding: 25px;
-        border-radius: 8px;
-        margin: 30px 0;
-        border: 1px solid #e2e8f0;
-      }
-      .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-top: 20px;
-      }
-      .metric-card {
-        background: white;
-        padding: 20px;
-        border-radius: 6px;
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: 1px solid #e5e7eb;
-      }
-      .metric-card h3 {
-        color: #374151;
-        font-size: 0.9em;
-        margin: 0 0 10px 0;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
-      }
-      .metric-value {
-        font-size: 1.8em;
-        font-weight: bold;
-        color: #10b981;
-        margin: 0;
-      }
-      
-      .content-section { 
-        margin: 40px 0; 
-        page-break-inside: avoid;
-      }
-      h2 { 
-        color: #1f2937; 
-        border-bottom: 2px solid #10b981; 
-        padding-bottom: 12px; 
-        font-size: 1.5em;
-        margin: 0 0 20px 0;
-        font-weight: bold;
-      }
-      .content-text {
-        color: #374151;
-        font-size: 1.1em;
-        line-height: 1.7;
-        text-align: justify;
-        margin-top: 15px;
-      }
-      
-      .footer { 
-        text-align: center; 
-        margin-top: 60px; 
-        padding-top: 30px; 
-        border-top: 2px solid #e5e7eb; 
-        color: #6b7280;
-        font-size: 0.9em;
-      }
-      
-      @media print {
-        body { background: white !important; }
-        .container { box-shadow: none !important; }
-      }
-    </style>
 </head>
-<body>
-    <div class="container">
-        <header class="header">
-            <h1>${title}</h1>
-            <p class="company">${companyName}</p>
-            <p class="date">Generated on ${new Date().toLocaleDateString()}</p>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 20px; background: white;">
+    <div style="max-width: 800px; margin: 0 auto; background: white;">
+        <header style="text-align: center; border-bottom: 3px solid #10b981; padding-bottom: 30px; margin-bottom: 40px;">
+            <h1 style="color: #10b981; font-size: 2.8em; margin: 0; font-weight: bold; margin-bottom: 10px;">${title}</h1>
+            <p style="font-size: 1.4em; color: #4f46e5; margin: 15px 0; font-weight: 600;">${companyName}</p>
+            <p style="color: #6b7280; font-size: 1em;">Generated on ${new Date().toLocaleDateString()}</p>
         </header>
         
-        <main class="content">
+        <main style="padding: 0;">
             ${htmlContent}
         </main>
         
-        <footer class="footer">
+        <footer style="text-align: center; margin-top: 60px; padding-top: 30px; border-top: 2px solid #e5e7eb; color: #6b7280; font-size: 0.9em;">
             <p>This report was generated by the Avallen Sustainability Platform</p>
         </footer>
     </div>
@@ -255,11 +154,12 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
       const sustainabilityData = await dbStorage.getCompanySustainabilityData(userCompany.id);
       if (sustainabilityData) {
         transformedReportData.metrics = {
-          co2e: sustainabilityData.totalCO2e || 0,
-          water: sustainabilityData.totalWaterUsage || 0, 
-          waste: sustainabilityData.totalWasteGenerated || 0
+          co2e: Math.round(sustainabilityData.totalCO2e || 0),
+          water: Math.round(sustainabilityData.totalWaterUsage || 0), 
+          waste: Math.round(sustainabilityData.totalWasteGenerated || 0)
         };
       }
+      console.log('📊 PDF Metrics fetched:', transformedReportData.metrics);
     } catch (error) {
       console.warn('Could not fetch company metrics for PDF:', error);
     }
@@ -275,13 +175,14 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
       const html = generateGuidedReportHTML(transformedReportData);
       console.log('📝 Generated HTML length:', html.length);
       
-      // Use html-pdf-node directly
+      // Use html-pdf-node directly with proper options for CSS
       const file = { content: html };
       const pdfOptions = { 
         format: 'A4',
         margin: { top: '20mm', bottom: '20mm', left: '20mm', right: '20mm' },
         printBackground: true,
-        displayHeaderFooter: false
+        displayHeaderFooter: false,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
       };
       
       buffer = await htmlPdf.generatePdf(file, pdfOptions);
