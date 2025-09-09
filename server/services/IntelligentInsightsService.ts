@@ -51,14 +51,14 @@ export class IntelligentInsightsService {
   async generateCategoryInsights(
     companyId: number, 
     category: string
-  ): Promise<{ recommendations: InsightRecommendation[] }> {
+  ): Promise<{ recommendations: InsightRecommendation[], generatedAt: string }> {
     try {
       console.log(`🤖 Generating AI insights for company ${companyId}, category: ${category}`);
 
       // Get company data and active goals for the category
       const [companyData, categoryGoals, companyPerformance, platformBenchmarks] = await Promise.all([
         this.getCompanyData(companyId),
-        this.getActiveGoalsByCategory(companyId, category),
+        category === 'overall' ? this.getAllActiveGoals(companyId) : this.getActiveGoalsByCategory(companyId, category),
         this.getCompanyPerformanceData(companyId),
         this.getPlatformBenchmarks()
       ]);
@@ -83,16 +83,34 @@ export class IntelligentInsightsService {
       const recommendations = await this.parseAIResponse(aiResponse, categoryGoals);
 
       console.log(`✅ Generated ${recommendations.length} AI-powered insights for ${category}`);
-      return { recommendations };
+      return { 
+        recommendations,
+        generatedAt: new Date().toISOString()
+      };
 
     } catch (error) {
       console.error('Error generating intelligent insights:', error);
       
       // Fallback to basic recommendations if AI fails
       return {
-        recommendations: await this.getFallbackRecommendations(companyId, category)
+        recommendations: await this.getFallbackRecommendations(companyId, category),
+        generatedAt: new Date().toISOString()
       };
     }
+  }
+
+  /**
+   * Get all active goals for overall analysis
+   */
+  private async getAllActiveGoals(companyId: number): Promise<CompanyKpiGoal[]> {
+    const goals = await db
+      .select()
+      .from(companyKpiGoals)
+      .leftJoin(kpiDefinitions, eq(companyKpiGoals.kpiDefinitionId, kpiDefinitions.id))
+      .where(eq(companyKpiGoals.companyId, companyId))
+      .orderBy(desc(companyKpiGoals.createdAt));
+
+    return goals.map(result => result.company_kpi_goals);
   }
 
   /**
@@ -265,15 +283,23 @@ export class IntelligentInsightsService {
       `- ${goal.kpiName}: Target ${goal.targetReductionPercentage}% reduction by ${goal.targetDate}`
     ).join('\n');
 
-    return `You are a sustainability expert advisor analyzing ${company.name || 'a company'}'s ${category} performance. 
-Provide 3 specific, actionable recommendations based on the data below.
+    const categoryContext = category === 'overall' 
+      ? 'comprehensive sustainability' 
+      : `${category} performance`;
+
+    const analysisScope = category === 'overall'
+      ? 'Provide 4 strategic, high-impact recommendations covering carbon footprint, operational efficiency, supply chain, and long-term sustainability strategy'
+      : `Provide 3 specific, actionable recommendations focused on ${category}`;
+
+    return `You are a sustainability expert advisor analyzing ${company.name || 'a company'}'s ${categoryContext}. 
+${analysisScope} based on the data below.
 
 COMPANY CONTEXT:
 - Industry: ${company.industry || 'Not specified'}
 - Company Size: ${company.size || 'Not specified'}
 - Location: ${company.country || 'Not specified'}
 
-ACTIVE ${category.toUpperCase()} GOALS:
+ACTIVE ${category === 'overall' ? 'SUSTAINABILITY' : category.toUpperCase()} GOALS:
 ${goalsContext || 'No active goals set for this category'}
 
 CURRENT PERFORMANCE:
@@ -295,7 +321,7 @@ REQUIREMENTS:
 4. Provide specific, measurable actions
 5. Include confidence level (0.0-1.0) based on data quality
 
-Return ONLY a JSON array with exactly 3 recommendations in this format:
+Return ONLY a JSON array with ${category === 'overall' ? '4' : '3'} recommendations in this format:
 [
   {
     "type": "optimization|best_practice|warning",
