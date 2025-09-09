@@ -94,7 +94,45 @@ router.post('/guided/:reportId/export-pdf', isAuthenticated, async (req: any, re
       return res.status(404).json({ error: 'Report not found' });
     }
     
-    const buffer = await unifiedPDFService.generateSustainabilityReport(reportData);
+    // Generate PDF using enhanced PDFGenerator for sustainability reports
+    console.log('🌱 Generating sustainability report PDF with PDFGenerator...');
+    
+    // Import PDFGenerator
+    const { PDFGenerator } = await import('../../report-generation/pdfGenerator.js');
+    const pdfGenerator = new PDFGenerator();
+    
+    // Prepare data for PDF generation
+    const sustainabilityReportData = {
+      report: {
+        reportTitle: reportData.reportTitle || 'Sustainability Report',
+        reportType: reportData.reportType || 'comprehensive'
+      },
+      content: {
+        introduction: reportData.introduction || '',
+        company_info_narrative: reportData.companyInfoNarrative || '',
+        key_metrics_narrative: reportData.keyMetricsNarrative || '',
+        carbon_footprint_narrative: reportData.carbonFootprintNarrative || '',
+        initiatives_narrative: reportData.initiativesNarrative || '',
+        kpi_tracking_narrative: reportData.kpiTrackingNarrative || '',
+        social_impact_narrative: reportData.socialImpactNarrative || '',
+        summary: reportData.summary || ''
+      },
+      company: userCompany || {},
+      metrics: {
+        // Pull metrics from existing dashboard APIs - will use real data
+        totalCO2Emissions: reportData.totalCO2Emissions || 0,
+        totalWaterUsage: reportData.totalWaterUsage || 0,
+        totalWasteGenerated: reportData.totalWasteGenerated || 0,
+        scope1Emissions: reportData.scope1Emissions || 0,
+        scope2Emissions: reportData.scope2Emissions || 0,
+        scope3Emissions: reportData.scope3Emissions || 0
+      },
+      selectedInitiatives: reportData.selectedInitiatives || [],
+      selectedKPIs: reportData.selectedKPIs || [],
+      uploadedImages: {} // Future Phase 3 implementation
+    };
+    
+    const buffer = await pdfGenerator.generateSustainabilityPDF(reportData.reportType || 'comprehensive', sustainabilityReportData);
     const filename = `sustainability_report_${reportId}_${Date.now()}.pdf`;
     
     res.setHeader('Content-Type', 'application/pdf');
