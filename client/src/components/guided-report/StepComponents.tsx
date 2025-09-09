@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { SectionImageUploader } from "./SectionImageUploader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ interface StepComponentProps {
   onChange: (content: string) => void;
   onSave: () => void;
   isSaving: boolean;
+  reportId?: string; // Add reportId for image uploads
 }
 
 // Removed unused hook - functionality moved to component
@@ -200,7 +202,7 @@ function AIWritingAssistant({
 }
 
 // Step 1: Introduction Component
-export function IntroductionStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function IntroductionStep({ content, onChange, onSave, isSaving, reportId }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   
   const suggestions = [
@@ -287,13 +289,23 @@ export function IntroductionStep({ content, onChange, onSave, isSaving }: StepCo
             ))}
           </div>
         </div>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="introduction"
+            sectionTitle="Introduction"
+            reportId={reportId}
+            maxImages={2}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 // Step 2: Company Information Component
-export function CompanyInfoStep({ content, onChange, onSave, isSaving }: StepComponentProps) {
+export function CompanyInfoStep({ content, onChange, onSave, isSaving, reportId }: StepComponentProps) {
   const { data: company } = useQuery({ queryKey: ['/api/company'] });
   
   return (
@@ -384,6 +396,16 @@ export function CompanyInfoStep({ content, onChange, onSave, isSaving }: StepCom
             </div>
           </CardContent>
         </Card>
+
+        {/* Section Image Uploader */}
+        {reportId && (
+          <SectionImageUploader
+            sectionId="company_info"
+            sectionTitle="Company Information"
+            reportId={reportId}
+            maxImages={3}
+          />
+        )}
       </div>
     </div>
   );

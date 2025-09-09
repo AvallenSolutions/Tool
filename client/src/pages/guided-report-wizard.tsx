@@ -608,6 +608,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('introduction', content)}
                         onSave={() => handleSaveStep('introduction')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                     
@@ -618,6 +619,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('company_info_narrative', content)}
                         onSave={() => handleSaveStep('company_info_narrative')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                     
@@ -628,6 +630,7 @@ export default function GuidedReportWizard({}: GuidedReportWizardProps) {
                         onChange={(content) => handleStepContentChange('key_metrics_narrative', content)}
                         onSave={() => handleSaveStep('key_metrics_narrative')}
                         isSaving={saveStepMutation.isPending}
+                        reportId={reportId}
                       />
                     )}
                     
