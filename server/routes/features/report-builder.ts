@@ -4,6 +4,8 @@ import { isAuthenticated } from '../../replitAuth';
 import { storage as dbStorage } from '../../storage';
 import { logger } from '../../config/logger';
 import { TimeSeriesEngine } from '../../services/TimeSeriesEngine';
+import { PDFExportService } from '../../services/PDFExportService';
+import { PowerPointExportService } from '../../services/PowerPointExportService';
 
 const router = Router();
 
@@ -158,52 +160,88 @@ async function fetchMetricsData(companyId: number, dataSelections: ReportExportR
 }
 
 /**
- * Generate report in specified format
+ * Generate report in specified format using export services
  */
 async function generateReport(
   config: ReportExportRequest, 
   company: any, 
   metricsData: any
 ) {
-  // This will be implemented with Puppeteer/pptxgenjs in the next phase
-  // For now, return a placeholder response
-  
-  const reportContent = {
-    title: config.templateOptions.customTitle || `${config.reportType.toUpperCase()} Report - ${company.companyName}`,
-    generatedAt: new Date().toISOString(),
-    reportType: config.reportType,
+  logger.info({ 
     exportFormat: config.exportFormat,
-    company: {
-      name: company.companyName,
-      id: company.id
-    },
-    metrics: {
-      totalProducts: metricsData.products.length,
-      totalKPIs: metricsData.kpis.length,
-      timeRange: metricsData.timeRange
-    }
+    reportType: config.reportType,
+    companyId: company.id 
+  }, 'Report generation started');
+
+  const exportOptions = {
+    reportType: config.reportType,
+    company,
+    metricsData,
+    templateOptions: config.templateOptions,
+    blocks: (config as any).blocks // Blocks from frontend Report Builder
   };
 
   switch (config.exportFormat) {
     case 'pdf':
-      return {
-        type: 'pdf',
-        downloadUrl: '/api/report/download/placeholder.pdf', // Will be implemented
-        content: reportContent
-      };
+      try {
+        const pdfResult = await PDFExportService.generatePDF(exportOptions);
+        return {
+          type: 'pdf',
+          downloadUrl: `/api/report/download/${pdfResult.filename}`,
+          filename: pdfResult.filename,
+          filePath: pdfResult.filePath,
+          content: {
+            title: config.templateOptions.customTitle || `${config.reportType.toUpperCase()} Report`,
+            company: company.companyName,
+            generatedAt: new Date().toISOString()
+          }
+        };
+      } catch (error) {
+        logger.error({ error }, 'PDF generation failed');
+        throw new Error('Failed to generate PDF report');
+      }
       
     case 'powerpoint':
-      return {
-        type: 'powerpoint', 
-        downloadUrl: '/api/report/download/placeholder.pptx', // Will be implemented
-        content: reportContent
-      };
+      try {
+        const pptxResult = await PowerPointExportService.generatePowerPoint(exportOptions);
+        return {
+          type: 'powerpoint',
+          downloadUrl: `/api/report/download/${pptxResult.filename}`,
+          filename: pptxResult.filename,
+          filePath: pptxResult.filePath,
+          content: {
+            title: config.templateOptions.customTitle || `${config.reportType.toUpperCase()} Report`,
+            company: company.companyName,
+            generatedAt: new Date().toISOString()
+          }
+        };
+      } catch (error) {
+        logger.error({ error }, 'PowerPoint generation failed');
+        throw new Error('Failed to generate PowerPoint report');
+      }
       
     case 'web':
+      const reportContent = {
+        title: config.templateOptions.customTitle || `${config.reportType.toUpperCase()} Report - ${company.companyName}`,
+        generatedAt: new Date().toISOString(),
+        reportType: config.reportType,
+        exportFormat: config.exportFormat,
+        company: {
+          name: company.companyName,
+          id: company.id
+        },
+        metrics: {
+          totalProducts: metricsData.products.length,
+          totalKPIs: metricsData.kpis.length,
+          timeRange: metricsData.timeRange
+        },
+        blocks: (config as any).blocks
+      };
+      
       return {
         type: 'web',
         content: reportContent,
-        html: generateWebReport(reportContent) // Basic HTML for web format
+        html: generateWebReport(reportContent)
       };
       
     default:
