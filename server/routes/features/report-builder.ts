@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { isAuthenticated } from '../../replitAuth';
-import { dbStorage } from '../../storage';
+import { storage as dbStorage } from '../../storage';
 import { logger } from '../../config/logger';
 import { TimeSeriesEngine } from '../../services/TimeSeriesEngine';
 
