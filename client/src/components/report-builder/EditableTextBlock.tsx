@@ -23,10 +23,12 @@ interface EditableTextBlockProps {
 export function EditableTextBlock({ block, onUpdate, isPreview = false }: EditableTextBlockProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(block.content.text);
+  const [currentFormatting, setCurrentFormatting] = useState(block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' });
   // Remove modal state since we're doing inline formatting
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const formatting = block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' };
+  // Keep formatting in sync with block content
+  const formatting = currentFormatting;
 
   // Auto-focus when editing starts and sync formatting
   useEffect(() => {
@@ -36,10 +38,11 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
     }
   }, [isEditing]);
 
-  // Sync text when block content changes
+  // Sync text and formatting when block content changes
   useEffect(() => {
     setEditText(block.content.text);
-  }, [block.content.text]);
+    setCurrentFormatting(block.content.formatting || { fontSize: 'medium', alignment: 'left', style: 'normal' });
+  }, [block.content.text, block.content.formatting]);
 
   const handleStartEditing = () => {
     if (isPreview) return;
@@ -51,7 +54,7 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
     onUpdate(block.id, {
       ...block.content,
       text: editText,
-      formatting: formatting  // Make sure to preserve current formatting
+      formatting: currentFormatting  // Make sure to preserve current formatting
     });
     setIsEditing(false);
   };
@@ -74,6 +77,11 @@ export function EditableTextBlock({ block, onUpdate, isPreview = false }: Editab
   const handleFormattingUpdate = (field: string, value: any) => {
     console.log(`🎨 Formatting update: ${field} = ${value}`, { current: formatting, new: { ...formatting, [field]: value } });
     const newFormatting = { ...formatting, [field]: value };
+    
+    // Update local state immediately for instant feedback
+    setCurrentFormatting(newFormatting);
+    
+    // Update the block content
     onUpdate(block.id, {
       ...block.content,
       text: editText, // Include current text
