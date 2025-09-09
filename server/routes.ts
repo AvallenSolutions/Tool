@@ -10134,13 +10134,26 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       const user = req.user as any;
       const userId = user?.claims?.sub;
       
+      console.log('🔍 Reports API Debug:', { 
+        hasUser: !!user, 
+        userId, 
+        userClaims: user?.claims 
+      });
+      
       if (!userId) {
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
       const company = await dbStorage.getCompanyByOwner(userId);
+      console.log('🔍 Company lookup result:', { 
+        userId, 
+        foundCompany: !!company, 
+        companyId: company?.id,
+        companyName: company?.name 
+      });
+      
       if (!company) {
-        return res.status(404).json({ error: 'Company not found' });
+        return res.status(404).json({ error: 'User company not found' });
       }
 
       const { reports } = await import('@shared/schema');
