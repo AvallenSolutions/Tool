@@ -26,8 +26,12 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
       return res.status(404).json({ error: 'User company not found' });
     }
     
-    // Get report data
-    const reportData = await dbStorage.getReportById(parseInt(reportId));
+    // Get report data from customReports table
+    const [reportData] = await db
+      .select()
+      .from(customReports)
+      .where(eq(customReports.id, reportId));
+    
     if (!reportData) {
       return res.status(404).json({ error: 'Report not found' });
     }
@@ -38,11 +42,11 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
     
     if (format === 'pdf') {
       buffer = await unifiedPDFService.exportReport(reportData, 'pdf');
-      filename = `${reportData.report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pdf`;
+      filename = `${reportData.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pdf`;
       contentType = 'application/pdf';
     } else if (format === 'pptx') {
       buffer = await unifiedPDFService.exportReport(reportData, 'pptx');
-      filename = `${reportData.report.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pptx`;
+      filename = `${reportData.reportTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getFullYear()}.pptx`;
       contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
     } else {
       return res.status(400).json({ error: 'Unsupported format. Use pdf or pptx' });
