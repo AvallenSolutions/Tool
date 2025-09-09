@@ -155,7 +155,7 @@ router.post('/guided/:reportId/export', isAuthenticated, async (req: any, res: a
       water: 20889, // thousands of liters (20,888,575 / 1000)
       waste: 11 // tonnes (10.84 rounded up)
     };
-    console.log('📊 PDF Metrics using dashboard values:', transformedReportData.metrics);
+    console.log('🔥 NEW METRICS CODE RUNNING:', transformedReportData.metrics);
     
     let filename: string;
     let buffer: Buffer;
