@@ -209,10 +209,14 @@ router.get('/:id', isAuthenticated, async (req: any, res: any) => {
 // DELETE /api/reports/:id - Delete a specific report
 router.delete('/:id', isAuthenticated, async (req: any, res: any) => {
   try {
+    console.log('🗑️ DELETE request received for report:', req.params.id);
     const userId = req.user?.claims?.sub || req.user?.id;
     const reportId = parseInt(req.params.id);
     
-    if (!reportId) {
+    console.log('🗑️ Delete attempt:', { userId, reportId });
+    
+    if (!reportId || isNaN(reportId)) {
+      console.log('🗑️ Invalid report ID');
       return res.status(400).json({ error: 'Invalid report ID' });
     }
     
