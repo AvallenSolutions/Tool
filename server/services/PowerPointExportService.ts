@@ -211,6 +211,9 @@ export class PowerPointExportService {
       case 'text':
         PowerPointExportService.createTextBlockSlide(slide, block, theme);
         break;
+      case 'editable_text':
+        PowerPointExportService.createEditableTextBlockSlide(slide, block, theme);
+        break;
       default:
         PowerPointExportService.createDefaultBlockSlide(slide, block, theme);
     }
@@ -343,6 +346,72 @@ export class PowerPointExportService {
       color: theme.text,
       align: 'left',
       valign: 'top'
+    });
+  }
+
+  /**
+   * Create editable text block slide with formatting support
+   */
+  private static createEditableTextBlockSlide(slide: any, block: any, theme: any): void {
+    const text = block.content?.text || 'Text content will be displayed here';
+    const formatting = block.content?.formatting || {};
+    
+    // Determine font size
+    let fontSize = 16; // default
+    switch (formatting.fontSize) {
+      case 'small':
+        fontSize = 14;
+        break;
+      case 'large':
+        fontSize = 20;
+        break;
+      default:
+        fontSize = 16;
+    }
+    
+    // Determine alignment
+    let align = 'left';
+    switch (formatting.alignment) {
+      case 'center':
+        align = 'center';
+        break;
+      case 'right':
+        align = 'right';
+        break;
+      case 'justify':
+        align = 'justify';
+        break;
+      default:
+        align = 'left';
+    }
+    
+    // Determine font style
+    let bold = false;
+    let italic = false;
+    switch (formatting.style) {
+      case 'bold':
+        bold = true;
+        break;
+      case 'italic':
+        italic = true;
+        break;
+      default:
+        bold = false;
+        italic = false;
+    }
+    
+    slide.addText(text, {
+      x: 0.5,
+      y: 2,
+      w: 9,
+      h: 4.5,
+      fontSize: fontSize,
+      fontFace: 'Inter',
+      color: theme.text,
+      align: align,
+      valign: 'top',
+      bold: bold,
+      italic: italic
     });
   }
   

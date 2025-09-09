@@ -311,6 +311,61 @@ export class PDFExportService {
           </div>
         `;
       
+      case 'editable_text':
+        const text = block.content?.text || 'Text content';
+        const formatting = block.content?.formatting || {};
+        
+        // Build style string based on formatting options
+        let styles = [];
+        
+        // Font size
+        switch (formatting.fontSize) {
+          case 'small':
+            styles.push('font-size: 0.875rem');
+            break;
+          case 'large':
+            styles.push('font-size: 1.125rem');
+            break;
+          default:
+            styles.push('font-size: 1rem');
+        }
+        
+        // Text alignment
+        switch (formatting.alignment) {
+          case 'center':
+            styles.push('text-align: center');
+            break;
+          case 'right':
+            styles.push('text-align: right');
+            break;
+          case 'justify':
+            styles.push('text-align: justify');
+            break;
+          default:
+            styles.push('text-align: left');
+        }
+        
+        // Font style
+        switch (formatting.style) {
+          case 'bold':
+            styles.push('font-weight: bold');
+            break;
+          case 'italic':
+            styles.push('font-style: italic');
+            break;
+          default:
+            styles.push('font-weight: normal');
+            styles.push('font-style: normal');
+        }
+        
+        const styleString = styles.join('; ');
+        
+        return `
+          <div class="section">
+            <div style="${styleString}; margin-bottom: 15px; line-height: 1.6;">${text}</div>
+          </div>
+        `;
+      
       default:
         return `
           <div class="section">
