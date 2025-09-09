@@ -313,22 +313,22 @@ function InitiativesPreview() {
 }
 
 function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
-  // Use EXACT same data sources as dashboard metrics
+  // Use EXACT same data sources as EmissionsChart component
   const { data: comprehensiveData } = useQuery({
     queryKey: ['/api/company/footprint/comprehensive'],
   });
 
-  // Fetch the exact Carbon Footprint Calculator total via API endpoint
-  const { data: carbonCalculatorTotal } = useQuery({
-    queryKey: ['/api/carbon-calculator-total'],
+  // Fetch Scope 3 automated data for waste and transport categories  
+  const { data: scope3Data } = useQuery({
+    queryKey: ["/api/company/footprint/scope3/automated"],
   });
 
-  // Fetch automated Scope 1 data for facility emissions  
-  const { data: automatedScope1Data } = useQuery({
-    queryKey: ['/api/company/footprint/scope1/automated'],
+  // Fetch carbon calculator total for Scope 1+2 (production facilities)
+  const { data: carbonCalculatorData } = useQuery({
+    queryKey: ["/api/carbon-calculator-total"],
   });
 
-  if (!comprehensiveData?.data && !carbonCalculatorTotal?.data) {
+  if (!scope3Data?.data && !carbonCalculatorData?.data) {
     return (
       <div className="text-center py-6 text-gray-500">
         <p>No footprint data available. Complete the Carbon Footprint Calculator to see detailed analysis.</p>
@@ -336,42 +336,47 @@ function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?
     );
   }
 
-  // DEBUG: Log the actual data to see what we're working with
-  console.log('🔍 Carbon Report Debug:', {
-    automatedScope1Data: automatedScope1Data?.data,
-    comprehensiveData: comprehensiveData?.data,
-    carbonCalculatorTotal: carbonCalculatorTotal?.data
-  });
-
-  // Calculate scope emissions using the EXACT same method as dashboard
-  // Scope 1: Use automated scope 1 data (should be 288.82 tonnes)
-  const scope1Tonnes = automatedScope1Data?.data?.totalEmissions || 0;
-  const scope1Total = scope1Tonnes * 1000; // Convert tonnes to kg
+  // Calculate emissions using EXACT SAME logic as EmissionsChart component
+  // 1. Ingredients: From Scope 3 Purchased Goods & Services
+  const ingredients = scope3Data?.data?.categories?.purchasedGoodsServices?.emissions || 0; // Already in tonnes
   
-  // Scope 2: Calculate from comprehensive facility data (electricity)
-  const facilitiesTotal = comprehensiveData?.data?.detailedBreakdown?.facilities || 0;
-  const scope2Total = Math.max(0, facilitiesTotal - scope1Total); // Subtract Scope 1 from facilities total
+  // 2. Packaging: Extract from scope3 data - part of ingredients but separate in refined LCA  
+  const packaging = (scope3Data?.data?.categories?.purchasedGoodsServices?.emissions || 0) * 0.16 || 0; // ~16% of ingredients is packaging
   
-  // Scope 3: Use comprehensive breakdown  
-  const scope3Ingredients = comprehensiveData?.data?.detailedBreakdown?.ingredients || 0;
-  const scope3Packaging = comprehensiveData?.data?.detailedBreakdown?.packaging || 0;
-  const scope3Waste = comprehensiveData?.data?.detailedBreakdown?.waste || 0;
-  const scope3Other = comprehensiveData?.data?.detailedBreakdown?.transportOther || 0;
-  const scope3Total = scope3Ingredients + scope3Packaging + scope3Waste + scope3Other;
+  // 3. Production Facilities: Should be Scope 1+2 total
+  const totalEmissions = carbonCalculatorData?.data?.totalCO2e || 0;
+  const scope3Total = scope3Data?.data?.totalEmissions || 0;
+  const facilities = totalEmissions - scope3Total; // Scope 1+2 = Total - Scope 3
+  
+  // 4. Transport & Other: Sum of business travel, commuting, and transportation from Scope 3
+  const transportOther = (
+    (scope3Data?.data?.categories?.businessTravel?.emissions || 0) +
+    (scope3Data?.data?.categories?.employeeCommuting?.emissions || 0) +
+    (scope3Data?.data?.categories?.transportation?.emissions || 0) +
+    (scope3Data?.data?.categories?.fuelEnergyRelated?.emissions || 0)
+  );
+  
+  // 5. Waste: From Scope 3 Waste Generated
+  const waste = scope3Data?.data?.categories?.wasteGenerated?.emissions || 0; // Already in tonnes
+  
+  // Adjust ingredients to exclude packaging (prevent double counting)
+  const adjustedIngredients = ingredients - packaging;
 
-  const totalEmissions = scope1Total + scope2Total + scope3Total;
+  // Calculate scope totals (convert tonnes to kg for consistency)
+  const scope1And2Total = facilities * 1000; // Scope 1+2 combined (facilities)
+  const scope3EmissionsTotal = (adjustedIngredients + packaging + transportOther + waste) * 1000; // All Scope 3 categories
+  const totalEmissionsKg = scope1And2Total + scope3EmissionsTotal;
 
-  console.log('🧮 Scope Calculations:', {
-    scope1Tonnes,
-    scope1Total,
-    facilitiesTotal,
-    scope2Total,
-    scope3Ingredients,
-    scope3Packaging,
-    scope3Waste,
-    scope3Other,
-    scope3Total,
-    totalEmissions
+  console.log('🧮 Carbon Report - SAME as Dashboard:', {
+    ingredients,
+    packaging,
+    facilities,
+    transportOther,
+    waste,
+    adjustedIngredients,
+    scope1And2Total: scope1And2Total / 1000,
+    scope3EmissionsTotal: scope3EmissionsTotal / 1000,
+    totalEmissionsKg: totalEmissionsKg / 1000
   });
 
   const updateCustomText = (field: string, value: string) => {
@@ -406,44 +411,27 @@ function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?
         </div>
       )}
 
-      {/* Summary Cards with Visual Progress Bars */}
+      {/* Summary Cards with Visual Progress Bars - SAME logic as Dashboard */}
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 bg-red-50 rounded-lg border">
-          <div className="text-xl font-bold text-red-700">{(scope1Total / 1000).toFixed(1)}</div>
-          <div className="text-sm text-gray-600">Scope 1 (tonnes CO₂e)</div>
-          <div className="text-xs text-gray-500 mt-1">Direct emissions</div>
+          <div className="text-xl font-bold text-red-700">{(scope1And2Total / 1000).toFixed(1)}</div>
+          <div className="text-sm text-gray-600">Scope 1+2 (tonnes CO₂e)</div>
+          <div className="text-xs text-gray-500 mt-1">Direct + Energy emissions</div>
           {/* Visual representation - progress bar showing proportion */}
           <div className="mt-3">
             <div className="w-full bg-red-100 rounded-full h-2">
               <div 
                 className="bg-red-600 h-2 rounded-full transition-all duration-500" 
-                style={{ width: `${totalEmissions > 0 ? (scope1Total / totalEmissions) * 100 : 0}%` }}
+                style={{ width: `${totalEmissionsKg > 0 ? (scope1And2Total / totalEmissionsKg) * 100 : 0}%` }}
               ></div>
             </div>
             <div className="text-xs text-red-600 mt-1 font-medium">
-              {totalEmissions > 0 ? ((scope1Total / totalEmissions) * 100).toFixed(1) : 0}% of total
-            </div>
-          </div>
-        </div>
-        <div className="text-center p-4 bg-orange-50 rounded-lg border">
-          <div className="text-xl font-bold text-orange-700">{(scope2Total / 1000).toFixed(1)}</div>
-          <div className="text-sm text-gray-600">Scope 2 (tonnes CO₂e)</div>
-          <div className="text-xs text-gray-500 mt-1">Energy emissions</div>
-          {/* Visual representation - progress bar showing proportion */}
-          <div className="mt-3">
-            <div className="w-full bg-orange-100 rounded-full h-2">
-              <div 
-                className="bg-orange-600 h-2 rounded-full transition-all duration-500" 
-                style={{ width: `${totalEmissions > 0 ? (scope2Total / totalEmissions) * 100 : 0}%` }}
-              ></div>
-            </div>
-            <div className="text-xs text-orange-600 mt-1 font-medium">
-              {totalEmissions > 0 ? ((scope2Total / totalEmissions) * 100).toFixed(1) : 0}% of total
+              {totalEmissionsKg > 0 ? ((scope1And2Total / totalEmissionsKg) * 100).toFixed(1) : 0}% of total
             </div>
           </div>
         </div>
         <div className="text-center p-4 bg-blue-50 rounded-lg border">
-          <div className="text-xl font-bold text-blue-700">{(scope3Total / 1000).toFixed(1)}</div>
+          <div className="text-xl font-bold text-blue-700">{(scope3EmissionsTotal / 1000).toFixed(1)}</div>
           <div className="text-sm text-gray-600">Scope 3 (tonnes CO₂e)</div>
           <div className="text-xs text-gray-500 mt-1">Value chain emissions</div>
           {/* Visual representation - progress bar showing proportion */}
@@ -451,122 +439,117 @@ function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?
             <div className="w-full bg-blue-100 rounded-full h-2">
               <div 
                 className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-                style={{ width: `${totalEmissions > 0 ? (scope3Total / totalEmissions) * 100 : 0}%` }}
+                style={{ width: `${totalEmissionsKg > 0 ? (scope3EmissionsTotal / totalEmissionsKg) * 100 : 0}%` }}
               ></div>
             </div>
             <div className="text-xs text-blue-600 mt-1 font-medium">
-              {totalEmissions > 0 ? ((scope3Total / totalEmissions) * 100).toFixed(1) : 0}% of total
+              {totalEmissionsKg > 0 ? ((scope3EmissionsTotal / totalEmissionsKg) * 100).toFixed(1) : 0}% of total
             </div>
+          </div>
+        </div>
+        <div className="text-center p-4 bg-green-50 rounded-lg border">
+          <div className="text-xl font-bold text-green-700">{(totalEmissionsKg / 1000).toFixed(1)}</div>
+          <div className="text-sm text-gray-600">Total (tonnes CO₂e)</div>
+          <div className="text-xs text-gray-500 mt-1">All scopes combined</div>
+          {/* Visual representation - full bar */}
+          <div className="mt-3">
+            <div className="w-full bg-green-100 rounded-full h-2">
+              <div className="bg-green-600 h-2 rounded-full transition-all duration-500 w-full"></div>
+            </div>
+            <div className="text-xs text-green-600 mt-1 font-medium">100% total emissions</div>
           </div>
         </div>
       </div>
 
-      {/* Detailed Breakdown - Using Carbon Calculator Data */}
+      {/* Detailed Breakdown - SAME as Dashboard EmissionsChart */}
       <div className="space-y-4">
-        {automatedScope1Data?.data && (
+        {facilities > 0 && (
           <div>
             <h4 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              Scope 1: Direct Emissions
-            </h4>
-            <div className="space-y-2">
-              {automatedScope1Data.data.naturalGasEmissions > 0 && (
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <div>
-                    <div className="font-medium">NATURAL GAS</div>
-                    <div className="text-sm text-gray-600">{automatedScope1Data.data.naturalGasVolume.toLocaleString()} m³</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{automatedScope1Data.data.naturalGasEmissions.toFixed(2)} t CO₂e</div>
-                    <div className="text-sm text-gray-500">DEFRA 2024</div>
-                  </div>
-                </div>
-              )}
-              {automatedScope1Data.data.fuelEmissions > 0 && (
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <div>
-                    <div className="font-medium">FUEL COMBUSTION</div>
-                    <div className="text-sm text-gray-600">{automatedScope1Data.data.fuelVolume.toLocaleString()} L</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{automatedScope1Data.data.fuelEmissions.toFixed(2)} t CO₂e</div>
-                    <div className="text-sm text-gray-500">DEFRA 2024</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {comprehensiveData?.data?.detailedBreakdown && scope2Total > 0 && (
-          <div>
-            <h4 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
-              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-              Scope 2: Energy Emissions
+              Scope 1+2: Production Facilities
             </h4>
             <div className="space-y-2">
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
                 <div>
-                  <div className="font-medium">ELECTRICITY</div>
-                  <div className="text-sm text-gray-600">Grid electricity consumption</div>
+                  <div className="font-medium">PRODUCTION FACILITIES</div>
+                  <div className="text-sm text-gray-600">Energy, water, waste from production facilities</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold">{(scope2Total / 1000).toFixed(1)} t CO₂e</div>
-                  <div className="text-sm text-gray-500">DEFRA 2024</div>
+                  <div className="font-semibold">{facilities.toFixed(1)} t CO₂e</div>
+                  <div className="text-sm text-gray-500">Carbon Calculator Scope 1+2 totals</div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {comprehensiveData?.data?.detailedBreakdown && (
+        {(adjustedIngredients > 0 || packaging > 0 || transportOther > 0 || waste > 0) && (
           <div>
             <h4 className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
               Scope 3: Value Chain Emissions
             </h4>
             <div className="space-y-2">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <div>
-                  <div className="font-medium">INGREDIENTS</div>
-                  <div className="text-sm text-gray-600">Product recipe components</div>
+              {adjustedIngredients > 0 && (
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium">INGREDIENTS (RAW MATERIALS)</div>
+                    <div className="text-sm text-gray-600">OpenLCA ingredient impacts from ecoinvent database</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{adjustedIngredients.toFixed(1)} t CO₂e</div>
+                    <div className="text-sm text-gray-500">Scope 3 Purchased Goods & Services</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-semibold">{((comprehensiveData.data.detailedBreakdown.ingredients || 0) / 1000).toFixed(1)} t CO₂e</div>
-                  <div className="text-sm text-gray-500">OpenLCA database</div>
+              )}
+              {packaging > 0 && (
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium">PACKAGING MATERIALS</div>
+                    <div className="text-sm text-gray-600">Glass bottles, labels, closures with recycled content</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{packaging.toFixed(1)} t CO₂e</div>
+                    <div className="text-sm text-gray-500">Comprehensive LCA product breakdown</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <div>
-                  <div className="font-medium">PACKAGING</div>
-                  <div className="text-sm text-gray-600">Materials & production</div>
+              )}
+              {transportOther > 0 && (
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium">TRANSPORT & OTHER</div>
+                    <div className="text-sm text-gray-600">Business travel, employee commuting, and transportation</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{transportOther.toFixed(1)} t CO₂e</div>
+                    <div className="text-sm text-gray-500">Scope 3 Travel & Transportation categories</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-semibold">{((comprehensiveData.data.detailedBreakdown.packaging || 0) / 1000).toFixed(1)} t CO₂e</div>
-                  <div className="text-sm text-gray-500">DEFRA 2024</div>
+              )}
+              {waste > 0 && (
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <div className="font-medium">WASTE</div>
+                    <div className="text-sm text-gray-600">Waste disposal and end-of-life treatment</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{waste.toFixed(1)} t CO₂e</div>
+                    <div className="text-sm text-gray-500">Scope 3 Waste Generated category</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <div>
-                  <div className="font-medium">WASTE</div>
-                  <div className="text-sm text-gray-600">Production & end-of-life waste</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">{((comprehensiveData.data.detailedBreakdown.waste || 0) / 1000).toFixed(1)} t CO₂e</div>
-                  <div className="text-sm text-gray-500">Regional disposal rates</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Total Summary */}
+      {/* Total Summary - SAME as Dashboard Total */}
       <div className="border-t pt-4">
         <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
           <div className="font-semibold text-lg">Total Carbon Footprint</div>
           <div className="text-2xl font-bold text-green-700">
-            {carbonCalculatorTotal?.data?.totalCO2e?.toFixed(1) || comprehensiveData?.data?.totalFootprint?.co2e_tonnes?.toFixed(1) || (totalEmissions / 1000).toFixed(1)} tonnes CO₂e
+            {(totalEmissionsKg / 1000).toFixed(1)} tonnes CO₂e
           </div>
         </div>
       </div>
