@@ -19,25 +19,94 @@ import { KPIProgressPreview } from "@/components/report-builder/KPIProgressPrevi
 import { EditableTextBlock } from "@/components/report-builder/EditableTextBlock";
 
 // Preview components for each block type
-function CompanyStoryPreview() {
+function CompanyStoryPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
   const { data: companyStory } = useQuery({
     queryKey: ['/api/company/story'],
   });
 
+  const updateCustomText = (field: string, value: string) => {
+    if (!block || !onUpdate) return;
+    const newContent = {
+      ...block.content,
+      customText: {
+        ...block.content?.customText,
+        [field]: value
+      }
+    };
+    onUpdate(block.id, newContent);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Introduction Section */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="font-semibold text-blue-700 mb-2">📝 Add Your Introduction</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_intro`,
+              content: {
+                text: block.content?.customText?.introduction || 'Add an introduction to your company story...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('introduction', content.text)}
+            isPreview={false}
+          />
+        </div>
+      )}
+      
+      {/* Platform Data */}
       {companyStory?.missionStatement && (
         <div>
           <h4 className="font-semibold text-green-700 mb-2">Mission Statement</h4>
           <p className="text-gray-700">{companyStory.missionStatement}</p>
+          
+          {/* Mission Context */}
+          {block && onUpdate && !isPreview && (
+            <div className="mt-3 bg-green-50 p-3 rounded border border-green-200">
+              <h5 className="font-medium text-green-700 mb-2">📝 Add Context</h5>
+              <EditableTextBlock
+                block={{
+                  id: `${block.id}_mission`,
+                  content: {
+                    text: block.content?.customText?.missionContext || 'Add context about your mission...',
+                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
+                  }
+                }}
+                onUpdate={(_, content) => updateCustomText('missionContext', content.text)}
+                isPreview={false}
+              />
+            </div>
+          )}
         </div>
       )}
+      
       {companyStory?.visionStatement && (
         <div>
           <h4 className="font-semibold text-green-700 mb-2">Vision Statement</h4>
           <p className="text-gray-700">{companyStory.visionStatement}</p>
+          
+          {/* Vision Context */}
+          {block && onUpdate && !isPreview && (
+            <div className="mt-3 bg-green-50 p-3 rounded border border-green-200">
+              <h5 className="font-medium text-green-700 mb-2">📝 Add Context</h5>
+              <EditableTextBlock
+                block={{
+                  id: `${block.id}_vision`,
+                  content: {
+                    text: block.content?.customText?.visionContext || 'Add context about your vision...',
+                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
+                  }
+                }}
+                onUpdate={(_, content) => updateCustomText('visionContext', content.text)}
+                isPreview={false}
+              />
+            </div>
+          )}
         </div>
       )}
+      
       {companyStory?.strategicPillars && companyStory.strategicPillars.length > 0 && (
         <div>
           <h4 className="font-semibold text-green-700 mb-2">Strategic Pillars</h4>
@@ -49,13 +118,49 @@ function CompanyStoryPreview() {
               </div>
             ))}
           </div>
+          
+          {/* Pillars Context */}
+          {block && onUpdate && !isPreview && (
+            <div className="mt-3 bg-green-50 p-3 rounded border border-green-200">
+              <h5 className="font-medium text-green-700 mb-2">📝 Add Analysis</h5>
+              <EditableTextBlock
+                block={{
+                  id: `${block.id}_pillars`,
+                  content: {
+                    text: block.content?.customText?.pillarsContext || 'Add analysis of your strategic pillars...',
+                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
+                  }
+                }}
+                onUpdate={(_, content) => updateCustomText('pillarsContext', content.text)}
+                isPreview={false}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Conclusion Section */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="font-semibold text-blue-700 mb-2">📝 Add Your Conclusion</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_conclusion`,
+              content: {
+                text: block.content?.customText?.conclusion || 'Add a conclusion to your company story...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('conclusion', content.text)}
+            isPreview={false}
+          />
         </div>
       )}
     </div>
   );
 }
 
-function MetricsSummaryPreview() {
+function MetricsSummaryPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
   // Use the exact same API endpoints as the dashboard
   const { data: footprintData } = useQuery({
     queryKey: ['/api/company/footprint'],
@@ -93,20 +198,89 @@ function MetricsSummaryPreview() {
   const waterUsage = dashboardMetrics?.waterUsage || 11700000; // 11.7M litres (same as dashboard)
   const wasteGenerated = dashboardMetrics?.wasteGenerated || 0.1;
 
+  const updateCustomText = (field: string, value: string) => {
+    if (!block || !onUpdate) return;
+    const newContent = {
+      ...block.content,
+      customText: {
+        ...block.content?.customText,
+        [field]: value
+      }
+    };
+    onUpdate(block.id, newContent);
+  };
+
   return (
-    <div className="grid grid-cols-3 gap-4">
-      <div className="text-center p-4 bg-green-50 rounded-lg">
-        <div className="text-2xl font-bold text-green-700">{totalCO2e.toLocaleString()}</div>
-        <div className="text-sm text-gray-600">tonnes CO₂e</div>
+    <div className="space-y-6">
+      {/* Executive Summary */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="font-semibold text-blue-700 mb-2">📊 Executive Summary</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_summary`,
+              content: {
+                text: block.content?.customText?.executiveSummary || 'Add an executive summary of your environmental performance...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('executiveSummary', content.text)}
+            isPreview={false}
+          />
+        </div>
+      )}
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center p-4 bg-green-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-700">{totalCO2e.toLocaleString()}</div>
+          <div className="text-sm text-gray-600">tonnes CO₂e</div>
+        </div>
+        <div className="text-center p-4 bg-blue-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-700">{(waterUsage / 1000000).toFixed(1)}M</div>
+          <div className="text-sm text-gray-600">litres water</div>
+        </div>
+        <div className="text-center p-4 bg-purple-50 rounded-lg">
+          <div className="text-2xl font-bold text-purple-700">{wasteGenerated}</div>
+          <div className="text-sm text-gray-600">tonnes waste</div>
+        </div>
       </div>
-      <div className="text-center p-4 bg-blue-50 rounded-lg">
-        <div className="text-2xl font-bold text-blue-700">{(waterUsage / 1000000).toFixed(1)}M</div>
-        <div className="text-sm text-gray-600">litres water</div>
-      </div>
-      <div className="text-center p-4 bg-purple-50 rounded-lg">
-        <div className="text-2xl font-bold text-purple-700">{wasteGenerated}</div>
-        <div className="text-sm text-gray-600">tonnes waste</div>
-      </div>
+
+      {/* Data Analysis */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <h4 className="font-semibold text-green-700 mb-2">📈 Data Analysis</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_analysis`,
+              content: {
+                text: block.content?.customText?.dataAnalysis || 'Provide analysis and context for these metrics...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('dataAnalysis', content.text)}
+            isPreview={false}
+          />
+        </div>
+      )}
+
+      {/* Key Insights */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+          <h4 className="font-semibold text-yellow-700 mb-2">💡 Key Insights</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_insights`,
+              content: {
+                text: block.content?.customText?.keyInsights || 'Share key insights and takeaways from your environmental data...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('keyInsights', content.text)}
+            isPreview={false}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -168,7 +342,7 @@ function InitiativesPreview() {
   );
 }
 
-function CarbonFootprintPreview() {
+function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
   const { data: footprintData } = useQuery({
     queryKey: ['/api/company/footprint'],
   });
@@ -196,24 +370,105 @@ function CarbonFootprintPreview() {
 
   const totalEmissions = scope1Total + scope2Total + scope3Total;
 
+  const updateCustomText = (field: string, value: string) => {
+    if (!block || !onUpdate) return;
+    const newContent = {
+      ...block.content,
+      customText: {
+        ...block.content?.customText,
+        [field]: value
+      }
+    };
+    onUpdate(block.id, newContent);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Introduction */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="font-semibold text-blue-700 mb-2">🌍 Carbon Footprint Introduction</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_intro`,
+              content: {
+                text: block.content?.customText?.introduction || 'Introduce your carbon footprint analysis methodology and approach...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('introduction', content.text)}
+            isPreview={false}
+          />
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 bg-red-50 rounded-lg border">
           <div className="text-xl font-bold text-red-700">{(scope1Total / 1000).toFixed(1)}</div>
           <div className="text-sm text-gray-600">Scope 1 (tonnes CO₂e)</div>
           <div className="text-xs text-gray-500 mt-1">Direct emissions</div>
+          {/* Scope 1 Analysis */}
+          {block && onUpdate && !isPreview && (
+            <div className="mt-3 bg-red-100 p-2 rounded border border-red-200">
+              <h5 className="font-medium text-red-700 mb-1 text-xs">📝 Scope 1 Analysis</h5>
+              <EditableTextBlock
+                block={{
+                  id: `${block.id}_scope1`,
+                  content: {
+                    text: block.content?.customText?.scope1Analysis || 'Analyze direct emissions...',
+                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
+                  }
+                }}
+                onUpdate={(_, content) => updateCustomText('scope1Analysis', content.text)}
+                isPreview={false}
+              />
+            </div>
+          )}
         </div>
         <div className="text-center p-4 bg-orange-50 rounded-lg border">
           <div className="text-xl font-bold text-orange-700">{(scope2Total / 1000).toFixed(1)}</div>
           <div className="text-sm text-gray-600">Scope 2 (tonnes CO₂e)</div>
           <div className="text-xs text-gray-500 mt-1">Energy emissions</div>
+          {/* Scope 2 Analysis */}
+          {block && onUpdate && !isPreview && (
+            <div className="mt-3 bg-orange-100 p-2 rounded border border-orange-200">
+              <h5 className="font-medium text-orange-700 mb-1 text-xs">📝 Scope 2 Analysis</h5>
+              <EditableTextBlock
+                block={{
+                  id: `${block.id}_scope2`,
+                  content: {
+                    text: block.content?.customText?.scope2Analysis || 'Analyze energy emissions...',
+                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
+                  }
+                }}
+                onUpdate={(_, content) => updateCustomText('scope2Analysis', content.text)}
+                isPreview={false}
+              />
+            </div>
+          )}
         </div>
         <div className="text-center p-4 bg-blue-50 rounded-lg border">
           <div className="text-xl font-bold text-blue-700">{(scope3Total / 1000).toFixed(1)}</div>
           <div className="text-sm text-gray-600">Scope 3 (tonnes CO₂e)</div>
           <div className="text-xs text-gray-500 mt-1">Value chain emissions</div>
+          {/* Scope 3 Analysis */}
+          {block && onUpdate && !isPreview && (
+            <div className="mt-3 bg-blue-100 p-2 rounded border border-blue-200">
+              <h5 className="font-medium text-blue-700 mb-1 text-xs">📝 Scope 3 Analysis</h5>
+              <EditableTextBlock
+                block={{
+                  id: `${block.id}_scope3`,
+                  content: {
+                    text: block.content?.customText?.scope3Analysis || 'Analyze value chain emissions...',
+                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
+                  }
+                }}
+                onUpdate={(_, content) => updateCustomText('scope3Analysis', content.text)}
+                isPreview={false}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -448,17 +703,17 @@ export default function ReportBuilderPage() {
   }, [currentTemplate]);
 
   // Render preview for each block type
-  const renderBlockPreview = (block: ReportBlock) => {
+  const renderBlockPreview = (block: ReportBlock, isPreview: boolean = false) => {
     const blockType = block.type;
     switch (blockType) {
       case 'company_story':
-        return <CompanyStoryPreview />;
+        return <CompanyStoryPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'metrics_summary':
-        return <MetricsSummaryPreview />;
+        return <MetricsSummaryPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'initiatives':
         return <InitiativesPreview />;
       case 'carbon_footprint':
-        return <CarbonFootprintPreview />;
+        return <CarbonFootprintPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'water_usage':
         return (
           <div className="space-y-3">
@@ -865,7 +1120,7 @@ export default function ReportBuilderPage() {
                       <h3 className="text-lg font-semibold text-gray-900">{block.title}</h3>
                     </div>
                     <div className="prose prose-sm max-w-none">
-                      {renderBlockPreview(block)}
+                      {renderBlockPreview(block, true)}
                     </div>
                   </div>
                 ))}
