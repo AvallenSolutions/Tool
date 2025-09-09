@@ -124,6 +124,7 @@ export default function Sidebar() {
     { path: "/app/dashboard", label: "Dashboard", icon: BarChart3 },
     { path: "/app/company", label: "Company", icon: Building2 },
     { path: "/app/products", label: "Products", icon: Package },
+    { path: "/app/report-builder", label: "Report Builder", icon: FileText },
     { path: "/app/insights", label: "AI Insights", icon: Brain },
     { path: "/app/greenwash-guardian", label: "GreenwashGuardian", icon: Shield },
     { path: "/app/supplier-network", label: "Supplier Network", icon: Users },
