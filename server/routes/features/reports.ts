@@ -123,8 +123,20 @@ router.post('/guided/:reportId/export-pdf', isAuthenticated, async (req: any, re
 // GET /api/reports - Get all reports for user's company
 router.get('/', isAuthenticated, async (req: any, res: any) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.claims?.sub || req.user?.id; // Support both formats
+    console.log('🔍 Feature Reports API Debug:', { 
+      hasUser: !!req.user, 
+      userId, 
+      userClaims: req.user?.claims 
+    });
+    
     const userCompany = await dbStorage.getCompanyByOwner(userId);
+    console.log('🔍 Feature Company lookup:', { 
+      userId, 
+      foundCompany: !!userCompany, 
+      companyId: userCompany?.id,
+      companyName: userCompany?.name 
+    });
     
     if (!userCompany) {
       return res.status(404).json({ error: 'User company not found' });
@@ -147,7 +159,7 @@ router.get('/', isAuthenticated, async (req: any, res: any) => {
 // POST /api/reports - Create new report
 router.post('/', isAuthenticated, async (req: any, res: any) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.claims?.sub || req.user?.id; // Support both formats
     const reportData = req.body;
     
     const userCompany = await dbStorage.getCompanyByOwner(userId);
