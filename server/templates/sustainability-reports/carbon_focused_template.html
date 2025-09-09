@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carbon Impact Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --avallen-green: #16a34a;
+      --avallen-green-light: #22c55e;
+      --avallen-blue: #1d4ed8;
+      --avallen-blue-light: #3b82f6;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --background: #ffffff;
+      --border-light: #e5e7eb;
+      --accent-light: #f3f4f6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Raleway', sans-serif;
+      color: var(--text-primary);
+      background: var(--background);
+      line-height: 1.6;
+      font-size: 11pt;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 25mm 25mm;
+      margin: 0 auto;
+      background: white;
+      position: relative;
+      text-align: left;
+    }
+
+    /* Professional Header with Gradient */
+    .header {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+      padding: 20px 25px;
+      margin: -25mm -25mm 25px -25mm;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 4px 15px rgba(32, 157, 80, 0.15);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24pt;
+      font-weight: 600;
+      margin: 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header .company-info {
+      text-align: right;
+      font-weight: 400;
+    }
+
+    .header .company-name {
+      font-size: 14pt;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .header .report-date {
+      font-size: 10pt;
+      opacity: 0.9;
+    }
+
+    /* Typography */
+    h1, h2, h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 20pt; margin-bottom: 16px; }
+    h2 { 
+      font-size: 16pt; 
+      color: var(--avallen-green);
+      margin-top: 0px;
+      margin-bottom: 20px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid transparent;
+      background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue)) bottom/100% 2px no-repeat;
+    }
+    h3 { 
+      font-size: 13pt; 
+      color: var(--text-primary);
+      margin-top: 20px;
+      margin-bottom: 12px;
+    }
+
+    /* Carbon-focused styling */
+    .carbon-highlight {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border: 2px solid var(--avallen-green);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      box-shadow: 0 4px 12px rgba(32, 157, 80, 0.1);
+    }
+
+    .carbon-highlight h3 {
+      color: var(--avallen-green);
+      font-size: 14pt;
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .carbon-highlight h3::before {
+      content: "🌱";
+      margin-right: 8px;
+      font-size: 16pt;
+    }
+
+    .emissions-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .scope-card {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      border-left: 4px solid var(--avallen-blue);
+    }
+
+    .scope-1 { border-left-color: #dc2626; }
+    .scope-2 { border-left-color: #f59e0b; }
+    .scope-3 { border-left-color: var(--avallen-green); }
+
+    .scope-title {
+      font-size: 10pt;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .scope-value {
+      font-size: 18pt;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .scope-1 .scope-value { color: #dc2626; }
+    .scope-2 .scope-value { color: #f59e0b; }
+    .scope-3 .scope-value { color: var(--avallen-green); }
+
+    .scope-description {
+      font-size: 9pt;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Content sections */
+    .content-section {
+      background: #fafbfc;
+      border-left: 4px solid var(--avallen-green);
+      padding: 20px 24px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .content-section h3 {
+      color: var(--avallen-green);
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    .content-section p {
+      margin-bottom: 12px;
+      line-height: 1.7;
+    }
+
+    /* Image Placeholders */
+    .section-image-container {
+      text-align: center;
+      margin: 25px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .section-image {
+      max-width: 100%;
+      max-height: 300px;
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 2px solid var(--avallen-green);
+    }
+    
+    .section-image-caption {
+      margin-top: 12px;
+      font-size: 10pt;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Data Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .data-table thead {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 10pt;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    /* Target tracking */
+    .target-container {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border: 1px solid var(--avallen-blue);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .target-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+      padding: 12px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 6px;
+    }
+
+    .target-label {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .target-progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-bar {
+      width: 120px;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue));
+      border-radius: 4px;
+    }
+
+    /* Page Breaks */
+    .page-break {
+      page-break-before: always;
+      page-break-after: avoid;
+    }
+
+    /* Utility Classes */
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 600; }
+    .text-sm { font-size: 10pt; }
+    .text-xs { font-size: 9pt; }
+    .mb-4 { margin-bottom: 16px; }
+    .mt-4 { margin-top: 16px; }
+    
+    /* Print Specific */
+    @media print {
+      body { print-color-adjust: exact; }
+      .page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Page -->
+  <div class="page">
+    <div class="header">
+      <div class="header-content">
+        <h1>Carbon Impact Report</h1>
+        <div class="company-info">
+          <div class="company-name">{{COMPANY_NAME}}</div>
+          <div class="report-date">{{REPORT_DATE}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+      <h1 style="font-size: 28pt; color: var(--avallen-green); margin-bottom: 20px;">
+        {{REPORT_TITLE}}
+      </h1>
+      <p style="font-size: 14pt; color: var(--text-secondary); margin-bottom: 30px;">
+        Climate Action & Carbon Management Report
+      </p>
+      
+      <!-- Company Logo -->
+      <div class="section-image-container">
+        <img src="{{COMPANY_LOGO_URL}}" alt="Company Logo" class="section-image" style="max-height: 150px;" />
+        <div class="section-image-caption">{{COMPANY_NAME}} - Leading Climate Action</div>
+      </div>
+      
+      <div class="carbon-highlight">
+        <h3>Carbon Footprint Summary</h3>
+        <div class="emissions-breakdown">
+          <div class="scope-card scope-1">
+            <div class="scope-title">Scope 1</div>
+            <div class="scope-value">{{SCOPE_1_EMISSIONS}}</div>
+            <div class="scope-description">Direct emissions from owned sources</div>
+          </div>
+          <div class="scope-card scope-2">
+            <div class="scope-title">Scope 2</div>
+            <div class="scope-value">{{SCOPE_2_EMISSIONS}}</div>
+            <div class="scope-description">Indirect emissions from energy</div>
+          </div>
+          <div class="scope-card scope-3">
+            <div class="scope-title">Scope 3</div>
+            <div class="scope-value">{{SCOPE_3_EMISSIONS}}</div>
+            <div class="scope-description">Value chain emissions</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+          <div style="font-size: 14pt; color: var(--text-secondary);">Total Annual Emissions</div>
+          <div style="font-size: 32pt; font-weight: 700; color: var(--avallen-green); margin: 8px 0;">{{TOTAL_CO2_EMISSIONS}} tonnes CO₂e</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Introduction Page -->
+  <div class="page page-break">
+    <h2>Introduction</h2>
+    
+    <div class="content-section">
+      {{INTRODUCTION_CONTENT}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_INTRODUCTION}}
+
+    <h3>Climate Commitment</h3>
+    <p>Climate change represents one of the most pressing challenges of our time. As a responsible business, we are committed to understanding, measuring, and reducing our carbon footprint across all aspects of our operations.</p>
+    
+    <p>This report presents our comprehensive carbon inventory, reduction strategies, and progress toward our climate targets. Our approach aligns with international standards including the GHG Protocol and Science Based Targets initiative.</p>
+
+    <div class="carbon-highlight">
+      <h3>Our Climate Targets</h3>
+      <div class="target-container">
+        <div class="target-item">
+          <span class="target-label">Net Zero by 2050</span>
+          <div class="target-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: {{NET_ZERO_PROGRESS}}%"></div>
+            </div>
+            <span class="text-sm">{{NET_ZERO_PROGRESS}}%</span>
+          </div>
+        </div>
+        <div class="target-item">
+          <span class="target-label">50% Reduction by 2030</span>
+          <div class="target-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: {{REDUCTION_2030_PROGRESS}}%"></div>
+            </div>
+            <span class="text-sm">{{REDUCTION_2030_PROGRESS}}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emissions Inventory Page -->
+  <div class="page page-break">
+    <h2>Emissions Inventory</h2>
+    
+    <div class="content-section">
+      <h3>Methodology & Approach</h3>
+      <p>Our carbon footprint assessment follows the GHG Protocol Corporate Accounting and Reporting Standard. We have categorized our emissions according to the three scopes defined by the protocol:</p>
+    </div>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Scope</th>
+          <th>Description</th>
+          <th>Emissions (tCO₂e)</th>
+          <th>Percentage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color: #dc2626;">Scope 1</strong></td>
+          <td>Direct emissions from owned/controlled sources</td>
+          <td>{{SCOPE_1_EMISSIONS}}</td>
+          <td>{{SCOPE_1_PERCENTAGE}}%</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #f59e0b;">Scope 2</strong></td>
+          <td>Indirect emissions from purchased energy</td>
+          <td>{{SCOPE_2_EMISSIONS}}</td>
+          <td>{{SCOPE_2_PERCENTAGE}}%</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--avallen-green);">Scope 3</strong></td>
+          <td>Other indirect emissions in value chain</td>
+          <td>{{SCOPE_3_EMISSIONS}}</td>
+          <td>{{SCOPE_3_PERCENTAGE}}%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_EMISSIONS_BREAKDOWN}}
+
+    <h3>Emission Sources Analysis</h3>
+    <p>The largest contributors to our carbon footprint are analyzed to identify reduction opportunities:</p>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Emission Source</th>
+          <th>Category</th>
+          <th>Annual Emissions</th>
+          <th>Reduction Potential</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{EMISSION_SOURCES_TABLE}}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Carbon Footprint Analysis Page -->
+  <div class="page page-break">
+    <h2>Carbon Footprint Analysis</h2>
+    
+    <div class="content-section">
+      {{CARBON_FOOTPRINT_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_CARBON_FOOTPRINT}}
+
+    <h3>Key Findings</h3>
+    <div class="carbon-highlight">
+      <h3>Impact Hotspots</h3>
+      <p>Our analysis reveals the following key areas with the highest carbon impact:</p>
+      <ul style="margin-left: 20px; margin-top: 12px;">
+        <li><strong>{{HOTSPOT_1}}</strong>: {{HOTSPOT_1_IMPACT}} tonnes CO₂e ({{HOTSPOT_1_PERCENTAGE}}%)</li>
+        <li><strong>{{HOTSPOT_2}}</strong>: {{HOTSPOT_2_IMPACT}} tonnes CO₂e ({{HOTSPOT_2_PERCENTAGE}}%)</li>
+        <li><strong>{{HOTSPOT_3}}</strong>: {{HOTSPOT_3_IMPACT}} tonnes CO₂e ({{HOTSPOT_3_PERCENTAGE}}%)</li>
+      </ul>
+    </div>
+
+    <h3>Year-over-Year Comparison</h3>
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Total Emissions (tCO₂e)</th>
+          <th>Change</th>
+          <th>Key Drivers</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{CURRENT_YEAR}}</td>
+          <td>{{TOTAL_CO2_EMISSIONS}}</td>
+          <td>{{ANNUAL_CHANGE}}%</td>
+          <td>{{CHANGE_DRIVERS}}</td>
+        </tr>
+        <tr>
+          <td>{{PREVIOUS_YEAR}}</td>
+          <td>{{PREVIOUS_TOTAL_EMISSIONS}}</td>
+          <td>Base year</td>
+          <td>Baseline measurement</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Reduction Initiatives Page -->
+  <div class="page page-break">
+    <h2>Reduction Initiatives</h2>
+    
+    <div class="content-section">
+      {{INITIATIVES_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_INITIATIVES}}
+
+    <h3>Active Carbon Reduction Initiatives</h3>
+    {{SELECTED_INITIATIVES_LIST}}
+
+    <div class="carbon-highlight">
+      <h3>Initiative Impact Summary</h3>
+      <div class="emissions-breakdown">
+        <div class="scope-card">
+          <div class="scope-title">Projected Reduction</div>
+          <div class="scope-value" style="color: var(--avallen-green);">{{PROJECTED_REDUCTION}} tonnes</div>
+          <div class="scope-description">Annual CO₂e savings from active initiatives</div>
+        </div>
+        <div class="scope-card">
+          <div class="scope-title">Investment</div>
+          <div class="scope-value" style="color: var(--avallen-blue);">£{{INITIATIVE_INVESTMENT}}</div>
+          <div class="scope-description">Total investment in carbon reduction</div>
+        </div>
+        <div class="scope-card">
+          <div class="scope-title">ROI Period</div>
+          <div class="scope-value" style="color: #f59e0b;">{{PAYBACK_YEARS}} years</div>
+          <div class="scope-description">Average payback period</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Future Targets Page -->
+  <div class="page page-break">
+    <h2>Future Targets</h2>
+    
+    <div class="content-section">
+      <h3>Science-Based Targets</h3>
+      <p>Our carbon reduction targets are aligned with climate science and the Paris Agreement goal of limiting global warming to 1.5°C above pre-industrial levels. These science-based targets provide a clear roadmap for our decarbonization journey.</p>
+    </div>
+
+    <div class="target-container">
+      <h3 style="color: var(--avallen-blue); margin-bottom: 20px;">Our Climate Commitments</h3>
+      <div class="target-item">
+        <span class="target-label">2025 Target: {{TARGET_2025}}% reduction</span>
+        <div class="target-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {{PROGRESS_2025}}%"></div>
+          </div>
+          <span class="text-sm">{{PROGRESS_2025}}% achieved</span>
+        </div>
+      </div>
+      <div class="target-item">
+        <span class="target-label">2030 Target: {{TARGET_2030}}% reduction</span>
+        <div class="target-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {{PROGRESS_2030}}%"></div>
+          </div>
+          <span class="text-sm">{{PROGRESS_2030}}% achieved</span>
+        </div>
+      </div>
+      <div class="target-item">
+        <span class="target-label">2050 Target: Net Zero emissions</span>
+        <div class="target-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {{PROGRESS_2050}}%"></div>
+          </div>
+          <span class="text-sm">{{PROGRESS_2050}}% progress</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_TARGETS}}
+
+    <div class="content-section">
+      {{SUMMARY_CONTENT}}
+    </div>
+
+    <h3>Path to Net Zero</h3>
+    <p>Achieving net zero emissions requires a comprehensive approach combining emission reductions with carbon removals. Our strategy focuses on immediate emission reductions through operational efficiency, renewable energy adoption, and supply chain optimization, while investing in carbon removal technologies for remaining emissions.</p>
+  </div>
+
+  <!-- Appendix Page -->
+  <div class="page page-break">
+    <h2>Methodology & Data</h2>
+    
+    <h3>Calculation Methodology</h3>
+    <p>Carbon footprint calculations follow established methodologies and use the most recent emission factors available:</p>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Data Category</th>
+          <th>Source</th>
+          <th>Emission Factors</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Electricity</strong></td>
+          <td>Utility bills, smart meters</td>
+          <td>DEFRA 2024, location-based</td>
+        </tr>
+        <tr>
+          <td><strong>Natural Gas</strong></td>
+          <td>Monthly consumption data</td>
+          <td>IPCC 2006 Guidelines</td>
+        </tr>
+        <tr>
+          <td><strong>Transportation</strong></td>
+          <td>Fuel receipts, mileage logs</td>
+          <td>DEFRA 2024 transport factors</td>
+        </tr>
+        <tr>
+          <td><strong>Materials</strong></td>
+          <td>Purchase records, supplier data</td>
+          <td>ecoinvent 3.5 database</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Data Quality & Verification</h3>
+    <p>Data quality is ensured through systematic collection processes, regular verification, and third-party validation where appropriate. All calculations are performed using the Avallen Sustainability Platform with automated quality checks and audit trails.</p>
+
+    <div class="content-section">
+      <p><strong>Report prepared by:</strong><br>
+      {{COMPANY_NAME}} Sustainability Team<br>
+      Date: {{REPORT_DATE}}<br><br>
+      
+      <strong>Platform:</strong><br>
+      Avallen Sustainability Platform<br>
+      Professional carbon accounting and reporting</p>
+    </div>
+  </div>
+</body>
+</html>

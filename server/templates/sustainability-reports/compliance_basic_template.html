@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic Compliance Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --avallen-green: #16a34a;
+      --avallen-green-light: #22c55e;
+      --avallen-blue: #1d4ed8;
+      --avallen-blue-light: #3b82f6;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --background: #ffffff;
+      --border-light: #e5e7eb;
+      --accent-light: #f3f4f6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Raleway', sans-serif;
+      color: var(--text-primary);
+      background: var(--background);
+      line-height: 1.6;
+      font-size: 11pt;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 25mm 25mm;
+      margin: 0 auto;
+      background: white;
+      position: relative;
+      text-align: left;
+    }
+
+    /* Professional Header with Gradient */
+    .header {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+      padding: 20px 25px;
+      margin: -25mm -25mm 25px -25mm;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 4px 15px rgba(32, 157, 80, 0.15);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24pt;
+      font-weight: 600;
+      margin: 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header .company-info {
+      text-align: right;
+      font-weight: 400;
+    }
+
+    .header .company-name {
+      font-size: 14pt;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .header .report-date {
+      font-size: 10pt;
+      opacity: 0.9;
+    }
+
+    /* Typography */
+    h1, h2, h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 20pt; margin-bottom: 16px; }
+    h2 { 
+      font-size: 16pt; 
+      color: var(--avallen-green);
+      margin-top: 0px;
+      margin-bottom: 20px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid transparent;
+      background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue)) bottom/100% 2px no-repeat;
+    }
+    h3 { 
+      font-size: 13pt; 
+      color: var(--text-primary);
+      margin-top: 20px;
+      margin-bottom: 12px;
+    }
+
+    /* Compliance-focused styling */
+    .compliance-highlight {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid var(--avallen-blue);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 8px rgba(29, 78, 216, 0.08);
+    }
+
+    .compliance-highlight h3 {
+      color: var(--avallen-blue);
+      font-size: 14pt;
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .compliance-highlight h3::before {
+      content: "✓";
+      margin-right: 8px;
+      font-size: 16pt;
+      color: var(--avallen-green);
+      font-weight: bold;
+    }
+
+    .compliance-status {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .status-item {
+      background: white;
+      padding: 16px;
+      border-radius: 6px;
+      border-left: 4px solid var(--avallen-green);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-label {
+      font-size: 10pt;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 9pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-compliant {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-partial {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-pending {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Content sections */
+    .content-section {
+      background: #fafbfc;
+      border-left: 4px solid var(--avallen-green);
+      padding: 20px 24px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .content-section h3 {
+      color: var(--avallen-green);
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    .content-section p {
+      margin-bottom: 12px;
+      line-height: 1.7;
+    }
+
+    /* Data Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .data-table thead {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 10pt;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    /* Essential metrics only */
+    .metrics-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .metric-card {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      border-top: 4px solid var(--avallen-green);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--avallen-green);
+      margin: 8px 0;
+    }
+
+    .metric-label {
+      font-size: 10pt;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-unit {
+      font-size: 9pt;
+      color: var(--text-muted);
+    }
+
+    /* Page Breaks */
+    .page-break {
+      page-break-before: always;
+      page-break-after: avoid;
+    }
+
+    /* Utility Classes */
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 600; }
+    .text-sm { font-size: 10pt; }
+    .text-xs { font-size: 9pt; }
+    .mb-4 { margin-bottom: 16px; }
+    .mt-4 { margin-top: 16px; }
+    
+    /* Print Specific */
+    @media print {
+      body { print-color-adjust: exact; }
+      .page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Page -->
+  <div class="page">
+    <div class="header">
+      <div class="header-content">
+        <h1>Basic Compliance Report</h1>
+        <div class="company-info">
+          <div class="company-name">{{COMPANY_NAME}}</div>
+          <div class="report-date">{{REPORT_DATE}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+      <h1 style="font-size: 28pt; color: var(--avallen-green); margin-bottom: 20px;">
+        {{REPORT_TITLE}}
+      </h1>
+      <p style="font-size: 14pt; color: var(--text-secondary); margin-bottom: 30px;">
+        Essential Sustainability Compliance Report
+      </p>
+      
+      <div class="compliance-highlight">
+        <h3>Regulatory Compliance Status</h3>
+        <div class="compliance-status">
+          <div class="status-item">
+            <div class="status-label">Environmental Regulations</div>
+            <div class="status-badge status-compliant">Compliant</div>
+          </div>
+          <div class="status-item">
+            <div class="status-label">Sustainability Reporting</div>
+            <div class="status-badge status-compliant">Complete</div>
+          </div>
+          <div class="status-item">
+            <div class="status-label">Carbon Disclosure</div>
+            <div class="status-badge status-compliant">Submitted</div>
+          </div>
+          <div class="status-item">
+            <div class="status-label">Data Verification</div>
+            <div class="status-badge status-compliant">Validated</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics-summary">
+        <div class="metric-card">
+          <div class="metric-label">Total CO₂ Emissions</div>
+          <div class="metric-value">{{TOTAL_CO2_EMISSIONS}}</div>
+          <div class="metric-unit">tonnes CO₂e</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Water Usage</div>
+          <div class="metric-value">{{TOTAL_WATER_USAGE}}</div>
+          <div class="metric-unit">litres</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Waste Generated</div>
+          <div class="metric-value">{{TOTAL_WASTE_GENERATED}}</div>
+          <div class="metric-unit">kg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Company Information Page -->
+  <div class="page page-break">
+    <h2>Company Information</h2>
+    
+    <div class="content-section">
+      <h3>Organization Details</h3>
+      {{COMPANY_INFO_NARRATIVE}}
+    </div>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Company Details</th>
+          <th>Information</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Company Name</strong></td>
+          <td>{{COMPANY_NAME}}</td>
+        </tr>
+        <tr>
+          <td><strong>Reporting Period</strong></td>
+          <td>{{REPORTING_PERIOD_START}} - {{REPORTING_PERIOD_END}}</td>
+        </tr>
+        <tr>
+          <td><strong>Industry Sector</strong></td>
+          <td>{{INDUSTRY_SECTOR}}</td>
+        </tr>
+        <tr>
+          <td><strong>Primary Operations</strong></td>
+          <td>{{PRIMARY_OPERATIONS}}</td>
+        </tr>
+        <tr>
+          <td><strong>Geographical Scope</strong></td>
+          <td>{{GEOGRAPHICAL_SCOPE}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Organizational Boundary</h3>
+    <p>This report covers all operations under the direct operational control of {{COMPANY_NAME}}. Data collection and reporting follows the operational control approach as defined in the GHG Protocol Corporate Accounting and Reporting Standard.</p>
+
+    <div class="compliance-highlight">
+      <h3>Reporting Standards Applied</h3>
+      <ul style="margin-left: 20px; margin-top: 12px;">
+        <li>GHG Protocol Corporate Accounting and Reporting Standard</li>
+        <li>ISO 14064-1: Greenhouse gases - Part 1</li>
+        <li>DEFRA Environmental Reporting Guidelines 2024</li>
+        <li>Companies Act 2006 (Strategic and Directors' Reports) Regulations</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Environmental Metrics Page -->
+  <div class="page page-break">
+    <h2>Environmental Metrics</h2>
+    
+    <div class="content-section">
+      <h3>Key Environmental Performance Indicators</h3>
+      {{KEY_METRICS_NARRATIVE}}
+    </div>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Annual Total</th>
+          <th>Unit</th>
+          <th>Scope</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Scope 1 Emissions</strong></td>
+          <td>{{SCOPE_1_EMISSIONS}}</td>
+          <td>tonnes CO₂e</td>
+          <td>Direct emissions from owned sources</td>
+        </tr>
+        <tr>
+          <td><strong>Scope 2 Emissions</strong></td>
+          <td>{{SCOPE_2_EMISSIONS}}</td>
+          <td>tonnes CO₂e</td>
+          <td>Indirect emissions from purchased energy</td>
+        </tr>
+        <tr>
+          <td><strong>Scope 3 Emissions</strong></td>
+          <td>{{SCOPE_3_EMISSIONS}}</td>
+          <td>tonnes CO₂e</td>
+          <td>Other indirect emissions</td>
+        </tr>
+        <tr>
+          <td><strong>Total Water Consumption</strong></td>
+          <td>{{TOTAL_WATER_USAGE}}</td>
+          <td>litres</td>
+          <td>Direct operations</td>
+        </tr>
+        <tr>
+          <td><strong>Total Waste Generated</strong></td>
+          <td>{{TOTAL_WASTE_GENERATED}}</td>
+          <td>kg</td>
+          <td>All waste streams</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Carbon Footprint Summary</h3>
+    <div class="content-section">
+      {{CARBON_FOOTPRINT_NARRATIVE}}
+    </div>
+
+    <div class="compliance-highlight">
+      <h3>Intensity Metrics</h3>
+      <div class="metrics-summary">
+        <div class="metric-card">
+          <div class="metric-label">Carbon Intensity</div>
+          <div class="metric-value">{{CARBON_INTENSITY}}</div>
+          <div class="metric-unit">kg CO₂e per unit</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Water Intensity</div>
+          <div class="metric-value">{{WATER_INTENSITY}}</div>
+          <div class="metric-unit">L per unit</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Waste Intensity</div>
+          <div class="metric-value">{{WASTE_INTENSITY}}</div>
+          <div class="metric-unit">kg per unit</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compliance Status Page -->
+  <div class="page page-break">
+    <h2>Compliance Status</h2>
+    
+    <h3>Regulatory Requirements</h3>
+    <p>{{COMPANY_NAME}} maintains compliance with all applicable environmental regulations and reporting requirements. This section summarizes our current compliance status across key regulatory areas.</p>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Regulation/Standard</th>
+          <th>Requirement</th>
+          <th>Status</th>
+          <th>Next Review</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ESOS Phase 3</strong></td>
+          <td>Energy efficiency assessment</td>
+          <td><span class="status-badge status-compliant">Compliant</span></td>
+          <td>{{ESOS_NEXT_REVIEW}}</td>
+        </tr>
+        <tr>
+          <td><strong>SECR Reporting</strong></td>
+          <td>Streamlined Energy and Carbon Reporting</td>
+          <td><span class="status-badge status-compliant">Complete</span></td>
+          <td>Annual</td>
+        </tr>
+        <tr>
+          <td><strong>Environmental Permits</strong></td>
+          <td>Operational permits and licenses</td>
+          <td><span class="status-badge status-compliant">Valid</span></td>
+          <td>{{PERMITS_RENEWAL_DATE}}</td>
+        </tr>
+        <tr>
+          <td><strong>Waste Duty of Care</strong></td>
+          <td>Waste transfer documentation</td>
+          <td><span class="status-badge status-compliant">Current</span></td>
+          <td>Ongoing</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Data Quality Assurance</h3>
+    <div class="compliance-highlight">
+      <h3>Quality Controls</h3>
+      <div class="compliance-status">
+        <div class="status-item">
+          <div class="status-label">Data Collection Procedures</div>
+          <div class="status-badge status-compliant">Documented</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">Internal Verification</div>
+          <div class="status-badge status-compliant">Complete</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">Management Review</div>
+          <div class="status-badge status-compliant">Approved</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">Record Retention</div>
+          <div class="status-badge status-compliant">5 Years</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Continuous Improvement</h3>
+    <p>We are committed to continuous improvement in our environmental performance and compliance management. Regular reviews ensure we maintain the highest standards and identify opportunities for enhancement.</p>
+  </div>
+
+  <!-- Summary Page -->
+  <div class="page page-break">
+    <h2>Summary</h2>
+    
+    <div class="content-section">
+      {{SUMMARY_CONTENT}}
+    </div>
+
+    <div class="compliance-highlight">
+      <h3>Key Achievements</h3>
+      <ul style="margin-left: 20px; margin-top: 12px;">
+        <li>Maintained full compliance with all applicable environmental regulations</li>
+        <li>Successfully completed annual sustainability data collection and verification</li>
+        <li>Implemented robust data quality assurance processes</li>
+        <li>Established baseline environmental performance metrics</li>
+        <li>Prepared comprehensive compliance documentation</li>
+      </ul>
+    </div>
+
+    <h3>Next Steps</h3>
+    <p>Moving forward, we will continue to monitor our environmental performance, maintain regulatory compliance, and seek opportunities for improvement. Key priorities include:</p>
+    
+    <ul style="margin-left: 20px; margin-top: 12px; margin-bottom: 20px;">
+      <li>Enhanced monitoring and measurement systems</li>
+      <li>Regular compliance audits and reviews</li>
+      <li>Staff training on environmental responsibilities</li>
+      <li>Continuous improvement program implementation</li>
+    </ul>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Contact Information</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sustainability Manager</strong></td>
+          <td>sustainability@{{COMPANY_DOMAIN}}</td>
+        </tr>
+        <tr>
+          <td><strong>Compliance Officer</strong></td>
+          <td>compliance@{{COMPANY_DOMAIN}}</td>
+        </tr>
+        <tr>
+          <td><strong>Report Date</strong></td>
+          <td>{{REPORT_DATE}}</td>
+        </tr>
+        <tr>
+          <td><strong>Next Review</strong></td>
+          <td>{{NEXT_REVIEW_DATE}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--border-light); text-align: center;">
+      <p class="text-sm" style="color: var(--text-muted);">
+        <strong>Report generated by Avallen Sustainability Platform</strong><br>
+        Professional compliance reporting and environmental management
+      </p>
+    </div>
+  </div>
+</body>
+</html>

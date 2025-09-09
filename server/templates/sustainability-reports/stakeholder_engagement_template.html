@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stakeholder Engagement Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --avallen-green: #16a34a;
+      --avallen-green-light: #22c55e;
+      --avallen-blue: #1d4ed8;
+      --avallen-blue-light: #3b82f6;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --background: #ffffff;
+      --border-light: #e5e7eb;
+      --accent-light: #f3f4f6;
+      --stakeholder-purple: #7c3aed;
+      --stakeholder-orange: #ea580c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Raleway', sans-serif;
+      color: var(--text-primary);
+      background: var(--background);
+      line-height: 1.6;
+      font-size: 11pt;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 25mm 25mm;
+      margin: 0 auto;
+      background: white;
+      position: relative;
+      text-align: left;
+    }
+
+    /* Professional Header with Gradient */
+    .header {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+      padding: 20px 25px;
+      margin: -25mm -25mm 25px -25mm;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 4px 15px rgba(32, 157, 80, 0.15);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24pt;
+      font-weight: 600;
+      margin: 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header .company-info {
+      text-align: right;
+      font-weight: 400;
+    }
+
+    .header .company-name {
+      font-size: 14pt;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .header .report-date {
+      font-size: 10pt;
+      opacity: 0.9;
+    }
+
+    /* Typography */
+    h1, h2, h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 20pt; margin-bottom: 16px; }
+    h2 { 
+      font-size: 16pt; 
+      color: var(--avallen-green);
+      margin-top: 0px;
+      margin-bottom: 20px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid transparent;
+      background: linear-gradient(90deg, var(--avallen-green), var(--avallen-blue)) bottom/100% 2px no-repeat;
+    }
+    h3 { 
+      font-size: 13pt; 
+      color: var(--text-primary);
+      margin-top: 20px;
+      margin-bottom: 12px;
+    }
+
+    /* Stakeholder-focused styling */
+    .stakeholder-highlight {
+      background: linear-gradient(135deg, #fdf4ff 0%, #f3e8ff 100%);
+      border: 2px solid var(--stakeholder-purple);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+    }
+
+    .stakeholder-highlight h3 {
+      color: var(--stakeholder-purple);
+      font-size: 14pt;
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .stakeholder-highlight h3::before {
+      content: "👥";
+      margin-right: 8px;
+      font-size: 16pt;
+    }
+
+    .stakeholder-groups {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .stakeholder-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      border-left: 5px solid var(--stakeholder-purple);
+      transition: transform 0.2s ease;
+    }
+
+    .stakeholder-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .stakeholder-type {
+      font-size: 12pt;
+      font-weight: 600;
+      color: var(--stakeholder-purple);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stakeholder-description {
+      font-size: 10pt;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .stakeholder-metrics {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stakeholder-count {
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--avallen-green);
+    }
+
+    .stakeholder-engagement {
+      font-size: 9pt;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .engagement-high {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .engagement-medium {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .engagement-low {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Content sections */
+    .content-section {
+      background: #fafbfc;
+      border-left: 4px solid var(--avallen-green);
+      padding: 20px 24px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .content-section h3 {
+      color: var(--avallen-green);
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    .content-section p {
+      margin-bottom: 12px;
+      line-height: 1.7;
+    }
+
+    /* Image Placeholders */
+    .section-image-container {
+      text-align: center;
+      margin: 25px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .section-image {
+      max-width: 100%;
+      max-height: 300px;
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 2px solid var(--avallen-green);
+    }
+    
+    .section-image-caption {
+      margin-top: 12px;
+      font-size: 10pt;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Data Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .data-table thead {
+      background: linear-gradient(135deg, var(--avallen-green) 0%, var(--avallen-blue) 100%);
+      color: white;
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 10pt;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    /* Value creation highlight */
+    .value-creation {
+      background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+      border: 2px solid var(--stakeholder-orange);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .value-creation h3 {
+      color: var(--stakeholder-orange);
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    .value-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .value-item {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .value-number {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--stakeholder-orange);
+      margin-bottom: 4px;
+    }
+
+    .value-label {
+      font-size: 10pt;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Page Breaks */
+    .page-break {
+      page-break-before: always;
+      page-break-after: avoid;
+    }
+
+    /* Utility Classes */
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 600; }
+    .text-sm { font-size: 10pt; }
+    .text-xs { font-size: 9pt; }
+    .mb-4 { margin-bottom: 16px; }
+    .mt-4 { margin-top: 16px; }
+    
+    /* Print Specific */
+    @media print {
+      body { print-color-adjust: exact; }
+      .page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Page -->
+  <div class="page">
+    <div class="header">
+      <div class="header-content">
+        <h1>Stakeholder Engagement Report</h1>
+        <div class="company-info">
+          <div class="company-name">{{COMPANY_NAME}}</div>
+          <div class="report-date">{{REPORT_DATE}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+      <h1 style="font-size: 28pt; color: var(--avallen-green); margin-bottom: 20px;">
+        {{REPORT_TITLE}}
+      </h1>
+      <p style="font-size: 14pt; color: var(--text-secondary); margin-bottom: 30px;">
+        Building Sustainable Value for All Stakeholders
+      </p>
+      
+      <!-- Company Logo -->
+      <div class="section-image-container">
+        <img src="{{COMPANY_LOGO_URL}}" alt="Company Logo" class="section-image" style="max-height: 150px;" />
+        <div class="section-image-caption">{{COMPANY_NAME}} - Creating Shared Value</div>
+      </div>
+      
+      <div class="stakeholder-highlight">
+        <h3>Our Stakeholder Community</h3>
+        <div class="stakeholder-groups">
+          <div class="stakeholder-card">
+            <div class="stakeholder-type">Investors</div>
+            <div class="stakeholder-description">Financial stakeholders seeking sustainable returns and transparent ESG performance</div>
+            <div class="stakeholder-metrics">
+              <div class="stakeholder-count">{{INVESTOR_COUNT}}</div>
+              <div class="stakeholder-engagement engagement-high">High</div>
+            </div>
+          </div>
+          <div class="stakeholder-card">
+            <div class="stakeholder-type">Customers</div>
+            <div class="stakeholder-description">Consumers choosing sustainable products and supporting responsible brands</div>
+            <div class="stakeholder-metrics">
+              <div class="stakeholder-count">{{CUSTOMER_COUNT}}</div>
+              <div class="stakeholder-engagement engagement-high">High</div>
+            </div>
+          </div>
+          <div class="stakeholder-card">
+            <div class="stakeholder-type">Employees</div>
+            <div class="stakeholder-description">Team members driving sustainability initiatives and operational excellence</div>
+            <div class="stakeholder-metrics">
+              <div class="stakeholder-count">{{EMPLOYEE_COUNT}}</div>
+              <div class="stakeholder-engagement engagement-medium">Medium</div>
+            </div>
+          </div>
+          <div class="stakeholder-card">
+            <div class="stakeholder-type">Community</div>
+            <div class="stakeholder-description">Local communities benefiting from our operations and social programs</div>
+            <div class="stakeholder-metrics">
+              <div class="stakeholder-count">{{COMMUNITY_REACH}}</div>
+              <div class="stakeholder-engagement engagement-medium">Medium</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Executive Summary Page -->
+  <div class="page page-break">
+    <h2>Executive Summary</h2>
+    
+    <div class="content-section">
+      {{INTRODUCTION_CONTENT}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_INTRODUCTION}}
+
+    <h3>Our Stakeholder Approach</h3>
+    <p>Meaningful stakeholder engagement is central to our sustainability strategy. We recognize that sustainable business success depends on creating value for all our stakeholders - investors, customers, employees, and communities.</p>
+
+    <p>This report demonstrates our commitment to transparency, accountability, and continuous improvement in our stakeholder relationships. Through regular dialogue and collaboration, we ensure our sustainability initiatives address the needs and expectations of those who matter most to our business.</p>
+
+    <div class="value-creation">
+      <h3>Value Creation Highlights</h3>
+      <div class="value-metrics">
+        <div class="value-item">
+          <div class="value-number">£{{STAKEHOLDER_VALUE_CREATED}}</div>
+          <div class="value-label">Economic Value Created</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{CO2_EMISSIONS_AVOIDED}} t</div>
+          <div class="value-label">CO₂ Emissions Avoided</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{COMMUNITY_INVESTMENT_HOURS}} hrs</div>
+          <div class="value-label">Community Investment</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Company Overview Page -->
+  <div class="page page-break">
+    <h2>Company Overview & Strategy</h2>
+    
+    <div class="content-section">
+      <h3>Our Purpose & Mission</h3>
+      {{COMPANY_INFO_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_COMPANY_INFO}}
+
+    <h3>Stakeholder-Centric Strategy</h3>
+    <p>Our business strategy is built around understanding and responding to stakeholder needs while delivering sustainable value. We have established formal processes for stakeholder identification, engagement, and feedback integration.</p>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Strategic Priority</th>
+          <th>Stakeholder Focus</th>
+          <th>Key Initiatives</th>
+          <th>Success Metrics</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sustainable Innovation</strong></td>
+          <td>Customers, Investors</td>
+          <td>Product development, R&D investment</td>
+          <td>Innovation pipeline, customer satisfaction</td>
+        </tr>
+        <tr>
+          <td><strong>Operational Excellence</strong></td>
+          <td>Employees, Community</td>
+          <td>Efficiency programs, safety initiatives</td>
+          <td>Operational metrics, safety record</td>
+        </tr>
+        <tr>
+          <td><strong>Environmental Stewardship</strong></td>
+          <td>All Stakeholders</td>
+          <td>Carbon reduction, circular economy</td>
+          <td>Environmental KPIs, compliance</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Governance & Oversight</h3>
+    <p>Stakeholder interests are represented at the highest levels of our organization. Our Board includes sustainability expertise, and regular stakeholder feedback informs strategic decisions.</p>
+  </div>
+
+  <!-- Performance & Impact Page -->
+  <div class="page page-break">
+    <h2>Performance & Impact</h2>
+    
+    <div class="content-section">
+      <h3>Environmental Performance for Stakeholders</h3>
+      {{KEY_METRICS_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_KEY_METRICS}}
+
+    <div class="stakeholder-highlight">
+      <h3>Key Performance Indicators</h3>
+      <div class="value-metrics">
+        <div class="value-item">
+          <div class="value-number">{{TOTAL_CO2_EMISSIONS}}</div>
+          <div class="value-label">Total CO₂ Emissions (tonnes)</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{TOTAL_WATER_USAGE}}</div>
+          <div class="value-label">Water Usage (litres)</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{TOTAL_WASTE_GENERATED}}</div>
+          <div class="value-label">Waste Generated (kg)</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Carbon Management</h3>
+    <div class="content-section">
+      {{CARBON_FOOTPRINT_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_CARBON_FOOTPRINT}}
+
+    <h3>Stakeholder-Requested Metrics</h3>
+    <p>Based on feedback from our stakeholder engagement processes, we track additional metrics that matter most to our key stakeholder groups:</p>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Stakeholder Group</th>
+          <th>Requested Metric</th>
+          <th>Current Performance</th>
+          <th>Target</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Investors</strong></td>
+          <td>ESG Risk Rating</td>
+          <td>{{ESG_RISK_RATING}}</td>
+          <td>Low Risk</td>
+        </tr>
+        <tr>
+          <td><strong>Customers</strong></td>
+          <td>Product Carbon Intensity</td>
+          <td>{{CARBON_INTENSITY}} kg CO₂e/unit</td>
+          <td>{{CARBON_INTENSITY_TARGET}} kg CO₂e/unit</td>
+        </tr>
+        <tr>
+          <td><strong>Employees</strong></td>
+          <td>Sustainability Training Hours</td>
+          <td>{{TRAINING_HOURS}} hours</td>
+          <td>{{TRAINING_HOURS_TARGET}} hours</td>
+        </tr>
+        <tr>
+          <td><strong>Community</strong></td>
+          <td>Local Economic Impact</td>
+          <td>£{{LOCAL_ECONOMIC_IMPACT}}</td>
+          <td>£{{LOCAL_ECONOMIC_TARGET}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Social Impact Page -->
+  <div class="page page-break">
+    <h2>Social Impact & Community</h2>
+    
+    <div class="content-section">
+      <h3>Social Performance & Community Engagement</h3>
+      {{SOCIAL_IMPACT_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_SOCIAL_IMPACT}}
+
+    <div class="value-creation">
+      <h3>Community Investment & Impact</h3>
+      <div class="value-metrics">
+        <div class="value-item">
+          <div class="value-number">£{{COMMUNITY_INVESTMENT}}</div>
+          <div class="value-label">Community Investment</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{VOLUNTEER_HOURS}}</div>
+          <div class="value-label">Employee Volunteer Hours</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{COMMUNITY_PARTNERSHIPS}}</div>
+          <div class="value-label">Community Partnerships</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Employee Engagement & Development</h3>
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Program</th>
+          <th>Participants</th>
+          <th>Investment</th>
+          <th>Outcomes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sustainability Training</strong></td>
+          <td>{{TRAINING_PARTICIPANTS}}</td>
+          <td>£{{TRAINING_INVESTMENT}}</td>
+          <td>{{TRAINING_COMPLETION}}% completion rate</td>
+        </tr>
+        <tr>
+          <td><strong>Green Team Initiative</strong></td>
+          <td>{{GREEN_TEAM_MEMBERS}}</td>
+          <td>{{GREEN_TEAM_HOURS}} hours</td>
+          <td>{{GREEN_INITIATIVES}} initiatives launched</td>
+        </tr>
+        <tr>
+          <td><strong>Community Volunteer Program</strong></td>
+          <td>{{VOLUNTEER_PARTICIPANTS}}</td>
+          <td>{{VOLUNTEER_HOURS}} hours</td>
+          <td>{{VOLUNTEER_IMPACT}} community projects</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Initiatives & Programs Page -->
+  <div class="page page-break">
+    <h2>Stakeholder-Driven Initiatives</h2>
+    
+    <div class="content-section">
+      <h3>Collaborative Sustainability Programs</h3>
+      {{INITIATIVES_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_INITIATIVES}}
+
+    <h3>Key Initiatives by Stakeholder Priority</h3>
+    {{SELECTED_INITIATIVES_LIST}}
+
+    <div class="stakeholder-highlight">
+      <h3>Initiative Impact by Stakeholder</h3>
+      <div class="stakeholder-groups">
+        <div class="stakeholder-card">
+          <div class="stakeholder-type">Investor Value</div>
+          <div class="stakeholder-description">Risk reduction, cost savings, and sustainable growth opportunities</div>
+          <div class="stakeholder-metrics">
+            <div class="stakeholder-count">£{{INVESTOR_VALUE}}</div>
+            <div class="stakeholder-engagement engagement-high">Strong ROI</div>
+          </div>
+        </div>
+        <div class="stakeholder-card">
+          <div class="stakeholder-type">Customer Benefits</div>
+          <div class="stakeholder-description">Sustainable products, transparency, and brand trust enhancement</div>
+          <div class="stakeholder-metrics">
+            <div class="stakeholder-count">{{CUSTOMER_SATISFACTION}}%</div>
+            <div class="stakeholder-engagement engagement-high">High Satisfaction</div>
+          </div>
+        </div>
+        <div class="stakeholder-card">
+          <div class="stakeholder-type">Employee Engagement</div>
+          <div class="stakeholder-description">Purpose-driven work, skill development, and workplace pride</div>
+          <div class="stakeholder-metrics">
+            <div class="stakeholder-count">{{EMPLOYEE_ENGAGEMENT}}%</div>
+            <div class="stakeholder-engagement engagement-high">Engaged</div>
+          </div>
+        </div>
+        <div class="stakeholder-card">
+          <div class="stakeholder-type">Community Impact</div>
+          <div class="stakeholder-description">Local job creation, environmental improvements, social programs</div>
+          <div class="stakeholder-metrics">
+            <div class="stakeholder-count">{{JOBS_CREATED}}</div>
+            <div class="stakeholder-engagement engagement-medium">Positive</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Tracking Page -->
+  <div class="page page-break">
+    <h2>Progress Tracking & KPIs</h2>
+    
+    <div class="content-section">
+      <h3>Stakeholder KPI Monitoring</h3>
+      {{KPI_TRACKING_NARRATIVE}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_KPI_TRACKING}}
+
+    <h3>Key Performance Indicators by Stakeholder</h3>
+    {{SELECTED_KPIS_LIST}}
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>KPI Category</th>
+          <th>Metric</th>
+          <th>Current</th>
+          <th>Target</th>
+          <th>Stakeholder Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Financial</strong></td>
+          <td>Sustainable Revenue</td>
+          <td>{{SUSTAINABLE_REVENUE}}%</td>
+          <td>{{SUSTAINABLE_REVENUE_TARGET}}%</td>
+          <td>Investors, Customers</td>
+        </tr>
+        <tr>
+          <td><strong>Environmental</strong></td>
+          <td>Carbon Intensity</td>
+          <td>{{CARBON_INTENSITY}}</td>
+          <td>{{CARBON_INTENSITY_TARGET}}</td>
+          <td>All Stakeholders</td>
+        </tr>
+        <tr>
+          <td><strong>Social</strong></td>
+          <td>Employee Satisfaction</td>
+          <td>{{EMPLOYEE_SATISFACTION}}%</td>
+          <td>{{EMPLOYEE_SATISFACTION_TARGET}}%</td>
+          <td>Employees, Investors</td>
+        </tr>
+        <tr>
+          <td><strong>Community</strong></td>
+          <td>Local Procurement</td>
+          <td>{{LOCAL_PROCUREMENT}}%</td>
+          <td>{{LOCAL_PROCUREMENT_TARGET}}%</td>
+          <td>Community, Customers</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="value-creation">
+      <h3>Stakeholder Value Creation Trends</h3>
+      <p>Our multi-year performance demonstrates consistent value creation across all stakeholder groups:</p>
+      <div class="value-metrics">
+        <div class="value-item">
+          <div class="value-number">+{{VALUE_GROWTH_RATE}}%</div>
+          <div class="value-label">Annual Value Growth</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{STAKEHOLDER_NPS}}</div>
+          <div class="value-label">Stakeholder NPS Score</div>
+        </div>
+        <div class="value-item">
+          <div class="value-number">{{ESG_SCORE}}/100</div>
+          <div class="value-label">ESG Performance Score</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Future Commitments Page -->
+  <div class="page page-break">
+    <h2>Future Commitments</h2>
+    
+    <div class="content-section">
+      <h3>Stakeholder-Informed Strategy</h3>
+      {{SUMMARY_CONTENT}}
+    </div>
+
+    <!-- Section Images Placeholder -->
+    {{SECTION_IMAGES_SUMMARY}}
+
+    <h3>Our Commitments to Stakeholders</h3>
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Stakeholder Group</th>
+          <th>Commitment</th>
+          <th>Timeline</th>
+          <th>Success Measure</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Investors</strong></td>
+          <td>Achieve carbon neutrality</td>
+          <td>By 2030</td>
+          <td>Net zero Scope 1 & 2 emissions</td>
+        </tr>
+        <tr>
+          <td><strong>Customers</strong></td>
+          <td>100% sustainable products</td>
+          <td>By 2028</td>
+          <td>Certified sustainable product range</td>
+        </tr>
+        <tr>
+          <td><strong>Employees</strong></td>
+          <td>Living wage employer</td>
+          <td>By 2025</td>
+          <td>All employees above living wage</td>
+        </tr>
+        <tr>
+          <td><strong>Community</strong></td>
+          <td>Local sourcing increase</td>
+          <td>By 2027</td>
+          <td>{{LOCAL_SOURCING_TARGET}}% local procurement</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="stakeholder-highlight">
+      <h3>Continuous Engagement Framework</h3>
+      <p>We are committed to maintaining regular, meaningful dialogue with all our stakeholders. Our engagement framework includes:</p>
+      <ul style="margin-left: 20px; margin-top: 12px;">
+        <li><strong>Quarterly investor updates</strong> on sustainability performance</li>
+        <li><strong>Annual customer surveys</strong> on sustainability preferences</li>
+        <li><strong>Monthly employee feedback</strong> sessions on sustainability initiatives</li>
+        <li><strong>Community advisory panels</strong> for major project decisions</li>
+        <li><strong>Regular supplier engagement</strong> on sustainability requirements</li>
+      </ul>
+    </div>
+
+    <h3>Looking Forward</h3>
+    <p>Our stakeholder-centric approach will continue to evolve as we deepen our understanding of stakeholder needs and expand our sustainability impact. Together, we are building a more sustainable future that creates shared value for all.</p>
+  </div>
+
+  <!-- Appendix Page -->
+  <div class="page page-break">
+    <h2>Stakeholder Engagement Process</h2>
+    
+    <h3>Methodology & Approach</h3>
+    <p>Our stakeholder engagement follows international best practices, including AA1000 Stakeholder Engagement Standard and GRI stakeholder engagement principles. We employ multiple methods to ensure comprehensive and inclusive dialogue.</p>
+
+    <div class="data-table">
+      <thead>
+        <tr>
+          <th>Engagement Method</th>
+          <th>Stakeholder Groups</th>
+          <th>Frequency</th>
+          <th>Key Topics</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Investor Meetings</strong></td>
+          <td>Shareholders, Financial Analysts</td>
+          <td>Quarterly</td>
+          <td>ESG performance, risk management</td>
+        </tr>
+        <tr>
+          <td><strong>Customer Surveys</strong></td>
+          <td>End Customers, B2B Clients</td>
+          <td>Annual</td>
+          <td>Product sustainability, transparency</td>
+        </tr>
+        <tr>
+          <td><strong>Employee Forums</strong></td>
+          <td>All Staff, Union Representatives</td>
+          <td>Monthly</td>
+          <td>Workplace sustainability, wellbeing</td>
+        </tr>
+        <tr>
+          <td><strong>Community Panels</strong></td>
+          <td>Local Residents, Community Groups</td>
+          <td>Bi-annual</td>
+          <td>Local impact, community investment</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Contact & Feedback</h3>
+    <div class="content-section">
+      <p><strong>Stakeholder Engagement Team</strong><br>
+      {{COMPANY_NAME}}<br>
+      Email: stakeholders@company.com<br>
+      Phone: +44 (0) 20 7946 0958</p>
+      
+      <p style="margin-top: 16px;"><strong>We value your feedback</strong><br>
+      Your input helps shape our sustainability strategy and reporting. Please contact us with questions, suggestions, or requests for additional information.</p>
+      
+      <p style="margin-top: 16px;"><strong>Report prepared with:</strong><br>
+      Avallen Sustainability Platform<br>
+      Stakeholder-focused sustainability reporting</p>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center;">
+      <div class="stakeholder-highlight">
+        <h3>Thank You to Our Stakeholders</h3>
+        <p style="font-size: 12pt; font-style: italic;">This report exists because of the ongoing engagement, feedback, and collaboration of our valued stakeholders. Together, we are building a more sustainable future.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
