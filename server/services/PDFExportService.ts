@@ -910,44 +910,18 @@ export class PDFExportService {
             </div>
           </div>`;
         
-        // Water Footprint Breakdown Chart - calculate percentages first
-        const ingredientsPercent = totalWaterL > 0 ? ((agriculturalWaterL / totalWaterL) * 100).toFixed(1) : 0;
-        const packagingPercent = totalWaterL > 0 ? ((processingWaterL / totalWaterL) * 100).toFixed(1) : 0;
-        const facilityPercent = totalWaterL > 0 ? ((operationalWaterL / totalWaterL) * 100).toFixed(1) : 0;
-        
+        // Simple Water Footprint Summary (temporarily simplified)
         waterUsageHTML += `
-          <h3 style="color: #1d4ed8; font-size: 1.3rem; margin: 30px 0 15px 0;">Water Footprint Breakdown</h3>
+          <h3 style="color: #1d4ed8; font-size: 1.3rem; margin: 30px 0 15px 0;">Water Footprint Summary</h3>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-              <div style="font-weight: 600; color: #1e293b;">Category</div>
-              <div style="font-weight: 600; color: #1e293b;">Water Usage</div>
+            <div style="margin-bottom: 10px;">
+              <strong>Ingredients:</strong> ${(agriculturalWaterL / 1000000).toFixed(1)}M L (${((agriculturalWaterL / totalWaterL) * 100).toFixed(1)}%)
             </div>
             <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span style="color: #22c55e; font-weight: 500;">Ingredients</span>
-                <span style="color: #374151;">${(agriculturalWaterL / 1000000).toFixed(1)}M L</span>
-              </div>
-              <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
-                <div style="background: #22c55e; height: 8px; border-radius: 4px; width: ${ingredientsPercent}%;"></div>
-              </div>
+              <strong>Packaging:</strong> ${(processingWaterL / 1000000).toFixed(1)}M L (${((processingWaterL / totalWaterL) * 100).toFixed(1)}%)
             </div>
             <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span style="color: #3b82f6; font-weight: 500;">Packaging</span>
-                <span style="color: #374151;">${(processingWaterL / 1000000).toFixed(1)}M L</span>
-              </div>
-              <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
-                <div style="background: #3b82f6; height: 8px; border-radius: 4px; width: ${packagingPercent}%;"></div>
-              </div>
-            </div>
-            <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span style="color: #64748b; font-weight: 500;">Facility Operations</span>
-                <span style="color: #374151;">${(operationalWaterL / 1000000).toFixed(1)}M L</span>
-              </div>
-              <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
-                <div style="background: #64748b; height: 8px; border-radius: 4px; width: ${facilityPercent}%;"></div>
-              </div>
+              <strong>Facility Operations:</strong> ${(operationalWaterL / 1000000).toFixed(1)}M L (${((operationalWaterL / totalWaterL) * 100).toFixed(1)}%)
             </div>
           </div>`;
         
@@ -1211,13 +1185,17 @@ export class PDFExportService {
       await page.setViewport({ width: 1920, height: 1080 });
       
       // Generate HTML content
+      logger.info({}, 'PDF Service: Generating HTML content...');
       const htmlContent = PDFExportService.generateReportHTML(options);
+      logger.info({ htmlLength: htmlContent.length }, 'PDF Service: HTML content generated');
       
       // Set content and wait for resources to load
+      logger.info({}, 'PDF Service: Setting page content...');
       await page.setContent(htmlContent, { 
         waitUntil: ['networkidle0', 'domcontentloaded'],
         timeout: 30000 
       });
+      logger.info({}, 'PDF Service: Page content set successfully');
       
       // Generate unique filename
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -1228,6 +1206,7 @@ export class PDFExportService {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       
       // Generate PDF with professional options
+      logger.info({}, 'PDF Service: Starting PDF generation...');
       await page.pdf({
         path: filePath,
         format: 'A4',
