@@ -158,7 +158,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
         percentage: ((waterData.agricultural_water / totalWaterLiters) * 100).toFixed(1)
       },
       {
-        category: 'Processing',
+        category: 'Packaging',
         liters: waterData.processing_and_dilution_water,
         percentage: ((waterData.processing_and_dilution_water / totalWaterLiters) * 100).toFixed(1)
       },
@@ -214,7 +214,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
         <div className="bg-green-50 p-4 rounded-lg border border-green-200">
           <div className="flex items-center gap-2 mb-2">
             <Sprout className="h-5 w-5 text-green-600" />
-            <h4 className="font-semibold text-green-700">Product Water</h4>
+            <h4 className="font-semibold text-green-700">Ingredients & Packaging</h4>
           </div>
           <p className="text-2xl font-bold text-green-800">
             {productWaterLiters.toLocaleString()} L
@@ -283,7 +283,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
             <span className="text-green-800 ml-2">{waterData.agricultural_water.toLocaleString()} L</span>
           </div>
           <div className="bg-blue-50 p-3 rounded">
-            <span className="font-medium text-blue-700">Processing:</span>
+            <span className="font-medium text-blue-700">Packaging:</span>
             <span className="text-blue-800 ml-2">{waterData.processing_and_dilution_water.toLocaleString()} L</span>
           </div>
           <div className="bg-slate-50 p-3 rounded">
