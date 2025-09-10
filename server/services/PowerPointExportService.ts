@@ -67,17 +67,33 @@ export class PowerPointExportService {
       }
       
       // Create content slides based on blocks or default structure
-      if (blocks && blocks.length > 0) {
-        blocks.forEach(block => {
-          PowerPointExportService.createBlockSlide(pptx, block, metricsData, theme);
-        });
-      } else {
-        // Default slides if no blocks provided
-        PowerPointExportService.createDefaultSlides(pptx, metricsData, theme);
+      try {
+        if (blocks && blocks.length > 0) {
+          logger.info({ blockCount: blocks.length }, 'PowerPoint: Creating block slides...');
+          blocks.forEach((block, index) => {
+            logger.info({ blockIndex: index, blockType: block.type }, 'PowerPoint: Creating block slide');
+            PowerPointExportService.createBlockSlide(pptx, block, metricsData, theme);
+          });
+          logger.info('PowerPoint: Block slides created successfully');
+        } else {
+          logger.info('PowerPoint: Creating default slides...');
+          PowerPointExportService.createDefaultSlides(pptx, metricsData, theme);
+          logger.info('PowerPoint: Default slides created successfully');
+        }
+      } catch (error) {
+        logger.error({ error: error.message, stack: error.stack }, 'PowerPoint: Content slides creation failed');
+        throw error;
       }
       
       // Create summary slide
-      PowerPointExportService.createSummarySlide(pptx, metricsData, theme);
+      try {
+        logger.info('PowerPoint: Creating summary slide...');
+        PowerPointExportService.createSummarySlide(pptx, metricsData, theme);
+        logger.info('PowerPoint: Summary slide created successfully');
+      } catch (error) {
+        logger.error({ error: error.message, stack: error.stack }, 'PowerPoint: Summary slide creation failed');
+        throw error;
+      }
       
       // Generate unique filename and path
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
