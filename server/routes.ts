@@ -4473,12 +4473,17 @@ Be precise and quote actual text from the content, not generic terms.`;
           
           // Use KPI calculation service with OpenLCA calculations
           const totalCarbonFootprintKg = await kpiCalculationService.calculateTotalCarbonFootprint(mockCompany.id);
-          const totalWaterUsage = await kpiCalculationService.calculateTotalWaterConsumption(mockCompany.id);
+          
+          // Use WaterFootprintService for complete water usage including dilution water
+          const { WaterFootprintService } = await import('./services/WaterFootprintService');
+          const waterFootprintResult = await WaterFootprintService.calculateTotalCompanyFootprint(mockCompany.id);
+          const totalWaterUsage = waterFootprintResult.total;
+          
           const totalWasteGenerated = await kpiCalculationService.calculateTotalWasteGenerated(mockCompany.id);
           
           console.log(`📊 Dashboard metrics (OpenLCA methodology):`);
           console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
-          console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres`);
+          console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres (COMPLETE footprint including dilution)`);
           console.log(`   Waste: ${(totalWasteGenerated/1000).toFixed(1)} tonnes`);
           
           return res.json({
@@ -4503,12 +4508,17 @@ Be precise and quote actual text from the content, not generic terms.`;
 
       // Production mode: Use KPI service with OpenLCA calculations
       const totalCarbonFootprintKg = await kpiCalculationService.calculateTotalCarbonFootprint(company.id);
-      const totalWaterUsage = await kpiCalculationService.calculateTotalWaterConsumption(company.id);
+      
+      // Use WaterFootprintService for complete water usage including dilution water
+      const { WaterFootprintService } = await import('./services/WaterFootprintService');
+      const waterFootprintResult = await WaterFootprintService.calculateTotalCompanyFootprint(company.id);
+      const totalWaterUsage = waterFootprintResult.total;
+      
       const totalWasteGenerated = await kpiCalculationService.calculateTotalWasteGenerated(company.id);
 
       console.log(`📊 Production dashboard metrics (OpenLCA methodology):`);
       console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
-      console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres`);
+      console.log(`   Water: ${totalWaterUsage.toLocaleString()} litres (COMPLETE footprint including dilution)`);
       console.log(`   Waste: ${(totalWasteGenerated/1000).toFixed(1)} tonnes`);
 
       return res.json({
