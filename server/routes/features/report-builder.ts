@@ -247,7 +247,18 @@ async function generateReport(
   switch (config.exportFormat) {
     case 'pdf':
       try {
+        logger.info({ 
+          exportOptions: {
+            reportType: exportOptions.reportType,
+            companyName: exportOptions.company?.companyName,
+            blocksCount: exportOptions.blocks?.length,
+            hasMetricsData: !!exportOptions.metricsData
+          }
+        }, 'About to call PDFExportService.generatePDF');
+        
         const pdfResult = await PDFExportService.generatePDF(exportOptions);
+        
+        logger.info({ pdfResult }, 'PDFExportService.generatePDF completed successfully');
         
         // Auto-save PDF to reports database
         try {
