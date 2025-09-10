@@ -19,7 +19,10 @@ export class PDFExportService {
    */
   private static async getBrowser(): Promise<Browser> {
     if (!PDFExportService.browser) {
-      PDFExportService.browser = await puppeteer.launch({
+      logger.info({}, 'PDF Service: Attempting to launch Puppeteer browser...');
+      
+      try {
+        PDFExportService.browser = await puppeteer.launch({
         headless: true,
         args: [
           '--no-sandbox',
@@ -29,9 +32,20 @@ export class PDFExportService {
           '--disable-gpu',
           '--window-size=1920x1080'
         ]
-      });
-      
-      logger.info({}, 'PDF Service: Puppeteer browser initialized');
+        });
+        
+        logger.info({}, 'PDF Service: Puppeteer browser initialized successfully');
+        
+      } catch (error) {
+        logger.error({ 
+          error: error instanceof Error ? {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+          } : error
+        }, 'PDF Service: Failed to launch Puppeteer browser');
+        throw error;
+      }
     }
     return PDFExportService.browser;
   }
