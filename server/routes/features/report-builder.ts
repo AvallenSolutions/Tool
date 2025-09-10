@@ -151,10 +151,13 @@ async function fetchMetricsData(companyId: number, dataSelections: ReportExportR
 
     // ===== FETCH ALL PREVIEW COMPONENT DATA SOURCES =====
     
-    // CompanyStoryPreview data
+    // CompanyStoryPreview data - fetch from API endpoint
     let companyStory = null;
     try {
-      companyStory = await dbStorage.getCompanyStory(companyId);
+      const companyStoryResponse = await fetch(`http://localhost:5000/api/company/story`);
+      if (companyStoryResponse.ok) {
+        companyStory = await companyStoryResponse.json();
+      }
     } catch (e) {
       logger.warn({ companyId, error: e }, 'Failed to fetch company story');
     }
