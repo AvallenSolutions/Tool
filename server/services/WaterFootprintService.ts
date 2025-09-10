@@ -1,6 +1,7 @@
 import { db } from "../db";
-import { products, companyData } from "../../shared/schema";
-import { eq, and, isNotNull } from "drizzle-orm";
+import { products } from "../../shared/schema";
+import { eq } from "drizzle-orm";
+import { MonthlyDataAggregationService } from "./MonthlyDataAggregationService";
 
 export interface WaterFootprintBreakdown {
   total: number;
@@ -11,31 +12,33 @@ export interface WaterFootprintBreakdown {
 
 export class WaterFootprintService {
   /**
-   * Calculate the complete water footprint breakdown for a company
-   * Prevents double-counting by allocating metered water between processing and operational use
+   * Calculate complete water footprint using real data from existing platform APIs
+   * Uses actual data from Company Operations and Products Impact Breakdown
    */
   static async calculateTotalCompanyFootprint(companyId: number): Promise<WaterFootprintBreakdown> {
     try {
-      // 1. Calculate Total Agricultural Water from LCA data
-      const agriculturalWater = await this.calculateAgriculturalWater(companyId);
+      console.log(`🌊 Calculating water footprint for company ${companyId} using REAL DATA ONLY`);
       
-      // 2. Calculate Total Processing & Dilution Water from LCA data (FIXED: no artificial multipliers)
-      const processingAndDilutionWater = await this.calculateProcessingAndDilutionWaterFixed(companyId);
+      // 1. Get facility water from MonthlyDataAggregationService (Company Operations)
+      const facilityWater = await this.getFacilityWaterFromMonthlyData(companyId);
       
-      // 3. Fetch Total Metered Water from company_data  
-      const totalMeteredWater = await this.getTotalMeteredWater(companyId);
+      // 2. Get ingredients + packaging water from Products refined-lca API 
+      const { ingredientsWater, packagingWater } = await this.getProductsWaterFromRefinedLCA(companyId);
       
-      // 4. Calculate Net Operational Water (avoiding double-counting)
-      const netOperationalWater = Math.max(0, totalMeteredWater - processingAndDilutionWater);
+      // 3. Calculate totals using real data
+      const total = facilityWater + ingredientsWater + packagingWater;
       
-      // 5. Calculate total water footprint
-      const total = agriculturalWater + processingAndDilutionWater + netOperationalWater;
+      console.log(`🌊 REAL DATA BREAKDOWN:`);
+      console.log(`   Facility (Operations): ${facilityWater.toLocaleString()}L`);
+      console.log(`   Ingredients: ${ingredientsWater.toLocaleString()}L`);
+      console.log(`   Packaging: ${packagingWater.toLocaleString()}L`);
+      console.log(`   TOTAL: ${total.toLocaleString()}L`);
       
       return {
         total,
-        agricultural_water: agriculturalWater,
-        processing_and_dilution_water: processingAndDilutionWater,
-        net_operational_water: netOperationalWater
+        agricultural_water: ingredientsWater,
+        processing_and_dilution_water: packagingWater,
+        net_operational_water: facilityWater
       };
     } catch (error) {
       console.error('Error calculating water footprint:', error);
@@ -44,225 +47,82 @@ export class WaterFootprintService {
   }
   
   /**
-   * Calculate agricultural water usage from all product LCAs
-   * This represents off-site water used for ingredient production
+   * Get facility water data from MonthlyDataAggregationService (Company Operations)
+   * Returns total water consumption from facility operations in liters
    */
-  private static async calculateAgriculturalWater(companyId: number): Promise<number> {
+  private static async getFacilityWaterFromMonthlyData(companyId: number): Promise<number> {
     try {
-      // Get all products with ingredients data for the company
+      const monthlyService = new MonthlyDataAggregationService();
+      const aggregatedData = await monthlyService.aggregateMonthlyData(companyId);
+      
+      // Convert from m³ to liters (1 m³ = 1,000 L)
+      const facilityWaterLiters = aggregatedData.totalWaterM3 * 1000;
+      
+      console.log(`🏭 Facility water from monthly data: ${aggregatedData.totalWaterM3} m³ = ${facilityWaterLiters.toLocaleString()}L`);
+      
+      return facilityWaterLiters;
+    } catch (error) {
+      console.error('Error fetching facility water from monthly data:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Get ingredients and packaging water from Products refined-lca API
+   * Returns breakdown from actual Impact Breakdown by Component data
+   */
+  private static async getProductsWaterFromRefinedLCA(companyId: number): Promise<{ingredientsWater: number, packagingWater: number}> {
+    try {
+      // Get all products for the company
       const companyProducts = await db
         .select({
           id: products.id,
-          annualProductionVolume: products.annualProductionVolume,
-          productionUnit: products.productionUnit,
-          ingredients: products.ingredients,
-          waterFootprint: products.waterFootprint
+          annualProductionVolume: products.annualProductionVolume
         })
         .from(products)
         .where(eq(products.companyId, companyId));
       
-      let totalAgriculturalWater = 0;
+      let totalIngredientsWater = 0;
+      let totalPackagingWater = 0;
       
       for (const product of companyProducts) {
         const productionVolume = Number(product.annualProductionVolume) || 0;
         
-        // Extract agricultural water using OpenLCA integration
-        if (product.ingredients && Array.isArray(product.ingredients)) {
-          let ingredientWater = 0;
-          
-          for (const ingredient of product.ingredients) {
-            const ingredientData = ingredient as any;
-            
-            // Try OpenLCA-based calculation first
-            if (ingredientData.name && ingredientData.amount) {
-              try {
-                const { OpenLCAService } = await import('./OpenLCAService');
-                const impactData = await OpenLCAService.calculateIngredientImpact(
-                  ingredientData.name,
-                  Number(ingredientData.amount) || 0,
-                  ingredientData.unit || 'kg'
-                );
-                
-                if (impactData && impactData.waterFootprint > 0) {
-                  ingredientWater += impactData.waterFootprint;
-                  console.log(`🌱 OpenLCA water footprint for ${ingredientData.name}: ${impactData.waterFootprint}L`);
-                  
-                  // ADDITION: Also calculate and store carbon footprint alongside water footprint
-                  if (impactData.carbonFootprint > 0) {
-                    console.log(`🌱 OpenLCA carbon footprint for ${ingredientData.name}: ${impactData.carbonFootprint} kg CO2e`);
-                  }
-                  continue;
-                }
-              } catch (error) {
-                console.warn(`OpenLCA calculation failed for ${ingredientData.name}:`, error);
-              }
-            }
-            
-            // Fallback to manual waterUsage field if OpenLCA unavailable
-            if (ingredientData.waterUsage) {
-              ingredientWater += Number(ingredientData.waterUsage) || 0;
-              console.log(`📊 Manual water usage for ${ingredientData.name}: ${ingredientData.waterUsage}L`);
-            }
-          }
-          
-          totalAgriculturalWater += ingredientWater * productionVolume;
+        // Call refined-lca API for this product to get Impact Breakdown by Component
+        const response = await fetch(`http://localhost:5000/api/products/${product.id}/refined-lca`);
+        if (!response.ok) {
+          console.warn(`Failed to fetch refined-lca for product ${product.id}`);
           continue;
         }
         
-        // Fallback: use water footprint if available (estimate 70% is agricultural)
-        if (product.waterFootprint) {
-          const perUnitWater = Number(product.waterFootprint) * 0.7;
-          totalAgriculturalWater += perUnitWater * productionVolume;
+        const lcaData = await response.json();
+        
+        if (lcaData.success && lcaData.data && lcaData.data.breakdown) {
+          const breakdown = lcaData.data.breakdown;
+          
+          // Get per-unit water impacts
+          const ingredientsWaterPerUnit = breakdown.ingredients?.water || 0;
+          const packagingWaterPerUnit = breakdown.packaging?.water || 0;
+          
+          // Scale by production volume
+          const productIngredientsWater = ingredientsWaterPerUnit * productionVolume;
+          const productPackagingWater = packagingWaterPerUnit * productionVolume;
+          
+          totalIngredientsWater += productIngredientsWater;
+          totalPackagingWater += productPackagingWater;
+          
+          console.log(`📦 Product ${product.id}: Ingredients=${ingredientsWaterPerUnit}L × ${productionVolume} = ${productIngredientsWater.toLocaleString()}L`);
+          console.log(`📦 Product ${product.id}: Packaging=${packagingWaterPerUnit}L × ${productionVolume} = ${productPackagingWater.toLocaleString()}L`);
         }
       }
       
-      return totalAgriculturalWater;
+      return {
+        ingredientsWater: totalIngredientsWater,
+        packagingWater: totalPackagingWater
+      };
     } catch (error) {
-      console.error('Error calculating agricultural water:', error);
-      return 0;
-    }
-  }
-  
-  /**
-   * Calculate processing and dilution water from LCA data
-   * This represents on-site water that goes directly into the product
-   */
-  private static async calculateProcessingAndDilutionWater(companyId: number): Promise<number> {
-    try {
-      const companyProducts = await db
-        .select({
-          id: products.id,
-          annualProductionVolume: products.annualProductionVolume,
-          waterDilution: products.waterDilution,
-          volume: products.volume
-        })
-        .from(products)
-        .where(eq(products.companyId, companyId));
-      
-      let totalProcessingWater = 0;
-      
-      for (const product of companyProducts) {
-        const productionVolume = Number(product.annualProductionVolume) || 0;
-        
-        // Calculate water dilution if specified
-        if (product.waterDilution) {
-          try {
-            const dilutionData = typeof product.waterDilution === 'string' 
-              ? JSON.parse(product.waterDilution) 
-              : product.waterDilution;
-            
-            if (dilutionData?.amount) {
-              const dilutionAmount = Number(dilutionData.amount);
-              totalProcessingWater += dilutionAmount * productionVolume;
-            }
-          } catch (error) {
-            console.error('Error parsing water dilution data:', error);
-          }
-        }
-        
-        // Add processing water estimates based on product type and volume
-        if (product.volume) {
-          const volumeMatch = product.volume.match(/(\d+(?:\.\d+)?)/);
-          if (volumeMatch) {
-            const volumeValue = parseFloat(volumeMatch[1]);
-            const volumeInLiters = product.volume.includes('L') ? volumeValue : volumeValue / 1000;
-            
-            // Use packaging water estimate only (5.4L per unit from comprehensive LCA)
-            const packagingWaterPerUnit = 5.4; // From refined LCA calculations
-            totalProcessingWater += packagingWaterPerUnit;
-          }
-        }
-      }
-      
-      return totalProcessingWater;
-    } catch (error) {
-      console.error('Error calculating processing water:', error);
-      return 0;
-    }
-  }
-  
-  /**
-   * Calculate processing and dilution water without artificial multipliers (FIXED VERSION)
-   */
-  private static async calculateProcessingAndDilutionWaterFixed(companyId: number): Promise<number> {
-    try {
-      const companyProducts = await db
-        .select({
-          id: products.id,
-          annualProductionVolume: products.annualProductionVolume,
-          waterDilution: products.waterDilution
-        })
-        .from(products)
-        .where(eq(products.companyId, companyId));
-      
-      let totalProcessingWater = 0;
-      
-      for (const product of companyProducts) {
-        const productionVolume = Number(product.annualProductionVolume) || 0;
-        console.log(`💧 Processing Product: ID ${product.id}, Production Volume: ${productionVolume}`);
-        
-        // Calculate water dilution if specified
-        if (product.waterDilution) {
-          try {
-            const dilutionData = typeof product.waterDilution === 'string' 
-              ? JSON.parse(product.waterDilution) 
-              : product.waterDilution;
-            
-            if (dilutionData?.amount) {
-              let dilutionAmount = Number(dilutionData.amount);
-              
-              // Convert to liters based on unit
-              if (dilutionData.unit === 'ml') {
-                dilutionAmount = dilutionAmount / 1000; // Convert ml to L
-              }
-              
-              const dilutionWater = dilutionAmount * productionVolume;
-              totalProcessingWater += dilutionWater;
-              console.log(`💧 Water dilution: ${dilutionAmount}L × ${productionVolume} = ${dilutionWater}L`);
-            }
-          } catch (error) {
-            console.error('Error parsing water dilution data:', error);
-          }
-        }
-        
-        // Use realistic packaging water estimate only (5.4L per unit from comprehensive LCA)
-        const packagingWaterPerUnit = 5.4; // From refined LCA calculations
-        const packagingWater = packagingWaterPerUnit * productionVolume;
-        totalProcessingWater += packagingWater;
-        console.log(`💧 Packaging water: ${packagingWaterPerUnit}L × ${productionVolume} = ${packagingWater}L`);
-      }
-      
-      console.log(`💧 FIXED Total Processing Water: ${totalProcessingWater}L`);
-      
-      return totalProcessingWater;
-    } catch (error) {
-      console.error('Error calculating processing water:', error);
-      return 0;
-    }
-  }
-  
-  /**
-   * Get total metered water consumption from utility bills
-   */
-  private static async getTotalMeteredWater(companyId: number): Promise<number> {
-    try {
-      const companyWaterData = await db
-        .select({
-          waterConsumption: companyData.waterConsumption
-        })
-        .from(companyData)
-        .where(eq(companyData.companyId, companyId))
-        .orderBy(companyData.createdAt)
-        .limit(1);
-      
-      if (companyWaterData.length > 0 && companyWaterData[0].waterConsumption) {
-        return Number(companyWaterData[0].waterConsumption);
-      }
-      
-      return 0;
-    } catch (error) {
-      console.error('Error fetching metered water data:', error);
-      return 0;
+      console.error('Error calculating products water from refined-lca:', error);
+      return { ingredientsWater: 0, packagingWater: 0 };
     }
   }
 }
