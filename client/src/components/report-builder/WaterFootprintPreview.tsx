@@ -246,7 +246,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
         </h4>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={breakdownData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart data={breakdownData} margin={{ top: 20, right: 30, left: 60, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e3f2fd" />
               <XAxis 
                 dataKey="category" 
@@ -256,7 +256,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
               <YAxis 
                 stroke="#1976d2"
                 fontSize={12}
-                label={{ value: 'Water Usage (L)', angle: -90, position: 'insideLeft' }}
+                label={{ value: 'Water Usage (L)', angle: -90, position: 'insideLeft', textAnchor: 'middle' }}
               />
               <Tooltip 
                 formatter={(value: number, name: string) => [
