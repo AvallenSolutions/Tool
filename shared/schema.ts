@@ -1433,6 +1433,11 @@ export const customReports = pgTable("custom_reports", {
   selectedKPIs: jsonb("selected_kpis").default('[]').$type<string[]>(), // Array of KPI names to include in report
   uploadedImages: jsonb("uploaded_images").default('{}').$type<Record<string, string[]>>(), // Images by section ID
   reportType: varchar("report_type", { length: 50 }).default('dynamic'), // 'dynamic' or 'guided'
+  
+  // Draft/Published status tracking
+  status: varchar("status", { length: 20 }).default('draft'), // 'draft' or 'published'
+  lastSaved: timestamp("last_saved").defaultNow(), // Track last save time
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
