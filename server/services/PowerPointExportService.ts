@@ -241,27 +241,27 @@ export class PowerPointExportService {
         break;
       case 'metrics':
       case 'metrics_summary':
-        PowerPointExportService.createMetricsBlockSlide(slide, block, metricsData, theme);
+        PowerPointExportService.createMetricsBlockSlide(pptx, slide, block, metricsData, theme);
         break;
       case 'chart':
       case 'carbon_footprint':
-        PowerPointExportService.createCarbonFootprintSlide(slide, block, metricsData, theme);
+        PowerPointExportService.createCarbonFootprintSlide(pptx, slide, block, metricsData, theme);
         break;
       case 'text':
       case 'company_story':
-        PowerPointExportService.createCompanyStorySlide(slide, block, metricsData, theme);
+        PowerPointExportService.createCompanyStorySlide(pptx, slide, block, metricsData, theme);
         break;
       case 'editable_text':
         PowerPointExportService.createEditableTextBlockSlide(slide, block, theme);
         break;
       case 'initiatives':
-        PowerPointExportService.createInitiativesSlide(slide, block, metricsData, theme);
+        PowerPointExportService.createInitiativesSlide(pptx, slide, block, metricsData, theme);
         break;
       case 'kpi_progress':
-        PowerPointExportService.createKPIProgressSlide(slide, block, metricsData, theme);
+        PowerPointExportService.createKPIProgressSlide(pptx, slide, block, metricsData, theme);
         break;
       case 'water_usage':
-        PowerPointExportService.createWaterUsageSlide(slide, block, metricsData, theme);
+        PowerPointExportService.createWaterUsageSlide(pptx, slide, block, metricsData, theme);
         break;
       default:
         PowerPointExportService.createDefaultBlockSlide(slide, block, theme);
@@ -271,7 +271,7 @@ export class PowerPointExportService {
   /**
    * Create metrics block slide
    */
-  private static createMetricsBlockSlide(slide: any, block: any, metricsData: any, theme: any): void {
+  private static createMetricsBlockSlide(pptx: any, slide: any, block: any, metricsData: any, theme: any): void {
     const metrics = block.content?.metrics || [
       { label: 'Total Products', value: metricsData.products.length, unit: 'products' },
       { label: 'KPIs Tracked', value: metricsData.kpis.length, unit: 'KPIs' },
@@ -497,7 +497,7 @@ export class PowerPointExportService {
   /**
    * Create company story slide
    */
-  private static createCompanyStorySlide(slide: any, block: any, metricsData: any, theme: any): void {
+  private static createCompanyStorySlide(pptx: any, slide: any, block: any, metricsData: any, theme: any): void {
     const story = block.content?.text || 
       `${metricsData.company?.companyName || 'Our Company'} is committed to sustainability excellence. ` +
       `We produce ${metricsData.products?.length || 0} products with a focus on environmental responsibility and ` +
@@ -519,7 +519,7 @@ export class PowerPointExportService {
   /**
    * Create carbon footprint slide
    */
-  private static createCarbonFootprintSlide(slide: any, block: any, metricsData: any, theme: any): void {
+  private static createCarbonFootprintSlide(pptx: any, slide: any, block: any, metricsData: any, theme: any): void {
     const footprint = metricsData.footprint || {};
     
     // Main carbon footprint value
@@ -556,7 +556,7 @@ export class PowerPointExportService {
   /**
    * Create initiatives slide
    */
-  private static createInitiativesSlide(slide: any, block: any, metricsData: any, theme: any): void {
+  private static createInitiativesSlide(pptx: any, slide: any, block: any, metricsData: any, theme: any): void {
     const initiatives = block.content?.initiatives || [
       'Renewable energy transition',
       'Waste reduction programs', 
@@ -584,7 +584,7 @@ export class PowerPointExportService {
   /**
    * Create KPI progress slide
    */
-  private static createKPIProgressSlide(slide: any, block: any, metricsData: any, theme: any): void {
+  private static createKPIProgressSlide(pptx: any, slide: any, block: any, metricsData: any, theme: any): void {
     const kpis = metricsData.kpis || [];
     
     if (kpis.length > 0) {
@@ -621,7 +621,7 @@ export class PowerPointExportService {
   /**
    * Create water usage slide
    */
-  private static createWaterUsageSlide(slide: any, block: any, metricsData: any, theme: any): void {
+  private static createWaterUsageSlide(pptx: any, slide: any, block: any, metricsData: any, theme: any): void {
     const waterData = metricsData.waterFootprint || {};
     const totalWater = waterData.totalWaterUsage || 0;
     
