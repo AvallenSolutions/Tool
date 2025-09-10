@@ -537,6 +537,15 @@ interface ReportTemplate {
   blocks: ReportBlock[];
   createdAt?: string;
   updatedAt?: string;
+  // Draft functionality fields
+  status?: 'draft' | 'published';
+  lastSaved?: string;
+  isDraft?: boolean;
+  reportContent?: Record<string, any>;
+  selectedInitiatives?: string[];
+  selectedKPIs?: string[];
+  uploadedImages?: Record<string, any>;
+  reportLayout?: any;
 }
 
 const AVAILABLE_BLOCKS: Omit<ReportBlock, 'id' | 'order' | 'isVisible'>[] = [
@@ -660,6 +669,11 @@ export default function ReportBuilderPage() {
   const [selectedAudience, setSelectedAudience] = useState<string>('stakeholders');
   const [activeTab, setActiveTab] = useState('builder');
   const [isPdfExporting, setIsPdfExporting] = useState(false);
+  // Draft functionality state
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastAutoSaveTime, setLastAutoSaveTime] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Fetch existing templates
   const { data: templates } = useQuery<ReportTemplate[]>({
@@ -729,28 +743,146 @@ export default function ReportBuilderPage() {
     }
   };
 
-  // Save template mutation
+  // Save template mutation (published)
   const saveTemplateMutation = useMutation({
     mutationFn: async (template: ReportTemplate) => {
+      const templateData = {
+        ...template,
+        status: 'published' // Ensure published status
+      };
       const url = template.id ? `/api/report-templates/${template.id}` : '/api/report-templates';
       const method = template.id ? 'PUT' : 'POST';
-      return apiRequest(url, method, template);
+      return apiRequest(url, method, templateData);
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Report template saved successfully"
+        description: "Report template published successfully"
       });
+      setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ['/api/report-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to save template",
+        description: "Failed to publish template",
         variant: "destructive"
       });
     }
   });
+
+  // Save draft mutation
+  const saveDraftMutation = useMutation({
+    mutationFn: async (template: ReportTemplate) => {
+      const templateData = {
+        ...template,
+        status: 'draft' // Ensure draft status
+      };
+      const url = template.id ? `/api/report-templates/${template.id}` : '/api/report-templates';
+      const method = template.id ? 'PUT' : 'POST';
+      return apiRequest(url, method, templateData);
+    },
+    onSuccess: (data) => {
+      setIsDraftSaving(false);
+      setHasUnsavedChanges(false);
+      
+      // Update the current template with returned data
+      if (data && data.id && currentTemplate) {
+        setCurrentTemplate({
+          ...currentTemplate,
+          id: data.id,
+          status: 'draft',
+          lastSaved: new Date().toISOString()
+        });
+      }
+      
+      toast({
+        title: "Draft Saved",
+        description: "Your report draft has been saved successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/report-templates'] });
+    },
+    onError: () => {
+      setIsDraftSaving(false);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Auto-save mutation (using the new auto-save endpoint)
+  const autoSaveMutation = useMutation({
+    mutationFn: async (template: ReportTemplate) => {
+      if (!template.id) return null; // Can only auto-save existing drafts
+      
+      const autoSaveData = {
+        reportTitle: template.templateName,
+        reportContent: template.reportContent || {},
+        reportLayout: {
+          templateName: template.templateName,
+          audienceType: template.audienceType,
+          blocks: template.blocks
+        },
+        selectedInitiatives: template.selectedInitiatives || [],
+        selectedKPIs: template.selectedKPIs || [],
+        uploadedImages: template.uploadedImages || {},
+        status: 'draft'
+      };
+      
+      return apiRequest(`/api/report-templates/${template.id}/autosave`, 'PUT', autoSaveData);
+    },
+    onSuccess: () => {
+      setIsAutoSaving(false);
+      setLastAutoSaveTime(new Date());
+      setHasUnsavedChanges(false);
+    },
+    onError: (error) => {
+      setIsAutoSaving(false);
+      console.warn('Auto-save failed:', error);
+      // Don't show error toast for auto-save failures
+    }
+  });
+
+  // Auto-save functionality
+  const triggerAutoSave = () => {
+    if (currentTemplate && currentTemplate.id && hasUnsavedChanges) {
+      setIsAutoSaving(true);
+      autoSaveMutation.mutate(currentTemplate);
+    }
+  };
+
+  // Auto-save effect (every 30 seconds)
+  useEffect(() => {
+    if (!hasUnsavedChanges || !currentTemplate?.id) return;
+    
+    const autoSaveTimer = setTimeout(() => {
+      triggerAutoSave();
+    }, 30000); // Auto-save every 30 seconds
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [hasUnsavedChanges, currentTemplate?.id]);
+
+  // Helper functions for draft operations
+  const handleSaveDraft = () => {
+    if (!currentTemplate) return;
+    
+    setIsDraftSaving(true);
+    saveDraftMutation.mutate(currentTemplate);
+  };
+
+  const handlePublishReport = () => {
+    if (!currentTemplate) return;
+    
+    saveTemplateMutation.mutate(currentTemplate);
+  };
+
+  // Track changes to trigger auto-save
+  const markAsChanged = () => {
+    setHasUnsavedChanges(true);
+  };
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination || !currentTemplate) return;
@@ -769,6 +901,7 @@ export default function ReportBuilderPage() {
       ...currentTemplate,
       blocks: updatedBlocks
     });
+    markAsChanged();
   };
 
   const addBlock = (blockType: ReportBlock['type']) => {
@@ -788,6 +921,7 @@ export default function ReportBuilderPage() {
       ...currentTemplate,
       blocks: [...currentTemplate.blocks, newBlock]
     });
+    markAsChanged();
     setIsBlockDialogOpen(false);
   };
 
@@ -802,6 +936,7 @@ export default function ReportBuilderPage() {
       ...currentTemplate,
       blocks: updatedBlocks
     });
+    markAsChanged();
   };
 
   const toggleBlockVisibility = (blockId: string) => {
@@ -815,6 +950,7 @@ export default function ReportBuilderPage() {
       ...currentTemplate,
       blocks: updatedBlocks
     });
+    markAsChanged();
   };
 
   const handleBlockContentUpdate = (blockId: string, updatedContent: any) => {
@@ -828,6 +964,9 @@ export default function ReportBuilderPage() {
       ...currentTemplate,
       blocks: updatedBlocks
     });
+    
+    // Track changes for auto-save functionality
+    markAsChanged();
   };
 
   const createFromAudience = (audience: string) => {
@@ -848,9 +987,29 @@ export default function ReportBuilderPage() {
       companyId: 1,
       templateName: `${audience.charAt(0).toUpperCase() + audience.slice(1)} Report`,
       audienceType: audience as any,
-      blocks
+      blocks,
+      status: 'draft' // Start as draft
     });
+    setHasUnsavedChanges(false); // New template, no changes yet
     setIsTemplateDialogOpen(false);
+  };
+
+  // Load existing draft for editing
+  const loadDraftForEditing = (template: ReportTemplate) => {
+    setCurrentTemplate({
+      ...template,
+      // Ensure blocks have proper structure
+      blocks: template.blocks.map((block, index) => ({
+        ...block,
+        order: index,
+        isVisible: block.isVisible !== undefined ? block.isVisible : true
+      }))
+    });
+    setHasUnsavedChanges(false); // Just loaded, no changes yet
+    toast({
+      title: "Draft Loaded",
+      description: `Continuing to edit "${template.templateName || template.reportTitle}"`
+    });
   };
 
   const getBlockIcon = (type: ReportBlock['type']) => {
@@ -900,43 +1059,151 @@ export default function ReportBuilderPage() {
                 New Template
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-white border shadow-lg">
+            <DialogContent className="sm:max-w-2xl bg-white border shadow-lg">
               <DialogHeader>
-                <DialogTitle>Create Report Template</DialogTitle>
+                <DialogTitle>Report Templates</DialogTitle>
                 <DialogDescription>
-                  Choose an audience to generate a pre-configured report template
+                  Create a new report or continue editing an existing draft
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="audience">Target Audience</Label>
-                  <Select value={selectedAudience} onValueChange={setSelectedAudience}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border shadow-lg">
-                      <SelectItem value="stakeholders">Stakeholders</SelectItem>
-                      <SelectItem value="customers">Customers</SelectItem>
-                      <SelectItem value="investors">Investors</SelectItem>
-                      <SelectItem value="employees">Employees</SelectItem>
-                      <SelectItem value="regulators">Regulators</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={() => createFromAudience(selectedAudience)}>
-                    Create Template
-                  </Button>
-                </div>
-              </div>
+              
+              <Tabs defaultValue="create" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="create">Create New</TabsTrigger>
+                  <TabsTrigger value="continue">Continue Editing</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="create" className="space-y-4">
+                  <div>
+                    <Label htmlFor="audience">Target Audience</Label>
+                    <Select value={selectedAudience} onValueChange={setSelectedAudience}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border shadow-lg">
+                        <SelectItem value="stakeholders">Stakeholders</SelectItem>
+                        <SelectItem value="customers">Customers</SelectItem>
+                        <SelectItem value="investors">Investors</SelectItem>
+                        <SelectItem value="employees">Employees</SelectItem>
+                        <SelectItem value="regulators">Regulators</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={() => createFromAudience(selectedAudience)}>
+                      Create Template
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="continue" className="space-y-4">
+                  <div className="space-y-3">
+                    <Label>Existing Drafts</Label>
+                    {templates && templates.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {templates
+                          .filter(t => t.status === 'draft' || !t.status)
+                          .map((template) => (
+                            <div
+                              key={template.id}
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                              onClick={() => loadDraftForEditing(template)}
+                              data-testid={`draft-${template.id}`}
+                            >
+                              <div className="flex-1">
+                                <div className="font-medium">{template.templateName || template.reportTitle || 'Untitled Report'}</div>
+                                <div className="text-sm text-gray-500">
+                                  {template.audienceType && `${template.audienceType.charAt(0).toUpperCase() + template.audienceType.slice(1)} • `}
+                                  {template.lastSaved ? `Last saved: ${new Date(template.lastSaved).toLocaleDateString()}` 
+                                    : `Created: ${new Date(template.createdAt || '').toLocaleDateString()}`}
+                                </div>
+                              </div>
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                📝 Draft
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No drafts available</p>
+                        <p className="text-sm mt-1">Create a new report to get started</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
-          <Button onClick={() => currentTemplate && saveTemplateMutation.mutate(currentTemplate)}>
-            Save Template
-          </Button>
+          {/* Draft functionality buttons with status indicators */}
+          <div className="flex items-center gap-3">
+            {/* Status badge */}
+            <Badge 
+              variant={currentTemplate?.status === 'published' ? 'default' : 'secondary'}
+              className={currentTemplate?.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+            >
+              {currentTemplate?.status === 'published' ? '✓ Published' : '📝 Draft'}
+            </Badge>
+            
+            {/* Auto-save indicator */}
+            {isAutoSaving && (
+              <div className="flex items-center text-sm text-gray-500">
+                <div className="animate-spin h-3 w-3 mr-1 border border-gray-300 border-t-gray-600 rounded-full"></div>
+                Auto-saving...
+              </div>
+            )}
+            
+            {lastAutoSaveTime && !isAutoSaving && (
+              <div className="text-sm text-gray-500">
+                Last saved: {lastAutoSaveTime.toLocaleTimeString()}
+              </div>
+            )}
+            
+            {/* Save Draft Button */}
+            <Button 
+              variant="outline" 
+              onClick={handleSaveDraft}
+              disabled={isDraftSaving || !currentTemplate}
+              data-testid="button-save-draft"
+            >
+              {isDraftSaving ? (
+                <>
+                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                  Saving Draft...
+                </>
+              ) : (
+                <>
+                  💾 Save Draft
+                </>
+              )}
+            </Button>
+            
+            {/* Publish Report Button */}
+            <Button 
+              onClick={handlePublishReport}
+              disabled={saveTemplateMutation.isPending || !currentTemplate}
+              data-testid="button-publish-report"
+            >
+              {saveTemplateMutation.isPending ? (
+                <>
+                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  🚀 Publish Report
+                </>
+              )}
+            </Button>
+          </div>
           <Button variant="outline" onClick={() => setActiveTab('preview')}>
             <Eye className="h-4 w-4 mr-2" />
             Preview
