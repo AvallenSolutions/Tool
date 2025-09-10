@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TrendingUp, TrendingDown, Minus, Target, Award, Activity, Settings, Clock, AlertTriangle, CheckCircle } from "lucide-react";
+import { EditableTextBlock } from "@/components/report-builder/EditableTextBlock";
 
 // Live KPI data structure from enhanced KPI endpoint
 interface LiveKPIGoalData {
@@ -49,6 +50,10 @@ interface KPIProgressPreviewProps {
     id: string;
     content?: {
       selectedKPIs?: string[];
+      customText?: {
+        introduction?: string;
+        summary?: string;
+      };
     };
   };
   onUpdate?: (blockId: string, content: any) => void;
@@ -110,8 +115,46 @@ export function KPIProgressPreview({ block, onUpdate, isPreview = false }: KPIPr
     });
   };
 
+  // Handle custom text updates
+  const updateCustomText = (field: string, value: string) => {
+    if (!block || !onUpdate) return;
+    const newContent = {
+      ...block.content,
+      customText: {
+        ...block.content?.customText,
+        [field]: value
+      }
+    };
+    onUpdate(block.id, newContent);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Introduction Section */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="font-semibold text-blue-700 mb-2">📝 Add KPI Introduction</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_intro`,
+              content: {
+                text: block.content?.customText?.introduction || 'Add an introduction to your Key Performance Indicators section...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('introduction', content.text)}
+            isPreview={false}
+          />
+        </div>
+      )}
+
+      {/* Display Introduction in Preview Mode */}
+      {isPreview && block?.content?.customText?.introduction && (
+        <div className="mb-6">
+          <p className="text-gray-700">{block.content.customText.introduction}</p>
+        </div>
+      )}
+
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Key Performance Indicators</h3>
         <p className="text-gray-600 text-sm mb-4">
@@ -278,6 +321,31 @@ export function KPIProgressPreview({ block, onUpdate, isPreview = false }: KPIPr
           Values are calculated from live company data and updated automatically.
         </p>
       </div>
+
+      {/* Summary Section - Edit Mode */}
+      {block && onUpdate && !isPreview && (
+        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <h4 className="font-semibold text-green-700 mb-2">📝 Add KPI Summary</h4>
+          <EditableTextBlock
+            block={{
+              id: `${block.id}_summary`,
+              content: {
+                text: block.content?.customText?.summary || 'Add a summary of your KPI performance and future goals...',
+                formatting: { fontSize: 'medium', alignment: 'left', style: 'normal' }
+              }
+            }}
+            onUpdate={(_, content) => updateCustomText('summary', content.text)}
+            isPreview={false}
+          />
+        </div>
+      )}
+
+      {/* Display Summary in Preview Mode */}
+      {isPreview && block?.content?.customText?.summary && (
+        <div className="mt-6">
+          <p className="text-gray-700">{block.content.customText.summary}</p>
+        </div>
+      )}
     </div>
   );
 }
