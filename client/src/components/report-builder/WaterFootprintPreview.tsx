@@ -81,7 +81,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
     );
   }
 
-  if (!comprehensiveWater?.total || comprehensiveWater.total === 0) {
+  if (!comprehensiveWater?.data?.total || comprehensiveWater.data.total === 0) {
     return (
       <div className="space-y-4">
         {/* Introduction Text Block */}
@@ -135,9 +135,10 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
   }
 
   // Calculate comprehensive water metrics
-  const totalWaterLiters = comprehensiveWater.total; // Already in liters
-  const facilityWaterLiters = comprehensiveWater.net_operational_water; // Facility operational water
-  const productWaterLiters = comprehensiveWater.agricultural_water + comprehensiveWater.processing_and_dilution_water; // Ingredients + packaging
+  const waterData = comprehensiveWater.data;
+  const totalWaterLiters = waterData.total; // Already in liters
+  const facilityWaterLiters = waterData.net_operational_water; // Facility operational water
+  const productWaterLiters = waterData.agricultural_water + waterData.processing_and_dilution_water; // Ingredients + packaging
   
   // Get facility production data for efficiency calculations
   const facilityData = monthlyData?.aggregated;
@@ -153,18 +154,18 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
     return [
       {
         category: 'Ingredients',
-        liters: comprehensiveWater.agricultural_water,
-        percentage: ((comprehensiveWater.agricultural_water / totalWaterLiters) * 100).toFixed(1)
+        liters: waterData.agricultural_water,
+        percentage: ((waterData.agricultural_water / totalWaterLiters) * 100).toFixed(1)
       },
       {
         category: 'Processing',
-        liters: comprehensiveWater.processing_and_dilution_water,
-        percentage: ((comprehensiveWater.processing_and_dilution_water / totalWaterLiters) * 100).toFixed(1)
+        liters: waterData.processing_and_dilution_water,
+        percentage: ((waterData.processing_and_dilution_water / totalWaterLiters) * 100).toFixed(1)
       },
       {
         category: 'Facility Operations',
-        liters: comprehensiveWater.net_operational_water,
-        percentage: ((comprehensiveWater.net_operational_water / totalWaterLiters) * 100).toFixed(1)
+        liters: waterData.net_operational_water,
+        percentage: ((waterData.net_operational_water / totalWaterLiters) * 100).toFixed(1)
       }
     ];
   };
@@ -279,15 +280,15 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
           <div className="bg-green-50 p-3 rounded">
             <span className="font-medium text-green-700">Ingredients:</span>
-            <span className="text-green-800 ml-2">{comprehensiveWater.agricultural_water.toLocaleString()} L</span>
+            <span className="text-green-800 ml-2">{waterData.agricultural_water.toLocaleString()} L</span>
           </div>
           <div className="bg-blue-50 p-3 rounded">
             <span className="font-medium text-blue-700">Processing:</span>
-            <span className="text-blue-800 ml-2">{comprehensiveWater.processing_and_dilution_water.toLocaleString()} L</span>
+            <span className="text-blue-800 ml-2">{waterData.processing_and_dilution_water.toLocaleString()} L</span>
           </div>
           <div className="bg-slate-50 p-3 rounded">
             <span className="font-medium text-slate-700">Operations:</span>
-            <span className="text-slate-800 ml-2">{comprehensiveWater.net_operational_water.toLocaleString()} L</span>
+            <span className="text-slate-800 ml-2">{waterData.net_operational_water.toLocaleString()} L</span>
           </div>
         </div>
       </div>
