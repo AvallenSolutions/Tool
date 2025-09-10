@@ -16,6 +16,7 @@ import { apiRequest } from '@/lib/queryClient';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
 import { KPIProgressPreview } from "@/components/report-builder/KPIProgressPreview";
+import { InitiativesPreview } from "@/components/report-builder/InitiativesPreview";
 import { EditableTextBlock } from "@/components/report-builder/EditableTextBlock";
 
 // Preview components for each block type
@@ -255,62 +256,6 @@ function MetricsSummaryPreview({ block, onUpdate, isPreview = false }: { block?:
   );
 }
 
-function InitiativesPreview() {
-  const { data: selectedGoals } = useQuery({
-    queryKey: ['/api/smart-goals/selected'],
-  });
-
-  return (
-    <div className="space-y-4">
-      {selectedGoals && selectedGoals.length > 0 ? (
-        selectedGoals.map((goal: any) => (
-          <div key={goal.id} className="p-4 border border-gray-200 rounded-lg bg-white">
-            <div className="flex items-start justify-between mb-2">
-              <h5 className="font-semibold text-gray-900">{goal.title}</h5>
-              <div className="flex gap-2">
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  goal.priority === 'high' ? 'bg-red-100 text-red-700' :
-                  goal.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-green-100 text-green-700'
-                }`}>
-                  {goal.priority} priority
-                </span>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  goal.status === 'active' ? 'bg-green-100 text-green-700' :
-                  goal.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}>
-                  {goal.status}
-                </span>
-              </div>
-            </div>
-            
-            {goal.description && (
-              <p className="text-sm text-gray-600 mb-3">{goal.description}</p>
-            )}
-            
-            {goal.narrative && (
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                <h6 className="font-medium text-blue-900 text-sm mb-1">Report Narrative</h6>
-                <p className="text-sm text-blue-700">{goal.narrative}</p>
-              </div>
-            )}
-            
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-              <span>Category: {goal.category}</span>
-              <span>Target: {new Date(goal.targetDate).toLocaleDateString()}</span>
-            </div>
-          </div>
-        ))
-      ) : (
-        <div className="text-center py-6 text-gray-500">
-          <p>No sustainability initiatives selected yet.</p>
-          <p className="text-sm mt-1">Select goals from the Initiatives page to include them in your report.</p>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function CarbonFootprintPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
   // Use EXACT same data sources as EmissionsChart component
@@ -733,7 +678,7 @@ export default function ReportBuilderPage() {
       case 'metrics_summary':
         return <MetricsSummaryPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'initiatives':
-        return <InitiativesPreview />;
+        return <InitiativesPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'carbon_footprint':
         return <CarbonFootprintPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'water_usage':
