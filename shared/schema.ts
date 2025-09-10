@@ -507,6 +507,33 @@ export const reports = pgTable("reports", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Report Templates - For Dynamic Report Builder
+export const reportTemplates = pgTable("report_templates", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  templateName: varchar("template_name").notNull(),
+  reportTitle: varchar("report_title"),
+  audienceType: varchar("audience_type"), // stakeholders, customers, investors, employees, regulators
+  status: varchar("status").default("draft").notNull(), // draft, published
+  
+  // Report Builder structure
+  blocks: jsonb("blocks").$type<Array<{
+    id: string;
+    type: 'company_story' | 'metrics_summary' | 'carbon_footprint' | 'water_usage' | 'initiatives' | 'kpi_progress' | 'custom_text' | 'editable_text';
+    title: string;
+    content: any;
+    order: number;
+    isVisible: boolean;
+  }>>().notNull().default([]),
+  
+  // Metadata
+  lastSaved: timestamp("last_saved"),
+  publishedAt: timestamp("published_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // OpenLCA Flow Mappings - For mapping user inputs to OpenLCA flows
 export const olcaFlowMappings = pgTable("olca_flow_mappings", {
   id: serial("id").primaryKey(),
@@ -935,6 +962,14 @@ export const reportRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
+// Report Templates Relations
+export const reportTemplateRelations = relations(reportTemplates, ({ one }) => ({
+  company: one(companies, {
+    fields: [reportTemplates.companyId],
+    references: [companies.id],
+  }),
+}));
+
 // Company Story Relations
 export const companyStoryRelations = relations(companyStory, ({ one }) => ({
   company: one(companies, {
@@ -998,6 +1033,19 @@ export const insertReportSchema = createInsertSchema(reports).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertReportTemplateSchema = createInsertSchema(reportTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateReportTemplateSchema = insertReportTemplateSchema.partial().omit({
+  companyId: true, // Server-controlled field
+  status: true, // Use separate publish endpoint
+  publishedAt: true, // Server-controlled field
+  lastSaved: true, // Server-controlled field
 });
 
 export const insertUploadedDocumentSchema = createInsertSchema(uploadedDocuments).omit({
@@ -1070,6 +1118,8 @@ export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
+export type ReportTemplate = typeof reportTemplates.$inferSelect;
+export type InsertReportTemplate = z.infer<typeof insertReportTemplateSchema>;
 export type UploadedDocument = typeof uploadedDocuments.$inferSelect;
 export type InsertUploadedDocument = z.infer<typeof insertUploadedDocumentSchema>;
 export type CompanyData = typeof companyData.$inferSelect;

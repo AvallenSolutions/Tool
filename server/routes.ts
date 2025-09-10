@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema, products, companyFootprintData, kpiDefinitions } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema, products, companyFootprintData, kpiDefinitions, reportTemplates, insertReportTemplateSchema, updateReportTemplateSchema } from "@shared/schema";
 import { eq, desc, asc, ilike, or, and, gte, gt, ne, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { nanoid } from "nanoid";
@@ -12594,6 +12594,346 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         error: 'Professional PDF generation failed',
         details: error.message 
       });
+    }
+  });
+
+  // ===== DYNAMIC REPORT BUILDER API ENDPOINTS =====
+
+  // GET /api/report-templates - Get all report templates for a company
+  app.get('/api/report-templates', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // Get user's company
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Fetch templates for the company
+      const templates = await db
+        .select()
+        .from(reportTemplates)
+        .where(eq(reportTemplates.companyId, company.id))
+        .orderBy(desc(reportTemplates.updatedAt));
+
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching report templates:', error);
+      res.status(500).json({ error: 'Failed to fetch report templates' });
+    }
+  });
+
+  // POST /api/report-templates - Create a new report template
+  app.post('/api/report-templates', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // Get user's company
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Validate request data
+      const validationResult = insertReportTemplateSchema.safeParse({
+        ...req.body,
+        companyId: company.id
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid template data',
+          details: validationResult.error.errors
+        });
+      }
+
+      // Create new template
+      const [newTemplate] = await db
+        .insert(reportTemplates)
+        .values(validationResult.data)
+        .returning();
+
+      res.status(201).json(newTemplate);
+    } catch (error) {
+      console.error('Error creating report template:', error);
+      res.status(500).json({ error: 'Failed to create report template' });
+    }
+  });
+
+  // PUT /api/report-templates/:id - Update a report template (save draft)
+  app.put('/api/report-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ error: 'Invalid template ID' });
+      }
+
+      // Get user's company
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Verify template belongs to user's company
+      const existingTemplate = await db
+        .select()
+        .from(reportTemplates)
+        .where(and(
+          eq(reportTemplates.id, templateId),
+          eq(reportTemplates.companyId, company.id)
+        ))
+        .limit(1);
+
+      if (existingTemplate.length === 0) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+
+      // Update template
+      const updateData = {
+        ...req.body,
+        lastSaved: new Date(),
+        updatedAt: new Date()
+      };
+
+      const [updatedTemplate] = await db
+        .update(reportTemplates)
+        .set(updateData)
+        .where(eq(reportTemplates.id, templateId))
+        .returning();
+
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error('Error updating report template:', error);
+      res.status(500).json({ error: 'Failed to update report template' });
+    }
+  });
+
+  // PATCH /api/report-templates/:id - Partial update (auto-save)
+  app.patch('/api/report-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ error: 'Invalid template ID' });
+      }
+
+      // Get user's company
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Verify template belongs to user's company
+      const existingTemplate = await db
+        .select()
+        .from(reportTemplates)
+        .where(and(
+          eq(reportTemplates.id, templateId),
+          eq(reportTemplates.companyId, company.id)
+        ))
+        .limit(1);
+
+      if (existingTemplate.length === 0) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+
+      // Validate partial update data
+      const validationResult = updateReportTemplateSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid update data',
+          details: validationResult.error.errors
+        });
+      }
+
+      // Perform partial update with server-controlled fields
+      const updateData = {
+        ...validationResult.data,
+        lastSaved: new Date(),
+        updatedAt: new Date()
+      };
+
+      const [updatedTemplate] = await db
+        .update(reportTemplates)
+        .set(updateData)
+        .where(and(
+          eq(reportTemplates.id, templateId),
+          eq(reportTemplates.companyId, company.id)
+        ))
+        .returning();
+
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error('Error auto-saving report template:', error);
+      res.status(500).json({ error: 'Failed to auto-save report template' });
+    }
+  });
+
+  // PUT /api/report-templates/:id/publish - Publish a report template
+  app.put('/api/report-templates/:id/publish', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ error: 'Invalid template ID' });
+      }
+
+      // Get user's company
+      const company = await dbStorage.getCompanyByOwner(user.id);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Verify template belongs to user's company
+      const existingTemplate = await db
+        .select()
+        .from(reportTemplates)
+        .where(and(
+          eq(reportTemplates.id, templateId),
+          eq(reportTemplates.companyId, company.id)
+        ))
+        .limit(1);
+
+      if (existingTemplate.length === 0) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+
+      // Publish template
+      const [publishedTemplate] = await db
+        .update(reportTemplates)
+        .set({
+          status: 'published',
+          publishedAt: new Date(),
+          lastSaved: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(reportTemplates.id, templateId))
+        .returning();
+
+      res.json(publishedTemplate);
+    } catch (error) {
+      console.error('Error publishing report template:', error);
+      res.status(500).json({ error: 'Failed to publish report template' });
+    }
+  });
+
+  // GET /api/report-templates/:id - Get a specific report template
+  app.get('/api/report-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ error: 'Invalid template ID' });
+      }
+
+      // Get user's company
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Fetch specific template
+      const template = await db
+        .select()
+        .from(reportTemplates)
+        .where(and(
+          eq(reportTemplates.id, templateId),
+          eq(reportTemplates.companyId, company.id)
+        ))
+        .limit(1);
+
+      if (template.length === 0) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+
+      res.json(template[0]);
+    } catch (error) {
+      console.error('Error fetching report template:', error);
+      res.status(500).json({ error: 'Failed to fetch report template' });
+    }
+  });
+
+  // DELETE /api/report-templates/:id - Delete a report template
+  app.delete('/api/report-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ error: 'Invalid template ID' });
+      }
+
+      // Get user's company
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      // Verify template belongs to user's company
+      const existingTemplate = await db
+        .select()
+        .from(reportTemplates)
+        .where(and(
+          eq(reportTemplates.id, templateId),
+          eq(reportTemplates.companyId, company.id)
+        ))
+        .limit(1);
+
+      if (existingTemplate.length === 0) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+
+      // Delete template
+      await db
+        .delete(reportTemplates)
+        .where(eq(reportTemplates.id, templateId));
+
+      res.json({ success: true, message: 'Template deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting report template:', error);
+      res.status(500).json({ error: 'Failed to delete report template' });
     }
   });
 

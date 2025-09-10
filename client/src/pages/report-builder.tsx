@@ -19,6 +19,7 @@ import { KPIProgressPreview } from "@/components/report-builder/KPIProgressPrevi
 import { InitiativesPreview } from "@/components/report-builder/InitiativesPreview";
 import { EditableTextBlock } from "@/components/report-builder/EditableTextBlock";
 import { WaterFootprintPreview } from "@/components/report-builder/WaterFootprintPreview";
+import type { ReportTemplate } from "@shared/schema";
 
 // Preview components for each block type
 function CompanyStoryPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
@@ -743,16 +744,15 @@ export default function ReportBuilderPage() {
     }
   };
 
-  // Save template mutation (published)
+  // Publish template mutation (published)
   const saveTemplateMutation = useMutation({
     mutationFn: async (template: ReportTemplate) => {
-      const templateData = {
-        ...template,
-        status: 'published' // Ensure published status
-      };
-      const url = template.id ? `/api/report-templates/${template.id}` : '/api/report-templates';
-      const method = template.id ? 'PUT' : 'POST';
-      return apiRequest(url, method, templateData);
+      if (!template.id) {
+        throw new Error('Template must be saved as draft first before publishing');
+      }
+      
+      // Use dedicated publish endpoint
+      return apiRequest(`/api/report-templates/${template.id}/publish`, 'PUT', {});
     },
     onSuccess: () => {
       toast({
@@ -813,26 +813,20 @@ export default function ReportBuilderPage() {
     }
   });
 
-  // Auto-save mutation (using the new auto-save endpoint)
+  // Auto-save mutation (using PATCH for partial updates)
   const autoSaveMutation = useMutation({
     mutationFn: async (template: ReportTemplate) => {
       if (!template.id) return null; // Can only auto-save existing drafts
       
+      // Use partial update data structure matching backend schema
       const autoSaveData = {
-        reportTitle: template.templateName,
-        reportContent: template.reportContent || {},
-        reportLayout: {
-          templateName: template.templateName,
-          audienceType: template.audienceType,
-          blocks: template.blocks
-        },
-        selectedInitiatives: template.selectedInitiatives || [],
-        selectedKPIs: template.selectedKPIs || [],
-        uploadedImages: template.uploadedImages || {},
-        status: 'draft'
+        templateName: template.templateName,
+        reportTitle: template.reportTitle,
+        audienceType: template.audienceType,
+        blocks: template.blocks
       };
       
-      return apiRequest(`/api/report-templates/${template.id}/autosave`, 'PUT', autoSaveData);
+      return apiRequest(`/api/report-templates/${template.id}`, 'PATCH', autoSaveData);
     },
     onSuccess: () => {
       setIsAutoSaving(false);
