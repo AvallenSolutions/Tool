@@ -563,8 +563,8 @@ export class PDFExportService {
           }
         }
         
-        // Strategic Pillars
-        if (companyStory?.strategicPillars && companyStory.strategicPillars.length > 0) {
+        // Strategic Pillars - only show if enabled in block content
+        if (block.content?.showPillars && companyStory?.strategicPillars && companyStory.strategicPillars.length > 0) {
           companyStoryHTML += `
             <h3 style="color: #22c55e; font-size: 1.3rem; margin: 20px 0 10px 0;">Strategic Pillars</h3>
             <ul style="color: #374151; line-height: 1.8; margin-left: 20px;">`;
@@ -874,8 +874,8 @@ export class PDFExportService {
           <div style="space-y: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f0fdf4; border-radius: 8px; margin-bottom: 10px;">
               <div>
-                <div style="font-weight: 500;">AGRICULTURAL WATER</div>
-                <div style="font-size: 0.875rem; color: #6b7280;">Ingredient production and farming</div>
+                <div style="font-weight: 500;">INGREDIENTS</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Raw materials and agricultural inputs</div>
               </div>
               <div style="text-align: right;">
                 <div style="font-weight: 600;">${(agriculturalWaterL / 1000000).toFixed(1)}M L</div>
@@ -884,8 +884,8 @@ export class PDFExportService {
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #dbeafe; border-radius: 8px; margin-bottom: 10px;">
               <div>
-                <div style="font-weight: 500;">PROCESSING & DILUTION</div>
-                <div style="font-size: 0.875rem; color: #6b7280;">Manufacturing and product dilution water</div>
+                <div style="font-weight: 500;">PACKAGING</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Glass bottles, labels, closures with recycled content</div>
               </div>
               <div style="text-align: right;">
                 <div style="font-weight: 600;">${(processingWaterL / 1000000).toFixed(1)}M L</div>
@@ -894,8 +894,8 @@ export class PDFExportService {
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #faf5ff; border-radius: 8px; margin-bottom: 10px;">
               <div>
-                <div style="font-weight: 500;">OPERATIONAL WATER</div>
-                <div style="font-size: 0.875rem; color: #6b7280;">Facility operations and cleaning</div>
+                <div style="font-weight: 500;">FACILITY OPERATIONS</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Operations, cooling, and cleaning water</div>
               </div>
               <div style="text-align: right;">
                 <div style="font-weight: 600;">${(operationalWaterL / 1000000).toFixed(1)}M L</div>
@@ -1037,18 +1037,108 @@ export class PDFExportService {
         return kpiProgressHTML;
 
       case 'initiatives':
-        // For now, return a placeholder since InitiativesPreview logic is complex
-        // This can be expanded later with actual initiatives data
-        return `
+        // Use real SMART Goals data - same as InitiativesPreview component
+        const smartGoalsData = metricsData.smartGoals;
+        const allGoals = smartGoalsData?.goals || [];
+        const goalsSummary = smartGoalsData?.summary || { total: 0, active: 0, completed: 0, overdue: 0 };
+        
+        // Get selected goals or show first 3 if none selected
+        const selectedGoalIds = block.content?.selectedGoalIds || [];
+        const displayGoals = selectedGoalIds.length > 0 
+          ? allGoals.filter((goal: any) => selectedGoalIds.includes(goal.id))
+          : allGoals.slice(0, 3);
+
+        let initiativesHTML = `
           <div class="section">
-            <h2>Sustainability Initiatives</h2>
-            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #22c55e;">
-              <h3 style="color: #15803d; margin-bottom: 10px;">Our Sustainability Commitments</h3>
-              <p style="color: #374151; line-height: 1.6;">
-                This section showcases our ongoing sustainability initiatives and their impact on our environmental performance.
-              </p>
+            <h2>Sustainability Initiatives</h2>`;
+        
+        // Introduction
+        if (block.content?.customText?.introduction) {
+          initiativesHTML += `<div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #22c55e; color: #374151; line-height: 1.6;">${block.content.customText.introduction}</div>`;
+        }
+        
+        // Summary Stats
+        initiativesHTML += `
+          <div style="text-align: center; margin-bottom: 25px;">
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 15px;">Our strategic SMART goals driving environmental and social impact.</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px;">
+              <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${goalsSummary.completed}</div>
+                <div style="font-size: 0.75rem; color: #6b7280;">Completed</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #22c55e;">${goalsSummary.active}</div>
+                <div style="font-size: 0.75rem; color: #6b7280;">Active</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;">${goalsSummary.total - goalsSummary.completed - goalsSummary.active - goalsSummary.overdue}</div>
+                <div style="font-size: 0.75rem; color: #6b7280;">Planned</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #ef4444;">${goalsSummary.overdue}</div>
+                <div style="font-size: 0.75rem; color: #6b7280;">Overdue</div>
+              </div>
             </div>
           </div>`;
+        
+        // Individual Goals
+        if (displayGoals.length > 0) {
+          displayGoals.forEach((goal: any) => {
+            const statusColors = {
+              'active': '#22c55e',
+              'completed': '#3b82f6', 
+              'paused': '#f59e0b',
+              'overdue': '#ef4444'
+            };
+            const statusColor = statusColors[goal.status as keyof typeof statusColors] || '#22c55e';
+            
+            initiativesHTML += `
+              <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                  <h4 style="font-size: 1.125rem; font-weight: 600; color: #1f2937; margin: 0;">${goal.title}</h4>
+                  <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                    ${goal.status}
+                  </span>
+                </div>
+                
+                ${goal.description ? `<p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 15px; line-height: 1.5;">${goal.description}</p>` : ''}
+                
+                <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
+                  <h6 style="font-weight: 500; color: #1f2937; font-size: 0.875rem; margin-bottom: 8px;">SMART Criteria</h6>
+                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.75rem;">
+                    <div><strong>Specific:</strong> ${goal.specific}</div>
+                    <div><strong>Measurable:</strong> ${goal.measurable}</div>
+                    <div><strong>Achievable:</strong> ${goal.achievable}</div>
+                    <div><strong>Relevant:</strong> ${goal.relevant}</div>
+                    <div><strong>Time-bound:</strong> ${goal.timeBound}</div>
+                  </div>
+                </div>
+                
+                ${goal.narrative ? `
+                  <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px;">
+                    <h6 style="font-weight: 500; color: #1e40af; font-size: 0.875rem; margin-bottom: 5px;">Report Narrative</h6>
+                    <p style="color: #1e40af; font-size: 0.875rem; margin: 0; line-height: 1.4;">${goal.narrative}</p>
+                  </div>
+                ` : ''}
+              </div>`;
+          });
+        } else {
+          initiativesHTML += `
+            <div style="text-align: center; padding: 40px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;">
+              <h3 style="font-size: 1.125rem; font-weight: 600; color: #6b7280; margin-bottom: 10px;">No Initiatives Selected</h3>
+              <p style="color: #9ca3af; margin: 0;">
+                Add SMART Goals to your sustainability program to showcase your environmental and social commitments.
+              </p>
+            </div>`;
+        }
+        
+        // Summary
+        if (block.content?.customText?.summary) {
+          initiativesHTML += `<div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 25px; border-left: 4px solid #22c55e; color: #374151; line-height: 1.6;">${block.content.customText.summary}</div>`;
+        }
+        
+        initiativesHTML += `</div>`;
+        return initiativesHTML;
 
       default:
         return `

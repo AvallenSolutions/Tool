@@ -188,6 +188,11 @@ async function fetchMetricsData(companyId: number, dataSelections: ReportExportR
     const [enhancedKpis] = await Promise.allSettled([
       fetch(`http://localhost:5000/api/enhanced-kpis/dashboard`).then(r => r.ok ? r.json() : null).catch(() => null)
     ]);
+    
+    // InitiativesPreview data source - SMART Goals
+    const [smartGoals] = await Promise.allSettled([
+      fetch(`http://localhost:5000/api/smart-goals`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ]);
 
     // Extract values from Promise.allSettled results
     const getSettledValue = (result: any) => result.status === 'fulfilled' ? result.value : null;
@@ -207,7 +212,8 @@ async function fetchMetricsData(companyId: number, dataSelections: ReportExportR
       scope3Data: getSettledValue(scope3Data),
       monthlyDataSummary: getSettledValue(monthlyDataSummary),
       waterFootprint: getSettledValue(waterFootprint),
-      enhancedKpis: getSettledValue(enhancedKpis)
+      enhancedKpis: getSettledValue(enhancedKpis),
+      smartGoals: getSettledValue(smartGoals)
     };
     
   } catch (error) {
