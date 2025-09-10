@@ -38,13 +38,14 @@ export class PowerPointExportService {
       pptx.title = templateOptions.customTitle || `${reportType.toUpperCase()} Report`;
       
       // Define theme colors (green to blue gradient theme) with proper hex format
+      // Ensure all colors are explicit strings for library compatibility
       const theme = {
-        primary: '#22C55E',    // Green
-        secondary: '#3B82F6',  // Blue
-        accent: '#8B5CF6',     // Purple
-        text: '#374151',       // Dark gray
-        light: '#F8FAFC',      // Light gray
-        white: '#FFFFFF'
+        primary: String('#22C55E'),    // Green
+        secondary: String('#3B82F6'),  // Blue
+        accent: String('#8B5CF6'),     // Purple
+        text: String('#374151'),       // Dark gray
+        light: String('#F8FAFC'),      // Light gray
+        white: String('#FFFFFF')
       };
       
       // Create title slide with error isolation
@@ -103,8 +104,21 @@ export class PowerPointExportService {
       // Ensure temp directory exists
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       
-      // Save presentation
-      await pptx.writeFile({ fileName: filePath });
+      // Save presentation with error isolation
+      try {
+        logger.info({ filePath, filename }, 'PowerPoint: Starting file write...');
+        await pptx.writeFile({ fileName: filePath });
+        logger.info({ filePath }, 'PowerPoint: File write completed successfully');
+      } catch (error) {
+        logger.error({ 
+          error: error.message, 
+          stack: error.stack, 
+          filePath,
+          errorName: error.name,
+          errorConstructor: error.constructor.name 
+        }, 'PowerPoint: File write failed');
+        throw error;
+      }
       
       logger.info({ 
         filename, 
