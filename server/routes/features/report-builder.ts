@@ -188,6 +188,40 @@ async function generateReport(
     case 'pdf':
       try {
         const pdfResult = await PDFExportService.generatePDF(exportOptions);
+        
+        // Auto-save PDF to reports database
+        try {
+          const reportData = {
+            title: config.templateOptions.customTitle || `${config.reportType.toUpperCase()} Report`,
+            blocks: (config as any).blocks,
+            templateOptions: config.templateOptions,
+            generatedAt: new Date().toISOString(),
+            exportFormat: 'pdf'
+          };
+          
+          const newReport = await dbStorage.createReport({
+            companyId: company.id,
+            reportType: config.reportType,
+            status: 'completed',
+            pdfFilePath: pdfResult.filePath,
+            totalCarbonFootprint: metricsData.totalCO2e || 0,
+            totalWaterUsage: metricsData.totalWater || 0,
+            totalWasteGenerated: metricsData.totalWaste || 0,
+            reportData: reportData,
+            reportingPeriodStart: new Date(config.dataSelections.timeRange.startDate),
+            reportingPeriodEnd: new Date(config.dataSelections.timeRange.endDate)
+          });
+          
+          logger.info({ 
+            reportId: newReport.id, 
+            companyId: company.id, 
+            reportType: config.reportType 
+          }, 'PDF report auto-saved to database');
+          
+        } catch (saveError) {
+          logger.warn({ error: saveError }, 'Failed to auto-save PDF to database, but PDF generation succeeded');
+        }
+        
         return {
           type: 'pdf',
           downloadUrl: `/api/report/download/${pdfResult.filename}`,

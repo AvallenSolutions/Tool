@@ -608,12 +608,26 @@ export default function ReportBuilderPage() {
           description: `Your ${format} report has been generated successfully`
         });
         
-        // Handle PDF/PowerPoint download (placeholder for now)
-        console.log('Download URL:', result.data.downloadUrl);
-        toast({
-          title: "Download Ready",
-          description: `Your ${format} report is ready for download`
-        });
+        // Trigger actual download
+        if (result.data.downloadUrl) {
+          // Create a temporary link to trigger download
+          const link = document.createElement('a');
+          link.href = result.data.downloadUrl;
+          link.download = result.data.filename || `${format}-report.${format === 'pdf' ? 'pdf' : 'pptx'}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast({
+            title: "Download Started",
+            description: `Your ${format} report is downloading and has been saved to View Reports`
+          });
+        } else {
+          toast({
+            title: "Download Ready",
+            description: `Your ${format} report is ready for download`
+          });
+        }
       } else {
         throw new Error('Export failed');
       }
