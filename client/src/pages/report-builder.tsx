@@ -563,7 +563,7 @@ export default function ReportBuilderPage() {
   const queryClient = useQueryClient();
   
   // Export report using new Report Builder API
-  const handleExportReport = async (format: 'pdf' | 'powerpoint') => {
+  const handleExportReport = async (format: 'pdf') => {
     if (!currentTemplate) {
       toast({
         title: "Error",
@@ -574,17 +574,13 @@ export default function ReportBuilderPage() {
     }
 
     // Prevent multiple clicks by checking if already exporting
-    const isCurrentlyExporting = format === 'pdf' ? isPdfExporting : isPowerpointExporting;
+    const isCurrentlyExporting = isPdfExporting;
     if (isCurrentlyExporting) {
       return;
     }
 
     // Set the appropriate loading state
-    if (format === 'pdf') {
-      setIsPdfExporting(true);
-    } else {
-      setIsPowerpointExporting(true);
-    }
+    setIsPdfExporting(true);
 
     try {
       const exportData = {
@@ -655,7 +651,6 @@ export default function ReportBuilderPage() {
       if (format === 'pdf') {
         setIsPdfExporting(false);
       } else {
-        setIsPowerpointExporting(false);
       }
     }
   };
@@ -665,7 +660,6 @@ export default function ReportBuilderPage() {
   const [selectedAudience, setSelectedAudience] = useState<string>('stakeholders');
   const [activeTab, setActiveTab] = useState('builder');
   const [isPdfExporting, setIsPdfExporting] = useState(false);
-  const [isPowerpointExporting, setIsPowerpointExporting] = useState(false);
 
   // Fetch existing templates
   const { data: templates } = useQuery<ReportTemplate[]>({
@@ -951,7 +945,7 @@ export default function ReportBuilderPage() {
             <Button 
               variant="outline" 
               onClick={() => handleExportReport('pdf')}
-              disabled={isPdfExporting || isPowerpointExporting}
+              disabled={isPdfExporting}
             >
               {isPdfExporting ? (
                 <>
@@ -967,20 +961,14 @@ export default function ReportBuilderPage() {
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => handleExportReport('powerpoint')}
-              disabled={isPdfExporting || isPowerpointExporting}
+              onClick={() => toast({
+                title: "PowerPoint Export",
+                description: "This feature is coming soon",
+              })}
+              disabled={isPdfExporting}
             >
-              {isPowerpointExporting ? (
-                <>
-                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
-                  Generating PowerPoint...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  PowerPoint
-                </>
-              )}
+              <Download className="h-4 w-4 mr-2" />
+              PowerPoint
             </Button>
           </div>
         </div>
