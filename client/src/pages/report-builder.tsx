@@ -108,39 +108,6 @@ function CompanyStoryPreview({ block, onUpdate, isPreview = false }: { block?: R
           )}
         </div>
       )}
-      
-      {/* Strategic Pillars - Only show if enabled in block settings */}
-      {block?.content?.showPillars && companyStory?.strategicPillars && companyStory.strategicPillars.length > 0 && (
-        <div>
-          <h4 className="font-semibold text-green-700 mb-2">Strategic Pillars</h4>
-          <div className="space-y-3">
-            {companyStory.strategicPillars.map((pillar, index) => (
-              <div key={index} className="bg-green-50 p-3 rounded border border-green-200">
-                <h5 className="font-medium text-green-700 mb-1">{pillar.title}</h5>
-                <p className="text-gray-700 text-sm">{pillar.description}</p>
-              </div>
-            ))}
-          </div>
-          
-          {/* Strategic Pillars Context */}
-          {block && onUpdate && !isPreview && (
-            <div className="mt-3 bg-green-50 p-3 rounded border border-green-200">
-              <h5 className="font-medium text-green-700 mb-2">📝 Add Context</h5>
-              <EditableTextBlock
-                block={{
-                  id: `${block.id}_pillars`,
-                  content: {
-                    text: block.content?.customText?.pillarsContext || 'Add context about your strategic pillars...',
-                    formatting: { fontSize: 'small', alignment: 'left', style: 'normal' }
-                  }
-                }}
-                onUpdate={(_, content) => updateCustomText('pillarsContext', content.text)}
-                isPreview={false}
-              />
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Conclusion Section */}
       {block && onUpdate && !isPreview && (
