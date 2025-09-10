@@ -47,17 +47,24 @@ export class PowerPointExportService {
         white: '#FFFFFF'
       };
       
-      // Create title slide
-      PowerPointExportService.createTitleSlide(pptx, {
-        title: templateOptions.customTitle || `${reportType.toUpperCase()} Report`,
-        company: company.companyName,
-        date: new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
-        theme
-      });
+      // Create title slide with error isolation
+      try {
+        logger.info('PowerPoint: Creating title slide...');
+        PowerPointExportService.createTitleSlide(pptx, {
+          title: templateOptions.customTitle || `${reportType.toUpperCase()} Report`,
+          company: company.companyName,
+          date: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          theme
+        });
+        logger.info('PowerPoint: Title slide created successfully');
+      } catch (error) {
+        logger.error({ error: error.message, stack: error.stack }, 'PowerPoint: Title slide creation failed');
+        throw error;
+      }
       
       // Create content slides based on blocks or default structure
       if (blocks && blocks.length > 0) {
