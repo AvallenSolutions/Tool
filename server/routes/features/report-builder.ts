@@ -125,13 +125,13 @@ router.post('/export', isAuthenticated, async (req, res) => {
 });
 
 /**
- * Fetch metrics data based on user selections
+ * Fetch comprehensive data for PDF generation - SAME as Preview components
  */
 async function fetchMetricsData(companyId: number, dataSelections: ReportExportRequest['dataSelections']) {
   try {
     const { startDate, endDate } = dataSelections.timeRange;
     
-    // Fetch company data
+    // Fetch basic company data
     const company = await dbStorage.getCompanyById(companyId);
     
     // Fetch selected products data
@@ -149,16 +149,59 @@ async function fetchMetricsData(companyId: number, dataSelections: ReportExportR
       new Date(endDate)
     );
 
+    // ===== FETCH ALL PREVIEW COMPONENT DATA SOURCES =====
+    
+    // CompanyStoryPreview data
+    let companyStory = null;
+    try {
+      companyStory = await dbStorage.getCompanyStory(companyId);
+    } catch (e) {
+      logger.warn({ companyId, error: e }, 'Failed to fetch company story');
+    }
+    
+    // MetricsSummaryPreview & CarbonFootprintPreview data sources
+    const [dashboardMetrics, comprehensiveFootprint, carbonCalculatorTotal, scope3Data] = await Promise.allSettled([
+      fetch(`http://localhost:5000/api/dashboard/metrics`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`http://localhost:5000/api/company/footprint/comprehensive`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`http://localhost:5000/api/carbon-calculator-total`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`http://localhost:5000/api/company/footprint/scope3/automated`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ]);
+    
+    // WaterFootprintPreview data sources
+    const [monthlyDataSummary, waterFootprint] = await Promise.allSettled([
+      fetch(`http://localhost:5000/api/monthly-data-summary`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`http://localhost:5000/api/company/water-footprint`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ]);
+    
+    // KPIProgressPreview data source
+    const [enhancedKpis] = await Promise.allSettled([
+      fetch(`http://localhost:5000/api/enhanced-kpis/dashboard`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ]);
+
+    // Extract values from Promise.allSettled results
+    const getSettledValue = (result: any) => result.status === 'fulfilled' ? result.value : null;
+
     return {
+      // Basic data
       company,
       products: productsData.filter(p => p !== null),
       kpis: kpiData,
-      timeRange: { startDate, endDate }
+      timeRange: { startDate, endDate },
+      
+      // Preview component data sources
+      companyStory,
+      dashboardMetrics: getSettledValue(dashboardMetrics),
+      comprehensiveFootprint: getSettledValue(comprehensiveFootprint),
+      carbonCalculatorTotal: getSettledValue(carbonCalculatorTotal),
+      scope3Data: getSettledValue(scope3Data),
+      monthlyDataSummary: getSettledValue(monthlyDataSummary),
+      waterFootprint: getSettledValue(waterFootprint),
+      enhancedKpis: getSettledValue(enhancedKpis)
     };
     
   } catch (error) {
-    logger.error({ companyId, error }, 'Error fetching metrics data');
-    throw new Error('Failed to fetch metrics data');
+    logger.error({ companyId, error }, 'Error fetching comprehensive metrics data');
+    throw new Error('Failed to fetch comprehensive metrics data');
   }
 }
 
