@@ -1,4 +1,4 @@
-import pptxgenjs from 'pptxgenjs';
+// Removed static import - using dynamic import for CJS/ESM interop
 import { logger } from '../config/logger';
 import path from 'path';
 import fs from 'fs/promises';
@@ -22,8 +22,13 @@ export class PowerPointExportService {
       
       const { reportType, company, metricsData, templateOptions, blocks } = options;
       
-      // Create new presentation
-      const pptx = new pptxgenjs();
+      // Create new presentation using dynamic import for CJS/ESM interop
+      const mod = await import('pptxgenjs');
+      const Pptx = (mod as any).default ?? (mod as any);
+      const pptx = new (Pptx as any)();
+      
+      // Debug logging for import resolution
+      logger.info({ pptxType: typeof Pptx, moduleKeys: Object.keys(mod) }, 'PowerPoint: Dynamic import resolved');
       
       // Set presentation properties
       pptx.author = 'Drinks Sustainability Platform';
