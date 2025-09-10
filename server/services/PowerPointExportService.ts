@@ -1,4 +1,4 @@
-import pptxgen from 'pptxgenjs';
+import PptxGenJS from 'pptxgenjs';
 import { logger } from '../config/logger';
 import path from 'path';
 import fs from 'fs/promises';
@@ -23,7 +23,7 @@ export class PowerPointExportService {
       const { reportType, company, metricsData, templateOptions, blocks } = options;
       
       // Create new presentation
-      const pptx = new pptxgen();
+      const pptx = new PptxGenJS();
       
       // Set presentation properties
       pptx.author = 'Drinks Sustainability Platform';

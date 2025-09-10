@@ -574,11 +574,17 @@ export default function ReportBuilderPage() {
     }
 
     // Prevent multiple clicks by checking if already exporting
-    if (isExporting) {
+    const isCurrentlyExporting = format === 'pdf' ? isPdfExporting : isPowerpointExporting;
+    if (isCurrentlyExporting) {
       return;
     }
 
-    setIsExporting(true);
+    // Set the appropriate loading state
+    if (format === 'pdf') {
+      setIsPdfExporting(true);
+    } else {
+      setIsPowerpointExporting(true);
+    }
 
     try {
       const exportData = {
@@ -641,11 +647,16 @@ export default function ReportBuilderPage() {
       console.error('Export error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to generate report. Please try again.",
+        description: `Failed to generate ${format} report. Please try again.`,
         variant: "destructive"
       });
     } finally {
-      setIsExporting(false);
+      // Reset the appropriate loading state
+      if (format === 'pdf') {
+        setIsPdfExporting(false);
+      } else {
+        setIsPowerpointExporting(false);
+      }
     }
   };
   const [currentTemplate, setCurrentTemplate] = useState<ReportTemplate | null>(null);
@@ -653,7 +664,8 @@ export default function ReportBuilderPage() {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [selectedAudience, setSelectedAudience] = useState<string>('stakeholders');
   const [activeTab, setActiveTab] = useState('builder');
-  const [isExporting, setIsExporting] = useState(false);
+  const [isPdfExporting, setIsPdfExporting] = useState(false);
+  const [isPowerpointExporting, setIsPowerpointExporting] = useState(false);
 
   // Fetch existing templates
   const { data: templates } = useQuery<ReportTemplate[]>({
@@ -939,9 +951,9 @@ export default function ReportBuilderPage() {
             <Button 
               variant="outline" 
               onClick={() => handleExportReport('pdf')}
-              disabled={isExporting}
+              disabled={isPdfExporting || isPowerpointExporting}
             >
-              {isExporting ? (
+              {isPdfExporting ? (
                 <>
                   <div className="animate-spin h-4 w-4 mr-2 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
                   Generating PDF...
@@ -956,12 +968,12 @@ export default function ReportBuilderPage() {
             <Button 
               variant="outline" 
               onClick={() => handleExportReport('powerpoint')}
-              disabled={isExporting}
+              disabled={isPdfExporting || isPowerpointExporting}
             >
-              {isExporting ? (
+              {isPowerpointExporting ? (
                 <>
                   <div className="animate-spin h-4 w-4 mr-2 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
-                  Generating...
+                  Generating PowerPoint...
                 </>
               ) : (
                 <>
