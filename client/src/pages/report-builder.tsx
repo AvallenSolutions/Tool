@@ -18,6 +18,7 @@ import Header from '@/components/layout/header';
 import { KPIProgressPreview } from "@/components/report-builder/KPIProgressPreview";
 import { InitiativesPreview } from "@/components/report-builder/InitiativesPreview";
 import { EditableTextBlock } from "@/components/report-builder/EditableTextBlock";
+import { WaterFootprintPreview } from "@/components/report-builder/WaterFootprintPreview";
 
 // Preview components for each block type
 function CompanyStoryPreview({ block, onUpdate, isPreview = false }: { block?: ReportBlock; onUpdate?: (blockId: string, content: any) => void; isPreview?: boolean }) {
@@ -682,14 +683,7 @@ export default function ReportBuilderPage() {
       case 'carbon_footprint':
         return <CarbonFootprintPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'water_usage':
-        return (
-          <div className="space-y-3">
-            <p className="text-gray-700">Water footprint analysis showing consumption patterns and conservation efforts.</p>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-blue-700">Water usage data will be displayed with charts and trends.</p>
-            </div>
-          </div>
-        );
+        return <WaterFootprintPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'kpi_progress':
         return <KPIProgressPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'custom_text':
