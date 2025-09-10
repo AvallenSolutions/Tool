@@ -37,15 +37,14 @@ export class PowerPointExportService {
       pptx.subject = `Sustainability Report - ${company.companyName}`;
       pptx.title = templateOptions.customTitle || `${reportType.toUpperCase()} Report`;
       
-      // Define theme colors (green to blue gradient theme) with proper hex format
-      // Ensure all colors are explicit strings for library compatibility
+      // Define theme colors (green to blue gradient theme) - hex without '#' for pptxgenjs compatibility
       const theme = {
-        primary: String('#22C55E'),    // Green
-        secondary: String('#3B82F6'),  // Blue
-        accent: String('#8B5CF6'),     // Purple
-        text: String('#374151'),       // Dark gray
-        light: String('#F8FAFC'),      // Light gray
-        white: String('#FFFFFF')
+        primary: '22C55E',    // Green
+        secondary: '3B82F6',  // Blue
+        accent: '8B5CF6',     // Purple
+        text: '374151',       // Dark gray
+        light: 'F8FAFC',      // Light gray
+        white: 'FFFFFF'
       };
       
       // Create title slide with error isolation
@@ -144,13 +143,9 @@ export class PowerPointExportService {
   private static createTitleSlide(pptx: any, options: any): void {
     const slide = pptx.addSlide();
     
-    // Background gradient
+    // Solid background (gradient objects cause pptxgenjs XML serialization errors)
     slide.background = {
-      fill: {
-        type: 'gradient',
-        colors: [String(options.theme.primary), String(options.theme.secondary)],
-        dir: 45
-      }
+      color: options.theme.secondary
     };
     
     // Main title
@@ -542,13 +537,9 @@ export class PowerPointExportService {
   private static createSummarySlide(pptx: any, metricsData: any, theme: any): void {
     const slide = pptx.addSlide();
     
-    // Background with subtle gradient
+    // Solid background (gradient objects cause pptxgenjs XML serialization errors)
     slide.background = {
-      fill: {
-        type: 'gradient',
-        colors: [String(theme.light), String(theme.white)],
-        dir: 90
-      }
+      color: theme.light
     };
     
     slide.addText('Summary', {
