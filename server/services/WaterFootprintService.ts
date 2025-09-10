@@ -19,10 +19,10 @@ export class WaterFootprintService {
       // 1. Calculate Total Agricultural Water from LCA data
       const agriculturalWater = await this.calculateAgriculturalWater(companyId);
       
-      // 2. Calculate Total Processing & Dilution Water from LCA data
-      const processingAndDilutionWater = await this.calculateProcessingAndDilutionWater(companyId);
+      // 2. Calculate Total Processing & Dilution Water from LCA data (FIXED: no artificial multipliers)
+      const processingAndDilutionWater = await this.calculateProcessingAndDilutionWaterFixed(companyId);
       
-      // 3. Fetch Total Metered Water from company_data
+      // 3. Fetch Total Metered Water from company_data  
       const totalMeteredWater = await this.getTotalMeteredWater(companyId);
       
       // 4. Calculate Net Operational Water (avoiding double-counting)
@@ -167,12 +167,58 @@ export class WaterFootprintService {
             const volumeValue = parseFloat(volumeMatch[1]);
             const volumeInLiters = product.volume.includes('L') ? volumeValue : volumeValue / 1000;
             
-            // Processing water factors (L water per L product)
-            const processingFactor = 3; // Conservative estimate for spirits/beverages
-            const processingWaterPerUnit = volumeInLiters * processingFactor;
-            totalProcessingWater += processingWaterPerUnit * productionVolume;
+            // Use packaging water estimate only (5.4L per unit from comprehensive LCA)
+            const packagingWaterPerUnit = 5.4; // From refined LCA calculations
+            totalProcessingWater += packagingWaterPerUnit;
           }
         }
+      }
+      
+      return totalProcessingWater;
+    } catch (error) {
+      console.error('Error calculating processing water:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Calculate processing and dilution water without artificial multipliers (FIXED VERSION)
+   */
+  private static async calculateProcessingAndDilutionWaterFixed(companyId: number): Promise<number> {
+    try {
+      const companyProducts = await db
+        .select({
+          id: products.id,
+          annualProductionVolume: products.annualProductionVolume,
+          waterDilution: products.waterDilution
+        })
+        .from(products)
+        .where(eq(products.companyId, companyId));
+      
+      let totalProcessingWater = 0;
+      
+      for (const product of companyProducts) {
+        const productionVolume = Number(product.annualProductionVolume) || 0;
+        
+        // Calculate water dilution if specified
+        if (product.waterDilution) {
+          try {
+            const dilutionData = typeof product.waterDilution === 'string' 
+              ? JSON.parse(product.waterDilution) 
+              : product.waterDilution;
+            
+            if (dilutionData?.amount) {
+              const dilutionAmount = Number(dilutionData.amount);
+              totalProcessingWater += dilutionAmount * productionVolume;
+            }
+          } catch (error) {
+            console.error('Error parsing water dilution data:', error);
+          }
+        }
+        
+        // Use realistic packaging water estimate only (5.4L per unit from comprehensive LCA)
+        const packagingWaterPerUnit = 5.4; // From refined LCA calculations
+        totalProcessingWater += packagingWaterPerUnit * productionVolume;
       }
       
       return totalProcessingWater;
