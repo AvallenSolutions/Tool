@@ -746,7 +746,7 @@ export default function ReportBuilderPage() {
           </div>
         );
       case 'kpi_progress':
-        return <KPIProgressPreview />;
+        return <KPIProgressPreview block={block} onUpdate={handleBlockContentUpdate} isPreview={isPreview} />;
       case 'custom_text':
         return (
           <div className="bg-gray-50 p-4 rounded-lg">
