@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { Droplets, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Droplets, TrendingUp, AlertCircle, Factory, Sprout } from 'lucide-react';
 import { EditableTextBlock } from './EditableTextBlock';
 import type { ReportBlock } from '../../pages/report-builder';
 
@@ -31,10 +31,26 @@ interface MonthlyDataSummary {
   message: string;
 }
 
+interface ComprehensiveWaterFootprint {
+  total: number;
+  total_m3: number;
+  agricultural_water: number;
+  agricultural_water_m3: number;
+  processing_and_dilution_water: number;
+  processing_and_dilution_water_m3: number;
+  net_operational_water: number;
+  net_operational_water_m3: number;
+}
+
 export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: WaterFootprintPreviewProps) {
-  // Fetch monthly data summary for water usage
+  // Fetch monthly data summary for facility water usage
   const { data: monthlyData, isLoading: monthlyLoading } = useQuery<MonthlyDataSummary>({
     queryKey: ['/api/monthly-data-summary'],
+  });
+
+  // Fetch comprehensive water footprint (includes OpenLCA ingredients + packaging)
+  const { data: comprehensiveWater, isLoading: comprehensiveLoading } = useQuery<ComprehensiveWaterFootprint>({
+    queryKey: ['/api/company/water-footprint'],
   });
 
   // Function to update custom text in the block
@@ -51,7 +67,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
     });
   };
 
-  if (monthlyLoading) {
+  if (monthlyLoading || comprehensiveLoading) {
     return (
       <div className="space-y-4 animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-1/2"></div>
@@ -65,7 +81,7 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
     );
   }
 
-  if (!monthlyData?.hasMonthlyData || !monthlyData.aggregated) {
+  if (!comprehensiveWater?.total || comprehensiveWater.total === 0) {
     return (
       <div className="space-y-4">
         {/* Introduction Text Block */}
@@ -90,10 +106,10 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
           <AlertCircle className="mx-auto h-12 w-12 text-blue-400 mb-4" />
           <h3 className="text-lg font-semibold text-blue-700 mb-2">Water Data Collection Needed</h3>
           <p className="text-blue-600 mb-4">
-            Complete your monthly facility data to see detailed water footprint analysis.
+            Complete your product data and facility information to see comprehensive water footprint analysis.
           </p>
           <p className="text-sm text-blue-500">
-            Navigate to Monthly Facility Data to add your water usage information.
+            Add product ingredients and monthly facility data to generate your water footprint report.
           </p>
         </div>
 
@@ -118,57 +134,46 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
     );
   }
 
-  const { aggregated } = monthlyData;
+  // Calculate comprehensive water metrics
+  const totalWaterLiters = comprehensiveWater.total; // Already in liters
+  const facilityWaterLiters = comprehensiveWater.net_operational_water; // Facility operational water
+  const productWaterLiters = comprehensiveWater.agricultural_water + comprehensiveWater.processing_and_dilution_water; // Ingredients + packaging
   
-  // Calculate key metrics
-  const totalWaterLiters = aggregated.totalWaterM3 * 1000; // Convert m³ to liters
-  const monthlyAverageM3 = aggregated.monthCount > 0 ? aggregated.totalWaterM3 / aggregated.monthCount : 0;
-  const annualProjectionM3 = monthlyAverageM3 * 12;
-  const waterEfficiency = aggregated.totalProductionVolume > 0 ? 
-    (totalWaterLiters / aggregated.totalProductionVolume) : 0;
+  // Get facility production data for efficiency calculations
+  const facilityData = monthlyData?.aggregated;
+  const totalProductionVolume = facilityData?.totalProductionVolume || 1;
+  
+  // Calculate water efficiency metrics
+  const totalWaterEfficiency = totalWaterLiters / totalProductionVolume;
+  const facilityWaterEfficiency = facilityWaterLiters / totalProductionVolume;
+  const productWaterEfficiency = productWaterLiters / totalProductionVolume;
 
-  // Generate monthly trend data for chart
-  const generateTrendData = () => {
-    const data = [];
-    const startDate = new Date(aggregated.dateRange.start);
-    const endDate = new Date(aggregated.dateRange.end);
-    
-    for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
-      const monthKey = d.toISOString().slice(0, 7);
-      // Use average monthly consumption with slight variation for visualization
-      const baseConsumption = monthlyAverageM3;
-      const variation = Math.sin(d.getMonth() * 0.5) * 0.1; // Seasonal variation
-      const consumption = baseConsumption * (1 + variation);
-      
-      data.push({
-        month: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-        waterM3: Math.round(consumption * 10) / 10,
-        waterLiters: Math.round(consumption * 1000)
-      });
-    }
-    return data;
+  // Generate breakdown chart data for comprehensive water footprint
+  const generateBreakdownData = () => {
+    return [
+      {
+        category: 'Ingredients',
+        liters: comprehensiveWater.agricultural_water,
+        percentage: ((comprehensiveWater.agricultural_water / totalWaterLiters) * 100).toFixed(1)
+      },
+      {
+        category: 'Processing',
+        liters: comprehensiveWater.processing_and_dilution_water,
+        percentage: ((comprehensiveWater.processing_and_dilution_water / totalWaterLiters) * 100).toFixed(1)
+      },
+      {
+        category: 'Facility Operations',
+        liters: comprehensiveWater.net_operational_water,
+        percentage: ((comprehensiveWater.net_operational_water / totalWaterLiters) * 100).toFixed(1)
+      }
+    ];
   };
 
-  const trendData = generateTrendData();
+  const breakdownData = generateBreakdownData();
 
-  // Data quality indicator
-  const getQualityColor = (quality: string) => {
-    switch (quality) {
-      case 'high': return 'text-green-600 bg-green-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'low': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getQualityIcon = (quality: string) => {
-    switch (quality) {
-      case 'high': return <CheckCircle2 className="h-4 w-4" />;
-      case 'medium': return <AlertCircle className="h-4 w-4" />;
-      case 'low': return <AlertCircle className="h-4 w-4" />;
-      default: return <AlertCircle className="h-4 w-4" />;
-    }
-  };
+  // Calculate water source percentages
+  const facilityPercentage = ((facilityWaterLiters / totalWaterLiters) * 100).toFixed(1);
+  const productPercentage = ((productWaterLiters / totalWaterLiters) * 100).toFixed(1);
 
   return (
     <div className="space-y-6">
@@ -190,100 +195,99 @@ export function WaterFootprintPreview({ block, onUpdate, isPreview = false }: Wa
         </div>
       )}
 
-      {/* Key Water Metrics */}
+      {/* Comprehensive Water Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <div className="flex items-center gap-2 mb-2">
             <Droplets className="h-5 w-5 text-blue-600" />
-            <h4 className="font-semibold text-blue-700">Total Water Usage</h4>
+            <h4 className="font-semibold text-blue-700">Total Water Footprint</h4>
           </div>
           <p className="text-2xl font-bold text-blue-800">
             {totalWaterLiters.toLocaleString()} L
           </p>
           <p className="text-sm text-blue-600">
-            {aggregated.totalWaterM3.toFixed(1)} m³ over {aggregated.monthCount} months
+            {(totalWaterLiters / 1000).toFixed(1)} m³ annually
           </p>
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <h4 className="font-semibold text-blue-700">Water Efficiency</h4>
+            <Sprout className="h-5 w-5 text-green-600" />
+            <h4 className="font-semibold text-green-700">Product Water</h4>
           </div>
-          <p className="text-2xl font-bold text-blue-800">
-            {waterEfficiency.toFixed(1)} L/unit
+          <p className="text-2xl font-bold text-green-800">
+            {productWaterLiters.toLocaleString()} L
           </p>
-          <p className="text-sm text-blue-600">
-            Liters per production unit
+          <p className="text-sm text-green-600">
+            {productPercentage}% - Ingredients & packaging
           </p>
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
           <div className="flex items-center gap-2 mb-2">
-            <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${getQualityColor(aggregated.dataQuality)}`}>
-              {getQualityIcon(aggregated.dataQuality)}
-              <span className="capitalize">{aggregated.dataQuality} Quality</span>
-            </div>
+            <Factory className="h-5 w-5 text-slate-600" />
+            <h4 className="font-semibold text-slate-700">Facility Water</h4>
           </div>
-          <p className="text-2xl font-bold text-blue-800">
-            {((aggregated.monthCount / 12) * 100).toFixed(0)}%
+          <p className="text-2xl font-bold text-slate-800">
+            {facilityWaterLiters.toLocaleString()} L
           </p>
-          <p className="text-sm text-blue-600">
-            Data completeness ({aggregated.monthCount}/12 months)
+          <p className="text-sm text-slate-600">
+            {facilityPercentage}% - Operations
           </p>
         </div>
       </div>
 
-      {/* Water Usage Trend Chart */}
+      {/* Water Footprint Breakdown Chart */}
       <div className="bg-white p-6 rounded-lg border border-blue-200">
         <h4 className="font-semibold text-blue-700 mb-4 flex items-center gap-2">
           <Droplets className="h-5 w-5" />
-          Monthly Water Usage Trends
+          Water Footprint Breakdown
         </h4>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData}>
+            <BarChart data={breakdownData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e3f2fd" />
               <XAxis 
-                dataKey="month" 
+                dataKey="category" 
                 stroke="#1976d2"
                 fontSize={12}
               />
               <YAxis 
                 stroke="#1976d2"
                 fontSize={12}
-                label={{ value: 'Water Usage (m³)', angle: -90, position: 'insideLeft' }}
+                label={{ value: 'Water Usage (L)', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip 
                 formatter={(value: number, name: string) => [
-                  `${value} m³ (${(value * 1000).toLocaleString()} L)`,
+                  `${value.toLocaleString()} L`,
                   'Water Usage'
                 ]}
-                labelFormatter={(label) => `Month: ${label}`}
                 contentStyle={{
                   backgroundColor: '#e3f2fd',
                   border: '1px solid #1976d2',
                   borderRadius: '6px'
                 }}
               />
-              <Area 
-                type="monotone" 
-                dataKey="waterM3" 
-                stroke="#1976d2" 
-                fill="#bbdefb"
-                strokeWidth={2}
+              <Bar 
+                dataKey="liters" 
+                fill="#1976d2"
+                radius={[4, 4, 0, 0]}
               />
-            </AreaChart>
+            </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-          <div className="bg-blue-50 p-3 rounded">
-            <span className="font-medium text-blue-700">Monthly Average:</span>
-            <span className="text-blue-800 ml-2">{monthlyAverageM3.toFixed(1)} m³</span>
+        <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+          <div className="bg-green-50 p-3 rounded">
+            <span className="font-medium text-green-700">Ingredients:</span>
+            <span className="text-green-800 ml-2">{comprehensiveWater.agricultural_water.toLocaleString()} L</span>
           </div>
           <div className="bg-blue-50 p-3 rounded">
-            <span className="font-medium text-blue-700">Annual Projection:</span>
-            <span className="text-blue-800 ml-2">{annualProjectionM3.toFixed(0)} m³</span>
+            <span className="font-medium text-blue-700">Processing:</span>
+            <span className="text-blue-800 ml-2">{comprehensiveWater.processing_and_dilution_water.toLocaleString()} L</span>
+          </div>
+          <div className="bg-slate-50 p-3 rounded">
+            <span className="font-medium text-slate-700">Operations:</span>
+            <span className="text-slate-800 ml-2">{comprehensiveWater.net_operational_water.toLocaleString()} L</span>
           </div>
         </div>
       </div>
