@@ -35,7 +35,15 @@ const reportExportSchema = z.object({
       startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
       endDate: new Date().toISOString()
     }
-  })
+  }),
+  blocks: z.array(z.object({
+    id: z.string(),
+    type: z.string(),
+    title: z.string(),
+    content: z.any(),
+    order: z.number(),
+    isVisible: z.boolean()
+  })).optional()
 });
 
 type ReportExportRequest = z.infer<typeof reportExportSchema>;
@@ -227,7 +235,7 @@ async function generateReport(
     company,
     metricsData,
     templateOptions: config.templateOptions,
-    blocks: (config as any).blocks // Blocks from frontend Report Builder
+    blocks: config.blocks // Blocks from frontend Report Builder
   };
 
   switch (config.exportFormat) {
@@ -239,7 +247,7 @@ async function generateReport(
         try {
           const reportData = {
             title: config.templateOptions.customTitle || `${config.reportType.toUpperCase()} Report`,
-            blocks: (config as any).blocks,
+            blocks: config.blocks,
             templateOptions: config.templateOptions,
             generatedAt: new Date().toISOString(),
             exportFormat: 'pdf'
