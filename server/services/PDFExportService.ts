@@ -609,40 +609,40 @@ export class PDFExportService {
         
         // Executive Summary
         if (block.content?.customText?.executiveSummary) {
-          metricsSummaryHTML += `<div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6; color: #374151; line-height: 1.6;">${block.content.customText.executiveSummary}</div>`;
+          metricsSummaryHTML += `<div class="text-block-blue">${block.content.customText.executiveSummary}</div>`;
         }
         
         // Key Metrics - EXACT same formatting as preview
         metricsSummaryHTML += `
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 20px 0;">
-            <div style="text-align: center; padding: 20px; background: #f0fdf4; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #15803d;">
+          <div class="metrics-grid">
+            <div class="metric-card metric-card-green">
+              <div class="metric-value text-green-700">
                 ${totalCO2e.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
               </div>
-              <div style="font-size: 0.875rem; color: #6b7280;">tonnes CO₂e</div>
+              <div class="metric-label">tonnes CO₂e</div>
             </div>
-            <div style="text-align: center; padding: 20px; background: #dbeafe; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #1d4ed8;">
+            <div class="metric-card metric-card-blue">
+              <div class="metric-value text-blue-700">
                 ${(waterUsage / 1000000).toFixed(1)}M
               </div>
-              <div style="font-size: 0.875rem; color: #6b7280;">litres water</div>
+              <div class="metric-label">litres water</div>
             </div>
-            <div style="text-align: center; padding: 20px; background: #faf5ff; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #7c3aed;">
+            <div class="metric-card metric-card-purple">
+              <div class="metric-value text-purple-700">
                 ${wasteGenerated.toFixed(1)}
               </div>
-              <div style="font-size: 0.875rem; color: #6b7280;">tonnes waste</div>
+              <div class="metric-label">tonnes waste</div>
             </div>
           </div>`;
         
         // Data Analysis
         if (block.content?.customText?.dataAnalysis) {
-          metricsSummaryHTML += `<div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #22c55e; color: #374151; line-height: 1.6;">${block.content.customText.dataAnalysis}</div>`;
+          metricsSummaryHTML += `<div class="text-block-green">${block.content.customText.dataAnalysis}</div>`;
         }
         
         // Key Insights
         if (block.content?.customText?.keyInsights) {
-          metricsSummaryHTML += `<div style="background: #fefce8; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #eab308; color: #374151; line-height: 1.6;">${block.content.customText.keyInsights}</div>`;
+          metricsSummaryHTML += `<div class="text-block-yellow">${block.content.customText.keyInsights}</div>`;
         }
         
         metricsSummaryHTML += `</div>`;
@@ -688,23 +688,26 @@ export class PDFExportService {
         
         // Introduction
         if (block.content?.customText?.introduction) {
-          carbonFootprintHTML += `<div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6; color: #374151; line-height: 1.6;">${block.content.customText.introduction}</div>`;
+          carbonFootprintHTML += `<div class="text-block-blue">${block.content.customText.introduction}</div>`;
         }
         
         // Summary Cards with Visual Progress Bars - SAME logic as Preview
         carbonFootprintHTML += `
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 20px 0;">
-            <div style="text-align: center; padding: 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: bold; color: #dc2626;">${(scope1And2Total / 1000).toFixed(1)}</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Scope 1+2 (tonnes CO₂e)</div>
+          <div class="metrics-grid">
+            <div class="metric-card metric-card-red">
+              <div class="metric-value text-red-700">${(scope1And2Total / 1000).toFixed(1)}</div>
+              <div class="metric-label">Scope 1+2 (tonnes CO₂e)</div>
+              <div class="metric-sublabel">Direct + Energy emissions</div>
             </div>
-            <div style="text-align: center; padding: 20px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: bold; color: #d97706;">${(scope3EmissionsTotal / 1000).toFixed(1)}</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Scope 3 (tonnes CO₂e)</div>
+            <div class="metric-card metric-card-yellow">
+              <div class="metric-value text-yellow-700">${(scope3EmissionsTotal / 1000).toFixed(1)}</div>
+              <div class="metric-label">Scope 3 (tonnes CO₂e)</div>
+              <div class="metric-sublabel">Value chain emissions</div>
             </div>
-            <div style="text-align: center; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: bold; color: #15803d;">${(totalEmissionsKg / 1000).toFixed(1)}</div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Total (tonnes CO₂e)</div>
+            <div class="metric-card metric-card-green">
+              <div class="metric-value text-green-700">${(totalEmissionsKg / 1000).toFixed(1)}</div>
+              <div class="metric-label">Total (tonnes CO₂e)</div>
+              <div class="metric-sublabel">Complete footprint</div>
             </div>
           </div>`;
         
@@ -716,14 +719,14 @@ export class PDFExportService {
           
           if (adjustedIngredients > 0) {
             carbonFootprintHTML += `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9fafb; border-radius: 8px; margin-bottom: 10px;">
+              <div class="breakdown-card">
                 <div>
-                  <div style="font-weight: 500;">INGREDIENTS</div>
-                  <div style="font-size: 0.875rem; color: #6b7280;">Raw materials and agricultural inputs</div>
+                  <div class="breakdown-title">INGREDIENTS</div>
+                  <div class="breakdown-description">Raw materials and agricultural inputs</div>
                 </div>
-                <div style="text-align: right;">
-                  <div style="font-weight: 600;">${adjustedIngredients.toFixed(1)} t CO₂e</div>
-                  <div style="font-size: 0.875rem; color: #6b7280;">OpenLCA ecoinvent database</div>
+                <div class="breakdown-value">
+                  <div>${adjustedIngredients.toFixed(1)} t CO₂e</div>
+                  <div class="breakdown-source">OpenLCA ecoinvent database</div>
                 </div>
               </div>`;
           }
@@ -800,7 +803,7 @@ export class PDFExportService {
         
         // Analysis Section
         if (block.content?.customText?.analysis) {
-          carbonFootprintHTML += `<div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #22c55e; color: #374151; line-height: 1.6;">${block.content.customText.analysis}</div>`;
+          carbonFootprintHTML += `<div class="text-block-green">${block.content.customText.analysis}</div>`;
         }
         
         carbonFootprintHTML += `</div>`;
@@ -839,29 +842,29 @@ export class PDFExportService {
         
         // Introduction
         if (block.content?.customText?.introduction) {
-          waterUsageHTML += `<div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6; color: #374151; line-height: 1.6;">${block.content.customText.introduction}</div>`;
+          waterUsageHTML += `<div class="text-block-blue">${block.content.customText.introduction}</div>`;
         }
         
         // Key Metrics Cards
         waterUsageHTML += `
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 20px 0;">
-            <div style="text-align: center; padding: 20px; background: #dbeafe; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #1d4ed8;">
+          <div class="metrics-grid">
+            <div class="metric-card metric-card-blue">
+              <div class="metric-value text-blue-700">
                 ${(totalWaterL / 1000000).toFixed(1)}M
               </div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Total Water (L)</div>
+              <div class="metric-label">Total Water (L)</div>
             </div>
-            <div style="text-align: center; padding: 20px; background: #f0fdf4; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #15803d;">
+            <div class="metric-card metric-card-green">
+              <div class="metric-value text-green-700">
                 ${totalWaterM3.toFixed(0)}
               </div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Total Water (m³)</div>
+              <div class="metric-label">Total Water (m³)</div>
             </div>
-            <div style="text-align: center; padding: 20px; background: #faf5ff; border-radius: 8px;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #7c3aed;">
+            <div class="metric-card metric-card-purple">
+              <div class="metric-value text-purple-700">
                 ${monthlyData?.aggregated?.dataQuality || 'medium'}
               </div>
-              <div style="font-size: 0.875rem; color: #6b7280;">Data Quality</div>
+              <div class="metric-label">Data Quality</div>
             </div>
           </div>`;
         
@@ -922,7 +925,7 @@ export class PDFExportService {
         
         // Summary
         if (block.content?.customText?.summary) {
-          waterUsageHTML += `<div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #3b82f6; color: #374151; line-height: 1.6;">${block.content.customText.summary}</div>`;
+          waterUsageHTML += `<div class="text-block-blue">${block.content.customText.summary}</div>`;
         }
         
         waterUsageHTML += `</div>`;
