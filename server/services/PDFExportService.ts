@@ -568,8 +568,9 @@ export class PDFExportService {
           companyStoryHTML += `
             <h3 style="color: #22c55e; font-size: 1.3rem; margin: 20px 0 10px 0;">Strategic Pillars</h3>
             <ul style="color: #374151; line-height: 1.8; margin-left: 20px;">`;
-          companyStory.strategicPillars.forEach((pillar: string) => {
-            companyStoryHTML += `<li style="margin-bottom: 5px;">${pillar}</li>`;
+          companyStory.strategicPillars.forEach((pillar: any) => {
+            const pillarText = typeof pillar === 'string' ? pillar : (pillar.name || pillar.title || String(pillar));
+            companyStoryHTML += `<li style="margin-bottom: 5px;">${pillarText}</li>`;
           });
           companyStoryHTML += `</ul>`;
         }
@@ -845,26 +846,31 @@ export class PDFExportService {
           waterUsageHTML += `<div class="text-block-blue">${block.content.customText.introduction}</div>`;
         }
         
-        // Key Metrics Cards
+        // Key Metrics Cards - MATCH WaterFootprintPreview component
+        const productWaterL = agriculturalWaterL + processingWaterL;
+        const facilityWaterL = operationalWaterL;
+        const productPercentage = ((productWaterL / totalWaterL) * 100).toFixed(1);
+        const facilityPercentage = ((facilityWaterL / totalWaterL) * 100).toFixed(1);
+        
         waterUsageHTML += `
           <div class="metrics-grid">
             <div class="metric-card metric-card-blue">
               <div class="metric-value text-blue-700">
-                ${(totalWaterL / 1000000).toFixed(1)}M
+                ${(totalWaterL / 1000000).toFixed(1)}M L
               </div>
-              <div class="metric-label">Total Water (L)</div>
+              <div class="metric-label">Total Water Footprint</div>
             </div>
             <div class="metric-card metric-card-green">
               <div class="metric-value text-green-700">
-                ${totalWaterM3.toFixed(0)}
+                ${(productWaterL / 1000000).toFixed(1)}M L
               </div>
-              <div class="metric-label">Total Water (m³)</div>
+              <div class="metric-label">Ingredients & Packaging</div>
             </div>
-            <div class="metric-card metric-card-purple">
-              <div class="metric-value text-purple-700">
-                ${monthlyData?.aggregated?.dataQuality || 'medium'}
+            <div class="metric-card metric-card-slate">
+              <div class="metric-value text-slate-700">
+                ${(facilityWaterL / 1000000).toFixed(1)}M L
               </div>
-              <div class="metric-label">Data Quality</div>
+              <div class="metric-label">Facility Water</div>
             </div>
           </div>`;
         
@@ -900,6 +906,43 @@ export class PDFExportService {
               <div style="text-align: right;">
                 <div style="font-weight: 600;">${(operationalWaterL / 1000000).toFixed(1)}M L</div>
                 <div style="font-size: 0.875rem; color: #6b7280;">${((operationalWaterL / totalWaterL) * 100).toFixed(1)}% of total</div>
+              </div>
+            </div>
+          </div>`;
+        
+        // Water Footprint Breakdown Chart (visual placeholder)
+        waterUsageHTML += `
+          <h3 style="color: #1d4ed8; font-size: 1.3rem; margin: 30px 0 15px 0;">Water Footprint Breakdown</h3>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+              <div style="font-weight: 600; color: #1e293b;">Category</div>
+              <div style="font-weight: 600; color: #1e293b;">Water Usage</div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="color: #22c55e; font-weight: 500;">Ingredients</span>
+                <span style="color: #374151;">${(agriculturalWaterL / 1000000).toFixed(1)}M L</span>
+              </div>
+              <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
+                <div style="background: #22c55e; height: 8px; border-radius: 4px; width: ${((agriculturalWaterL / totalWaterL) * 100).toFixed(1)}%;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="color: #3b82f6; font-weight: 500;">Packaging</span>
+                <span style="color: #374151;">${(processingWaterL / 1000000).toFixed(1)}M L</span>
+              </div>
+              <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
+                <div style="background: #3b82f6; height: 8px; border-radius: 4px; width: ${((processingWaterL / totalWaterL) * 100).toFixed(1)}%;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="color: #64748b; font-weight: 500;">Facility Operations</span>
+                <span style="color: #374151;">${(operationalWaterL / 1000000).toFixed(1)}M L</span>
+              </div>
+              <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
+                <div style="background: #64748b; height: 8px; border-radius: 4px; width: ${((operationalWaterL / totalWaterL) * 100).toFixed(1)}%;"></div>
               </div>
             </div>
           </div>`;
