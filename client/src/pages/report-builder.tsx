@@ -574,6 +574,13 @@ export default function ReportBuilderPage() {
       return;
     }
 
+    // Prevent multiple clicks by checking if already exporting
+    if (isExporting) {
+      return;
+    }
+
+    setIsExporting(true);
+
     try {
       const exportData = {
         reportType: 'sustainability',
@@ -638,6 +645,8 @@ export default function ReportBuilderPage() {
         description: "Failed to generate report. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsExporting(false);
     }
   };
   const [currentTemplate, setCurrentTemplate] = useState<ReportTemplate | null>(null);
@@ -645,6 +654,7 @@ export default function ReportBuilderPage() {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [selectedAudience, setSelectedAudience] = useState<string>('stakeholders');
   const [activeTab, setActiveTab] = useState('builder');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch existing templates
   const { data: templates } = useQuery<ReportTemplate[]>({
@@ -927,13 +937,39 @@ export default function ReportBuilderPage() {
             Preview
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => handleExportReport('pdf')}>
-              <Download className="h-4 w-4 mr-2" />
-              Export PDF
+            <Button 
+              variant="outline" 
+              onClick={() => handleExportReport('pdf')}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export PDF
+                </>
+              )}
             </Button>
-            <Button variant="outline" onClick={() => handleExportReport('powerpoint')}>
-              <Download className="h-4 w-4 mr-2" />
-              PowerPoint
+            <Button 
+              variant="outline" 
+              onClick={() => handleExportReport('powerpoint')}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  PowerPoint
+                </>
+              )}
             </Button>
           </div>
         </div>
