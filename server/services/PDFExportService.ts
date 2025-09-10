@@ -166,20 +166,184 @@ export class PDFExportService {
             text-align: justify;
           }
           
+          /* Enhanced Grid Layouts - Match Tailwind grid-cols-3 */
           .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
-            margin: 30px 0;
+            margin: 20px 0;
           }
           
+          .breakdown-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+          }
+          
+          /* Metric Cards - Match Preview Styling Exactly */
           .metric-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
           }
+          
+          /* Color-specific metric cards to match Preview */
+          .metric-card-green {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+          }
+          
+          .metric-card-blue {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+          }
+          
+          .metric-card-purple {
+            background: #faf5ff;
+            border: 1px solid #c4b5fd;
+          }
+          
+          .metric-card-red {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+          }
+          
+          .metric-card-yellow {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+          }
+          
+          .metric-card-slate {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+          }
+          
+          /* Typography - Match Preview exactly */
+          .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          
+          .metric-value-large {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          
+          .metric-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+          }
+          
+          .metric-sublabel {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 2px;
+          }
+          
+          /* Color-specific text colors */
+          .text-green-700 { color: #15803d; }
+          .text-blue-700 { color: #1d4ed8; }
+          .text-purple-700 { color: #7c3aed; }
+          .text-red-700 { color: #dc2626; }
+          .text-yellow-700 { color: #a16207; }
+          .text-slate-700 { color: #374151; }
+          
+          /* Text Block Backgrounds - Match Preview */
+          .text-block-blue {
+            background: #dbeafe;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3b82f6;
+            color: #374151;
+            line-height: 1.6;
+          }
+          
+          .text-block-green {
+            background: #f0fdf4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #22c55e;
+            color: #374151;
+            line-height: 1.6;
+          }
+          
+          .text-block-yellow {
+            background: #fefce8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #eab308;
+            color: #374151;
+            line-height: 1.6;
+          }
+          
+          /* Breakdown Cards */
+          .breakdown-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+          }
+          
+          .breakdown-title {
+            font-weight: 500;
+            margin-bottom: 3px;
+          }
+          
+          .breakdown-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+          }
+          
+          .breakdown-value {
+            font-weight: 600;
+            text-align: right;
+          }
+          
+          .breakdown-source {
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-align: right;
+          }
+          
+          /* Progress Elements */
+          .progress-bar-bg {
+            width: 100%;
+            background: #e5e7eb;
+            border-radius: 4px;
+            height: 8px;
+            margin-bottom: 10px;
+          }
+          
+          .progress-bar-fill {
+            height: 8px;
+            border-radius: 4px;
+          }
+          
+          /* Status Badges */
+          .status-badge {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            color: white;
+          }
+          
+          .status-on-track { background: #15803d; }
+          .status-at-risk { background: #ca8a04; }
+          .status-behind { background: #dc2626; }
+          .status-achieved { background: #1d4ed8; }
           
           .metric-card h3 {
             font-size: 0.9rem;
