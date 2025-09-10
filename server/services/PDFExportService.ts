@@ -924,7 +924,7 @@ export class PDFExportService {
                 <span style="color: #374151;">${(agriculturalWaterL / 1000000).toFixed(1)}M L</span>
               </div>
               <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
-                <div style="background: #22c55e; height: 8px; border-radius: 4px; width: ${((agriculturalWaterL / totalWaterL) * 100).toFixed(1)}%;"></div>
+                <div style="background: #22c55e; height: 8px; border-radius: 4px; width: ${totalWaterL > 0 ? ((agriculturalWaterL / totalWaterL) * 100).toFixed(1) : 0}%;"></div>
               </div>
             </div>
             <div style="margin-bottom: 10px;">
@@ -933,7 +933,7 @@ export class PDFExportService {
                 <span style="color: #374151;">${(processingWaterL / 1000000).toFixed(1)}M L</span>
               </div>
               <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
-                <div style="background: #3b82f6; height: 8px; border-radius: 4px; width: ${((processingWaterL / totalWaterL) * 100).toFixed(1)}%;"></div>
+                <div style="background: #3b82f6; height: 8px; border-radius: 4px; width: ${totalWaterL > 0 ? ((processingWaterL / totalWaterL) * 100).toFixed(1) : 0}%;"></div>
               </div>
             </div>
             <div style="margin-bottom: 10px;">
@@ -942,7 +942,7 @@ export class PDFExportService {
                 <span style="color: #374151;">${(operationalWaterL / 1000000).toFixed(1)}M L</span>
               </div>
               <div style="background: #e5e7eb; height: 8px; border-radius: 4px;">
-                <div style="background: #64748b; height: 8px; border-radius: 4px; width: ${((operationalWaterL / totalWaterL) * 100).toFixed(1)}%;"></div>
+                <div style="background: #64748b; height: 8px; border-radius: 4px; width: ${totalWaterL > 0 ? ((operationalWaterL / totalWaterL) * 100).toFixed(1) : 0}%;"></div>
               </div>
             </div>
           </div>`;
