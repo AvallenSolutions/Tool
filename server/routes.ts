@@ -9991,7 +9991,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     }
   });
 
-  // Report Template Management
+  // Report Template Management (Enhanced for Draft/Published workflow)
   app.post('/api/report-templates', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
@@ -10006,12 +10006,18 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         return res.status(404).json({ error: 'Company not found' });
       }
 
-      // Store template in database (using customReports table for now)
+      // Store template in database with draft/published status support
       const { customReports } = await import('@shared/schema');
       const templateData = {
         companyId: company.id,
-        reportTitle: req.body.templateName,
-        reportLayout: req.body // Store entire template structure
+        reportTitle: req.body.templateName || req.body.reportTitle || 'Untitled Report',
+        reportLayout: req.body, // Store entire template structure
+        status: req.body.status || 'draft', // Support draft/published status
+        reportContent: req.body.reportContent || {},
+        selectedInitiatives: req.body.selectedInitiatives || [],
+        selectedKPIs: req.body.selectedKPIs || [],
+        uploadedImages: req.body.uploadedImages || {},
+        reportType: req.body.reportType || 'dynamic'
       };
 
       const [result] = await db.insert(customReports).values(templateData).returning();
@@ -10037,19 +10043,41 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
       }
 
       const { customReports } = await import('@shared/schema');
+      const { sql } = await import('drizzle-orm');
+      
+      // Support status filtering via query parameter
+      const statusFilter = req.query.status as string;
+      let conditions = eq(customReports.companyId, company.id);
+      
+      if (statusFilter && (statusFilter === 'draft' || statusFilter === 'published')) {
+        conditions = and(
+          eq(customReports.companyId, company.id),
+          eq(customReports.status, statusFilter)
+        );
+      }
+
       const templates = await db
         .select()
         .from(customReports)
-        .where(eq(customReports.companyId, company.id))
-        .orderBy(desc(customReports.createdAt));
+        .where(conditions)
+        .orderBy(desc(sql`coalesce(${customReports.lastSaved}, ${customReports.createdAt})`));
 
-      // Transform to expected format
+      // Transform to expected format with enhanced fields
       const formattedTemplates = templates.map(template => ({
         id: template.id,
         companyId: template.companyId,
         templateName: template.reportTitle,
+        reportTitle: template.reportTitle,
+        status: template.status,
+        isDraft: template.status === 'draft',
+        lastSaved: template.lastSaved,
         audienceType: (template.reportLayout as any)?.audienceType || 'stakeholders',
         blocks: (template.reportLayout as any)?.blocks || [],
+        reportContent: template.reportContent || {},
+        selectedInitiatives: template.selectedInitiatives || [],
+        selectedKPIs: template.selectedKPIs || [],
+        uploadedImages: template.uploadedImages || {},
+        reportLayout: template.reportLayout,
         createdAt: template.createdAt,
         updatedAt: template.updatedAt
       }));
@@ -10058,6 +10086,69 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     } catch (error) {
       console.error('Error fetching report templates:', error);
       res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Auto-Save Draft Report (for frequent saves without validation)
+  app.put('/api/report-templates/:id/autosave', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      const reportId = req.params.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const company = await dbStorage.getCompanyByOwner(userId);
+      if (!company) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const { customReports } = await import('@shared/schema');
+      
+      // Verify the report belongs to the user's company
+      const [existingReport] = await db
+        .select()
+        .from(customReports)
+        .where(and(eq(customReports.id, reportId), eq(customReports.companyId, company.id)));
+
+      if (!existingReport) {
+        return res.status(404).json({ error: 'Report not found or access denied' });
+      }
+
+      // Auto-save with current timestamp (minimal validation for frequent saves)
+      const updateData: any = {
+        lastSaved: new Date(),
+        status: req.body.status || 'draft'
+      };
+
+      // Update fields if provided
+      if (req.body.reportTitle) updateData.reportTitle = req.body.reportTitle;
+      if (req.body.reportContent) updateData.reportContent = req.body.reportContent;
+      if (req.body.reportLayout) updateData.reportLayout = req.body.reportLayout;
+      if (req.body.selectedInitiatives) updateData.selectedInitiatives = req.body.selectedInitiatives;
+      if (req.body.selectedKPIs) updateData.selectedKPIs = req.body.selectedKPIs;
+      if (req.body.uploadedImages) updateData.uploadedImages = req.body.uploadedImages;
+
+      const [result] = await db
+        .update(customReports)
+        .set(updateData)
+        .where(and(
+          eq(customReports.id, reportId),
+          eq(customReports.companyId, company.id)
+        ))
+        .returning();
+
+      res.json({ 
+        success: true, 
+        message: 'Draft auto-saved successfully',
+        lastSaved: result.lastSaved,
+        status: result.status
+      });
+    } catch (error) {
+      console.error('Error auto-saving draft:', error);
+      res.status(500).json({ error: 'Auto-save failed' });
     }
   });
 
@@ -10147,7 +10238,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // Get all reports for the authenticated user's company
+  // Get all reports for the authenticated user's company (includes dynamic reports)
   app.get('/api/reports', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
@@ -10163,15 +10254,58 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         return res.status(404).json({ error: 'User company not found' });
       }
 
-      const { reports } = await import('@shared/schema');
+      const { reports, customReports } = await import('@shared/schema');
       
-      const userReports = await db
+      // Get traditional reports
+      const traditionalReports = await db
         .select()
         .from(reports)
         .where(eq(reports.companyId, company.id))
         .orderBy(desc(reports.createdAt));
 
-      res.json(userReports);
+      // Get dynamic reports (published only for main listing, or include drafts based on query param)
+      const includeDrafts = req.query.includeDrafts === 'true';
+      
+      let dynamicReportsConditions = eq(customReports.companyId, company.id);
+      
+      // Filter by status if not including drafts
+      if (!includeDrafts) {
+        dynamicReportsConditions = and(
+          eq(customReports.companyId, company.id),
+          eq(customReports.status, 'published')
+        );
+      }
+      
+      const dynamicReports = await db
+        .select()
+        .from(customReports)
+        .where(dynamicReportsConditions)
+        .orderBy(desc(customReports.createdAt));
+
+      // Transform dynamic reports to match traditional report structure
+      const formattedDynamicReports = dynamicReports.map(report => ({
+        id: report.id,
+        companyId: report.companyId,
+        reportType: 'dynamic',
+        reportTitle: report.reportTitle,
+        reportContent: report.reportContent || {},
+        status: report.status,
+        isDraft: report.status === 'draft',
+        createdAt: report.createdAt,
+        updatedAt: report.updatedAt,
+        lastSaved: report.lastSaved,
+        // Additional dynamic report fields
+        selectedInitiatives: report.selectedInitiatives || [],
+        selectedKPIs: report.selectedKPIs || [],
+        uploadedImages: report.uploadedImages || {},
+        reportLayout: report.reportLayout
+      }));
+
+      // Combine and sort all reports by creation date
+      const allReports = [...traditionalReports, ...formattedDynamicReports]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      res.json(allReports);
     } catch (error) {
       console.error('Error fetching reports:', error);
       res.status(500).json({ error: 'Internal server error' });
