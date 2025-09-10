@@ -199,6 +199,7 @@ export class WaterFootprintService {
       
       for (const product of companyProducts) {
         const productionVolume = Number(product.annualProductionVolume) || 0;
+        console.log(`💧 Processing Product: ID ${product.id}, Production Volume: ${productionVolume}`);
         
         // Calculate water dilution if specified
         if (product.waterDilution) {
@@ -208,8 +209,16 @@ export class WaterFootprintService {
               : product.waterDilution;
             
             if (dilutionData?.amount) {
-              const dilutionAmount = Number(dilutionData.amount);
-              totalProcessingWater += dilutionAmount * productionVolume;
+              let dilutionAmount = Number(dilutionData.amount);
+              
+              // Convert to liters based on unit
+              if (dilutionData.unit === 'ml') {
+                dilutionAmount = dilutionAmount / 1000; // Convert ml to L
+              }
+              
+              const dilutionWater = dilutionAmount * productionVolume;
+              totalProcessingWater += dilutionWater;
+              console.log(`💧 Water dilution: ${dilutionAmount}L × ${productionVolume} = ${dilutionWater}L`);
             }
           } catch (error) {
             console.error('Error parsing water dilution data:', error);
@@ -218,8 +227,12 @@ export class WaterFootprintService {
         
         // Use realistic packaging water estimate only (5.4L per unit from comprehensive LCA)
         const packagingWaterPerUnit = 5.4; // From refined LCA calculations
-        totalProcessingWater += packagingWaterPerUnit * productionVolume;
+        const packagingWater = packagingWaterPerUnit * productionVolume;
+        totalProcessingWater += packagingWater;
+        console.log(`💧 Packaging water: ${packagingWaterPerUnit}L × ${productionVolume} = ${packagingWater}L`);
       }
+      
+      console.log(`💧 FIXED Total Processing Water: ${totalProcessingWater}L`);
       
       return totalProcessingWater;
     } catch (error) {
