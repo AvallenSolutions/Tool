@@ -99,7 +99,7 @@ export class PowerPointExportService {
   /**
    * Create title slide
    */
-  private static createTitleSlide(pptx: pptxgen, options: any): void {
+  private static createTitleSlide(pptx: PptxGenJS, options: any): void {
     const slide = pptx.addSlide();
     
     // Background gradient
@@ -174,7 +174,7 @@ export class PowerPointExportService {
   /**
    * Create slide for a specific block
    */
-  private static createBlockSlide(pptx: pptxgen, block: any, metricsData: any, theme: any): void {
+  private static createBlockSlide(pptx: PptxGenJS, block: any, metricsData: any, theme: any): void {
     const slide = pptx.addSlide();
     
     // Header
@@ -465,7 +465,7 @@ export class PowerPointExportService {
   /**
    * Create default slides when no blocks provided
    */
-  private static createDefaultSlides(pptx: pptxgen, metricsData: any, theme: any): void {
+  private static createDefaultSlides(pptx: PptxGenJS, metricsData: any, theme: any): void {
     // Executive Summary slide
     const summarySlide = pptx.addSlide();
     summarySlide.addText('Executive Summary', {
@@ -497,7 +497,7 @@ export class PowerPointExportService {
   /**
    * Create summary slide
    */
-  private static createSummarySlide(pptx: pptxgen, metricsData: any, theme: any): void {
+  private static createSummarySlide(pptx: PptxGenJS, metricsData: any, theme: any): void {
     const slide = pptx.addSlide();
     
     // Background with subtle gradient
