@@ -37,14 +37,14 @@ export class PowerPointExportService {
       pptx.subject = `Sustainability Report - ${company.companyName}`;
       pptx.title = templateOptions.customTitle || `${reportType.toUpperCase()} Report`;
       
-      // Define theme colors (green to blue gradient theme)
+      // Define theme colors (green to blue gradient theme) with proper hex format
       const theme = {
-        primary: '22C55E',    // Green
-        secondary: '3B82F6',  // Blue
-        accent: '8B5CF6',     // Purple
-        text: '374151',       // Dark gray
-        light: 'F8FAFC',      // Light gray
-        white: 'FFFFFF'
+        primary: '#22C55E',    // Green
+        secondary: '#3B82F6',  // Blue
+        accent: '#8B5CF6',     // Purple
+        text: '#374151',       // Dark gray
+        light: '#F8FAFC',      // Light gray
+        white: '#FFFFFF'
       };
       
       // Create title slide
