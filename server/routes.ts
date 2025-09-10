@@ -2271,19 +2271,22 @@ Be precise and quote actual text from the content, not generic terms.`;
           console.log(`🏭 YOUR PRODUCT METHOD: Per unit: ${facilityImpacts.co2e.toFixed(3)}kg CO2e ÷ ${totalCompanyUnits.toLocaleString()} units`);
         }
         
-        // Water consumption (keep existing logic for water)
-        const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
-        for (const facility of facilities) {
-          const totalFacilityWater = 
-            (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
-            (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
-            (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
+        // Water consumption - Use SAME source as company-level (MonthlyDataAggregationService)
+        try {
+          const monthlyService = new MonthlyDataAggregationService();
+          const aggregatedData = await monthlyService.aggregateMonthlyData(product.companyId);
           
-          if (totalFacilityWater > 0) {
-            const waterPerUnit = totalFacilityWater / totalCompanyUnits;
-            facilityImpacts.water += waterPerUnit;
-            console.log(`💧 PRODUCT WATER: ${totalFacilityWater.toFixed(0)}L/year ÷ ${totalCompanyUnits.toLocaleString()} units = ${waterPerUnit.toFixed(1)}L per unit`);
+          // Convert from m³ to liters (same as company-level calculation)
+          const totalCompanyFacilityWater = aggregatedData.totalWaterM3 * 1000;
+          
+          if (totalCompanyFacilityWater > 0) {
+            const waterPerUnit = totalCompanyFacilityWater / totalCompanyUnits;
+            facilityImpacts.water = waterPerUnit; // Set directly, not +=
+            console.log(`💧 FIXED PRODUCT WATER: ${totalCompanyFacilityWater.toLocaleString()}L/year ÷ ${totalCompanyUnits.toLocaleString()} units = ${waterPerUnit.toFixed(1)}L per unit`);
+            console.log(`💧 VERIFICATION: ${waterPerUnit.toFixed(1)}L × ${totalCompanyUnits.toLocaleString()} = ${(waterPerUnit * totalCompanyUnits).toLocaleString()}L (should equal company total)`);
           }
+        } catch (error) {
+          console.error('Error calculating facility water using MonthlyDataAggregationService:', error);
         }
       } catch (error) {
         console.error('Error calculating facility impacts using your product method:', error);
@@ -4244,16 +4247,23 @@ Be precise and quote actual text from the content, not generic terms.`;
                 console.log(`🔥 Facility gas: ${gasM3}m³/year = ${co2eFromGas.toFixed(3)}kg CO2e per unit`);
               }
               
-              // Water consumption
-              const totalFacilityWater = 
-                (facility.totalProcessWaterLitersPerYear ? parseFloat(facility.totalProcessWaterLitersPerYear) : 0) +
-                (facility.totalCleaningWaterLitersPerYear ? parseFloat(facility.totalCleaningWaterLitersPerYear) : 0) +
-                (facility.totalCoolingWaterLitersPerYear ? parseFloat(facility.totalCoolingWaterLitersPerYear) : 0);
-              
-              if (totalFacilityWater > 0) {
-                const waterPerUnit = totalFacilityWater / annualProduction;
-                facilityImpacts.water += waterPerUnit;
-                console.log(`💧 Facility water: ${totalFacilityWater.toFixed(0)}L/year = ${waterPerUnit.toFixed(1)}L per unit`);
+              // Water consumption - Use MonthlyDataAggregationService for consistency
+              try {
+                const monthlyService = new MonthlyDataAggregationService();
+                const aggregatedData = await monthlyService.aggregateMonthlyData(product.companyId);
+                const totalCompanyFacilityWater = aggregatedData.totalWaterM3 * 1000; // Convert m³ to L
+                
+                // Get total company production units for proper allocation
+                const allCompanyProducts = await dbStorage.getProductsByCompany(product.companyId);
+                const totalCompanyUnits = allCompanyProducts.reduce((total, p) => total + Number(p.annualProductionVolume || 0), 0);
+                
+                if (totalCompanyFacilityWater > 0 && totalCompanyUnits > 0) {
+                  const waterPerUnit = totalCompanyFacilityWater / totalCompanyUnits;
+                  facilityImpacts.water = waterPerUnit; // Set directly to avoid double-counting across facilities
+                  console.log(`💧 COMPREHENSIVE FIXED WATER: ${totalCompanyFacilityWater.toLocaleString()}L/year ÷ ${totalCompanyUnits.toLocaleString()} units = ${waterPerUnit.toFixed(1)}L per unit`);
+                }
+              } catch (error) {
+                console.error('Error calculating facility water using MonthlyDataAggregationService in comprehensive endpoint:', error);
               }
               
               // Production waste footprint
