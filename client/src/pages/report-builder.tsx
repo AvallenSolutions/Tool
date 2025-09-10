@@ -564,7 +564,7 @@ export default function ReportBuilderPage() {
   const queryClient = useQueryClient();
   
   // Export report using new Report Builder API
-  const handleExportReport = async (format: 'pdf' | 'powerpoint' | 'web') => {
+  const handleExportReport = async (format: 'pdf' | 'powerpoint') => {
     if (!currentTemplate) {
       toast({
         title: "Error",
@@ -608,21 +608,12 @@ export default function ReportBuilderPage() {
           description: `Your ${format} report has been generated successfully`
         });
         
-        if (format === 'web' && result.data.html) {
-          // Open web report in new tab
-          const newWindow = window.open('', '_blank');
-          if (newWindow) {
-            newWindow.document.write(result.data.html);
-            newWindow.document.close();
-          }
-        } else {
-          // Handle PDF/PowerPoint download (placeholder for now)
-          console.log('Download URL:', result.data.downloadUrl);
-          toast({
-            title: "Download Ready",
-            description: `Your ${format} report is ready for download`
-          });
-        }
+        // Handle PDF/PowerPoint download (placeholder for now)
+        console.log('Download URL:', result.data.downloadUrl);
+        toast({
+          title: "Download Ready",
+          description: `Your ${format} report is ready for download`
+        });
       } else {
         throw new Error('Export failed');
       }
@@ -929,10 +920,6 @@ export default function ReportBuilderPage() {
             <Button variant="outline" onClick={() => handleExportReport('powerpoint')}>
               <Download className="h-4 w-4 mr-2" />
               PowerPoint
-            </Button>
-            <Button variant="outline" onClick={() => handleExportReport('web')}>
-              <Eye className="h-4 w-4 mr-2" />
-              Web Preview
             </Button>
           </div>
         </div>
