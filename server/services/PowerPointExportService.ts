@@ -240,16 +240,28 @@ export class PowerPointExportService {
         PowerPointExportService.createTitleBlockSlide(slide, block, theme);
         break;
       case 'metrics':
+      case 'metrics_summary':
         PowerPointExportService.createMetricsBlockSlide(slide, block, metricsData, theme);
         break;
       case 'chart':
-        PowerPointExportService.createChartBlockSlide(slide, block, theme);
+      case 'carbon_footprint':
+        PowerPointExportService.createCarbonFootprintSlide(slide, block, metricsData, theme);
         break;
       case 'text':
-        PowerPointExportService.createTextBlockSlide(slide, block, theme);
+      case 'company_story':
+        PowerPointExportService.createCompanyStorySlide(slide, block, metricsData, theme);
         break;
       case 'editable_text':
         PowerPointExportService.createEditableTextBlockSlide(slide, block, theme);
+        break;
+      case 'initiatives':
+        PowerPointExportService.createInitiativesSlide(slide, block, metricsData, theme);
+        break;
+      case 'kpi_progress':
+        PowerPointExportService.createKPIProgressSlide(slide, block, metricsData, theme);
+        break;
+      case 'water_usage':
+        PowerPointExportService.createWaterUsageSlide(slide, block, metricsData, theme);
         break;
       default:
         PowerPointExportService.createDefaultBlockSlide(slide, block, theme);
@@ -482,6 +494,169 @@ export class PowerPointExportService {
     }
   }
   
+  /**
+   * Create company story slide
+   */
+  private static createCompanyStorySlide(slide: any, block: any, metricsData: any, theme: any): void {
+    const story = block.content?.text || 
+      `${metricsData.company?.companyName || 'Our Company'} is committed to sustainability excellence. ` +
+      `We produce ${metricsData.products?.length || 0} products with a focus on environmental responsibility and ` +
+      `transparent reporting. Our journey towards sustainability involves continuous improvement across all operations.`;
+    
+    slide.addText(String(story), {
+      x: 0.5,
+      y: 2.5,
+      w: 9,
+      h: 4,
+      fontSize: 16,
+      fontFace: 'Inter',
+      color: String(theme.text),
+      align: 'left',
+      valign: 'top'
+    });
+  }
+
+  /**
+   * Create carbon footprint slide
+   */
+  private static createCarbonFootprintSlide(slide: any, block: any, metricsData: any, theme: any): void {
+    const footprint = metricsData.footprint || {};
+    
+    // Main carbon footprint value
+    slide.addText(String(`${(footprint.totalEmissionsKg / 1000).toFixed(1) || '0'} tonnes CO₂e`), {
+      x: 2,
+      y: 3,
+      w: 6,
+      h: 1.5,
+      fontSize: 36,
+      fontFace: 'Inter',
+      color: String(theme.primary),
+      bold: true,
+      align: 'center'
+    });
+    
+    // Breakdown text
+    const breakdown = `
+    Scope 1 + 2: ${((footprint.scope1And2Total || 0) / 1000).toFixed(1)} tonnes
+    Scope 3: ${((footprint.scope3EmissionsTotal || 0) / 1000).toFixed(1)} tonnes
+    `;
+    
+    slide.addText(String(breakdown), {
+      x: 0.5,
+      y: 5,
+      w: 9,
+      h: 1.5,
+      fontSize: 14,
+      fontFace: 'Inter',
+      color: String(theme.text),
+      align: 'center'
+    });
+  }
+
+  /**
+   * Create initiatives slide
+   */
+  private static createInitiativesSlide(slide: any, block: any, metricsData: any, theme: any): void {
+    const initiatives = block.content?.initiatives || [
+      'Renewable energy transition',
+      'Waste reduction programs', 
+      'Sustainable packaging solutions',
+      'Carbon offset initiatives'
+    ];
+    
+    const content = initiatives.map((init: string, index: number) => 
+      `${index + 1}. ${init}`
+    ).join('\n\n');
+    
+    slide.addText(String(content), {
+      x: 0.5,
+      y: 2.5,
+      w: 9,
+      h: 4,
+      fontSize: 16,
+      fontFace: 'Inter',
+      color: String(theme.text),
+      align: 'left',
+      valign: 'top'
+    });
+  }
+
+  /**
+   * Create KPI progress slide
+   */
+  private static createKPIProgressSlide(slide: any, block: any, metricsData: any, theme: any): void {
+    const kpis = metricsData.kpis || [];
+    
+    if (kpis.length > 0) {
+      const content = kpis.slice(0, 4).map((kpi: any) => 
+        `${kpi.name}: ${kpi.currentValue || '0'} ${kpi.unit || ''} (Target: ${kpi.targetValue || '0'} ${kpi.unit || ''})`
+      ).join('\n\n');
+      
+      slide.addText(String(content), {
+        x: 0.5,
+        y: 2.5,
+        w: 9,
+        h: 4,
+        fontSize: 16,
+        fontFace: 'Inter',
+        color: String(theme.text),
+        align: 'left',
+        valign: 'top'
+      });
+    } else {
+      slide.addText('KPI tracking system enables measurement of sustainability progress across key performance indicators.', {
+        x: 0.5,
+        y: 3,
+        w: 9,
+        h: 2,
+        fontSize: 16,
+        fontFace: 'Inter',
+        color: String(theme.text),
+        align: 'center',
+        valign: 'middle'
+      });
+    }
+  }
+
+  /**
+   * Create water usage slide
+   */
+  private static createWaterUsageSlide(slide: any, block: any, metricsData: any, theme: any): void {
+    const waterData = metricsData.waterFootprint || {};
+    const totalWater = waterData.totalWaterUsage || 0;
+    
+    // Main water usage value
+    slide.addText(String(`${(totalWater / 1000000).toFixed(1)} million liters`), {
+      x: 2,
+      y: 3,
+      w: 6,
+      h: 1.5,
+      fontSize: 36,
+      fontFace: 'Inter',
+      color: String(theme.primary),
+      bold: true,
+      align: 'center'
+    });
+    
+    // Water usage breakdown
+    const breakdown = waterData.breakdown ? 
+      Object.entries(waterData.breakdown)
+        .map(([key, value]: [string, any]) => `${key}: ${((value || 0) / 1000000).toFixed(1)}M L`)
+        .join('\n') :
+      'Comprehensive water footprint analysis across operations and products';
+    
+    slide.addText(String(breakdown), {
+      x: 0.5,
+      y: 5,
+      w: 9,
+      h: 1.5,
+      fontSize: 14,
+      fontFace: 'Inter',
+      color: String(theme.text),
+      align: 'center'
+    });
+  }
+
   /**
    * Create default block slide
    */
