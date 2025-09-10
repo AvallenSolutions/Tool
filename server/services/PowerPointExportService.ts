@@ -148,7 +148,7 @@ export class PowerPointExportService {
     slide.background = {
       fill: {
         type: 'gradient',
-        colors: [`${options.theme.primary}`, `${options.theme.secondary}`],
+        colors: [String(options.theme.primary), String(options.theme.secondary)],
         dir: 45
       }
     };
@@ -161,7 +161,7 @@ export class PowerPointExportService {
       h: 1.5,
       fontSize: 36,
       fontFace: 'Inter',
-      color: options.theme.white,
+      color: String(options.theme.white),
       bold: true,
       align: 'center'
     });
@@ -174,7 +174,7 @@ export class PowerPointExportService {
       h: 0.8,
       fontSize: 24,
       fontFace: 'Inter',
-      color: options.theme.white,
+      color: String(options.theme.white),
       align: 'center'
     });
     
@@ -186,7 +186,7 @@ export class PowerPointExportService {
       h: 0.5,
       fontSize: 16,
       fontFace: 'Inter',
-      color: options.theme.white,
+      color: String(options.theme.white),
       align: 'center'
     });
     
@@ -196,8 +196,8 @@ export class PowerPointExportService {
       y: 0.5,
       w: 1.5,
       h: 1.5,
-      fill: { color: options.theme.white },
-      line: { color: options.theme.white, width: 2 }
+      fill: { color: String(options.theme.white) },
+      line: { color: String(options.theme.white), width: 2 }
     });
     
     slide.addText('LOGO', {
@@ -207,7 +207,7 @@ export class PowerPointExportService {
       h: 1.5,
       fontSize: 12,
       fontFace: 'Inter',
-      color: options.theme.primary,
+      color: String(options.theme.primary),
       align: 'center',
       valign: 'middle'
     });
@@ -227,7 +227,7 @@ export class PowerPointExportService {
       h: 0.8,
       fontSize: 28,
       fontFace: 'Inter',
-      color: theme.primary,
+      color: String(theme.primary),
       bold: true
     });
     
@@ -237,7 +237,7 @@ export class PowerPointExportService {
       y: 1.4,
       w: 9,
       h: 0,
-      line: { color: theme.secondary, width: 3 }
+      line: { color: String(theme.secondary), width: 3 }
     });
     
     switch (block.type) {
@@ -289,8 +289,8 @@ export class PowerPointExportService {
         y,
         w: cardWidth,
         h: cardHeight,
-        fill: { color: theme.light },
-        line: { color: theme.secondary, width: 1 }
+        fill: { color: String(theme.light) },
+        line: { color: String(theme.secondary), width: 1 }
       });
       
       // Metric value
@@ -301,7 +301,7 @@ export class PowerPointExportService {
         h: 0.8,
         fontSize: 32,
         fontFace: 'Inter',
-        color: theme.primary,
+        color: String(theme.primary),
         bold: true,
         align: 'center'
       });
@@ -314,7 +314,7 @@ export class PowerPointExportService {
         h: 0.3,
         fontSize: 12,
         fontFace: 'Inter',
-        color: theme.text,
+        color: String(theme.text),
         align: 'center'
       });
       
@@ -326,7 +326,7 @@ export class PowerPointExportService {
         h: 0.4,
         fontSize: 14,
         fontFace: 'Inter',
-        color: theme.text,
+        color: String(theme.text),
         bold: true,
         align: 'center'
       });
@@ -343,8 +343,8 @@ export class PowerPointExportService {
       y: 2.5,
       w: 8,
       h: 4,
-      fill: { color: theme.light },
-      line: { color: theme.secondary, width: 2, dashType: 'dash' }
+      fill: { color: String(theme.light) },
+      line: { color: String(theme.secondary), width: 2, dashType: 'dash' }
     });
     
     slide.addText('Chart visualization will be displayed here', {
@@ -354,7 +354,7 @@ export class PowerPointExportService {
       h: 0.5,
       fontSize: 16,
       fontFace: 'Inter',
-      color: theme.text,
+      color: String(theme.text),
       align: 'center',
       italic: true
     });
@@ -366,7 +366,7 @@ export class PowerPointExportService {
       h: 0.5,
       fontSize: 20,
       fontFace: 'Inter',
-      color: theme.primary,
+      color: String(theme.primary),
       bold: true,
       align: 'center'
     });
@@ -385,7 +385,7 @@ export class PowerPointExportService {
       h: 4.5,
       fontSize: 16,
       fontFace: 'Inter',
-      color: theme.text,
+      color: String(theme.text),
       align: 'left',
       valign: 'top'
     });
@@ -449,7 +449,7 @@ export class PowerPointExportService {
       h: 4.5,
       fontSize: fontSize,
       fontFace: 'Inter',
-      color: theme.text,
+      color: String(theme.text),
       align: align,
       valign: 'top',
       bold: bold,
@@ -468,7 +468,7 @@ export class PowerPointExportService {
       h: 1.5,
       fontSize: 36,
       fontFace: 'Inter',
-      color: theme.primary,
+      color: String(theme.primary),
       bold: true,
       align: 'center'
     });
@@ -481,7 +481,7 @@ export class PowerPointExportService {
         h: 0.8,
         fontSize: 20,
         fontFace: 'Inter',
-        color: theme.text,
+        color: String(theme.text),
         align: 'center'
       });
     }
@@ -498,7 +498,7 @@ export class PowerPointExportService {
       h: 2,
       fontSize: 18,
       fontFace: 'Inter',
-      color: theme.text,
+      color: String(theme.text),
       align: 'center',
       valign: 'middle'
     });
@@ -517,7 +517,7 @@ export class PowerPointExportService {
       h: 0.8,
       fontSize: 28,
       fontFace: 'Inter',
-      color: theme.primary,
+      color: String(theme.primary),
       bold: true
     });
     
@@ -530,7 +530,7 @@ export class PowerPointExportService {
         h: 3,
         fontSize: 16,
         fontFace: 'Inter',
-        color: theme.text,
+        color: String(theme.text),
         align: 'left'
       }
     );
@@ -546,7 +546,7 @@ export class PowerPointExportService {
     slide.background = {
       fill: {
         type: 'gradient',
-        colors: [`${theme.light}`, `${theme.white}`],
+        colors: [String(theme.light), String(theme.white)],
         dir: 90
       }
     };
@@ -558,7 +558,7 @@ export class PowerPointExportService {
       h: 0.8,
       fontSize: 28,
       fontFace: 'Inter',
-      color: theme.primary,
+      color: String(theme.primary),
       bold: true,
       align: 'center'
     });
@@ -570,7 +570,7 @@ export class PowerPointExportService {
       h: 1,
       fontSize: 20,
       fontFace: 'Inter',
-      color: theme.text,
+      color: String(theme.text),
       align: 'center'
     });
     
@@ -581,7 +581,7 @@ export class PowerPointExportService {
       h: 0.5,
       fontSize: 12,
       fontFace: 'Inter',
-      color: theme.text,
+      color: String(theme.text),
       align: 'center',
       italic: true
     });
