@@ -747,12 +747,16 @@ export default function ReportBuilderPage() {
   // Publish template mutation (published)
   const saveTemplateMutation = useMutation({
     mutationFn: async (template: ReportTemplate) => {
+      console.log('🚀 Publishing template:', { templateId: template.id, template });
       if (!template.id) {
         throw new Error('Template must be saved as draft first before publishing');
       }
       
       // Use dedicated publish endpoint
-      return apiRequest('PUT', `/api/report-templates/${template.id}/publish`, {});
+      console.log(`🌐 Making PUT request to: /api/report-templates/${template.id}/publish`);
+      const response = await apiRequest('PUT', `/api/report-templates/${template.id}/publish`, {});
+      console.log('✅ Publish response:', response);
+      return response;
     },
     onSuccess: () => {
       toast({
@@ -763,10 +767,13 @@ export default function ReportBuilderPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/report-templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('❌ Publish error details:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Full error:', JSON.stringify(error, null, 2));
       toast({
         title: "Error",
-        description: "Failed to publish template",
+        description: `Failed to publish template: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     }

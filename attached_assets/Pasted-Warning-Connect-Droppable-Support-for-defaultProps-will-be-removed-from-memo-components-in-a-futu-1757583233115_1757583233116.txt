@@ -1,0 +1,67 @@
+Warning: Connect(Droppable): Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.
+    at Provider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:947:20)
+    at App (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:7464:25)
+    at ErrorBoundary2 (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:1961:35)
+    at DragDropContext (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:7584:19)
+    at div
+    at _c9 (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XFKJLW6A.js?v=bc7a3467:42:13
+    at Presence (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ACBL5YOA.js?v=bc7a3467:24:11)
+    at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=bc7a3467:176:13
+    at _c5 (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XFKJLW6A.js?v=bc7a3467:42:13
+    at Provider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6BJTAFJ.js?v=bc7a3467:37:15)
+    at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=bc7a3467:54:7
+    at div
+    at main
+    at div
+    at div
+    at ReportBuilderPage (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/pages/report-builder.tsx:1039:21)
+    at Route (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bc7a3467:190:16)
+    at Switch (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bc7a3467:246:17)
+    at Router
+    at Provider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6BJTAFJ.js?v=bc7a3467:37:15)
+    at TooltipProvider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=bc7a3467:64:5)
+    at AuthProvider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/auth/AuthProvider.tsx:32:32)
+    at QueryClientProvider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=bc7a3467:2747:3)
+    at App
+at Provider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:947:20)
+at App (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:7464:25)
+at ErrorBoundary2 (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:1961:35)
+at DragDropContext (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=bc7a3467:7584:19)
+at div
+at _c9 (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+at div
+at _c (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+at div
+at div
+at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XFKJLW6A.js?v=bc7a3467:42:13
+at Presence (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ACBL5YOA.js?v=bc7a3467:24:11)
+at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=bc7a3467:176:13
+at _c5 (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/ui/tabs.tsx:72:12)
+at div
+at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XFKJLW6A.js?v=bc7a3467:42:13
+at Provider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6BJTAFJ.js?v=bc7a3467:37:15)
+at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=bc7a3467:54:7
+at div
+at main
+at div
+at div
+at ReportBuilderPage (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/pages/report-builder.tsx:1039:21)
+at Route (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bc7a3467:190:16)
+at Switch (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bc7a3467:246:17)
+at Router
+at Provider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6BJTAFJ.js?v=bc7a3467:37:15)
+at TooltipProvider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=bc7a3467:64:5)
+at AuthProvider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/src/components/auth/AuthProvider.tsx:32:32)
+at QueryClientProvider (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=bc7a3467:2747:3)
+at App
+at t.value (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://a2de1e29-dc97-4178-a225-d21101249b90-00-11nevw9wr351d.janeway.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
