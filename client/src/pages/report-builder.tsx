@@ -1080,44 +1080,25 @@ export default function ReportBuilderPage() {
           <div className="container mx-auto max-w-7xl">
             
             {/* Report Title Section */}
-            <Card className="mb-6 border-l-4 border-l-green-600 bg-green-50/30">
-              <CardContent className="py-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    <Edit className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor="report-title-main" className="text-sm font-medium text-gray-700">
-                      Report Title
-                    </Label>
-                    <Input
-                      id="report-title-main"
-                      value={currentTemplate.templateName}
-                      onChange={(e) => {
-                        setCurrentTemplate({
-                          ...currentTemplate,
-                          templateName: e.target.value
-                        });
-                        markAsChanged();
-                      }}
-                      placeholder="Enter your report title..."
-                      className="mt-1 text-lg font-medium bg-white border-gray-300 focus:border-green-500 focus:ring-green-500"
-                      data-testid="input-report-title"
-                    />
-                  </div>
-                  {isAutoSaving && (
-                    <div className="flex-shrink-0 text-sm text-gray-500">
-                      Saving...
-                    </div>
-                  )}
-                  {lastAutoSaveTime && !isAutoSaving && (
-                    <div className="flex-shrink-0 text-sm text-gray-500">
-                      Saved {lastAutoSaveTime.toLocaleTimeString()}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mb-8">
+              <div className="flex items-center space-x-3 mb-4">
+                <Edit className="h-6 w-6 text-gray-600" />
+                <h1 className="text-2xl font-bold text-gray-900">Report Title</h1>
+              </div>
+              <Input
+                value={currentTemplate.templateName}
+                onChange={(e) => {
+                  setCurrentTemplate({
+                    ...currentTemplate,
+                    templateName: e.target.value
+                  });
+                  markAsChanged();
+                }}
+                placeholder="Enter your report title..."
+                className="text-xl font-semibold py-4 px-4 border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                data-testid="input-report-title"
+              />
+            </div>
 
       <div className="flex items-center justify-between mb-8">
         <div className="flex gap-2">
