@@ -12810,7 +12810,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       }
 
       // Get user's company
-      const company = await dbStorage.getCompanyByOwner(user.id);
+      const company = await dbStorage.getCompanyByOwner(userId);
       if (!company) {
         return res.status(404).json({ error: 'Company not found' });
       }
