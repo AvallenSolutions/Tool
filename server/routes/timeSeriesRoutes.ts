@@ -150,7 +150,10 @@ router.get("/monthly-facility/:companyId", async (req, res) => {
 // Add or update monthly facility data
 router.post("/monthly-facility", async (req, res) => {
   try {
-    const facilityData = insertMonthlyFacilityDataSchema.parse(req.body);
+    // Extract waste streams data from request body before parsing
+    const { wasteStreams: wasteStreamsData, ...facilityDataOnly } = req.body;
+    
+    const facilityData = insertMonthlyFacilityDataSchema.parse(facilityDataOnly);
 
     // Check if data already exists for this company, facility and month
     const existing = await db
@@ -184,6 +187,32 @@ router.post("/monthly-facility", async (req, res) => {
         .insert(monthlyFacilityData)
         .values(facilityData)
         .returning();
+    }
+
+    // Handle waste streams data if provided
+    if (wasteStreamsData && Array.isArray(wasteStreamsData) && wasteStreamsData.length > 0) {
+      console.log(`🗑️ Processing ${wasteStreamsData.length} waste streams for monthly data ${result.id}`);
+      
+      // Delete existing waste streams for this monthly facility data
+      await db
+        .delete(wasteStreams)
+        .where(eq(wasteStreams.monthlyFacilityDataId, result.id));
+
+      // Insert new waste streams
+      for (const stream of wasteStreamsData) {
+        if (stream.wasteType && stream.weightKg > 0 && stream.disposalRoute) {
+          await db
+            .insert(wasteStreams)
+            .values({
+              monthlyFacilityDataId: result.id,
+              wasteType: stream.wasteType,
+              weightKg: stream.weightKg,
+              disposalRoute: stream.disposalRoute
+            });
+          
+          console.log(`✅ Saved waste stream: ${stream.wasteType} - ${stream.weightKg}kg via ${stream.disposalRoute}`);
+        }
+      }
     }
 
     // Optionally trigger KPI recalculation for this month

@@ -64,7 +64,23 @@ export default function MonthlyFacilityDataSection() {
     queryKey: [facilityQueryUrl],
     queryFn: async () => {
       const response = await apiRequest('GET', `${facilityQueryUrl}?limit=12`);
-      return response.json();
+      const facilityData = await response.json();
+      
+      // Load waste streams for each monthly record
+      const dataWithWasteStreams = await Promise.all(
+        facilityData.map(async (record: MonthlyFacilityData) => {
+          try {
+            const wasteResponse = await apiRequest('GET', `/api/time-series/monthly-facility/${record.id}/waste-streams`);
+            const wasteStreams = await wasteResponse.json();
+            return { ...record, wasteStreams };
+          } catch (error) {
+            console.warn(`Failed to load waste streams for record ${record.id}:`, error);
+            return { ...record, wasteStreams: [] };
+          }
+        })
+      );
+      
+      return dataWithWasteStreams;
     },
     retry: false,
     refetchOnMount: 'always',
@@ -619,6 +635,101 @@ export default function MonthlyFacilityDataSection() {
                               <YAxis />
                               <Tooltip />
                               <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Waste Stream Trends */}
+                    <div className="space-y-6">
+                      <h4 className="text-lg font-semibold text-gray-800">Waste Stream Analytics</h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Total Waste by Month (kg)</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <LineChart data={allFacilityData
+                                .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                                .map(d => ({
+                                  month: new Date(d.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                                  value: d.wasteStreams?.reduce((sum, stream) => sum + stream.weightKg, 0) || 0
+                                }))}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="month" />
+                                <YAxis />
+                                <Tooltip />
+                                <Line type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Waste Diversion Rate (%)</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <LineChart data={allFacilityData
+                                .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                                .map(d => {
+                                  const totalWaste = d.wasteStreams?.reduce((sum, stream) => sum + stream.weightKg, 0) || 0;
+                                  const landfillWaste = d.wasteStreams?.filter(stream => stream.disposalRoute.toLowerCase().includes('landfill')).reduce((sum, stream) => sum + stream.weightKg, 0) || 0;
+                                  const diversionRate = totalWaste > 0 ? ((totalWaste - landfillWaste) / totalWaste) * 100 : 0;
+                                  return {
+                                    month: new Date(d.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                                    value: diversionRate
+                                  };
+                                })}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="month" />
+                                <YAxis domain={[0, 100]} />
+                                <Tooltip formatter={(value) => [`${Number(value).toFixed(1)}%`, 'Diversion Rate']} />
+                                <Line type="monotone" dataKey="value" stroke="#22c55e" strokeWidth={2} />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Waste by Disposal Route Over Time</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <LineChart data={allFacilityData
+                              .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+                              .map(d => {
+                                const month = new Date(d.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                                const wasteByRoute = d.wasteStreams?.reduce((acc, stream) => {
+                                  acc[stream.disposalRoute] = (acc[stream.disposalRoute] || 0) + stream.weightKg;
+                                  return acc;
+                                }, {} as Record<string, number>) || {};
+                                
+                                return {
+                                  month,
+                                  Landfill: wasteByRoute.Landfill || 0,
+                                  Recycling: wasteByRoute.Recycling || 0,
+                                  Composting: wasteByRoute.Composting || 0,
+                                  'Anaerobic Digestion': wasteByRoute['Anaerobic Digestion'] || 0,
+                                  'Animal Feed': wasteByRoute['Animal Feed'] || 0
+                                };
+                              })}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="month" />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend />
+                              <Line type="monotone" dataKey="Landfill" stroke="#ef4444" strokeWidth={2} />
+                              <Line type="monotone" dataKey="Recycling" stroke="#3b82f6" strokeWidth={2} />
+                              <Line type="monotone" dataKey="Composting" stroke="#22c55e" strokeWidth={2} />
+                              <Line type="monotone" dataKey="Anaerobic Digestion" stroke="#a855f7" strokeWidth={2} />
+                              <Line type="monotone" dataKey="Animal Feed" stroke="#f59e0b" strokeWidth={2} />
                             </LineChart>
                           </ResponsiveContainer>
                         </CardContent>
