@@ -759,8 +759,13 @@ export default function ReportBuilderPage() {
           status: 'draft'
         };
         const draftResponse = await apiRequest('POST', '/api/report-templates', draftData);
-        templateToPublish = { ...template, id: draftResponse.id };
-        console.log('✅ Draft saved with ID:', draftResponse.id);
+        console.log('📋 Full draft response:', draftResponse);
+        const templateId = draftResponse.id || draftResponse.templateId || draftResponse.reportId;
+        if (!templateId) {
+          throw new Error('Failed to get template ID from draft save response');
+        }
+        templateToPublish = { ...template, id: templateId };
+        console.log('✅ Draft saved with ID:', templateId);
       }
       
       // Use dedicated publish endpoint
