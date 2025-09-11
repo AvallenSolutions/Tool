@@ -1269,27 +1269,6 @@ export default function ReportBuilderPage() {
         </div>
       </div>
 
-      {/* Report Title Section */}
-      <div className="mb-6">
-        <Label htmlFor="report-title-main" className="text-sm font-medium text-gray-700 mb-2 block">
-          Report Title
-        </Label>
-        <Input
-          id="report-title-main"
-          value={currentTemplate.templateName}
-          onChange={(e) => {
-            setCurrentTemplate({
-              ...currentTemplate,
-              templateName: e.target.value
-            });
-            markAsChanged();
-          }}
-          placeholder="Enter your report title..."
-          className="text-lg font-medium"
-          data-testid="input-report-title"
-        />
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="builder">Report Builder</TabsTrigger>
@@ -1341,6 +1320,23 @@ export default function ReportBuilderPage() {
 
           {/* Report Builder Area */}
           <div className="lg:col-span-3">
+            {/* Report Title Section */}
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold mb-2">Report Title</h2>
+              <Input
+                value={currentTemplate.templateName}
+                onChange={(e) => {
+                  setCurrentTemplate({
+                    ...currentTemplate,
+                    templateName: e.target.value
+                  });
+                  markAsChanged();
+                }}
+                placeholder="Enter your report title..."
+                className="text-lg font-medium"
+                data-testid="input-report-title"
+              />
+            </div>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
