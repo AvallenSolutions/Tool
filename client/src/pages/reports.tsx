@@ -37,6 +37,15 @@ export default function Reports() {
     gcTime: 0,
   });
 
+  // Fetch report templates (drafts)
+  const { data: reportTemplates, isLoading: templatesLoading } = useQuery({
+    queryKey: ["/api/report-templates"],
+    retry: false,
+    staleTime: 0,
+    gcTime: 0,
+    enabled: isAuthenticated,
+  });
+
   // Ensure reports is always an array to prevent TypeScript errors
   const reportsData = Array.isArray(reports) ? reports : [];
 
@@ -98,6 +107,35 @@ export default function Reports() {
   const handleDeleteReport = (reportId: number) => {
     if (window.confirm("Are you sure you want to delete this report? This action cannot be undone.")) {
       deleteReportMutation.mutate(reportId);
+    }
+  };
+
+  // Delete template mutation
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      const response = await apiRequest("DELETE", `/api/report-templates/${templateId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/report-templates"] });
+      toast({
+        title: "Draft Deleted",
+        description: "The draft report has been successfully deleted.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Error deleting template:', error);
+      toast({
+        title: "Delete Failed",
+        description: "There was an error deleting the draft. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteTemplate = (templateId: number) => {
+    if (window.confirm("Are you sure you want to delete this draft? This action cannot be undone.")) {
+      deleteTemplateMutation.mutate(templateId);
     }
   };
 
@@ -303,6 +341,96 @@ export default function Reports() {
                       <p className="text-gray-600 mb-4">
                         Create your first guided sustainability report to showcase your environmental impact.
                       </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Draft Templates Section */}
+          <div>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <FileText className="w-5 h-5 text-amber-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900">Draft Reports</h2>
+            </div>
+            
+            {templatesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {Array.isArray(reportTemplates) && reportTemplates.length > 0 ? (
+                  reportTemplates.map((template: any) => (
+                    <Card key={template.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-amber-300">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-amber-50 rounded-full">
+                              <FileText className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg text-gray-900">
+                                {template.reportTitle || template.templateName}
+                              </h3>
+                              <p className="text-sm text-gray-500 flex items-center mt-1">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                Last saved {new Date(template.lastSaved || template.createdAt).toLocaleDateString()}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                Audience: {template.audienceType} • {template.blocks?.length || 0} blocks
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+                            Draft
+                          </Badge>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex space-x-2 pt-4 border-t border-gray-100">
+                          <Button
+                            onClick={() => setLocation(`/app/report-builder?template=${template.id}`)}
+                            size="sm"
+                            className="bg-amber-600 hover:bg-amber-700 text-white"
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Continue Editing
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteTemplate(template.id)}
+                            variant="outline"
+                            size="sm"
+                            className="border-red-500 text-red-600 hover:bg-red-50"
+                            disabled={deleteTemplateMutation?.isPending}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Draft
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="border-2 border-dashed border-gray-300">
+                    <CardContent className="py-12 text-center">
+                      <div className="p-4 bg-amber-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                        <FileText className="w-10 h-10 text-amber-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Draft Reports Yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        Create and save draft reports using the Report Builder to see them here.
+                      </p>
+                      <Button
+                        onClick={() => setLocation('/app/report-builder')}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Draft Report
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
