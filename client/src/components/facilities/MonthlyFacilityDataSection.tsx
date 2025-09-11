@@ -24,13 +24,7 @@ interface MonthlyFacilityData {
   naturalGasM3: string | null;
   waterM3: string | null;
   productionVolume: string | null;
-  
-  // Waste data fields (kept for backward compatibility)
-  organicWasteKg: string | null;
-  packagingWasteKg: string | null;
-  hazardousWasteKg: string | null;
-  generalWasteKg: string | null;
-  
+  utilityBillUrl: string | null;
   createdAt: string;
   updatedAt: string;
   _metadata?: {
@@ -39,7 +33,7 @@ interface MonthlyFacilityData {
     aggregationType: string;
   };
   
-  // New waste streams data
+  // Waste streams data loaded separately
   wasteStreams?: WasteStream[];
 }
 

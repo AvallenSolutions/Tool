@@ -110,7 +110,19 @@ router.get("/monthly-facility/:companyId", async (req, res) => {
     const validLimit = isNaN(limitValue) ? 12 : Math.min(limitValue, 100);
 
     let query = db
-      .select()
+      .select({
+        id: monthlyFacilityData.id,
+        companyId: monthlyFacilityData.companyId,
+        facilityId: monthlyFacilityData.facilityId,
+        month: monthlyFacilityData.month,
+        electricityKwh: monthlyFacilityData.electricityKwh,
+        naturalGasM3: monthlyFacilityData.naturalGasM3,
+        waterM3: monthlyFacilityData.waterM3,
+        productionVolume: monthlyFacilityData.productionVolume,
+        utilityBillUrl: monthlyFacilityData.utilityBillUrl,
+        createdAt: monthlyFacilityData.createdAt,
+        updatedAt: monthlyFacilityData.updatedAt,
+      })
       .from(monthlyFacilityData)
       .where(eq(monthlyFacilityData.companyId, companyId))
       .orderBy(desc(monthlyFacilityData.month));
