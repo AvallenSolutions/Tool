@@ -150,7 +150,7 @@ export default function Reports() {
     }
   };
 
-  // Update template title mutation
+  // Update template title mutation with optimistic updates
   const updateTemplateTitle = useMutation({
     mutationFn: async ({ templateId, newTitle }: { templateId: number; newTitle: string }) => {
       const response = await apiRequest("PATCH", `/api/report-templates/${templateId}`, {
@@ -158,20 +158,55 @@ export default function Reports() {
       });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/report-templates"] });
-      toast({
-        title: "Title Updated",
-        description: "The report title has been successfully updated.",
+    onMutate: async ({ templateId, newTitle }) => {
+      // Cancel outgoing refetches to avoid optimistic update conflicts
+      await queryClient.cancelQueries({ queryKey: ["/api/report-templates"] });
+      
+      // Snapshot previous value for rollback
+      const previousTemplates = queryClient.getQueryData(["/api/report-templates"]);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(["/api/report-templates"], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        
+        return old.map((template: any) => {
+          if (template.id === templateId) {
+            return {
+              ...template,
+              reportTitle: newTitle,
+              lastSaved: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return template;
+        });
       });
+      
+      // Return context with previous data for potential rollback
+      return { previousTemplates };
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
+      // Rollback to previous state on error
+      if (context?.previousTemplates) {
+        queryClient.setQueryData(["/api/report-templates"], context.previousTemplates);
+      }
+      
       console.error('Error updating template title:', error);
       toast({
         title: "Update Failed",
         description: "There was an error updating the report title. Please try again.",
         variant: "destructive",
       });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Title Updated",
+        description: "The report title has been successfully updated.",
+      });
+    },
+    onSettled: () => {
+      // Always invalidate to ensure we have the latest server state
+      queryClient.invalidateQueries({ queryKey: ["/api/report-templates"] });
     },
   });
 
