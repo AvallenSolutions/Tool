@@ -752,7 +752,7 @@ export default function ReportBuilderPage() {
       }
       
       // Use dedicated publish endpoint
-      return apiRequest(`/api/report-templates/${template.id}/publish`, 'PUT', {});
+      return apiRequest('PUT', `/api/report-templates/${template.id}/publish`, {});
     },
     onSuccess: () => {
       toast({
@@ -781,7 +781,7 @@ export default function ReportBuilderPage() {
       };
       const url = template.id ? `/api/report-templates/${template.id}` : '/api/report-templates';
       const method = template.id ? 'PUT' : 'POST';
-      return apiRequest(url, method, templateData);
+      return apiRequest(method, url, templateData);
     },
     onSuccess: (data) => {
       setIsDraftSaving(false);
@@ -826,7 +826,7 @@ export default function ReportBuilderPage() {
         blocks: template.blocks
       };
       
-      return apiRequest(`/api/report-templates/${template.id}`, 'PATCH', autoSaveData);
+      return apiRequest('PATCH', `/api/report-templates/${template.id}`, autoSaveData);
     },
     onSuccess: () => {
       setIsAutoSaving(false);
