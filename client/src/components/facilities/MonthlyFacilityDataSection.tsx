@@ -52,8 +52,8 @@ export default function MonthlyFacilityDataSection() {
     productionVolume: '',
   });
 
-  // Query for aggregated facility data across all facilities (using company ID 1)
-  const facilityQueryUrl = `/api/time-series/monthly-aggregated/1`;
+  // Query for facility data from facility 1 (Main Distillery) instead of aggregated data
+  const facilityQueryUrl = `/api/time-series/monthly-facility/1`;
   const { data: allFacilityData, isLoading: isFacilityLoading, error: facilityError } = useQuery({
     queryKey: [facilityQueryUrl],
     queryFn: async () => {
@@ -78,8 +78,14 @@ export default function MonthlyFacilityDataSection() {
 
   // Update facility data mutation for editing existing records
   const updateFacilityData = useMutation({
-    mutationFn: async ({ recordId, data }: { recordId: string, data: any }) => {
-      const response = await apiRequest('PUT', `/api/time-series/monthly-facility/${recordId}`, data);
+    mutationFn: async ({ month, data }: { month: string, data: any }) => {
+      const facilityData = {
+        companyId: 1,
+        facilityId: 1, // Main Distillery
+        month: month,
+        ...data
+      };
+      const response = await apiRequest('POST', `/api/time-series/monthly-facility`, facilityData);
       return response.json();
     },
     onSuccess: () => {
@@ -132,17 +138,20 @@ export default function MonthlyFacilityDataSection() {
   };
 
   const saveEdit = () => {
-    if (!editingRecord) return;
+    if (!editingRecord || !allFacilityData) return;
     
+    // Find the record being edited to get its month
+    const currentRecord = allFacilityData.find((record: any) => record.id === editingRecord);
+    if (!currentRecord) return;
+
     const payload = {
-      companyId: 1,
       electricityKwh: editFormData.electricityKwh || null,
       naturalGasM3: editFormData.naturalGasM3 || null,
       waterM3: editFormData.waterM3 || null,
       productionVolume: editFormData.productionVolume || null,
     };
 
-    updateFacilityData.mutate({ recordId: editingRecord, data: payload });
+    updateFacilityData.mutate({ month: currentRecord.month, data: payload });
   };
 
   if (isFacilityLoading) {
