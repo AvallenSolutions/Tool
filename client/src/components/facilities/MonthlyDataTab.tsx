@@ -120,7 +120,8 @@ export default function MonthlyDataTab({ facilityId, facilityName }: MonthlyData
   // Save facility data mutation
   const saveFacilityData = useMutation({
     mutationFn: async (data: any) => {
-      const facilitySpecificData = facilityId ? { ...data, facilityId } : data;
+      // For company-wide data, use facilityId = 1 (Main Distillery) as default
+      const facilitySpecificData = { ...data, facilityId: facilityId || 1 };
       const response = await apiRequest('POST', '/api/time-series/monthly-facility', facilitySpecificData);
       return response.json();
     },
