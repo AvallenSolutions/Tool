@@ -759,8 +759,9 @@ export default function ReportBuilderPage() {
           status: 'draft'
         };
         const draftResponse = await apiRequest('POST', '/api/report-templates', draftData);
-        console.log('📋 Full draft response:', draftResponse);
-        const templateId = draftResponse.id || draftResponse.templateId || draftResponse.reportId;
+        const draftData_parsed = await draftResponse.json();
+        console.log('📋 Full draft response:', draftData_parsed);
+        const templateId = draftData_parsed.id || draftData_parsed.templateId || draftData_parsed.reportId;
         if (!templateId) {
           throw new Error('Failed to get template ID from draft save response');
         }
