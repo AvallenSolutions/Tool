@@ -1048,6 +1048,21 @@ export const updateReportTemplateSchema = insertReportTemplateSchema.partial().o
   lastSaved: true, // Server-controlled field
 });
 
+// Enhanced validation schema for PATCH operations with specific reportTitle constraints
+export const patchReportTemplateSchema = z.object({
+  templateName: z.string().min(1).max(100).optional(),
+  reportTitle: z.string().min(1, "Report title cannot be empty").max(200, "Report title cannot exceed 200 characters").optional(),
+  audienceType: z.enum(['stakeholders', 'customers', 'investors', 'employees', 'regulators']).optional(),
+  blocks: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['company_story', 'metrics_summary', 'carbon_footprint', 'water_usage', 'initiatives', 'kpi_progress', 'custom_text', 'editable_text']),
+    title: z.string(),
+    content: z.any(),
+    order: z.number(),
+    isVisible: z.boolean(),
+  })).optional(),
+});
+
 export const insertUploadedDocumentSchema = createInsertSchema(uploadedDocuments).omit({
   id: true,
   createdAt: true,

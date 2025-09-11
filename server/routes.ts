@@ -8,7 +8,7 @@ import rateLimit from "express-rate-limit";
 import passport from "passport";
 import { storage as dbStorage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema, products, companyFootprintData, kpiDefinitions, reportTemplates, insertReportTemplateSchema, updateReportTemplateSchema } from "@shared/schema";
+import { insertCompanySchema, insertProductSchema, insertSupplierSchema, insertUploadedDocumentSchema, insertLcaQuestionnaireSchema, insertCompanySustainabilityDataSchema, insertProductionFacilitySchema, companies, reports, users, companyData, lcaProcessMappings, smartGoals, feedbackSubmissions, lcaJobs, insertFeedbackSubmissionSchema, products, companyFootprintData, kpiDefinitions, reportTemplates, insertReportTemplateSchema, updateReportTemplateSchema, patchReportTemplateSchema } from "@shared/schema";
 import { eq, desc, asc, ilike, or, and, gte, gt, ne, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { nanoid } from "nanoid";
@@ -12665,8 +12665,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         return res.status(404).json({ error: 'Template not found' });
       }
 
-      // Validate partial update data
-      const validationResult = updateReportTemplateSchema.safeParse(req.body);
+      // Validate partial update data with enhanced reportTitle validation
+      const validationResult = patchReportTemplateSchema.safeParse(req.body);
       
       if (!validationResult.success) {
         return res.status(400).json({ 

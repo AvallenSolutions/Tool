@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, Plus, BarChart3, TrendingUp, Calendar, Award, Leaf, Trash2 } from "lucide-react";
+import { InlineEditableTitle } from "@/components/ui/inline-editable-title";
 import { EnhancedReportButton } from "@/components/EnhancedReportButton";
 import { ReportProgressTracker } from "@/components/reports/ReportProgressTracker";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -147,6 +148,35 @@ export default function Reports() {
     if (window.confirm("Are you sure you want to delete this draft? This action cannot be undone.")) {
       deleteTemplateMutation.mutate(templateId);
     }
+  };
+
+  // Update template title mutation
+  const updateTemplateTitle = useMutation({
+    mutationFn: async ({ templateId, newTitle }: { templateId: number; newTitle: string }) => {
+      const response = await apiRequest("PATCH", `/api/report-templates/${templateId}`, {
+        reportTitle: newTitle
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/report-templates"] });
+      toast({
+        title: "Title Updated",
+        description: "The report title has been successfully updated.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Error updating template title:', error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the report title. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleUpdateTitle = async (templateId: number, newTitle: string) => {
+    await updateTemplateTitle.mutateAsync({ templateId, newTitle });
   };
 
 
@@ -354,9 +384,13 @@ export default function Reports() {
                             <FileText className="w-5 h-5 text-green-600" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-lg text-gray-900">
-                              {template.reportTitle || template.templateName}
-                            </h3>
+                            <InlineEditableTitle
+                              title={template.reportTitle || template.templateName}
+                              onSave={(newTitle) => handleUpdateTitle(template.id, newTitle)}
+                              isLoading={updateTemplateTitle.isPending}
+                              templateId={template.id}
+                              className="font-semibold text-lg text-gray-900"
+                            />
                             <p className="text-sm text-gray-500 flex items-center mt-1">
                               <Calendar className="w-4 h-4 mr-1" />
                               Published {new Date(template.updatedAt || template.createdAt).toLocaleDateString()}
@@ -438,9 +472,13 @@ export default function Reports() {
                               <FileText className="w-5 h-5 text-amber-600" />
                             </div>
                             <div>
-                              <h3 className="font-semibold text-lg text-gray-900">
-                                {template.reportTitle || template.templateName}
-                              </h3>
+                              <InlineEditableTitle
+                                title={template.reportTitle || template.templateName}
+                                onSave={(newTitle) => handleUpdateTitle(template.id, newTitle)}
+                                isLoading={updateTemplateTitle.isPending}
+                                templateId={template.id}
+                                className="font-semibold text-lg text-gray-900"
+                              />
                               <p className="text-sm text-gray-500 flex items-center mt-1">
                                 <Calendar className="w-4 h-4 mr-1" />
                                 Last saved {new Date(template.lastSaved || template.createdAt).toLocaleDateString()}
