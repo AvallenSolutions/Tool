@@ -1966,13 +1966,6 @@ export const monthlyFacilityData = pgTable("monthly_facility_data", {
   naturalGasM3: numeric("natural_gas_m3", { precision: 12, scale: 2 }),
   waterM3: numeric("water_m3", { precision: 12, scale: 2 }),
   productionVolume: numeric("production_volume", { precision: 12, scale: 2 }),
-  
-  // Waste data fields
-  organicWasteKg: numeric("organic_waste_kg", { precision: 12, scale: 2 }),
-  packagingWasteKg: numeric("packaging_waste_kg", { precision: 12, scale: 2 }),
-  hazardousWasteKg: numeric("hazardous_waste_kg", { precision: 12, scale: 2 }),
-  generalWasteKg: numeric("general_waste_kg", { precision: 12, scale: 2 }),
-  
   utilityBillUrl: varchar("utility_bill_url", { length: 255 }), // Link to uploaded verification document
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

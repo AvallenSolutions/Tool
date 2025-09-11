@@ -19,6 +19,7 @@ import {
 } from "@shared/schema";
 import { OpenLCAService } from "./OpenLCAService";
 import { WasteIntensityCalculationService } from "./WasteIntensityCalculationService";
+import { WasteStreamsCalculationService } from "./WasteStreamsCalculationService";
 import { productionFacilities } from "@shared/schema";
 import { MonthlyDataAggregationService } from './MonthlyDataAggregationService';
 
@@ -146,10 +147,10 @@ export class KPICalculationService {
       breakdown.packaging.co2e += glassEmissions;
       breakdown.packaging.water += bottleWeightKg * 10; // ~10L water per kg glass
       
-      // Calculate production waste intensity from facility data
+      // Calculate production waste intensity from facility data using new waste streams system
       let productionWastePerUnit = 0;
       try {
-        const wasteIntensityData = await WasteIntensityCalculationService.calculateWasteIntensity(1);
+        const wasteIntensityData = await WasteStreamsCalculationService.calculateWasteIntensityFromStreams(1);
         productionWastePerUnit = wasteIntensityData.productionWasteIntensity;
       } catch (error) {
         productionWastePerUnit = 0.002; // 2g fallback
@@ -228,11 +229,11 @@ export class KPICalculationService {
       console.error('Error calculating facility impacts using your method:', error);
     }
     
-    // Calculate production waste carbon footprint from disposal routes for all facilities
+    // Calculate production waste carbon footprint from disposal routes for all facilities using new waste streams system
     const facilities = await db.select().from(productionFacilities).where(eq(productionFacilities.companyId, product.companyId));
     for (const facility of facilities) {
       try {
-        const wasteFootprint = await WasteIntensityCalculationService.calculateProductionWasteFootprint(facility.id, 'United Kingdom');
+        const wasteFootprint = await WasteStreamsCalculationService.calculateProductionWasteFootprintFromStreams(facility.id, 'United Kingdom');
         productionWasteFootprint += wasteFootprint.totalWasteCarbonFootprint;
       } catch (error) {
         // Ignore individual facility waste errors
@@ -905,10 +906,10 @@ export class KPICalculationService {
         const refinedLCA = await this.calculateProductRefinedLCA(product);
         const wastePerUnit = refinedLCA.totalWaste;
         
-        // Add production facility waste from WasteIntensityCalculationService
+        // Add production facility waste from WasteStreamsCalculationService using new waste streams system
         let facilityWastePerUnit = 0;
         try {
-          const wasteIntensityData = await WasteIntensityCalculationService.calculateWasteIntensity(1); // Primary facility
+          const wasteIntensityData = await WasteStreamsCalculationService.calculateWasteIntensityFromStreams(1); // Primary facility
           facilityWastePerUnit = wasteIntensityData.productionWasteIntensity;
           console.log(`🏭 Facility waste intensity: ${facilityWastePerUnit.toFixed(6)} kg waste per unit`);
         } catch (error) {
