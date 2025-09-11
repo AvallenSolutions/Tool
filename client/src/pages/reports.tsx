@@ -53,6 +53,16 @@ export default function Reports() {
   const lcaReports = reportsData.filter((report: any) => report.reportType === 'lca');
   const lcaReportsData = lcaReports; // For compatibility with existing code
 
+  // Filter published report templates for Sustainability Reports section
+  const publishedTemplates = Array.isArray(reportTemplates) 
+    ? reportTemplates.filter((template: any) => template.status === 'published')
+    : [];
+  
+  // Filter draft templates only
+  const draftTemplates = Array.isArray(reportTemplates) 
+    ? reportTemplates.filter((template: any) => template.status === 'draft')
+    : [];
+
 
   // Generate new report mutation
   const generateReportMutation = useMutation({
@@ -232,7 +242,7 @@ export default function Reports() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-green-600">Sustainability Reports</p>
-                    <p className="text-2xl font-bold text-green-900">{guidedReportsData.length}</p>
+                    <p className="text-2xl font-bold text-green-900">{guidedReportsData.length + publishedTemplates.length}</p>
                   </div>
                 </div>
               </CardContent>
@@ -285,53 +295,101 @@ export default function Reports() {
               <h2 className="text-xl font-semibold text-gray-900">Sustainability Reports</h2>
             </div>
             
-            {guidedReportsLoading ? (
+            {guidedReportsLoading || templatesLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
               </div>
             ) : (
               <div className="grid gap-4">
-                {guidedReportsData.length > 0 ? (
-                  guidedReportsData.map((report: any) => (
-                    <Card key={report.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-green-300">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-green-50 rounded-full">
-                              <Award className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-lg text-gray-900">
-                                {report.reportTitle || 'Sustainability Report'}
-                              </h3>
-                              <p className="text-sm text-gray-500 flex items-center mt-1">
-                                <Calendar className="w-4 h-4 mr-1" />
-                                Created {new Date(report.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
+                {/* Show guided reports first */}
+                {guidedReportsData.map((report: any) => (
+                  <Card key={`guided-${report.id}`} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-green-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-3 bg-green-50 rounded-full">
+                            <Award className="w-5 h-5 text-green-600" />
                           </div>
-                          <div className="flex space-x-2">
-                            <Button
-                              onClick={() => setLocation(`/app/guided-report/${report.id}`)}
-                              variant="outline"
-                              size="sm"
-                              className="border-green-500 text-green-600 hover:bg-green-50"
-                            >
-                              Continue Editing
-                            </Button>
+                          <div>
+                            <h3 className="font-semibold text-lg text-gray-900">
+                              {report.reportTitle || 'Sustainability Report'}
+                            </h3>
+                            <p className="text-sm text-gray-500 flex items-center mt-1">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              Created {new Date(report.createdAt).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
-                        
-                        <div className="text-sm text-gray-600">
-                          <p className="mb-2">Report Type: <span className="font-medium text-gray-800">Guided Sustainability</span></p>
-                          {report.selectedInitiatives && report.selectedInitiatives.length > 0 && (
-                            <p>Selected Initiatives: <span className="font-medium text-gray-800">{report.selectedInitiatives.length}</span></p>
-                          )}
+                        <Badge className="bg-green-100 text-green-700 border-green-200">Published</Badge>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600 mb-4">
+                        <p className="mb-2">Report Type: <span className="font-medium text-gray-800">Guided Sustainability</span></p>
+                        {report.selectedInitiatives && report.selectedInitiatives.length > 0 && (
+                          <p>Selected Initiatives: <span className="font-medium text-gray-800">{report.selectedInitiatives.length}</span></p>
+                        )}
+                      </div>
+
+                      <div className="flex space-x-2 pt-4 border-t border-gray-100">
+                        <Button
+                          onClick={() => setLocation(`/app/guided-report/${report.id}`)}
+                          variant="outline"
+                          size="sm"
+                          className="border-green-500 text-green-600 hover:bg-green-50"
+                        >
+                          View Report
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Show published dynamic reports */}
+                {publishedTemplates.map((template: any) => (
+                  <Card key={`published-${template.id}`} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-green-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-3 bg-green-50 rounded-full">
+                            <FileText className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg text-gray-900">
+                              {template.reportTitle || template.templateName}
+                            </h3>
+                            <p className="text-sm text-gray-500 flex items-center mt-1">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              Published {new Date(template.updatedAt || template.createdAt).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Audience: {template.audienceType} • {template.blocks?.length || 0} blocks
+                            </p>
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
+                        <Badge className="bg-green-100 text-green-700 border-green-200">Published</Badge>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600 mb-4">
+                        <p>Report Type: <span className="font-medium text-gray-800">Dynamic Report Builder</span></p>
+                      </div>
+
+                      <div className="flex space-x-2 pt-4 border-t border-gray-100">
+                        <Button
+                          onClick={() => setLocation(`/app/report-builder?template=${template.id}&mode=view`)}
+                          variant="outline"
+                          size="sm"
+                          className="border-green-500 text-green-600 hover:bg-green-50"
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          View Report
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Show empty state only if no reports at all */}
+                {guidedReportsData.length === 0 && publishedTemplates.length === 0 && (
                   <Card className="border-2 border-dashed border-gray-300">
                     <CardContent className="py-12 text-center">
                       <div className="p-4 bg-green-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
@@ -339,8 +397,15 @@ export default function Reports() {
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">No Sustainability Reports Yet</h3>
                       <p className="text-gray-600 mb-4">
-                        Create your first guided sustainability report to showcase your environmental impact.
+                        Create your first sustainability report to showcase your environmental impact.
                       </p>
+                      <Button
+                        onClick={() => setLocation('/app/report-builder')}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Report
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
@@ -363,8 +428,8 @@ export default function Reports() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {Array.isArray(reportTemplates) && reportTemplates.length > 0 ? (
-                  reportTemplates.map((template: any) => (
+                {draftTemplates.length > 0 ? (
+                  draftTemplates.map((template: any) => (
                     <Card key={template.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-amber-300">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
