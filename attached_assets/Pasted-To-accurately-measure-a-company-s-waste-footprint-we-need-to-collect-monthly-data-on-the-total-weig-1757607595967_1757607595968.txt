@@ -1,0 +1,65 @@
+To accurately measure a company's waste footprint, we need to collect monthly data on the total weight of waste generated, broken down by its final disposal route. This allows for precise calculation of key waste metrics, such as the "Waste Diversion from Landfill (%)" KPI, and provides a clear picture of the company's circularity performance.
+
+This data will be collected in the "Monthly Facility Data" section of the tool.
+
+Core Waste Streams to Collect
+The following categories represent the most common waste streams for a distillery, brewery, or winery. The user will be able to select from this list and enter the corresponding weight from their monthly waste management invoices.
+
+1. General Waste (to Landfill)
+
+Description: All non-recyclable waste sent for disposal in a landfill. This is the least desirable route and typically has the highest carbon footprint.
+
+Examples: Contaminated packaging, office waste, non-recyclable plastics.
+
+Data to Collect: Total weight (kg).
+
+2. Dry Mixed Recycling (DMR)
+
+Description: The most common recycling stream for businesses, typically co-mingled paper, cardboard, plastic bottles, and metal cans.
+
+Examples: Cardboard outer cases, plastic shrink wrap, office paper, rinsed chemical containers.
+
+Data to Collect: Total weight (kg).
+
+3. Glass Recycling
+
+Description: A major waste stream for any drinks business, often collected separately.
+
+Examples: Broken or out-of-spec bottles from the bottling line, reject glassware.
+
+Data to Collect: Total weight (kg).
+
+4. Organic Waste
+
+Description: Biodegradable waste generated from the production process. It is crucial to track not just the amount, but also where it goes.
+
+Examples: Spent grain, hops, yeast (breweries/distilleries); grape pomace, stems, seeds (wineries).
+
+Data to Collect: Total weight (kg) and the specific Disposal Route (see below).
+
+5. Hazardous Waste
+
+Description: Any waste that requires special handling and disposal due to its potentially harmful nature.
+
+Examples: Laboratory chemicals, strong cleaning agents, waste oils, fluorescent light tubes.
+
+Data to Collect: Total weight (kg).
+
+Implementation in the Tool
+In the "Monthly Facility Data" section, we will create a dynamic form for waste entry.
+
+The user clicks an "+ Add Waste Stream" button.
+
+A new row appears with the following fields:
+
+Waste Type: A dropdown menu containing the five categories listed above.
+
+Weight (kg): A numerical input field.
+
+Disposal Route: A second dropdown menu. This will be crucial, especially for Organic Waste.
+
+Default options: Landfill, Recycling.
+
+Additional options for Organic Waste: Anaerobic Digestion, Composting, Animal Feed.
+
+The user can add as many rows as needed to match their monthly waste invoice. The tool will then automatically calculate the total waste generated and the percentage diverted from landfill for that month, updating the relevant KPIs on the dashboard.

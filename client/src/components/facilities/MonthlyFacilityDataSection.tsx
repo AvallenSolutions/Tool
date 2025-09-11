@@ -23,6 +23,13 @@ interface MonthlyFacilityData {
   naturalGasM3: string | null;
   waterM3: string | null;
   productionVolume: string | null;
+  
+  // Waste data fields
+  organicWasteKg: string | null;
+  packagingWasteKg: string | null;
+  hazardousWasteKg: string | null;
+  generalWasteKg: string | null;
+  
   createdAt: string;
   updatedAt: string;
   _metadata?: {
@@ -50,6 +57,12 @@ export default function MonthlyFacilityDataSection() {
     naturalGasM3: '',
     waterM3: '',
     productionVolume: '',
+    
+    // Waste data fields
+    organicWasteKg: '',
+    packagingWasteKg: '',
+    hazardousWasteKg: '',
+    generalWasteKg: '',
   });
 
   // Query for facility data from facility 1 (Main Distillery) instead of aggregated data
@@ -124,6 +137,12 @@ export default function MonthlyFacilityDataSection() {
       naturalGasM3: record.naturalGasM3 || '',
       waterM3: record.waterM3 || '',
       productionVolume: record.productionVolume || '',
+      
+      // Waste data fields
+      organicWasteKg: record.organicWasteKg || '',
+      packagingWasteKg: record.packagingWasteKg || '',
+      hazardousWasteKg: record.hazardousWasteKg || '',
+      generalWasteKg: record.generalWasteKg || '',
     });
   };
 
@@ -134,6 +153,12 @@ export default function MonthlyFacilityDataSection() {
       naturalGasM3: '',
       waterM3: '',
       productionVolume: '',
+      
+      // Waste data fields
+      organicWasteKg: '',
+      packagingWasteKg: '',
+      hazardousWasteKg: '',
+      generalWasteKg: '',
     });
   };
 
@@ -149,6 +174,12 @@ export default function MonthlyFacilityDataSection() {
       naturalGasM3: editFormData.naturalGasM3 || null,
       waterM3: editFormData.waterM3 || null,
       productionVolume: editFormData.productionVolume || null,
+      
+      // Waste data fields
+      organicWasteKg: editFormData.organicWasteKg || null,
+      packagingWasteKg: editFormData.packagingWasteKg || null,
+      hazardousWasteKg: editFormData.hazardousWasteKg || null,
+      generalWasteKg: editFormData.generalWasteKg || null,
     };
 
     updateFacilityData.mutate({ month: currentRecord.month, data: payload });
@@ -272,73 +303,163 @@ export default function MonthlyFacilityDataSection() {
                         </CardHeader>
                         <CardContent>
                           {editingRecord === data.id ? (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-xs font-medium text-gray-700">Electricity (kWh)</Label>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="15000"
-                                  value={editFormData.electricityKwh}
-                                  onChange={(e) => setEditFormData(prev => ({ ...prev, electricityKwh: e.target.value }))}
-                                  data-testid={`input-edit-electricity-${data.id}`}
-                                  className="text-sm"
-                                />
+                            <div className="space-y-4">
+                              {/* Energy & Production Row */}
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-800 mb-3">Energy & Production</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">Electricity (kWh)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="15000"
+                                      value={editFormData.electricityKwh}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, electricityKwh: e.target.value }))}
+                                      data-testid={`input-edit-electricity-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">Natural Gas (m³)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="2500"
+                                      value={editFormData.naturalGasM3}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, naturalGasM3: e.target.value }))}
+                                      data-testid={`input-edit-gas-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">Water (m³)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="1200"
+                                      value={editFormData.waterM3}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, waterM3: e.target.value }))}
+                                      data-testid={`input-edit-water-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">Production (units)</Label>
+                                    <Input
+                                      type="number"
+                                      step="1"
+                                      placeholder="25000"
+                                      value={editFormData.productionVolume}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, productionVolume: e.target.value }))}
+                                      data-testid={`input-edit-production-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-medium text-gray-700">Natural Gas (m³)</Label>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="2500"
-                                  value={editFormData.naturalGasM3}
-                                  onChange={(e) => setEditFormData(prev => ({ ...prev, naturalGasM3: e.target.value }))}
-                                  data-testid={`input-edit-gas-${data.id}`}
-                                  className="text-sm"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-medium text-gray-700">Water (m³)</Label>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="1200"
-                                  value={editFormData.waterM3}
-                                  onChange={(e) => setEditFormData(prev => ({ ...prev, waterM3: e.target.value }))}
-                                  data-testid={`input-edit-water-${data.id}`}
-                                  className="text-sm"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-medium text-gray-700">Production (units)</Label>
-                                <Input
-                                  type="number"
-                                  step="1"
-                                  placeholder="25000"
-                                  value={editFormData.productionVolume}
-                                  onChange={(e) => setEditFormData(prev => ({ ...prev, productionVolume: e.target.value }))}
-                                  data-testid={`input-edit-production-${data.id}`}
-                                  className="text-sm"
-                                />
+                              
+                              {/* Waste Data Row */}
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-800 mb-3">Waste Data</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">Organic Waste (kg)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="500"
+                                      value={editFormData.organicWasteKg}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, organicWasteKg: e.target.value }))}
+                                      data-testid={`input-edit-organic-waste-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">Packaging Waste (kg)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="200"
+                                      value={editFormData.packagingWasteKg}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, packagingWasteKg: e.target.value }))}
+                                      data-testid={`input-edit-packaging-waste-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">Hazardous Waste (kg)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="50"
+                                      value={editFormData.hazardousWasteKg}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, hazardousWasteKg: e.target.value }))}
+                                      data-testid={`input-edit-hazardous-waste-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs font-medium text-gray-700">General Waste (kg)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="300"
+                                      value={editFormData.generalWasteKg}
+                                      onChange={(e) => setEditFormData(prev => ({ ...prev, generalWasteKg: e.target.value }))}
+                                      data-testid={`input-edit-general-waste-${data.id}`}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="space-y-4">
+                              {/* Energy & Production Display */}
                               <div>
-                                <div className="font-medium text-gray-700">Electricity</div>
-                                <div className="text-gray-900">{formatValue(data.electricityKwh, 'kWh')}</div>
+                                <h4 className="text-sm font-medium text-gray-800 mb-3">Energy & Production</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                  <div>
+                                    <div className="font-medium text-gray-700">Electricity</div>
+                                    <div className="text-gray-900" data-testid={`text-electricity-${data.id}`}>{formatValue(data.electricityKwh, 'kWh')}</div>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-700">Natural Gas</div>
+                                    <div className="text-gray-900" data-testid={`text-gas-${data.id}`}>{formatValue(data.naturalGasM3, 'm³')}</div>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-700">Water</div>
+                                    <div className="text-gray-900" data-testid={`text-water-${data.id}`}>{formatValue(data.waterM3, 'm³')}</div>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-700">Production</div>
+                                    <div className="text-gray-900" data-testid={`text-production-${data.id}`}>{formatValue(data.productionVolume, 'units')}</div>
+                                  </div>
+                                </div>
                               </div>
+                              
+                              {/* Waste Data Display */}
                               <div>
-                                <div className="font-medium text-gray-700">Natural Gas</div>
-                                <div className="text-gray-900">{formatValue(data.naturalGasM3, 'm³')}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-700">Water</div>
-                                <div className="text-gray-900">{formatValue(data.waterM3, 'm³')}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-700">Production</div>
-                                <div className="text-gray-900">{formatValue(data.productionVolume, 'units')}</div>
+                                <h4 className="text-sm font-medium text-gray-800 mb-3">Waste Data</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                  <div>
+                                    <div className="font-medium text-gray-700">Organic Waste</div>
+                                    <div className="text-gray-900" data-testid={`text-organic-waste-${data.id}`}>{formatValue(data.organicWasteKg, 'kg')}</div>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-700">Packaging Waste</div>
+                                    <div className="text-gray-900" data-testid={`text-packaging-waste-${data.id}`}>{formatValue(data.packagingWasteKg, 'kg')}</div>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-700">Hazardous Waste</div>
+                                    <div className="text-gray-900" data-testid={`text-hazardous-waste-${data.id}`}>{formatValue(data.hazardousWasteKg, 'kg')}</div>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-700">General Waste</div>
+                                    <div className="text-gray-900" data-testid={`text-general-waste-${data.id}`}>{formatValue(data.generalWasteKg, 'kg')}</div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           )}
