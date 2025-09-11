@@ -287,8 +287,8 @@ export class DataMigrationService {
       case '2bf9535d-c36a-4010-819e-61c0d8f1c555': // Water Efficiency
         return this.calculateWaterEfficiency(data);
       
-      case '91bc4cba-d22a-40c8-92f0-a17876c2dc35': // Waste Reduction
-        return this.calculateWasteReduction(data);
+      case '91bc4cba-d22a-40c8-92f0-a17876c2dc35': // Waste Diversion from Landfill (%)
+        return this.calculateWasteDiversionFromLandfill(data);
       
       case '0e0edb33-634a-4c27-8c4c-5ca856c255cb': // Renewable Energy Usage
         return this.calculateRenewableEnergyUsage(data);
@@ -321,10 +321,36 @@ export class DataMigrationService {
     return waterUsed / production; // liters per unit
   }
 
-  private calculateWasteReduction(data: any): number {
-    const production = parseFloat(data.productionVolume || '1');
-    // Estimate waste based on production (typical distillery: 3.8kg waste per 1000 units)
-    return (production * 0.0038) / 1000; // tonnes waste
+  private calculateWasteDiversionFromLandfill(data: any): number {
+    // Calculate waste diversion from landfill using waste streams data
+    if (data.wasteStreams && Array.isArray(data.wasteStreams)) {
+      let totalWasteWeight = 0;
+      let landfillWasteWeight = 0;
+
+      for (const stream of data.wasteStreams) {
+        const streamWeight = parseFloat(stream.weightKg?.toString() || '0');
+        if (streamWeight > 0) {
+          totalWasteWeight += streamWeight;
+          
+          // Check if disposal route is landfill (case insensitive)
+          if (stream.disposalRoute && 
+              stream.disposalRoute.toLowerCase().includes('landfill')) {
+            landfillWasteWeight += streamWeight;
+          }
+        }
+      }
+
+      // Calculate diversion percentage
+      if (totalWasteWeight === 0) {
+        return 0; // No waste data means 0% diversion
+      }
+
+      const diversionPercentage = ((totalWasteWeight - landfillWasteWeight) / totalWasteWeight) * 100;
+      return Math.max(0, Math.min(100, diversionPercentage)); // Clamp between 0-100%
+    }
+    
+    // Fallback: use estimated baseline for historical compatibility
+    return this.getEstimatedBaselineValue('91bc4cba-d22a-40c8-92f0-a17876c2dc35');
   }
 
   private calculateRenewableEnergyUsage(data: any): number {
@@ -341,7 +367,7 @@ export class DataMigrationService {
       '170a5cca-9363-4a0a-88ec-ff1b046fe2d7': 1.8, // Carbon Intensity per Bottle (kg CO₂e/bottle)
       'f934598b-5367-4024-8c82-3ed92f48b7da': 2.5, // Total Carbon Emissions (tonnes CO₂e)
       '2bf9535d-c36a-4010-819e-61c0d8f1c555': 8.5, // Water Efficiency (L/bottle)
-      '91bc4cba-d22a-40c8-92f0-a17876c2dc35': 0.05, // Waste Reduction (%)
+      '91bc4cba-d22a-40c8-92f0-a17876c2dc35': 75.0, // Waste Diversion from Landfill (%) - typical distillery target
       '0e0edb33-634a-4c27-8c4c-5ca856c255cb': 25, // Renewable Energy Usage (%)
     };
     

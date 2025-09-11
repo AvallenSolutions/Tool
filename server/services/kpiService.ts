@@ -11,6 +11,7 @@ import {
   companyKpiGoals,
   verifiedSuppliers,
   monthlyFacilityData,
+  wasteStreams,
   smartGoals,
   type KpiDefinition,
   type CompanyKpiGoal,
@@ -306,6 +307,19 @@ export class KPICalculationService {
         return await this.getDataPoint(formulaJson.dataPoint, companyId);
       }
       
+      // CRITICAL FIX: Handle complex formula expressions in numerator
+      if (formulaJson.numerator && formulaJson.calculation_type) {
+        // Special handling for waste diversion percentage calculation
+        if (formulaJson.numerator.includes('totalWasteWeight') && 
+            formulaJson.numerator.includes('landfillWasteWeight')) {
+          console.log('🎯 CRITICAL FIX: Routing waste diversion formula to dedicated method');
+          return await this.calculateWasteDiversionFromLandfill(companyId);
+        }
+        
+        // Handle other complex expressions here if needed in the future
+        console.warn(`Complex formula expression not yet supported: ${formulaJson.numerator}`);
+      }
+      
       return 0;
     } catch (error) {
       console.error('Error evaluating KPI formula:', error);
@@ -388,6 +402,10 @@ export class KPICalculationService {
           
         case 'human_rights_policy_implemented':
           return await this.checkHumanRightsPolicyImplemented(companyId);
+        
+        // CRITICAL FIX: Add waste diversion percentage data point 
+        case 'wasteDiversionFromLandfillPercentage':
+          return await this.calculateWasteDiversionFromLandfill(companyId);
         
         default:
           console.warn(`Unknown data point: ${dataPoint}`);
@@ -911,6 +929,86 @@ export class KPICalculationService {
     } catch (error) {
       console.error('Error calculating refined total waste generated:', error);
       return 0;
+    }
+  }
+
+  async calculateWasteDiversionFromLandfill(companyId: number): Promise<number> {
+    try {
+      // CRITICAL FIX: Add 12-month time window constraint for accurate KPI calculation
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      
+      console.log(`📊 WASTE DIVERSION KPI: Calculating for company ${companyId} with 12-month window from ${twelveMonthsAgo.toISOString().split('T')[0]}`);
+      
+      // Get waste streams data from the last 12 months
+      const wasteStreamData = await db
+        .select({
+          weightKg: sql<string>`CAST(${wasteStreams.weightKg} AS TEXT)`,
+          disposalRoute: wasteStreams.disposalRoute,
+          month: monthlyFacilityData.month,
+          facilityId: monthlyFacilityData.facilityId
+        })
+        .from(wasteStreams)
+        .innerJoin(monthlyFacilityData, eq(wasteStreams.monthlyFacilityDataId, monthlyFacilityData.id))
+        .where(
+          and(
+            eq(monthlyFacilityData.companyId, companyId),
+            sql`${monthlyFacilityData.month} >= ${twelveMonthsAgo.toISOString().split('T')[0]}`
+          )
+        )
+        .orderBy(desc(monthlyFacilityData.month));
+
+      let totalWasteWeight = 0;
+      let landfillWasteWeight = 0;
+
+      for (const stream of wasteStreamData) {
+        const streamWeight = parseFloat(stream.weightKg?.toString() || '0');
+        if (streamWeight > 0) {
+          totalWasteWeight += streamWeight;
+          
+          // Check if disposal route is landfill (case insensitive)
+          if (stream.disposalRoute && 
+              stream.disposalRoute.toLowerCase().includes('landfill')) {
+            landfillWasteWeight += streamWeight;
+          }
+        }
+      }
+
+      // Calculate diversion percentage: (total - landfill) / total * 100
+      if (totalWasteWeight === 0) {
+        console.log(`📊 WASTE DIVERSION KPI: No waste stream data found for company ${companyId} in last 12 months`);
+        console.log(`   Searched: ${wasteStreamData.length} waste stream records`);
+        console.log(`   Time window: Last 12 months from ${twelveMonthsAgo.toISOString().split('T')[0]}`);
+        console.log(`   ⚠️ IMPORTANT: This represents 'no data available' not '0% diversion'`);
+        console.log(`   📈 For KPI purposes: Returning 0 to avoid dashboard errors, but consider showing 'No Data' in UI`);
+        
+        // CRITICAL: This is truly "no data" but we return 0 to prevent dashboard crashes
+        // Future enhancement: Return null and handle null values in dashboard
+        return 0; // No waste data available in time window - not the same as 0% diversion
+      }
+
+      const diversionPercentage = ((totalWasteWeight - landfillWasteWeight) / totalWasteWeight) * 100;
+      
+      console.log(`♻️  WASTE DIVERSION KPI CALCULATION for company ${companyId} (12-month window):`);
+      console.log(`   Time period: ${twelveMonthsAgo.toISOString().split('T')[0]} to ${new Date().toISOString().split('T')[0]}`);
+      console.log(`   Total waste streams: ${wasteStreamData.length}`);
+      console.log(`   Facilities covered: ${new Set(wasteStreamData.map(s => s.facilityId)).size}`);
+      console.log(`   Total waste: ${totalWasteWeight.toFixed(1)} kg`);
+      console.log(`   Landfill waste: ${landfillWasteWeight.toFixed(1)} kg`);
+      console.log(`   Diverted waste: ${(totalWasteWeight - landfillWasteWeight).toFixed(1)} kg`);
+      console.log(`   🎯 Final KPI value: ${diversionPercentage.toFixed(1)}%`);
+      
+      // Enhanced data quality reporting
+      if (diversionPercentage === 0) {
+        console.log(`   ⚠️  Note: True 0% diversion - all waste goes to landfill`);
+      } else if (diversionPercentage === 100) {
+        console.log(`   🎉 Perfect diversion - no waste to landfill!`);
+      }
+
+      return Math.max(0, Math.min(100, diversionPercentage)); // Clamp between 0-100%
+    } catch (error) {
+      console.error('Error calculating waste diversion from landfill:', error);
+      return 0; // Return 0% on error
     }
   }
 
@@ -1572,6 +1670,12 @@ export class EnhancedKPIService {
         return await calcService.calculateCarbonIntensityPerLitre(companyId);
       case 'carbonIntensityPerLitre':
         return await calcService.calculateCarbonIntensityPerLitre(companyId);
+      case '(totalWasteWeight - landfillWasteWeight) / totalWasteWeight * 100':
+        // CRITICAL FIX: Add missing mapping for waste diversion KPI formula reference
+        return await calcService.calculateWasteDiversionFromLandfill(companyId);
+      case 'wasteDiversionFromLandfillPercentage':
+        // Alternative formula reference for waste diversion
+        return await calcService.calculateWasteDiversionFromLandfill(companyId);
       default:
         return 0;
     }

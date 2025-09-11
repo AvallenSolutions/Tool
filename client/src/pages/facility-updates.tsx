@@ -556,7 +556,7 @@ export default function FacilityUpdates() {
                       <SelectItem value="170a5cca-9363-4a0a-88ec-ff1b046fe2d7">Carbon Intensity per Bottle</SelectItem>
                       <SelectItem value="f934598b-5367-4024-8c82-3ed92f48b7da">Total Carbon Emissions</SelectItem>
                       <SelectItem value="2bf9535d-c36a-4010-819e-61c0d8f1c555">Water Efficiency</SelectItem>
-                      <SelectItem value="91bc4cba-d22a-40c8-92f0-a17876c2dc35">Waste Reduction</SelectItem>
+                      <SelectItem value="91bc4cba-d22a-40c8-92f0-a17876c2dc35">Waste Diversion from Landfill (%)</SelectItem>
                       <SelectItem value="0e0edb33-634a-4c27-8c4c-5ca856c255cb">Renewable Energy Usage</SelectItem>
                     </SelectContent>
                   </Select>

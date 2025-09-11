@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { kpiDefinitions } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const kpiDefinitionsData = [
   // Environmental KPIs
@@ -51,15 +52,16 @@ const kpiDefinitionsData = [
     description: "Water consumption efficiency per unit of production"
   },
   {
-    kpiName: "Waste Reduction",
+    id: "91bc4cba-d22a-40c8-92f0-a17876c2dc35", // CRITICAL: Use stable ID to update existing KPI
+    kpiName: "Waste Diversion from Landfill (%)",
     kpiCategory: "Environmental",
     unit: "%",
     formulaJson: {
-      numerator: "(wasteGenerated - wasteRecycled) / wasteGenerated * 100",
+      dataPoint: "wasteDiversionFromLandfillPercentage", // CRITICAL FIX: Use dataPoint format instead of complex numerator
       calculation_type: "percentage" as const,
-      description: "Percentage of waste diverted from landfill"
+      description: "Percentage of waste diverted from landfill disposal to recycling, composting, anaerobic digestion, animal feed and other circular routes"
     },
-    description: "Percentage of total waste that is recycled or diverted from landfill"
+    description: "Measures company's circularity performance by calculating the percentage of waste diverted from landfill disposal to circular routes"
   },
   {
     kpiName: "Renewable Energy Usage",
@@ -116,18 +118,61 @@ export async function seedKpiDefinitions() {
   try {
     console.log("Seeding KPI definitions...");
     
-    // Check if KPI definitions already exist
-    const existingKpis = await db.select().from(kpiDefinitions);
-    
-    if (existingKpis.length > 0) {
-      console.log(`Found ${existingKpis.length} existing KPI definitions. Skipping seed.`);
-      return;
+    // CRITICAL FIX: Use upsert logic with ID-based matching to prevent duplicates
+    for (const kpiDef of kpiDefinitionsData) {
+      let existingKpi;
+      
+      // Check by ID first (for records that have explicit IDs)
+      if ('id' in kpiDef) {
+        existingKpi = await db
+          .select()
+          .from(kpiDefinitions)
+          .where(eq(kpiDefinitions.id, kpiDef.id as string))
+          .limit(1);
+      }
+      
+      // Fall back to name-based matching if no ID match found
+      if (!existingKpi || existingKpi.length === 0) {
+        existingKpi = await db
+          .select()
+          .from(kpiDefinitions)
+          .where(eq(kpiDefinitions.kpiName, kpiDef.kpiName))
+          .limit(1);
+      }
+      
+      if (existingKpi && existingKpi.length > 0) {
+        // Update existing KPI definition to ensure formula and description are current
+        const updateData = {
+          kpiCategory: kpiDef.kpiCategory,
+          unit: kpiDef.unit,
+          formulaJson: kpiDef.formulaJson,
+          description: kpiDef.description,
+          updatedAt: new Date()
+        };
+        
+        if ('id' in kpiDef) {
+          // Update by ID for precise targeting
+          await db
+            .update(kpiDefinitions)
+            .set(updateData)
+            .where(eq(kpiDefinitions.id, kpiDef.id as string));
+          console.log(`✅ Updated KPI definition by ID: ${kpiDef.kpiName} (${kpiDef.id})`);
+        } else {
+          // Update by name as fallback
+          await db
+            .update(kpiDefinitions)
+            .set(updateData)
+            .where(eq(kpiDefinitions.kpiName, kpiDef.kpiName));
+          console.log(`✅ Updated existing KPI definition: ${kpiDef.kpiName}`);
+        }
+      } else {
+        // Insert new KPI definition
+        await db.insert(kpiDefinitions).values(kpiDef);
+        console.log(`➕ Inserted new KPI definition: ${kpiDef.kpiName}`);
+      }
     }
     
-    // Insert all KPI definitions
-    await db.insert(kpiDefinitions).values(kpiDefinitionsData);
-    
-    console.log(`Successfully seeded ${kpiDefinitionsData.length} KPI definitions`);
+    console.log(`Successfully processed ${kpiDefinitionsData.length} KPI definitions (upsert)`);
   } catch (error) {
     console.error("Error seeding KPI definitions:", error);
     throw error;
