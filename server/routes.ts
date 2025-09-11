@@ -9991,42 +9991,6 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
     }
   });
 
-  // Report Template Management (Enhanced for Draft/Published workflow)
-  app.post('/api/report-templates', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user?.claims?.sub;
-      
-      if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
-
-      const company = await dbStorage.getCompanyByOwner(userId);
-      if (!company) {
-        return res.status(404).json({ error: 'Company not found' });
-      }
-
-      // Store template in database with draft/published status support
-      const { customReports } = await import('@shared/schema');
-      const templateData = {
-        companyId: company.id,
-        reportTitle: req.body.templateName || req.body.reportTitle || 'Untitled Report',
-        reportLayout: req.body, // Store entire template structure
-        status: req.body.status || 'draft', // Support draft/published status
-        reportContent: req.body.reportContent || {},
-        selectedInitiatives: req.body.selectedInitiatives || [],
-        selectedKPIs: req.body.selectedKPIs || [],
-        uploadedImages: req.body.uploadedImages || {},
-        reportType: req.body.reportType || 'dynamic'
-      };
-
-      const [result] = await db.insert(customReports).values(templateData).returning();
-      res.json(result);
-    } catch (error) {
-      console.error('Error saving report template:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
 
   app.get('/api/report-templates', isAuthenticated, async (req, res) => {
     try {
