@@ -748,22 +748,43 @@ export default function ReportBuilderPage() {
   const saveTemplateMutation = useMutation({
     mutationFn: async (template: ReportTemplate) => {
       console.log('🚀 Publishing template:', { templateId: template.id, template });
+      
+      let templateToPublish = template;
+      
+      // If template doesn't have an ID, save it as draft first
       if (!template.id) {
-        throw new Error('Template must be saved as draft first before publishing');
+        console.log('📝 Template not saved yet, saving as draft first...');
+        const draftData = {
+          ...template,
+          status: 'draft'
+        };
+        const draftResponse = await apiRequest('POST', '/api/report-templates', draftData);
+        templateToPublish = { ...template, id: draftResponse.id };
+        console.log('✅ Draft saved with ID:', draftResponse.id);
       }
       
       // Use dedicated publish endpoint
-      console.log(`🌐 Making PUT request to: /api/report-templates/${template.id}/publish`);
-      const response = await apiRequest('PUT', `/api/report-templates/${template.id}/publish`, {});
+      console.log(`🌐 Making PUT request to: /api/report-templates/${templateToPublish.id}/publish`);
+      const response = await apiRequest('PUT', `/api/report-templates/${templateToPublish.id}/publish`, {});
       console.log('✅ Publish response:', response);
       return response;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast({
         title: "Success",
         description: "Report template published successfully"
       });
       setHasUnsavedChanges(false);
+      
+      // If template was created during publish, update currentTemplate with ID
+      if (!variables.id && currentTemplate) {
+        setCurrentTemplate({
+          ...currentTemplate,
+          status: 'published',
+          lastSaved: new Date().toISOString()
+        });
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['/api/report-templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
     },
