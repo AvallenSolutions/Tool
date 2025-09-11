@@ -2088,10 +2088,42 @@ export const insertMonthlyFacilityDataSchema = createInsertSchema(monthlyFacilit
 // Type exports for Waste Streams
 export type WasteStream = typeof wasteStreams.$inferSelect;
 export type InsertWasteStream = typeof wasteStreams.$inferInsert;
+
+// Enhanced validation schema for waste streams
 export const insertWasteStreamSchema = createInsertSchema(wasteStreams).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  wasteType: z.enum([
+    'general_waste',
+    'dry_mixed_recycling', 
+    'glass_recycling',
+    'organic_waste',
+    'hazardous_waste'
+  ], {
+    required_error: "Waste type is required",
+    invalid_type_error: "Invalid waste type - must be one of: general_waste, dry_mixed_recycling, glass_recycling, organic_waste, hazardous_waste"
+  }),
+  disposalRoute: z.enum([
+    'landfill',
+    'recycling',
+    'anaerobic_digestion',
+    'composting',
+    'animal_feed'
+  ], {
+    required_error: "Disposal route is required",
+    invalid_type_error: "Invalid disposal route - must be one of: landfill, recycling, anaerobic_digestion, composting, animal_feed"
+  }),
+  weightKg: z.string()
+    .transform((val) => parseFloat(val))
+    .pipe(z.number({
+      required_error: "Weight in kg is required",
+      invalid_type_error: "Weight must be a valid number"
+    })
+    .min(0, "Weight cannot be negative")
+    .max(50000, "Weight cannot exceed 50,000 kg")
+    .multipleOf(0.01, "Weight can have at most 2 decimal places"))
 });
 
 // Type exports for Product Versions

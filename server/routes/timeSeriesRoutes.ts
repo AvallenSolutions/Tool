@@ -1,15 +1,21 @@
 import { Router } from "express";
 import { z } from "zod";
+import { ZodError } from "zod";
 import { db } from "../db";
 import { eq, and, gte, lte, desc, asc, sql } from "drizzle-orm";
+import { isAuthenticated } from "../replitAuth";
+import { storage as dbStorage } from "../storage";
 import { 
   monthlyFacilityData,
+  wasteStreams,
   productVersions,
   kpiSnapshots,
   products,
   insertMonthlyFacilityDataSchema,
+  insertWasteStreamSchema,
   insertProductVersionSchema,
   type InsertMonthlyFacilityData,
+  type InsertWasteStream,
   type InsertProductVersion,
 } from "@shared/schema";
 import { timeSeriesEngine } from "../services/TimeSeriesEngine";
@@ -204,6 +210,247 @@ router.put("/monthly-facility/:recordId", async (req, res) => {
   } catch (error) {
     console.error("Error updating monthly facility data:", error);
     res.status(500).json({ error: "Failed to update monthly facility data" });
+  }
+});
+
+// Waste Streams Routes
+
+// Get waste streams for a monthly facility record
+router.get("/monthly-facility/:monthlyFacilityDataId/waste-streams", isAuthenticated, async (req, res) => {
+  try {
+    const monthlyFacilityDataId = req.params.monthlyFacilityDataId;
+
+    // Validate that monthlyFacilityDataId exists
+    if (!monthlyFacilityDataId) {
+      return res.status(400).json({ error: "Monthly facility data ID is required" });
+    }
+
+    // Get user's company for authorization
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const company = await dbStorage.getCompanyByOwner(userId);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    // First verify the monthly facility data record exists and get company info for access control
+    const facilityRecord = await db
+      .select({ companyId: monthlyFacilityData.companyId })
+      .from(monthlyFacilityData)
+      .where(eq(monthlyFacilityData.id, monthlyFacilityDataId));
+
+    if (!facilityRecord.length) {
+      return res.status(404).json({ error: "Monthly facility data record not found" });
+    }
+
+    // Verify user's company owns this facility data
+    if (facilityRecord[0].companyId !== company.id) {
+      return res.status(403).json({ error: "Access denied: facility data belongs to another company" });
+    }
+
+    // Fetch all waste streams for this monthly facility record
+    const wasteStreamRecords = await db
+      .select()
+      .from(wasteStreams)
+      .where(eq(wasteStreams.monthlyFacilityDataId, monthlyFacilityDataId))
+      .orderBy(desc(wasteStreams.createdAt));
+
+    console.log(`🗑️ Fetched ${wasteStreamRecords.length} waste streams for monthly facility data ${monthlyFacilityDataId}`);
+    res.json(wasteStreamRecords);
+  } catch (error) {
+    console.error("Error fetching waste streams:", error);
+    res.status(500).json({ error: "Failed to fetch waste streams" });
+  }
+});
+
+// Create new waste stream entry
+router.post("/waste-streams", isAuthenticated, async (req, res) => {
+  try {
+    const wasteStreamData = insertWasteStreamSchema.parse(req.body);
+
+    // Get user's company for authorization
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const company = await dbStorage.getCompanyByOwner(userId);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    // Verify the referenced monthly facility data exists and get company info for access control
+    const facilityRecord = await db
+      .select({ companyId: monthlyFacilityData.companyId })
+      .from(monthlyFacilityData)
+      .where(eq(monthlyFacilityData.id, wasteStreamData.monthlyFacilityDataId));
+
+    if (!facilityRecord.length) {
+      return res.status(404).json({ error: "Referenced monthly facility data record not found" });
+    }
+
+    // Verify user's company owns the target monthly facility data
+    if (facilityRecord[0].companyId !== company.id) {
+      return res.status(403).json({ error: "Access denied: cannot create waste streams for another company's facility data" });
+    }
+
+    // Create the new waste stream
+    const [newWasteStream] = await db
+      .insert(wasteStreams)
+      .values(wasteStreamData)
+      .returning();
+
+    console.log(`🗑️ Created waste stream ${newWasteStream.id} for monthly facility data ${wasteStreamData.monthlyFacilityDataId}`);
+    res.status(201).json(newWasteStream);
+  } catch (error) {
+    console.error("Error creating waste stream:", error);
+    if (error instanceof ZodError) {
+      return res.status(400).json({ 
+        error: "Validation failed", 
+        details: error.errors 
+      });
+    }
+    res.status(500).json({ error: "Failed to create waste stream" });
+  }
+});
+
+// Update existing waste stream
+router.put("/waste-streams/:id", isAuthenticated, async (req, res) => {
+  try {
+    const wasteStreamId = req.params.id;
+    const updateData = req.body;
+
+    // Get user's company for authorization
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const company = await dbStorage.getCompanyByOwner(userId);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    // Validate that the waste stream exists and get its associated company
+    const existingWasteStreamWithCompany = await db
+      .select({
+        wasteStream: wasteStreams,
+        companyId: monthlyFacilityData.companyId
+      })
+      .from(wasteStreams)
+      .innerJoin(monthlyFacilityData, eq(wasteStreams.monthlyFacilityDataId, monthlyFacilityData.id))
+      .where(eq(wasteStreams.id, wasteStreamId));
+
+    if (!existingWasteStreamWithCompany.length) {
+      return res.status(404).json({ error: "Waste stream not found" });
+    }
+
+    // Verify user's company owns this waste stream
+    if (existingWasteStreamWithCompany[0].companyId !== company.id) {
+      return res.status(403).json({ error: "Access denied: waste stream belongs to another company" });
+    }
+
+    // If monthlyFacilityDataId is being updated, validate it exists and belongs to user's company
+    if (updateData.monthlyFacilityDataId) {
+      const facilityRecord = await db
+        .select({ companyId: monthlyFacilityData.companyId })
+        .from(monthlyFacilityData)
+        .where(eq(monthlyFacilityData.id, updateData.monthlyFacilityDataId));
+
+      if (!facilityRecord.length) {
+        return res.status(404).json({ error: "Referenced monthly facility data record not found" });
+      }
+
+      // Verify the new facility data also belongs to user's company
+      if (facilityRecord[0].companyId !== company.id) {
+        return res.status(403).json({ error: "Access denied: cannot assign waste stream to another company's facility data" });
+      }
+    }
+
+    // Validate the update data (partial validation for PUT)
+    const partialSchema = insertWasteStreamSchema.partial();
+    const validatedUpdateData = partialSchema.parse(updateData);
+
+    // Update the waste stream
+    const [updatedWasteStream] = await db
+      .update(wasteStreams)
+      .set({ 
+        ...validatedUpdateData, 
+        updatedAt: new Date() 
+      })
+      .where(eq(wasteStreams.id, wasteStreamId))
+      .returning();
+
+    console.log(`🗑️ Updated waste stream ${wasteStreamId}`);
+    res.json(updatedWasteStream);
+  } catch (error) {
+    console.error("Error updating waste stream:", error);
+    if (error instanceof ZodError) {
+      return res.status(400).json({ 
+        error: "Validation failed", 
+        details: error.errors 
+      });
+    }
+    res.status(500).json({ error: "Failed to update waste stream" });
+  }
+});
+
+// Delete waste stream by ID
+router.delete("/waste-streams/:id", isAuthenticated, async (req, res) => {
+  try {
+    const wasteStreamId = req.params.id;
+
+    // Get user's company for authorization
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const company = await dbStorage.getCompanyByOwner(userId);
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    // Verify the waste stream exists and get its associated company
+    const existingWasteStreamWithCompany = await db
+      .select({
+        wasteStream: wasteStreams,
+        companyId: monthlyFacilityData.companyId
+      })
+      .from(wasteStreams)
+      .innerJoin(monthlyFacilityData, eq(wasteStreams.monthlyFacilityDataId, monthlyFacilityData.id))
+      .where(eq(wasteStreams.id, wasteStreamId));
+
+    if (!existingWasteStreamWithCompany.length) {
+      return res.status(404).json({ error: "Waste stream not found" });
+    }
+
+    // Verify user's company owns this waste stream
+    if (existingWasteStreamWithCompany[0].companyId !== company.id) {
+      return res.status(403).json({ error: "Access denied: waste stream belongs to another company" });
+    }
+
+    // Delete the waste stream
+    await db
+      .delete(wasteStreams)
+      .where(eq(wasteStreams.id, wasteStreamId));
+
+    console.log(`🗑️ Deleted waste stream ${wasteStreamId}`);
+    res.json({ 
+      success: true, 
+      message: "Waste stream deleted successfully",
+      deletedId: wasteStreamId
+    });
+  } catch (error) {
+    console.error("Error deleting waste stream:", error);
+    res.status(500).json({ error: "Failed to delete waste stream" });
   }
 });
 
