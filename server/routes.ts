@@ -9992,66 +9992,6 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
   });
 
 
-  app.get('/api/report-templates', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user?.claims?.sub;
-      
-      if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
-      }
-
-      const company = await dbStorage.getCompanyByOwner(userId);
-      if (!company) {
-        return res.status(404).json({ error: 'Company not found' });
-      }
-
-      const { customReports } = await import('@shared/schema');
-      const { sql } = await import('drizzle-orm');
-      
-      // Support status filtering via query parameter
-      const statusFilter = req.query.status as string;
-      let conditions = eq(customReports.companyId, company.id);
-      
-      if (statusFilter && (statusFilter === 'draft' || statusFilter === 'published')) {
-        conditions = and(
-          eq(customReports.companyId, company.id),
-          eq(customReports.status, statusFilter)
-        );
-      }
-
-      const templates = await db
-        .select()
-        .from(customReports)
-        .where(conditions)
-        .orderBy(desc(sql`coalesce(${customReports.lastSaved}, ${customReports.createdAt})`));
-
-      // Transform to expected format with enhanced fields
-      const formattedTemplates = templates.map(template => ({
-        id: template.id,
-        companyId: template.companyId,
-        templateName: template.reportTitle,
-        reportTitle: template.reportTitle,
-        status: template.status,
-        isDraft: template.status === 'draft',
-        lastSaved: template.lastSaved,
-        audienceType: (template.reportLayout as any)?.audienceType || 'stakeholders',
-        blocks: (template.reportLayout as any)?.blocks || [],
-        reportContent: template.reportContent || {},
-        selectedInitiatives: template.selectedInitiatives || [],
-        selectedKPIs: template.selectedKPIs || [],
-        uploadedImages: template.uploadedImages || {},
-        reportLayout: template.reportLayout,
-        createdAt: template.createdAt,
-        updatedAt: template.updatedAt
-      }));
-
-      res.json(formattedTemplates);
-    } catch (error) {
-      console.error('Error fetching report templates:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
 
   // Auto-Save Draft Report (for frequent saves without validation)
   app.put('/api/report-templates/:id/autosave', isAuthenticated, async (req, res) => {
