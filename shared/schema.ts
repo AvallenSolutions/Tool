@@ -1978,6 +1978,17 @@ export const monthlyFacilityData = pgTable("monthly_facility_data", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Waste Streams table - stores detailed waste stream data for company footprint measurements
+export const wasteStreams = pgTable("waste_streams", {
+  id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
+  monthlyFacilityDataId: text("monthly_facility_data_id").notNull().references(() => monthlyFacilityData.id),
+  wasteType: varchar("waste_type", { length: 50 }).notNull(), // 'general_waste', 'dry_mixed_recycling', 'glass_recycling', 'organic_waste', 'hazardous_waste'
+  weightKg: numeric("weight_kg", { precision: 12, scale: 2 }).notNull(), // Weight in kilograms
+  disposalRoute: varchar("disposal_route", { length: 50 }), // 'landfill', 'recycling', 'anaerobic_digestion', 'composting', 'animal_feed'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Product Versions table - stores different versions of products over time
 export const productVersions = pgTable("product_versions", {
   id: text("id").$defaultFn(() => crypto.randomUUID()).primaryKey(),
@@ -2021,7 +2032,7 @@ export const kpiSnapshots = pgTable("kpi_snapshots", {
 });
 
 // Relations for Monthly Facility Data
-export const monthlyFacilityDataRelations = relations(monthlyFacilityData, ({ one }) => ({
+export const monthlyFacilityDataRelations = relations(monthlyFacilityData, ({ one, many }) => ({
   company: one(companies, {
     fields: [monthlyFacilityData.companyId],
     references: [companies.id],
@@ -2029,6 +2040,15 @@ export const monthlyFacilityDataRelations = relations(monthlyFacilityData, ({ on
   facility: one(productionFacilities, {
     fields: [monthlyFacilityData.facilityId],
     references: [productionFacilities.id],
+  }),
+  wasteStreams: many(wasteStreams),
+}));
+
+// Relations for Waste Streams
+export const wasteStreamsRelations = relations(wasteStreams, ({ one }) => ({
+  monthlyFacilityData: one(monthlyFacilityData, {
+    fields: [wasteStreams.monthlyFacilityDataId],
+    references: [monthlyFacilityData.id],
   }),
 }));
 
@@ -2060,6 +2080,15 @@ export const kpiSnapshotsRelations = relations(kpiSnapshots, ({ one }) => ({
 export type MonthlyFacilityData = typeof monthlyFacilityData.$inferSelect;
 export type InsertMonthlyFacilityData = typeof monthlyFacilityData.$inferInsert;
 export const insertMonthlyFacilityDataSchema = createInsertSchema(monthlyFacilityData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports for Waste Streams
+export type WasteStream = typeof wasteStreams.$inferSelect;
+export type InsertWasteStream = typeof wasteStreams.$inferInsert;
+export const insertWasteStreamSchema = createInsertSchema(wasteStreams).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
