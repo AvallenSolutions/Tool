@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { apiRequest } from '@/lib/queryClient';
+import WasteStreamManager, { WasteStream } from './WasteStreamManager';
 
 interface MonthlyFacilityData {
   id: string;
@@ -24,7 +25,7 @@ interface MonthlyFacilityData {
   waterM3: string | null;
   productionVolume: string | null;
   
-  // Waste data fields
+  // Waste data fields (kept for backward compatibility)
   organicWasteKg: string | null;
   packagingWasteKg: string | null;
   hazardousWasteKg: string | null;
@@ -37,6 +38,9 @@ interface MonthlyFacilityData {
     facilityCount: number;
     aggregationType: string;
   };
+  
+  // New waste streams data
+  wasteStreams?: WasteStream[];
 }
 
 interface KpiSnapshot {
@@ -57,13 +61,8 @@ export default function MonthlyFacilityDataSection() {
     naturalGasM3: '',
     waterM3: '',
     productionVolume: '',
-    
-    // Waste data fields
-    organicWasteKg: '',
-    packagingWasteKg: '',
-    hazardousWasteKg: '',
-    generalWasteKg: '',
   });
+  const [currentWasteStreams, setCurrentWasteStreams] = useState<WasteStream[]>([]);
 
   // Query for facility data from facility 1 (Main Distillery) instead of aggregated data
   const facilityQueryUrl = `/api/time-series/monthly-facility/1`;
@@ -137,13 +136,8 @@ export default function MonthlyFacilityDataSection() {
       naturalGasM3: record.naturalGasM3 || '',
       waterM3: record.waterM3 || '',
       productionVolume: record.productionVolume || '',
-      
-      // Waste data fields
-      organicWasteKg: record.organicWasteKg || '',
-      packagingWasteKg: record.packagingWasteKg || '',
-      hazardousWasteKg: record.hazardousWasteKg || '',
-      generalWasteKg: record.generalWasteKg || '',
     });
+    setCurrentWasteStreams(record.wasteStreams || []);
   };
 
   const cancelEdit = () => {
@@ -153,33 +147,39 @@ export default function MonthlyFacilityDataSection() {
       naturalGasM3: '',
       waterM3: '',
       productionVolume: '',
-      
-      // Waste data fields
-      organicWasteKg: '',
-      packagingWasteKg: '',
-      hazardousWasteKg: '',
-      generalWasteKg: '',
     });
+    setCurrentWasteStreams([]);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingRecord || !allFacilityData) return;
     
     // Find the record being edited to get its month
     const currentRecord = allFacilityData.find((record: any) => record.id === editingRecord);
     if (!currentRecord) return;
 
+    // Validate waste streams if any exist
+    if (currentWasteStreams.length > 0) {
+      const invalidStreams = currentWasteStreams.some(stream => 
+        !stream.wasteType || stream.weightKg <= 0 || !stream.disposalRoute
+      );
+      
+      if (invalidStreams) {
+        toast({
+          title: "Validation Error",
+          description: "Please ensure all waste streams have valid waste type, weight > 0, and disposal route.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const payload = {
       electricityKwh: editFormData.electricityKwh || null,
       naturalGasM3: editFormData.naturalGasM3 || null,
       waterM3: editFormData.waterM3 || null,
       productionVolume: editFormData.productionVolume || null,
-      
-      // Waste data fields
-      organicWasteKg: editFormData.organicWasteKg || null,
-      packagingWasteKg: editFormData.packagingWasteKg || null,
-      hazardousWasteKg: editFormData.hazardousWasteKg || null,
-      generalWasteKg: editFormData.generalWasteKg || null,
+      wasteStreams: currentWasteStreams,
     };
 
     updateFacilityData.mutate({ month: currentRecord.month, data: payload });
@@ -359,59 +359,12 @@ export default function MonthlyFacilityDataSection() {
                                 </div>
                               </div>
                               
-                              {/* Waste Data Row */}
+                              {/* Dynamic Waste Stream Management */}
                               <div>
-                                <h4 className="text-sm font-medium text-gray-800 mb-3">Waste Data</h4>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                  <div className="space-y-2">
-                                    <Label className="text-xs font-medium text-gray-700">Organic Waste (kg)</Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="500"
-                                      value={editFormData.organicWasteKg}
-                                      onChange={(e) => setEditFormData(prev => ({ ...prev, organicWasteKg: e.target.value }))}
-                                      data-testid={`input-edit-organic-waste-${data.id}`}
-                                      className="text-sm"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label className="text-xs font-medium text-gray-700">Packaging Waste (kg)</Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="200"
-                                      value={editFormData.packagingWasteKg}
-                                      onChange={(e) => setEditFormData(prev => ({ ...prev, packagingWasteKg: e.target.value }))}
-                                      data-testid={`input-edit-packaging-waste-${data.id}`}
-                                      className="text-sm"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label className="text-xs font-medium text-gray-700">Hazardous Waste (kg)</Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="50"
-                                      value={editFormData.hazardousWasteKg}
-                                      onChange={(e) => setEditFormData(prev => ({ ...prev, hazardousWasteKg: e.target.value }))}
-                                      data-testid={`input-edit-hazardous-waste-${data.id}`}
-                                      className="text-sm"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label className="text-xs font-medium text-gray-700">General Waste (kg)</Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="300"
-                                      value={editFormData.generalWasteKg}
-                                      onChange={(e) => setEditFormData(prev => ({ ...prev, generalWasteKg: e.target.value }))}
-                                      data-testid={`input-edit-general-waste-${data.id}`}
-                                      className="text-sm"
-                                    />
-                                  </div>
-                                </div>
+                                <WasteStreamManager
+                                  monthlyFacilityDataId={data.id}
+                                  onWasteStreamsChange={setCurrentWasteStreams}
+                                />
                               </div>
                             </div>
                           ) : (
@@ -439,27 +392,36 @@ export default function MonthlyFacilityDataSection() {
                                 </div>
                               </div>
                               
-                              {/* Waste Data Display */}
+                              {/* Waste Streams Display */}
                               <div>
-                                <h4 className="text-sm font-medium text-gray-800 mb-3">Waste Data</h4>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                  <div>
-                                    <div className="font-medium text-gray-700">Organic Waste</div>
-                                    <div className="text-gray-900" data-testid={`text-organic-waste-${data.id}`}>{formatValue(data.organicWasteKg, 'kg')}</div>
+                                <h4 className="text-sm font-medium text-gray-800 mb-3">Waste Streams</h4>
+                                {data.wasteStreams && data.wasteStreams.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {data.wasteStreams.map((stream, index) => (
+                                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg text-sm">
+                                        <div className="flex-1">
+                                          <div className="font-medium text-gray-700">{stream.wasteType}</div>
+                                          <div className="text-xs text-gray-600">{stream.disposalRoute}</div>
+                                        </div>
+                                        <div className="font-medium text-gray-900" data-testid={`text-waste-stream-${data.id}-${index}`}>
+                                          {stream.weightKg.toFixed(1)} kg
+                                        </div>
+                                      </div>
+                                    ))}
+                                    <div className="pt-2 border-t border-gray-200">
+                                      <div className="flex justify-between font-medium text-gray-800">
+                                        <span>Total Waste:</span>
+                                        <span data-testid={`text-total-waste-${data.id}`}>
+                                          {data.wasteStreams.reduce((sum, stream) => sum + stream.weightKg, 0).toFixed(1)} kg
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <div className="font-medium text-gray-700">Packaging Waste</div>
-                                    <div className="text-gray-900" data-testid={`text-packaging-waste-${data.id}`}>{formatValue(data.packagingWasteKg, 'kg')}</div>
+                                ) : (
+                                  <div className="text-sm text-gray-600" data-testid={`text-no-waste-data-${data.id}`}>
+                                    No waste streams recorded
                                   </div>
-                                  <div>
-                                    <div className="font-medium text-gray-700">Hazardous Waste</div>
-                                    <div className="text-gray-900" data-testid={`text-hazardous-waste-${data.id}`}>{formatValue(data.hazardousWasteKg, 'kg')}</div>
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-gray-700">General Waste</div>
-                                    <div className="text-gray-900" data-testid={`text-general-waste-${data.id}`}>{formatValue(data.generalWasteKg, 'kg')}</div>
-                                  </div>
-                                </div>
+                                )}
                               </div>
                             </div>
                           )}
