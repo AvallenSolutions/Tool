@@ -1078,28 +1078,6 @@ export default function ReportBuilderPage() {
         <Header title="Dynamic Report Builder" subtitle="Create customized sustainability reports with drag-and-drop content blocks" />
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="container mx-auto max-w-7xl">
-            
-            {/* Report Title Section */}
-            <div className="mb-8">
-              <div className="flex items-center space-x-3 mb-4">
-                <Edit className="h-6 w-6 text-gray-600" />
-                <h1 className="text-2xl font-bold text-gray-900">Report Title</h1>
-              </div>
-              <Input
-                value={currentTemplate.templateName}
-                onChange={(e) => {
-                  setCurrentTemplate({
-                    ...currentTemplate,
-                    templateName: e.target.value
-                  });
-                  markAsChanged();
-                }}
-                placeholder="Enter your report title..."
-                className="text-xl font-semibold py-4 px-4 border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                data-testid="input-report-title"
-              />
-            </div>
-
       <div className="flex items-center justify-between mb-8">
         <div className="flex gap-2">
           <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
@@ -1289,6 +1267,27 @@ export default function ReportBuilderPage() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Report Title Section */}
+      <div className="mb-6">
+        <Label htmlFor="report-title-main" className="text-sm font-medium text-gray-700 mb-2 block">
+          Report Title
+        </Label>
+        <Input
+          id="report-title-main"
+          value={currentTemplate.templateName}
+          onChange={(e) => {
+            setCurrentTemplate({
+              ...currentTemplate,
+              templateName: e.target.value
+            });
+            markAsChanged();
+          }}
+          placeholder="Enter your report title..."
+          className="text-lg font-medium"
+          data-testid="input-report-title"
+        />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
