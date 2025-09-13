@@ -5,65 +5,98 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { Suspense, lazy } from "react";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
+
+// EAGER-LOADED: Essential pages for initial user flow
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Welcome from "@/pages/welcome";
 import Dashboard from "@/pages/dashboard";
-import Products from "@/pages/products";
-import CreateEnhancedProduct from "@/pages/CreateEnhancedProduct";
-import Reports from "@/pages/reports";
 
-import Settings from "@/pages/settings";
-import Company from "@/pages/Company";
-import Onboarding from "@/pages/onboarding";
-import SupplierPortal from "@/pages/SupplierPortal";
-import AdminDashboardMain from "@/pages/admin/EnhancedAdminDashboard";
-import SupplierManagement from "@/pages/admin/SupplierManagement";
-import UserManagement from "@/pages/admin/UserManagement";
-import UserDetail from "@/pages/admin/UserDetail";
-import PerformanceAnalytics from "@/pages/admin/PerformanceAnalytics";
-import AdminMessagingPage from "@/pages/admin/AdminMessaging";
-import AdminSupplierDetail from "@/pages/admin/SupplierDetail";
-import SupplierEdit from "@/pages/admin/SupplierEdit";
-import AdminProductManagement from "@/pages/admin/ProductManagement";
-import LCAApprovals from "@/pages/admin/LCAApprovals";
-import LCAJobsMonitoring from "@/pages/admin/LCAJobsMonitoring";
-import SupplierDataAdmin from "@/pages/admin/SupplierDataAdmin";
-import SupplierDataExtraction from "@/pages/admin/SupplierDataExtraction";
-import SupplierInvitations from "@/pages/admin/SupplierInvitations";
-import FeedbackDashboard from "@/pages/admin/FeedbackDashboard";
-import SupplierManagementOverview from "@/pages/admin/supplier-management/SupplierManagementOverview";
-import CreateSupplierProduct from "@/pages/admin/supplier-management/CreateSupplierProduct";
-import SupplierNetwork from "@/pages/SupplierNetwork";
-import SupplierDetail from "@/pages/SupplierDetail";
-import ProductDetail from "@/pages/ProductDetail";
-import SupplierProductDetailPage from "@/pages/SupplierProductDetail";
-import SupplierOnboarding from "@/pages/SupplierOnboarding";
-import SupplierRegistration from "@/pages/SupplierRegistration";
-import ProductRegistration from "@/pages/ProductRegistration";
-import Suppliers from "@/pages/suppliers";
-import GreenwashGuardian from "@/pages/GreenwashGuardian";
-import LCAPage from "@/pages/LCAPage";
-import TestRunner from "@/pages/TestRunner";
-import CollaborationHub from "@/pages/CollaborationHub";
-import ProductLcaPage from "@/pages/ProductLcaPage";
-import { KPIsPage } from "@/pages/kpis";
-import InitiativesPage from "@/pages/initiatives";
-import AIInsightsPage from "@/pages/ai-insights";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import TermsOfService from "@/pages/terms-of-service";
-import ComingSoon from "@/pages/ComingSoon";
-// Monthly facility updates now integrated into Production Facility popup
-// Company story now integrated into Company page
-// Initiatives functionality now integrated into Report Builder and SMART Goals
-import ReportsCreate from "@/pages/reports-create";
-import ReportBuilder from "@/pages/report-builder";
-// import PioneersSubscription from "@/pages/pioneers-subscription"; // Disabled due to Stripe loading issues
-import PioneersSubscriptionSimple from "@/pages/pioneers-subscription-simple";
-import PioneersNoStripe from "@/pages/pioneers-no-stripe";
-import PioneersPaymentTest from "@/pages/pioneers-payment-test";
-import { FeedbackWidget } from "@/components/FeedbackWidget";
+// LAZY-LOADED: Admin pages (highest priority for bundle splitting)
+const AdminDashboardMain = lazy(() => import("@/pages/admin/EnhancedAdminDashboard"));
+const SupplierManagement = lazy(() => import("@/pages/admin/SupplierManagement"));
+const UserManagement = lazy(() => import("@/pages/admin/UserManagement"));
+const UserDetail = lazy(() => import("@/pages/admin/UserDetail"));
+const PerformanceAnalytics = lazy(() => import("@/pages/admin/PerformanceAnalytics"));
+const AdminMessagingPage = lazy(() => import("@/pages/admin/AdminMessaging"));
+const AdminSupplierDetail = lazy(() => import("@/pages/admin/SupplierDetail"));
+const SupplierEdit = lazy(() => import("@/pages/admin/SupplierEdit"));
+const AdminProductManagement = lazy(() => import("@/pages/admin/ProductManagement"));
+const LCAApprovals = lazy(() => import("@/pages/admin/LCAApprovals"));
+const LCAJobsMonitoring = lazy(() => import("@/pages/admin/LCAJobsMonitoring"));
+const SupplierDataAdmin = lazy(() => import("@/pages/admin/SupplierDataAdmin"));
+const SupplierDataExtraction = lazy(() => import("@/pages/admin/SupplierDataExtraction"));
+const SupplierInvitations = lazy(() => import("@/pages/admin/SupplierInvitations"));
+const FeedbackDashboard = lazy(() => import("@/pages/admin/FeedbackDashboard"));
+const SupplierManagementOverview = lazy(() => import("@/pages/admin/supplier-management/SupplierManagementOverview"));
+const CreateSupplierProduct = lazy(() => import("@/pages/admin/supplier-management/CreateSupplierProduct"));
+
+// LAZY-LOADED: LCA and calculation pages (heavy computational components)
+const LCAPage = lazy(() => import("@/pages/LCAPage"));
+const ProductLcaPage = lazy(() => import("@/pages/ProductLcaPage"));
+const Company = lazy(() => import("@/pages/Company"));
+
+// LAZY-LOADED: Report builder and analytics (heavy components)
+const Reports = lazy(() => import("@/pages/reports"));
+const ReportsCreate = lazy(() => import("@/pages/reports-create"));
+const ReportBuilder = lazy(() => import("@/pages/report-builder"));
+const AIInsightsPage = lazy(() => import("@/pages/ai-insights"));
+const KPIsPage = lazy(() => import("@/pages/kpis"));
+
+// LAZY-LOADED: Product management
+const Products = lazy(() => import("@/pages/products"));
+const CreateEnhancedProduct = lazy(() => import("@/pages/CreateEnhancedProduct"));
+const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
+
+// LAZY-LOADED: Supplier network and management
+const SupplierNetwork = lazy(() => import("@/pages/SupplierNetwork"));
+const SupplierDetail = lazy(() => import("@/pages/SupplierDetail"));
+const SupplierProductDetailPage = lazy(() => import("@/pages/SupplierProductDetail"));
+const SupplierOnboarding = lazy(() => import("@/pages/SupplierOnboarding"));
+const SupplierRegistration = lazy(() => import("@/pages/SupplierRegistration"));
+const SupplierPortal = lazy(() => import("@/pages/SupplierPortal"));
+const Suppliers = lazy(() => import("@/pages/suppliers"));
+
+// LAZY-LOADED: Secondary pages
+const Settings = lazy(() => import("@/pages/settings"));
+const Onboarding = lazy(() => import("@/pages/onboarding"));
+const ProductRegistration = lazy(() => import("@/pages/ProductRegistration"));
+const GreenwashGuardian = lazy(() => import("@/pages/GreenwashGuardian"));
+const TestRunner = lazy(() => import("@/pages/TestRunner"));
+const CollaborationHub = lazy(() => import("@/pages/CollaborationHub"));
+const InitiativesPage = lazy(() => import("@/pages/initiatives"));
+const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
+const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
+const ComingSoon = lazy(() => import("@/pages/ComingSoon"));
+
+// LAZY-LOADED: Pioneers subscription pages
+const PioneersSubscriptionSimple = lazy(() => import("@/pages/pioneers-subscription-simple"));
+const PioneersNoStripe = lazy(() => import("@/pages/pioneers-no-stripe"));
+const PioneersPaymentTest = lazy(() => import("@/pages/pioneers-payment-test"));
+
+// Loading fallback component for better UX
+function PageLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-lightest-gray flex items-center justify-center">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin w-8 h-8 border-4 border-avallen-green border-t-transparent rounded-full" />
+        <p className="text-muted-foreground">Loading page...</p>
+      </div>
+    </div>
+  );
+}
+
+// Wrapper component for lazy-loaded routes
+function LazyRoute({ component: Component, ...props }: { component: React.ComponentType<any> }) {
+  return (
+    <Suspense fallback={<PageLoadingFallback />}>
+      <Component {...props} />
+    </Suspense>
+  );
+}
 
 function SimpleTestComponent() {
   return (
@@ -143,81 +176,94 @@ function SimpleTestComponent() {
 }
 
 function Router() {
-  // Simplified router that always shows the test component first
+  // Optimized router with lazy loading for better performance
   return (
     <Switch>
+      {/* EAGER-LOADED ROUTES: Essential user flow */}
       <Route path="/" component={SimpleTestComponent} />
       <Route path="/login" component={Login} />
-      <Route path="/pioneers/register" component={PioneersNoStripe} />
-      <Route path="/pioneers/simple" component={PioneersSubscriptionSimple} />
-      {/* <Route path="/pioneers/stripe" component={PioneersSubscription} /> */}
-      <Route path="/pioneers/test" component={PioneersPaymentTest} />
       <Route path="/landing" component={Landing} />
       <Route path="/app/welcome" component={Welcome} />
-      <Route path="/app/greenwash-guardian" component={GreenwashGuardian} />
       <Route path="/app/dashboard" component={Dashboard} />
-      <Route path="/app/onboarding" component={Onboarding} />
-      <Route path="/app/products" component={Products} />
-      <Route path="/create-enhanced-product" component={CreateEnhancedProduct} />
-      <Route path="/app/products/create/enhanced" component={CreateEnhancedProduct} />
-      <Route path="/app/products/:id/enhanced" component={CreateEnhancedProduct} />
-      <Route path="/app/products/:productId/lca" component={ProductLcaPage} />
-      <Route path="/app/products/:id" component={ProductDetail} />
-      <Route path="/app/reports" component={Reports} />
+      
+      {/* LAZY-LOADED ROUTES: Admin pages (highest priority for bundle splitting) */}
+      <Route path="/app/admin" component={(props) => <LazyRoute component={AdminDashboardMain} {...props} />} />
+      <Route path="/app/admin/dashboard" component={(props) => <LazyRoute component={AdminDashboardMain} {...props} />} />
+      <Route path="/app/admin/supplier-management/overview" component={(props) => <LazyRoute component={SupplierManagementOverview} {...props} />} />
+      <Route path="/app/admin/supplier-management/suppliers" component={(props) => <LazyRoute component={SupplierManagement} {...props} />} />
+      <Route path="/app/admin/supplier-management/products" component={(props) => <LazyRoute component={AdminProductManagement} {...props} />} />
+      <Route path="/app/admin/supplier-management/products/create" component={(props) => <LazyRoute component={CreateSupplierProduct} {...props} />} />
+      <Route path="/app/admin/supplier-management/data-extraction" component={(props) => <LazyRoute component={SupplierDataExtraction} {...props} />} />
+      <Route path="/app/admin/supplier-management/onboarding" component={(props) => <LazyRoute component={SupplierRegistration} {...props} />} />
+      <Route path="/app/admin/suppliers/:id/edit" component={(props) => <LazyRoute component={SupplierEdit} {...props} />} />
+      <Route path="/app/admin/suppliers/:id" component={(props) => <LazyRoute component={AdminSupplierDetail} {...props} />} />
+      <Route path="/app/admin/suppliers" component={(props) => <LazyRoute component={SupplierManagement} {...props} />} />
+      <Route path="/app/admin/supplier-management" component={(props) => <LazyRoute component={SupplierManagement} {...props} />} />
+      <Route path="/app/admin/products" component={(props) => <LazyRoute component={AdminProductManagement} {...props} />} />
+      <Route path="/app/admin/product-management" component={(props) => <LazyRoute component={AdminProductManagement} {...props} />} />
+      <Route path="/app/admin/lca-approvals" component={(props) => <LazyRoute component={LCAApprovals} {...props} />} />
+      <Route path="/app/admin/lca-jobs" component={(props) => <LazyRoute component={LCAJobsMonitoring} {...props} />} />
+      <Route path="/app/admin/supplier-data" component={(props) => <LazyRoute component={SupplierDataAdmin} {...props} />} />
+      <Route path="/app/admin/data-extraction" component={(props) => <LazyRoute component={SupplierDataExtraction} {...props} />} />
+      <Route path="/app/admin/invitations" component={(props) => <LazyRoute component={SupplierInvitations} {...props} />} />
+      <Route path="/app/admin/feedback" component={(props) => <LazyRoute component={FeedbackDashboard} {...props} />} />
+      <Route path="/app/admin/users/:companyId" component={(props) => <LazyRoute component={UserDetail} {...props} />} />
+      <Route path="/app/admin/users" component={(props) => <LazyRoute component={UserManagement} {...props} />} />
+      <Route path="/app/admin/analytics" component={(props) => <LazyRoute component={PerformanceAnalytics} {...props} />} />
+      <Route path="/app/admin/messaging" component={(props) => <LazyRoute component={AdminMessagingPage} {...props} />} />
+      
+      {/* LAZY-LOADED ROUTES: LCA and calculation pages (heavy computational components) */}
+      <Route path="/app/lca" component={(props) => <LazyRoute component={LCAPage} {...props} />} />
+      <Route path="/app/products/:productId/lca" component={(props) => <LazyRoute component={ProductLcaPage} {...props} />} />
+      <Route path="/app/company" component={(props) => <LazyRoute component={Company} {...props} />} />
+      <Route path="/footprint" component={(props) => <LazyRoute component={Company} {...props} />} />
+      
+      {/* LAZY-LOADED ROUTES: Report builder and analytics (heavy components) */}
+      <Route path="/app/reports" component={(props) => <LazyRoute component={Reports} {...props} />} />
+      <Route path="/app/reports/create" component={(props) => <LazyRoute component={ReportsCreate} {...props} />} />
+      <Route path="/app/report-builder" component={(props) => <LazyRoute component={ReportBuilder} {...props} />} />
+      <Route path="/app/insights" component={(props) => <LazyRoute component={AIInsightsPage} {...props} />} />
+      <Route path="/app/kpis" component={(props) => <LazyRoute component={KPIsPage} {...props} />} />
+      
+      {/* LAZY-LOADED ROUTES: Product management */}
+      <Route path="/app/products" component={(props) => <LazyRoute component={Products} {...props} />} />
+      <Route path="/create-enhanced-product" component={(props) => <LazyRoute component={CreateEnhancedProduct} {...props} />} />
+      <Route path="/app/products/create/enhanced" component={(props) => <LazyRoute component={CreateEnhancedProduct} {...props} />} />
+      <Route path="/app/products/:id/enhanced" component={(props) => <LazyRoute component={CreateEnhancedProduct} {...props} />} />
+      <Route path="/app/products/:id" component={(props) => <LazyRoute component={ProductDetail} {...props} />} />
+      
+      {/* LAZY-LOADED ROUTES: Supplier network and management */}
+      <Route path="/app/supplier-network" component={(props) => <LazyRoute component={SupplierNetwork} {...props} />} />
+      <Route path="/app/supplier-network/supplier/:id" component={(props) => <LazyRoute component={SupplierDetail} {...props} />} />
+      <Route path="/app/supplier-network/product/:id" component={(props) => <LazyRoute component={SupplierProductDetailPage} {...props} />} />
+      <Route path="/app/supplier-onboarding" component={(props) => <LazyRoute component={SupplierOnboarding} {...props} />} />
+      <Route path="/app/supplier-registration" component={(props) => <LazyRoute component={SupplierRegistration} {...props} />} />
+      <Route path="/app/suppliers" component={(props) => <LazyRoute component={Suppliers} {...props} />} />
+      <Route path="/supplier-portal/:token" component={(props) => <LazyRoute component={SupplierPortal} {...props} />} />
+      <Route path="/supplier-onboarding" component={(props) => <LazyRoute component={SupplierOnboarding} {...props} />} />
+      
+      {/* LAZY-LOADED ROUTES: Secondary pages */}
+      <Route path="/app/settings" component={(props) => <LazyRoute component={Settings} {...props} />} />
+      <Route path="/app/onboarding" component={(props) => <LazyRoute component={Onboarding} {...props} />} />
+      <Route path="/app/product-registration" component={(props) => <LazyRoute component={ProductRegistration} {...props} />} />
+      <Route path="/app/greenwash-guardian" component={(props) => <LazyRoute component={GreenwashGuardian} {...props} />} />
+      <Route path="/app/collaboration" component={(props) => <LazyRoute component={CollaborationHub} {...props} />} />
+      <Route path="/app/initiatives" component={(props) => <LazyRoute component={InitiativesPage} {...props} />} />
+      <Route path="/app/privacy-policy" component={(props) => <LazyRoute component={PrivacyPolicy} {...props} />} />
+      <Route path="/app/terms-of-service" component={(props) => <LazyRoute component={TermsOfService} {...props} />} />
+      <Route path="/app/coming-soon" component={(props) => <LazyRoute component={ComingSoon} {...props} />} />
+      <Route path="/app/test" component={(props) => <LazyRoute component={TestRunner} {...props} />} />
+      
+      {/* LAZY-LOADED ROUTES: Pioneers subscription pages */}
+      <Route path="/pioneers/register" component={(props) => <LazyRoute component={PioneersNoStripe} {...props} />} />
+      <Route path="/pioneers/simple" component={(props) => <LazyRoute component={PioneersSubscriptionSimple} {...props} />} />
+      <Route path="/pioneers/test" component={(props) => <LazyRoute component={PioneersPaymentTest} {...props} />} />
+      
+      {/* Redirects */}
       <Route path="/app/reports/guided" component={() => { window.location.replace('/app/reports'); return null; }} />
-      <Route path="/app/supplier-network" component={SupplierNetwork} />
-      <Route path="/app/supplier-network/supplier/:id" component={SupplierDetail} />
-      <Route path="/app/supplier-network/product/:id" component={SupplierProductDetailPage} />
-      <Route path="/app/supplier-onboarding" component={SupplierOnboarding} />
-      <Route path="/app/supplier-registration" component={SupplierRegistration} />
-      <Route path="/app/product-registration" component={ProductRegistration} />
-      <Route path="/app/suppliers" component={Suppliers} />
-      <Route path="/app/lca" component={LCAPage} />
-      <Route path="/app/company" component={Company} />
-      <Route path="/footprint" component={Company} />
-      <Route path="/app/settings" component={Settings} />
-      <Route path="/app/kpis" component={KPIsPage} />
-      <Route path="/app/insights" component={AIInsightsPage} />
-      <Route path="/app/privacy-policy" component={PrivacyPolicy} />
-      <Route path="/app/terms-of-service" component={TermsOfService} />
-      {/* Monthly facility updates now integrated into Production Facility popup */}
-      <Route path="/app/admin" component={AdminDashboardMain} />
-      <Route path="/app/admin/dashboard" component={AdminDashboardMain} />
-      
-      {/* New Supplier Management Routes */}
-      <Route path="/app/admin/supplier-management/overview" component={SupplierManagementOverview} />
-      <Route path="/app/admin/supplier-management/suppliers" component={SupplierManagement} />
-      <Route path="/app/admin/supplier-management/products" component={AdminProductManagement} />
-      <Route path="/app/admin/supplier-management/products/create" component={CreateSupplierProduct} />
-      <Route path="/app/admin/supplier-management/data-extraction" component={SupplierDataExtraction} />
-      <Route path="/app/admin/supplier-management/onboarding" component={SupplierRegistration} />
-      
-      {/* Legacy Admin Routes - Keep for backward compatibility */}
-      <Route path="/app/admin/suppliers/:id/edit" component={SupplierEdit} />
-      <Route path="/app/admin/suppliers/:id" component={AdminSupplierDetail} />
-      <Route path="/app/admin/suppliers" component={SupplierManagement} />
-      <Route path="/app/admin/supplier-management" component={SupplierManagement} />
-      <Route path="/app/admin/products" component={AdminProductManagement} />
-      <Route path="/app/collaboration" component={CollaborationHub} />
-      <Route path="/app/coming-soon" component={ComingSoon} />
-      <Route path="/app/admin/product-management" component={AdminProductManagement} />
-      <Route path="/app/admin/lca-approvals" component={LCAApprovals} />
-      <Route path="/app/admin/lca-jobs" component={LCAJobsMonitoring} />
-      <Route path="/app/admin/supplier-data" component={SupplierDataAdmin} />
-      <Route path="/app/admin/data-extraction" component={SupplierDataExtraction} />
-      <Route path="/app/admin/invitations" component={SupplierInvitations} />
-      <Route path="/app/admin/feedback" component={FeedbackDashboard} />
-      <Route path="/app/admin/users/:companyId" component={UserDetail} />
-      <Route path="/app/admin/users" component={UserManagement} />
-      <Route path="/app/admin/analytics" component={PerformanceAnalytics} />
-      <Route path="/app/admin/messaging" component={AdminMessagingPage} />
       <Route path="/app/story" component={() => { window.location.replace('/app/company'); return null; }} />
-      <Route path="/app/initiatives" component={InitiativesPage} />
-      <Route path="/app/report-builder" component={ReportBuilder} />
-      <Route path="/app/reports/create" component={ReportsCreate} />
-      <Route path="/app/test" component={TestRunner} />
-      <Route path="/supplier-portal/:token" component={SupplierPortal} />
-      <Route path="/supplier-onboarding" component={SupplierOnboarding} />
+      
+      {/* 404 - Keep eager loaded for instant feedback */}
       <Route component={NotFound} />
     </Switch>
   );
