@@ -9,6 +9,7 @@ import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { Upload, Image as ImageIcon } from "lucide-react";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 interface ImageUploaderProps {
   maxNumberOfFiles?: number;
@@ -135,27 +136,37 @@ export function ImageUploader({
 
   return (
     <div className="flex flex-col items-start gap-2">
-      {/* Display existing images */}
+      {/* Display existing images with optimized loading */}
       {existingImages.length > 0 && (
         <div className="grid grid-cols-3 gap-2 mb-4">
           {existingImages.map((url, index) => (
-            <div key={index} className="w-24 h-24 border rounded-lg overflow-hidden">
-              <img 
-                src={url} 
-                alt={`Uploaded ${index + 1}`} 
-                className="w-full h-full object-cover"
-              />
-            </div>
+              <div key={index} className="w-24 h-24 border rounded-lg overflow-hidden">
+                <LazyImage 
+                  src={url} 
+                  alt={`Uploaded ${index + 1}`} 
+                  className="w-full h-full object-cover"
+                  width={96}
+                  height={96}
+                  quality={85}
+                  priority={index === 0} // Prioritize first image
+                  data-testid={`uploaded-image-${index}`}
+                />
+              </div>
           ))}
         </div>
       )}
       
       {currentImageUrl && (
         <div className="w-32 h-32 border rounded-lg overflow-hidden">
-          <img 
+          <LazyImage 
             src={currentImageUrl} 
             alt="Current" 
             className="w-full h-full object-cover"
+            width={128}
+            height={128}
+            quality={85}
+            priority={true} // Current image should load immediately
+            data-testid="current-image"
           />
         </div>
       )}

@@ -5,8 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { useAuth } from "@/hooks/useAuth";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
+import { imagePerformanceService } from "@/services/ImagePerformanceService";
 
 // EAGER-LOADED: Essential pages for initial user flow
 import NotFound from "@/pages/not-found";
@@ -270,6 +271,23 @@ function Router() {
 }
 
 function App() {
+  // Initialize image performance monitoring
+  useEffect(() => {
+    imagePerformanceService.startMonitoring();
+    
+    // Log performance report every 30 seconds in development
+    if (process.env.NODE_ENV === 'development') {
+      const interval = setInterval(() => {
+        const report = imagePerformanceService.generateReport();
+        if (report.totalImages > 0) {
+          console.log('📊 Image Performance Report:', report);
+        }
+      }, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

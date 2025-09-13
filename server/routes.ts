@@ -2697,35 +2697,26 @@ Be precise and quote actual text from the content, not generic terms.`;
     res.sendFile(filePath);
   });
 
-  // Simple image serving route - no fancy processing
+  // Optimized image serving route with lazy loading support and advanced caching
   app.get("/simple-image/objects/:objectPath(*)", async (req, res) => {
     const objectPath = `/objects/${req.params.objectPath}`;
-    console.log('Simple image request for:', objectPath);
+    console.log('Optimized image request for:', objectPath);
     
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
       
-      // Set basic headers and stream the file
-      const [metadata] = await objectFile.getMetadata();
-      res.set({
-        'Content-Type': metadata.contentType || 'image/jpeg',
-        'Content-Length': metadata.size,
-        'Cache-Control': 'public, max-age=3600'
-      });
+      // Use ImageOptimizationService for optimized serving
+      const { ImageOptimizationService } = await import('./services/ImageOptimizationService');
       
-      const stream = objectFile.createReadStream();
-      stream.pipe(res);
+      // Generate performance metrics
+      ImageOptimizationService.generateImageMetrics(req, res);
       
-      stream.on('error', (err) => {
-        console.error('Stream error:', err);
-        if (!res.headersSent) {
-          res.status(500).send('Error streaming image');
-        }
-      });
+      // Serve optimized image with advanced caching
+      await ImageOptimizationService.serveOptimizedImage(objectFile, req, res);
       
     } catch (error) {
-      console.error("Error serving simple image:", error);
+      console.error("Error serving optimized image:", error);
       if (error instanceof ObjectNotFoundError) {
         return res.status(404).send('Image not found');
       }

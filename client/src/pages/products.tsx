@@ -12,6 +12,7 @@ import { Package, Plus, Edit, Trash2, Factory, ExternalLink, Leaf, Users, Layers
 import { useLocation } from 'wouter';
 import { ProductLCAMetricsDisplay } from '@/components/products/ProductLCAMetricsDisplay';
 import { usePortfolioMetrics } from '@/hooks/usePortfolioMetrics';
+import { ProductImage } from '@/components/ui/lazy-image';
 
 interface ClientProduct {
   id: number;
@@ -310,23 +311,23 @@ export default function ProductsPage() {
                         <div className="flex">
                           {/* Product Image */}
                           <div className="w-40 h-40 bg-gradient-to-br from-avallen-green/10 to-avallen-green/5 flex items-center justify-center flex-shrink-0 relative overflow-hidden rounded-l-lg m-4 ml-6">
-                            {product.productImages && product.productImages.length > 0 && (
-                              <img 
+                            {product.productImages && product.productImages.length > 0 ? (
+                              <ProductImage
                                 src={`/simple-image/objects/uploads/${product.productImages[0].split('/').pop()}`}
                                 alt={product.name}
                                 className="w-full h-full object-contain rounded-lg shadow-sm"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const fallback = target.parentElement?.querySelector('.fallback-icon');
-                                  if (fallback) fallback.classList.remove('hidden');
-                                }}
+                                width={160}
+                                height={160}
+                                priority={true} // Main products get priority loading
+                                quality={90}
+                                data-testid={`product-image-main-${product.id}`}
                               />
+                            ) : (
+                              <div className="fallback-icon flex flex-col items-center">
+                                <Package className="w-12 h-12 text-avallen-green mb-2" />
+                                <span className="text-xs text-avallen-green font-medium">No Image</span>
+                              </div>
                             )}
-                            <div className={`fallback-icon flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
-                              <Package className="w-12 h-12 text-avallen-green mb-2" />
-                              <span className="text-xs text-avallen-green font-medium">No Image</span>
-                            </div>
                           </div>
                           
                           {/* Product Details */}
@@ -396,27 +397,27 @@ export default function ProductsPage() {
                           <div className="flex">
                             {/* Product Thumbnail */}
                             <div className="w-28 h-28 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0 relative overflow-hidden rounded-l-lg m-3 ml-4">
-                              {product.productImages && product.productImages.length > 0 && (
-                                <img 
+                              {product.productImages && product.productImages.length > 0 ? (
+                                <ProductImage
                                   src={`/simple-image/objects/uploads/${product.productImages[0].split('/').pop()}`}
                                   alt={product.name}
                                   className="w-full h-full object-contain rounded-lg shadow-sm"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                    const fallback = target.parentElement?.querySelector('.fallback-icon');
-                                    if (fallback) fallback.classList.remove('hidden');
-                                  }}
+                                  width={112}
+                                  height={112}
+                                  priority={false} // Thumbnails use lazy loading
+                                  quality={85}
+                                  data-testid={`product-thumbnail-${product.id}`}
                                 />
+                              ) : (
+                                <div className="fallback-icon flex flex-col items-center">
+                                  {product.productionModel === 'in-house' ? (
+                                    <Factory className="w-8 h-8 text-gray-400 mb-1" />
+                                  ) : (
+                                    <ExternalLink className="w-8 h-8 text-gray-400 mb-1" />
+                                  )}
+                                  <span className="text-xs text-gray-400">No Image</span>
+                                </div>
                               )}
-                              <div className={`fallback-icon flex flex-col items-center ${product.productImages && product.productImages.length > 0 ? 'hidden' : ''}`}>
-                                {product.productionModel === 'in-house' ? (
-                                  <Factory className="w-8 h-8 text-gray-400 mb-1" />
-                                ) : (
-                                  <ExternalLink className="w-8 h-8 text-gray-400 mb-1" />
-                                )}
-                                <span className="text-xs text-gray-400">No Image</span>
-                              </div>
                             </div>
                             
                             {/* Product Info */}
