@@ -291,6 +291,7 @@ export class ConsolidatedLCAService {
   // Cache configuration
   private readonly memoryCacheTTL = 30 * 60 * 1000; // 30 minutes
   private readonly redisCacheTTL = 24 * 60 * 60; // 24 hours
+  private redisConnectionWarningShown = false; // Prevent Redis log spam
   private readonly maxMemoryCacheSize = 500;
   
   // DEFRA 2024 verified emission factors
@@ -892,14 +893,24 @@ export class ConsolidatedLCAService {
         password: process.env.REDIS_PASSWORD,
         db: parseInt(process.env.REDIS_LCA_CACHE_DB || '1'),
         retryDelayOnFailover: 100,
-        maxRetriesPerRequest: 3,
+        maxRetriesPerRequest: 1, // Reduced for faster fallback
         lazyConnect: true,
+        connectTimeout: 5000, // 5 second timeout
       };
 
       this.redis = new Redis(redisConfig);
       
       this.redis.on('error', (error) => {
-        logger.warn({ error }, 'Redis LCA cache connection error - using memory cache only');
+        // Only log once to prevent spam
+        if (!this.redisConnectionWarningShown) {
+          logger.warn({ error }, 'Redis LCA cache connection error - using memory cache only');
+          this.redisConnectionWarningShown = true;
+        }
+      });
+      
+      this.redis.on('connect', () => {
+        logger.info({}, 'Redis LCA cache connected');
+        this.redisConnectionWarningShown = false;
       });
 
       // Initialize Bull queue for job processing

@@ -4,8 +4,10 @@ import { users, companies, reports, verifiedSuppliers, supplierProducts, convers
 import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
 import { eq, count, gte, desc, and, lt, ilike, or, sql } from 'drizzle-orm';
 import { logger } from '../config/logger';
+import { CacheInvalidationService } from '../services/CacheInvalidationService';
 
 const router = Router();
+const cacheInvalidationService = CacheInvalidationService.getInstance();
 
 // Apply admin authentication to all routes
 router.use(requireAdminRole);

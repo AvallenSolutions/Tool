@@ -14,10 +14,17 @@ import { db } from "./db";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
-import { simpleLCAService } from "./services/ConsolidatedLCAService";
+import { simpleLCAService, consolidatedLCAService } from "./services/ConsolidatedLCAService";
 import { consolidatedPDFService } from "./services/ConsolidatedPDFService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
+
+// Import comprehensive caching infrastructure
+import { cacheMiddleware, cacheLCAResults, cacheAnalytics, cacheProductData, cacheSupplierData, cacheDashboard } from "./middleware/cacheMiddleware";
+import { cacheInvalidationService, invalidateProduct, invalidateSupplier, invalidateCompany, invalidateDashboard } from "./services/CacheInvalidationService";
+import { databaseQueryCache } from "./services/DatabaseQueryCache";
+import { cacheWarmingService } from "./services/CacheWarmingService";
+import { cacheMetricsService } from "./services/CacheMetricsService";
 
 import { body, validationResult } from "express-validator";
 import { 
@@ -1345,7 +1352,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Get all suppliers for admin management
-  app.get('/api/admin/suppliers', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/suppliers', isAuthenticated, cacheSupplierData, async (req, res) => {
     // SECURITY FIX: Verify admin role for supplier management
     const user = req.user as any;
     const userId = user?.claims?.sub;
@@ -1385,8 +1392,8 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Public suppliers route (for supplier onboarding page)
-  app.get('/api/suppliers', async (req, res) => {
+  // Public suppliers route (for supplier onboarding page) - WITH CACHING
+  app.get('/api/suppliers', cacheSupplierData, async (req, res) => {
     try {
       const { verifiedSuppliers } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
@@ -1894,7 +1901,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Performance Analytics API Endpoints
-  app.get('/api/admin/analytics/performance', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/analytics/performance', isAuthenticated, cacheAnalytics, async (req, res) => {
     try {
       const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
       
@@ -1914,7 +1921,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  app.get('/api/admin/analytics/alerts', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/analytics/alerts', isAuthenticated, cacheAnalytics, async (req, res) => {
     try {
       const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
       
@@ -1934,7 +1941,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  app.get('/api/admin/analytics/realtime', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/analytics/realtime', isAuthenticated, cacheAnalytics, async (req, res) => {
     try {
       const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
       
@@ -4458,8 +4465,8 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ DASHBOARD METRICS ENDPOINT ============
   
-  // Get dashboard metrics (using OpenLCA methodology via KPI service)
-  app.get('/api/dashboard/metrics', isAuthenticated, async (req, res) => {
+  // Get dashboard metrics (using OpenLCA methodology via KPI service) - WITH CACHING
+  app.get('/api/dashboard/metrics', isAuthenticated, cacheDashboard, async (req, res) => {
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub;
@@ -5503,19 +5510,14 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
   });
 
   // Main product creation endpoint (Enhanced Product Form)
-  // GET products endpoint
-  app.get('/api/products', async (req, res) => {
-    // Add cache-busting headers
-    res.set({
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    });
+  // GET products endpoint - WITH CACHING
+  app.get('/api/products', cacheProductData, async (req, res) => {
     try {
       const { products } = await import('@shared/schema');
       const { eq, desc } = await import('drizzle-orm');
       const { db } = await import('./db');
-      const { OpenLCAService } = await import('./services/OpenLCAService');
+      // Use cached ConsolidatedLCAService instead of individual services
+      // const { OpenLCAService } = await import('./services/OpenLCAService');
       const { WaterFootprintService } = await import('./services/WaterFootprintService');
       // For development mode, show all products from company 1 (including drafts that were just moved)
       const companyId = process.env.NODE_ENV === 'development' ? 1 : (req.session as any)?.user?.companyId || 1;
@@ -5558,6 +5560,13 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
   });
 
   app.post('/api/products', async (req, res) => {
+    // Add cache invalidation for products
+    const companyId = (req.session as any)?.user?.companyId;
+    if (companyId) {
+      invalidateProduct(0, companyId).catch(err => 
+        console.warn('Cache invalidation failed for products:', err)
+      );
+    }
     try {
       const { products } = await import('@shared/schema');
       
@@ -11486,32 +11495,60 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // GET /api/lca/test-calculation/:ingredient - Test OpenLCA calculation for a specific ingredient
-  app.get('/api/lca/test-calculation/:ingredient', async (req, res) => {
+  // GET /api/lca/test-calculation/:ingredient - Test LCA calculation for a specific ingredient WITH CACHING
+  app.get('/api/lca/test-calculation/:ingredient', cacheLCAResults, async (req, res) => {
     try {
       const { ingredient } = req.params;
       const { amount = 1, unit = 'kg' } = req.query;
 
-      const { OpenLCAService } = await import('./services/OpenLCAService');
+      // Use cached ConsolidatedLCAService for better performance
+      const mockProduct = {
+        id: 0,
+        name: `Test Product - ${ingredient}`,
+        companyId: 1
+      };
       
-      const co2Footprint = await OpenLCAService.calculateCarbonFootprint(
-        ingredient, 
-        parseFloat(amount as string), 
-        unit as string
-      );
+      const lcaInputs = {
+        agriculture: {
+          mainCropType: ingredient.toLowerCase(),
+          yieldTonPerHectare: parseFloat(amount as string),
+          dieselLPerHectare: 150,
+          fertilizer: {
+            nitrogenKgPerHectare: 120,
+            phosphorusKgPerHectare: 40,
+            potassiumKgPerHectare: 80
+          }
+        },
+        processing: {
+          electricityKwhPerTonCrop: 180,
+          waterM3PerTonCrop: 2.5
+        }
+      };
       
-      const detailedImpact = await OpenLCAService.calculateIngredientImpact(
-        ingredient,
-        parseFloat(amount as string),
-        unit as string
+      // Use cached ConsolidatedLCAService instead of individual OpenLCAService
+      const lcaResult = await consolidatedLCAService.calculateLCA(
+        mockProduct,
+        lcaInputs,
+        {
+          method: 'hybrid',
+          useCache: true,
+          forceRecalculation: false
+        }
       );
 
       res.json({
         ingredient,
         amount: parseFloat(amount as string),
         unit,
-        co2Footprint,
-        detailedImpact,
+        co2Footprint: lcaResult.carbonFootprint,
+        detailedImpact: {
+          carbonFootprint: lcaResult.carbonFootprint,
+          waterFootprint: lcaResult.waterFootprint,
+          landUse: lcaResult.landUse,
+          energyFootprint: lcaResult.energyFootprint
+        },
+        calculationMethod: lcaResult.calculationMethod,
+        cacheHit: lcaResult.cached,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -11520,12 +11557,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // GET /api/lca/packaging-impact - Get impact data for packaging materials by category
-  app.get('/api/lca/packaging-impact', async (req, res) => {
-    // Disable caching for this endpoint to ensure fresh calculations
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
+  // GET /api/lca/packaging-impact - Get impact data for packaging materials by category WITH CACHING
+  app.get('/api/lca/packaging-impact', cacheLCAResults, async (req, res) => {
     try {
       const { category } = req.query;
       
@@ -11550,10 +11583,34 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         console.log(`Processing material: ${material.materialName} in category: ${category}`);
         
         try {
-          const { OpenLCAService } = await import('./services/OpenLCAService');
+          // Use cached ConsolidatedLCAService instead of individual OpenLCAService
+          const mockProduct = {
+            id: 0, 
+            name: `Packaging Material - ${material.materialName}`,
+            companyId: 1
+          };
           
-          // Try OpenLCA service first
-          const impact = await OpenLCAService.calculateIngredientImpact(material.materialName, 1, material.unit || 'kg');
+          const packageLcaInputs = {
+            packagingDetailed: {
+              container: {
+                materialType: material.materialName.toLowerCase(),
+                weightGrams: 100,
+                recycledContentPercentage: 30
+              }
+            }
+          };
+          
+          const lcaResult = await consolidatedLCAService.calculateLCA(
+            mockProduct,
+            packageLcaInputs,
+            { method: 'simple', useCache: true, forceRecalculation: false }
+          );
+          
+          const impact = {
+            carbonFootprint: lcaResult.carbonFootprint,
+            waterFootprint: lcaResult.waterFootprint,
+            landUse: lcaResult.landUse
+          };
           
           // Check if OpenLCA is returning generic category-based fallback values for all categories
           const categoryFallbacks = {
