@@ -14,7 +14,7 @@ import { db } from "./db";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
-import { simpleLcaService } from "./simpleLca";
+import { simpleLCAService } from "./services/ConsolidatedLCAService";
 import { consolidatedPDFService } from "./services/ConsolidatedPDFService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
@@ -9124,7 +9124,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 50, stage: 'Calculating environmental impacts...' };
           console.log(`🧮 LCA Report ${newReport.id}: Calculating environmental impacts... (50%)`);
           
-          const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
+          const { EnhancedLCACalculationService } = await import('./services/ConsolidatedLCAService');
           
           let totalCarbon = 0;
           let totalWater = 0; 

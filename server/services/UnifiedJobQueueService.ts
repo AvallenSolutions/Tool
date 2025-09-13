@@ -1,7 +1,7 @@
 import Bull from 'bull';
 import { logger } from '../config/logger';
 import { unifiedPDFService } from './UnifiedPDFService';
-import { unifiedLCAService } from './UnifiedLCAService';
+import { consolidatedLCAService } from './ConsolidatedLCAService';
 import { storage as dbStorage } from '../storage';
 
 // Job types and interfaces

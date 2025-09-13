@@ -1,4 +1,4 @@
-import { OpenLCAService } from '../services/OpenLCAService';
+import { OpenLCAService } from '../services/ConsolidatedLCAService';
 
 /**
  * Initialize the LCA process mappings table with common agricultural ingredients

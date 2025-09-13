@@ -17,7 +17,7 @@ import {
   type CompanyKpiGoal,
   type InsertCompanyKpiGoal
 } from "@shared/schema";
-import { OpenLCAService } from "./OpenLCAService";
+import { OpenLCAService } from "./ConsolidatedLCAService";
 import { WasteIntensityCalculationService } from "./WasteIntensityCalculationService";
 import { WasteStreamsCalculationService } from "./WasteStreamsCalculationService";
 import { productionFacilities } from "@shared/schema";
