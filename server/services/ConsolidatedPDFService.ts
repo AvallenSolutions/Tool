@@ -188,10 +188,10 @@ class BrowserPoolManager {
       const browser = await puppeteer.launch({
         headless: true,
         args: [
-          '--no-sandbox',
+          // Only use no-sandbox in containerized environments if absolutely necessary
+          ...(process.env.NODE_ENV === 'production' && process.env.CONTAINER ? ['--no-sandbox'] : []),
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-web-security',
           '--disable-features=VizDisplayCompositor',
           '--disable-accelerated-2d-canvas',
           '--disable-gpu',
