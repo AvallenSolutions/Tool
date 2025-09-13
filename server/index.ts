@@ -28,39 +28,62 @@ const allowedOrigins = isDevelopment
   ? ["http://localhost:5000", "http://localhost:5173"]
   : ["'self'", "https:", process.env.FRONTEND_URL].filter(Boolean);
 
+// Generate nonce for CSP
+app.use((req, res, next) => {
+  res.locals.nonce = Buffer.from(Math.random().toString()).toString('base64');
+  next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
+      styleSrc: ["'self'", "'unsafe-inline'"], // Keep for CSS-in-JS compatibility
       imgSrc: ["'self'", "data:", "https:", ...allowedOrigins],
       connectSrc: ["'self'", "https:", ...allowedOrigins],
+      objectSrc: ["'none'"],
+      baseSrc: ["'self'"],
+      frameAncestors: ["'self'"],
     },
   },
 }));
 
-// Rate limiting for API endpoints
+// Enhanced rate limiting for API endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Increased for development - limit each IP to 1000 requests per windowMs
-  message: 'Too many API requests from this IP, please try again later.',
+  max: 100, // Reduced from 1000 to 100 for better security
+  message: {
+    error: 'Too many API requests from this IP, please try again later.',
+    retryAfter: 15 * 60 // 15 minutes in seconds
+  },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.path === '/health';
+  }
 });
 
 app.use('/api/', apiLimiter);
 
-// Environment-aware CORS configuration
+// Secure CORS configuration - no wildcard fallback
 app.use((req, res, next) => {
   const isDevelopment = process.env.NODE_ENV !== 'production';
-  const allowedOrigin = isDevelopment 
-    ? 'http://localhost:5173' 
-    : process.env.FRONTEND_URL || req.get('origin') || '*';
-    
-  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  const allowedOrigins = isDevelopment 
+    ? ['http://localhost:5173', 'http://localhost:5000']
+    : [process.env.FRONTEND_URL, 'https://' + (process.env.REPL_SLUG || 'app') + '.replit.app'].filter(Boolean);
+  
+  const origin = req.get('origin');
+  const allowedOrigin = allowedOrigins.find(allowed => allowed === origin) || (isDevelopment ? 'http://localhost:5173' : null);
+  
+  if (allowedOrigin) {
+    res.header('Access-Control-Allow-Origin', allowedOrigin);
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
