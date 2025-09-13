@@ -1,5 +1,5 @@
 import { WebScrapingService } from './WebScrapingService';
-import { PDFExtractionService } from './PDFExtractionService';
+import { ConsolidatedPDFService } from './ConsolidatedPDFService';
 import { SupplierProductService } from './SupplierProductService';
 import * as cheerio from 'cheerio';
 
@@ -26,12 +26,12 @@ interface ProductLink {
 
 export class BulkImportService {
   private webScrapingService: WebScrapingService;
-  private pdfExtractionService: PDFExtractionService;
+  private pdfService: ConsolidatedPDFService;
   private supplierProductService: SupplierProductService;
 
   constructor() {
     this.webScrapingService = new WebScrapingService();
-    this.pdfExtractionService = new PDFExtractionService();
+    this.pdfService = ConsolidatedPDFService.getInstance();
     this.supplierProductService = new SupplierProductService();
   }
 
@@ -277,7 +277,7 @@ export class BulkImportService {
       // If we have a PDF, extract from PDF first
       if (link.pdfUrl) {
         try {
-          const pdfData = await this.pdfExtractionService.extractProductDataFromUrl(link.pdfUrl);
+          const pdfData = await this.pdfService.extractDataFromPDF(link.pdfUrl, 'product-catalog.pdf');
           if (pdfData.success) {
             productData = pdfData.extractedData.productData;
             supplierData = pdfData.extractedData.supplierData;
