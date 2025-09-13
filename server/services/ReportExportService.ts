@@ -1,9 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import JSZip from 'jszip';
-import { PDFService } from '../pdfService';
-import { ModernPDFService } from '../modernPdfService';
-import { ProfessionalPDFService } from '../professionalPdfService';
+import { consolidatedPDFService } from './ConsolidatedPDFService';
 import { google } from 'googleapis';
 
 export interface ExportOptions {
@@ -36,14 +34,8 @@ export interface ReportData {
 }
 
 export class ReportExportService {
-  private pdfService: PDFService;
-  private modernPdfService: ModernPDFService;
-  private professionalPdfService: ProfessionalPDFService;
-
   constructor() {
-    this.pdfService = new PDFService();
-    this.modernPdfService = new ModernPDFService();
-    this.professionalPdfService = new ProfessionalPDFService();
+    // Using consolidated PDF service
   }
 
   async exportReport(reportData: ReportData, format: string, options: ExportOptions): Promise<Buffer> {
@@ -68,29 +60,33 @@ export class ReportExportService {
   }
 
   private async exportPDF(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    // Use the professional PDF service based on the template design
-    return this.professionalPdfService.generateProfessionalReport(
-      reportData.title,
-      reportData.content,
-      reportData.socialData,
-      options.branding?.companyName || reportData.companyName || 'Demo Company',
-      reportData.metrics,
-      (reportData as any).selectedInitiatives || [],
-      (reportData as any).selectedKPIs || []
-    );
+    // Use the consolidated PDF service for professional reports
+    const consolidatedReportData = {
+      ...reportData,
+      companyName: options.branding?.companyName || reportData.companyName || 'Demo Company',
+      selectedInitiatives: (reportData as any).selectedInitiatives || [],
+      selectedKPIs: (reportData as any).selectedKPIs || []
+    };
+    
+    return consolidatedPDFService.generatePDF(consolidatedReportData, { 
+      type: 'professional',
+      branding: options.branding 
+    });
   }
 
   private async exportBrandedPDF(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
-    // Use the professional PDF service with branding options
-    return this.professionalPdfService.generateProfessionalReport(
-      reportData.title,
-      reportData.content,
-      reportData.socialData,
-      options.branding?.companyName || reportData.companyName || 'Demo Company',
-      reportData.metrics,
-      (reportData as any).selectedInitiatives || [],
-      (reportData as any).selectedKPIs || []
-    );
+    // Use the consolidated PDF service with branding options
+    const consolidatedReportData = {
+      ...reportData,
+      companyName: options.branding?.companyName || reportData.companyName || 'Demo Company',
+      selectedInitiatives: (reportData as any).selectedInitiatives || [],
+      selectedKPIs: (reportData as any).selectedKPIs || []
+    };
+    
+    return consolidatedPDFService.generatePDF(consolidatedReportData, { 
+      type: 'branded',
+      branding: options.branding 
+    });
   }
 
   private async exportPowerPoint(reportData: ReportData, options: ExportOptions): Promise<Buffer> {
@@ -228,7 +224,7 @@ export class ReportExportService {
       // Fallback to presentation-style PDF
       console.log('🔄 Falling back to presentation-style PDF...');
       const presentationHTML = this.generatePresentationHTML(reportData);
-      return this.pdfService.generateFromHTML(presentationHTML, {
+      return consolidatedPDFService.generateFromHTML(presentationHTML, {
         title: `${reportData.title} - Presentation Format`,
         format: 'A4',
         margin: { top: '0.5cm', right: '0.5cm', bottom: '0.5cm', left: '0.5cm' }

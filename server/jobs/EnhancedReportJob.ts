@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { EnhancedPDFService } from '../services/EnhancedPDFService';
+import { consolidatedPDFService } from '../services/ConsolidatedPDFService';
 import { ReportDataProcessor } from '../services/ReportDataProcessor';
 
 // Simple in-memory job queue for development
@@ -55,7 +55,6 @@ export interface EnhancedReportJobData {
 }
 
 export class EnhancedReportJobProcessor {
-  private static pdfService = new EnhancedPDFService();
 
   static async processEnhancedReport(job: any): Promise<string> {
     const { reportId, userId } = job.data;
@@ -72,7 +71,7 @@ export class EnhancedReportJobProcessor {
 
       // Generate the enhanced PDF
       
-      const pdfBuffer = await this.pdfService.generateEnhancedLCAPDF(reportData);
+      const pdfBuffer = await consolidatedPDFService.generateEnhancedLCAPDF(reportData);
       job.progress(80);
 
       // Save the PDF file

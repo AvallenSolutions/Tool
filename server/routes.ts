@@ -15,7 +15,7 @@ import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
 import { simpleLcaService } from "./simpleLca";
-import { PDFService } from "./pdfService";
+import { consolidatedPDFService } from "./services/ConsolidatedPDFService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
 
@@ -7129,17 +7129,14 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         });
       }
 
-      // Use EnhancedPDFService for comprehensive reports instead of basic SimpleLcaService
-      const { EnhancedPDFService } = await import('./services/EnhancedPDFService');
+      // Use ConsolidatedPDFService for comprehensive reports
       const { ReportDataProcessor } = await import('./services/ReportDataProcessor');
-      
-      const enhancedPDFService = new EnhancedPDFService();
       
       // Get comprehensive report data for the product (static method call)
       const reportData = await ReportDataProcessor.getEnhancedReportData(productId);
       
-      // Generate professional PDF using enhanced service
-      const reportBuffer = await enhancedPDFService.generateEnhancedLCAPDF(reportData);
+      // Generate professional PDF using consolidated service
+      const reportBuffer = await consolidatedPDFService.generateEnhancedLCAPDF(reportData);
       
       // Serving as proper PDF
       res.set({
@@ -9474,9 +9471,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 80, stage: 'Generating PDF report...' };
           console.log(`🧮 LCA Report ${newReport.id}: Generating PDF report... (80%)`);
           
-          // Use enhanced professional PDF generator with comprehensive data
-          const { PDFGenerator } = await import('./report-generation/pdfGenerator.js');
-          const professionalGenerator = new PDFGenerator();
+          // Use consolidated PDF service for comprehensive reports
           
           // PHASE 1: Enhanced report data structure with comprehensive breakdown
           const lcaReportData = {
@@ -9588,9 +9583,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
             }
           };
 
-          // Generate PDF using enhanced professional Puppeteer service
+          // Generate PDF using consolidated service  
           console.log('🎯 Generating comprehensive LCA report with enhanced data structure...');
-          const pdfBuffer = await professionalGenerator.generatePDF(lcaReportData);
+          const pdfBuffer = await consolidatedPDFService.generatePDF(lcaReportData, { type: 'comprehensive' });
           console.log(`✅ Enhanced PDF generated successfully: ${pdfBuffer.length} bytes`);
           
           // Store PDF in database or file system (simplified for now)
@@ -11050,7 +11045,6 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           
           // Import services
           const { ReportDataProcessor } = await import('./services/ReportDataProcessor');
-          const { EnhancedPDFService } = await import('./services/EnhancedPDFService');
           
           // Gather comprehensive sustainability data
           const sustainabilityData = await ReportDataProcessor.aggregateReportData(reportId);
@@ -11061,8 +11055,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           });
           
           // Generate comprehensive sustainability report
-          const pdfService = new EnhancedPDFService();
-          const pdfBuffer = await pdfService.generateSustainabilityReport(sustainabilityData);
+          const pdfBuffer = await consolidatedPDFService.generateSustainabilityReport(sustainabilityData);
           
           // Save to file system
           const enhancedFileName = `sustainability_report_${reportId}_${Date.now()}.pdf`;
@@ -12468,10 +12461,6 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       console.log('🎯 Professional PDF report generation requested');
       console.log('📄 Request body keys:', Object.keys(req.body));
 
-      // Import PDF generator
-      const { PDFGenerator } = require('./report-generation/pdfGenerator.js');
-      const pdfGenerator = new PDFGenerator();
-
       // Validate request data
       if (!req.body || !req.body.products || !req.body.company) {
         return res.status(400).json({ 
@@ -12479,8 +12468,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         });
       }
 
-      // Generate PDF using Puppeteer
-      const pdfBuffer = await pdfGenerator.generatePDF(req.body);
+      // Generate PDF using consolidated service
+      const pdfBuffer = await consolidatedPDFService.generatePDF(req.body, { type: 'comprehensive' });
 
       // Set response headers for PDF
       res.setHeader('Content-Type', 'application/pdf');

@@ -1,4 +1,4 @@
-import { PDFService, LCAReportData } from './pdfService';
+import { consolidatedPDFService, type LCAReportData } from './services/ConsolidatedPDFService';
 import fs from 'fs';
 import path from 'path';
 
@@ -61,7 +61,7 @@ const testReportData: LCAReportData = {
 async function generateTestPDF() {
   try {
     
-    const pdfBuffer = await PDFService.generateLCAPDF(testReportData);
+    const pdfBuffer = await consolidatedPDFService.generateLCAPDF(testReportData);
     
     // Save to a file
     const filename = `LCA_Report_Avallen_Test_${new Date().toISOString().split('T')[0]}.pdf`;

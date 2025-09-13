@@ -1,6 +1,6 @@
 // Test script for enhanced report generation
 import { ReportDataProcessor } from './services/ReportDataProcessor';
-import { EnhancedPDFService } from './services/EnhancedPDFService';
+import { consolidatedPDFService } from './services/ConsolidatedPDFService';
 import fs from 'fs';
 import path from 'path';
 
@@ -19,8 +19,7 @@ async function testEnhancedReportGeneration() {
 
     // Step 2: Test PDF generation
     
-    const pdfService = new EnhancedPDFService();
-    const pdfBuffer = await pdfService.generateEnhancedLCAPDF(reportData);
+    const pdfBuffer = await consolidatedPDFService.generateEnhancedLCAPDF(reportData);
     
     
 
