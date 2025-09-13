@@ -5,6 +5,7 @@ import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
 import { eq, count, gte, desc, and, lt, ilike, or, sql } from 'drizzle-orm';
 import { logger } from '../config/logger';
 import { CacheInvalidationService } from '../services/CacheInvalidationService';
+import performanceMonitoringRouter from './performanceMonitoring';
 
 const router = Router();
 const cacheInvalidationService = CacheInvalidationService.getInstance();
@@ -2163,5 +2164,8 @@ router.get('/conversations/stats', async (req: AdminRequest, res: Response) => {
     });
   }
 });
+
+// Mount performance monitoring routes under /performance
+router.use('/performance', performanceMonitoringRouter);
 
 export { router as adminRouter };
