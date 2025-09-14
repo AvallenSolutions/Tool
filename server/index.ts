@@ -28,26 +28,46 @@ const allowedOrigins = isDevelopment
   ? ["http://localhost:5000", "http://localhost:5173"]
   : ["'self'", "https:", process.env.FRONTEND_URL].filter(Boolean);
 
-// Generate nonce for CSP
-app.use((req, res, next) => {
-  res.locals.nonce = Buffer.from(Math.random().toString()).toString('base64');
-  next();
-});
-
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
-      styleSrc: ["'self'", "'unsafe-inline'"], // Keep for CSS-in-JS compatibility
-      imgSrc: ["'self'", "data:", "https:", ...allowedOrigins],
-      connectSrc: ["'self'", "https:", ...allowedOrigins],
-      objectSrc: ["'none'"],
-      baseSrc: ["'self'"],
-      frameAncestors: ["'self'"],
+// Development: Permissive CSP for Vite/React
+// Production: Strict nonce-based CSP  
+if (isDevelopment) {
+  // No nonce needed in development - allow inline scripts for Vite
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:", ...allowedOrigins],
+        connectSrc: ["'self'", "https:", "wss:", ...allowedOrigins],
+        objectSrc: ["'none'"],
+        baseSrc: ["'self'"],
+        frameAncestors: ["'self'"],
+      },
     },
-  },
-}));
+  }));
+} else {
+  // Production: Generate nonce for CSP
+  app.use((req, res, next) => {
+    res.locals.nonce = Buffer.from(Math.random().toString()).toString('base64');
+    next();
+  });
+
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "https:"],
+        objectSrc: ["'none'"],
+        baseSrc: ["'self'"],
+        frameAncestors: ["'self'"],
+      },
+    },
+  }));
+}
 
 // Enhanced rate limiting for API endpoints
 const apiLimiter = rateLimit({
