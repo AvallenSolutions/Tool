@@ -226,7 +226,8 @@ export class WasteIntensityCalculationService {
     
     // Get production volume from monthly aggregation
     const { MonthlyDataAggregationService } = await import('./MonthlyDataAggregationService');
-    const annualEquivalents = await MonthlyDataAggregationService.getAnnualEquivalents(facility.companyId);
+    const monthlyDataService = new MonthlyDataAggregationService();
+    const annualEquivalents = await monthlyDataService.getAnnualEquivalents(facility.companyId);
     
     if (annualEquivalents.annualCapacityVolume === 0) {
       throw new Error('No monthly production data found for waste footprint calculation');
