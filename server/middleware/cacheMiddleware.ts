@@ -251,7 +251,7 @@ class CacheMiddleware {
         res.json = (body: any) => {
           // Only cache successful responses
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            this.cacheResponse(cacheKey, body, config, res).catch(error => {
+            this.saveToCache(cacheKey, body, config, res).catch(error => {
               logger.warn({ error, cacheKey }, 'Failed to cache API response');
             });
           }
@@ -267,7 +267,7 @@ class CacheMiddleware {
         res.send = (body: any) => {
           // Only cache successful responses
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            this.cacheResponse(cacheKey, body, config, res).catch(error => {
+            this.saveToCache(cacheKey, body, config, res).catch(error => {
               logger.warn({ error, cacheKey }, 'Failed to cache API response');
             });
           }
@@ -412,18 +412,18 @@ class CacheMiddleware {
     return null;
   }
 
-  private async cacheResponse(
+  private async saveToCache(
     cacheKey: string,
     data: any,
-    config: CacheConfig,
+    config: CacheConfig | undefined,
     res: Response
   ): Promise<void> {
-    const ttl = config.ttl || 300;
-    const etag = config.useETag ? this.generateETag(data) : undefined;
+    const ttl = config?.ttl || 300;
+    const etag = config?.useETag ? this.generateETag(data) : undefined;
     
     const cacheEntry = {
       data,
-      contentType: res.get('Content-Type'),
+      contentType: res?.get?.('Content-Type') || 'application/json',
       etag,
       cachedAt: Date.now(),
     };
@@ -446,7 +446,7 @@ class CacheMiddleware {
     }
 
     // Set ETag header if configured
-    if (etag) {
+    if (etag && res?.set) {
       res.set('ETag', etag);
     }
   }
