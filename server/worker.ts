@@ -9,7 +9,7 @@ import { startMetricsCollection } from './monitoring/metrics';
 import { gracefulShutdownService } from './services/GracefulShutdownService';
 import { jobQueueService } from './services/UnifiedJobQueueService';
 import { browserPoolService } from './services/BrowserPoolService';
-import { consolidatedLCAService } from './services/ConsolidatedLCAService';
+import { redisLCACacheService } from './services/RedisLCACacheService';
 
 // Import job processors
 import { pdfGenerationProcessor } from './jobs/pdfGenerationProcessor';

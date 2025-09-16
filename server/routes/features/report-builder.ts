@@ -4,7 +4,7 @@ import { isAuthenticated } from '../../replitAuth';
 import { storage as dbStorage } from '../../storage';
 import { logger } from '../../config/logger';
 import { TimeSeriesEngine } from '../../services/TimeSeriesEngine';
-import { consolidatedPDFService } from '../../services/ConsolidatedPDFService';
+import { PDFExportService } from '../../services/PDFExportService';
 import { PowerPointExportService } from '../../services/PowerPointExportService';
 import { createReadStream } from 'fs';
 import fs from 'fs/promises';
@@ -254,40 +254,11 @@ async function generateReport(
             blocksCount: exportOptions.blocks?.length,
             hasMetricsData: !!exportOptions.metricsData
           }
-        }, 'About to call ConsolidatedPDFService.generatePDF');
+        }, 'About to call PDFExportService.generatePDF');
         
-        // Use the consolidated PDF service for report generation
-        const reportData = {
-          id: `export-${Date.now()}`,
-          title: config.templateOptions.customTitle || `${config.reportType.toUpperCase()} Report`,
-          content: {},
-          companyName: company.companyName,
-          metrics: metricsData,
-          blocks: config.blocks
-        };
+        const pdfResult = await PDFExportService.generatePDF(exportOptions);
         
-        const pdfBuffer = await consolidatedPDFService.generatePDF(reportData, {
-          type: 'comprehensive',
-          templateType: config.reportType
-        });
-        
-        // Save to file system
-        const fs = await import('fs');
-        const path = await import('path');
-        const filename = `report_${Date.now()}.pdf`;
-        const filePath = path.join(process.cwd(), 'generated_reports', filename);
-        
-        // Ensure directory exists
-        const reportsDir = path.dirname(filePath);
-        if (!fs.existsSync(reportsDir)) {
-          fs.mkdirSync(reportsDir, { recursive: true });
-        }
-        
-        fs.writeFileSync(filePath, pdfBuffer);
-        
-        const pdfResult = { filename, filePath };
-        
-        logger.info({ pdfResult }, 'ConsolidatedPDFService.generatePDF completed successfully');
+        logger.info({ pdfResult }, 'PDFExportService.generatePDF completed successfully');
         
         // Auto-save PDF to reports database
         try {

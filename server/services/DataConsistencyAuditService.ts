@@ -1,6 +1,5 @@
 // Storage will be imported dynamically to avoid circular dependencies
-import { EnhancedLCACalculationService } from './ConsolidatedLCAService';
-import type { LCAResults as EnhancedLCAResults } from './ConsolidatedLCAService';
+import { EnhancedLCACalculationService, EnhancedLCAResults } from './EnhancedLCACalculationService';
 
 export interface ProductAuditResult {
   productId: number;

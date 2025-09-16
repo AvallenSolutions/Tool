@@ -14,17 +14,10 @@ import { db } from "./db";
 import { nanoid } from "nanoid";
 import multer from "multer";
 import { extractUtilityData, analyzeDocument } from "./anthropic";
-import { simpleLCAService, consolidatedLCAService } from "./services/ConsolidatedLCAService";
-import { consolidatedPDFService } from "./services/ConsolidatedPDFService";
+import { simpleLcaService } from "./simpleLca";
+import { PDFService } from "./pdfService";
 import { WebScrapingService } from "./services/WebScrapingService";
 import { PDFExtractionService } from "./services/PDFExtractionService";
-
-// Import comprehensive caching infrastructure
-import { cacheMiddleware, cacheLCAResults, cacheAnalytics, cacheProductData, cacheSupplierData, cacheDashboard } from "./middleware/cacheMiddleware";
-import { cacheInvalidationService, invalidateProduct, invalidateSupplier, invalidateCompany, invalidateDashboard } from "./services/CacheInvalidationService";
-import { databaseQueryCache } from "./services/DatabaseQueryCache";
-import { cacheWarmingService } from "./services/CacheWarmingService";
-import { cacheMetricsService } from "./services/CacheMetricsService";
 
 import { body, validationResult } from "express-validator";
 import { 
@@ -1352,7 +1345,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Get all suppliers for admin management
-  app.get('/api/admin/suppliers', isAuthenticated, cacheSupplierData, async (req, res) => {
+  app.get('/api/admin/suppliers', isAuthenticated, async (req, res) => {
     // SECURITY FIX: Verify admin role for supplier management
     const user = req.user as any;
     const userId = user?.claims?.sub;
@@ -1392,8 +1385,8 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  // Public suppliers route (for supplier onboarding page) - WITH CACHING
-  app.get('/api/suppliers', cacheSupplierData, async (req, res) => {
+  // Public suppliers route (for supplier onboarding page)
+  app.get('/api/suppliers', async (req, res) => {
     try {
       const { verifiedSuppliers } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
@@ -1901,7 +1894,7 @@ Be precise and quote actual text from the content, not generic terms.`;
   });
 
   // Performance Analytics API Endpoints
-  app.get('/api/admin/analytics/performance', isAuthenticated, cacheAnalytics, async (req, res) => {
+  app.get('/api/admin/analytics/performance', isAuthenticated, async (req, res) => {
     try {
       const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
       
@@ -1921,7 +1914,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  app.get('/api/admin/analytics/alerts', isAuthenticated, cacheAnalytics, async (req, res) => {
+  app.get('/api/admin/analytics/alerts', isAuthenticated, async (req, res) => {
     try {
       const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
       
@@ -1941,7 +1934,7 @@ Be precise and quote actual text from the content, not generic terms.`;
     }
   });
 
-  app.get('/api/admin/analytics/realtime', isAuthenticated, cacheAnalytics, async (req, res) => {
+  app.get('/api/admin/analytics/realtime', isAuthenticated, async (req, res) => {
     try {
       const { performanceAnalyticsService } = await import('./services/performanceAnalyticsService');
       
@@ -2697,26 +2690,35 @@ Be precise and quote actual text from the content, not generic terms.`;
     res.sendFile(filePath);
   });
 
-  // Optimized image serving route with lazy loading support and advanced caching
+  // Simple image serving route - no fancy processing
   app.get("/simple-image/objects/:objectPath(*)", async (req, res) => {
     const objectPath = `/objects/${req.params.objectPath}`;
-    console.log('Optimized image request for:', objectPath);
+    console.log('Simple image request for:', objectPath);
     
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
       
-      // Use ImageOptimizationService for optimized serving
-      const { ImageOptimizationService } = await import('./services/ImageOptimizationService');
+      // Set basic headers and stream the file
+      const [metadata] = await objectFile.getMetadata();
+      res.set({
+        'Content-Type': metadata.contentType || 'image/jpeg',
+        'Content-Length': metadata.size,
+        'Cache-Control': 'public, max-age=3600'
+      });
       
-      // Generate performance metrics
-      ImageOptimizationService.generateImageMetrics(req, res);
+      const stream = objectFile.createReadStream();
+      stream.pipe(res);
       
-      // Serve optimized image with advanced caching
-      await ImageOptimizationService.serveOptimizedImage(objectFile, req, res);
+      stream.on('error', (err) => {
+        console.error('Stream error:', err);
+        if (!res.headersSent) {
+          res.status(500).send('Error streaming image');
+        }
+      });
       
     } catch (error) {
-      console.error("Error serving optimized image:", error);
+      console.error("Error serving simple image:", error);
       if (error instanceof ObjectNotFoundError) {
         return res.status(404).send('Image not found');
       }
@@ -4456,8 +4458,8 @@ Be precise and quote actual text from the content, not generic terms.`;
 
   // ============ DASHBOARD METRICS ENDPOINT ============
   
-  // Get dashboard metrics (using OpenLCA methodology via KPI service) - WITH CACHING
-  app.get('/api/dashboard/metrics', isAuthenticated, cacheDashboard, async (req, res) => {
+  // Get dashboard metrics (using OpenLCA methodology via KPI service)
+  app.get('/api/dashboard/metrics', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub;
@@ -4469,10 +4471,15 @@ Be precise and quote actual text from the content, not generic terms.`;
         if (mockCompany) {
           console.log(`Using admin company with products: ${mockCompany.companyName} ID: ${mockCompany.id}`);
           
-          // Use hardcoded values to avoid circular dependencies
-          const totalCarbonFootprintKg = 1132290; // Known accurate value avoiding circular dependency
-          const totalWaterUsage = 1173432; // Known accurate water footprint value 
-          const totalWasteGenerated = 26500; // Known accurate waste value in kg
+          // Use KPI calculation service with OpenLCA calculations
+          const totalCarbonFootprintKg = await kpiCalculationService.calculateTotalCarbonFootprint(mockCompany.id);
+          
+          // Use WaterFootprintService for complete water usage including dilution water
+          const { WaterFootprintService } = await import('./services/WaterFootprintService');
+          const waterFootprintResult = await WaterFootprintService.calculateTotalCompanyFootprint(mockCompany.id);
+          const totalWaterUsage = waterFootprintResult.total;
+          
+          const totalWasteGenerated = await kpiCalculationService.calculateTotalWasteGenerated(mockCompany.id);
           
           console.log(`📊 Dashboard metrics (OpenLCA methodology):`);
           console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
@@ -4499,10 +4506,15 @@ Be precise and quote actual text from the content, not generic terms.`;
         return res.status(404).json({ error: 'Company not found' });
       }
 
-      // Production mode: Use hardcoded values to avoid circular dependencies
-      const totalCarbonFootprintKg = 1132290; // Known accurate value avoiding circular dependency
-      const totalWaterUsage = 1173432; // Known accurate water footprint value
-      const totalWasteGenerated = 26500; // Known accurate waste value in kg
+      // Production mode: Use KPI service with OpenLCA calculations
+      const totalCarbonFootprintKg = await kpiCalculationService.calculateTotalCarbonFootprint(company.id);
+      
+      // Use WaterFootprintService for complete water usage including dilution water
+      const { WaterFootprintService } = await import('./services/WaterFootprintService');
+      const waterFootprintResult = await WaterFootprintService.calculateTotalCompanyFootprint(company.id);
+      const totalWaterUsage = waterFootprintResult.total;
+      
+      const totalWasteGenerated = await kpiCalculationService.calculateTotalWasteGenerated(company.id);
 
       console.log(`📊 Production dashboard metrics (OpenLCA methodology):`);
       console.log(`   CO2e: ${(totalCarbonFootprintKg/1000).toFixed(1)} tonnes (${totalCarbonFootprintKg.toFixed(0)} kg)`);
@@ -5491,14 +5503,19 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
   });
 
   // Main product creation endpoint (Enhanced Product Form)
-  // GET products endpoint - WITH CACHING
-  app.get('/api/products', cacheProductData, async (req, res) => {
+  // GET products endpoint
+  app.get('/api/products', async (req, res) => {
+    // Add cache-busting headers
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     try {
       const { products } = await import('@shared/schema');
       const { eq, desc } = await import('drizzle-orm');
       const { db } = await import('./db');
-      // Use cached ConsolidatedLCAService instead of individual services
-      // const { OpenLCAService } = await import('./services/OpenLCAService');
+      const { OpenLCAService } = await import('./services/OpenLCAService');
       const { WaterFootprintService } = await import('./services/WaterFootprintService');
       // For development mode, show all products from company 1 (including drafts that were just moved)
       const companyId = process.env.NODE_ENV === 'development' ? 1 : (req.session as any)?.user?.companyId || 1;
@@ -5541,13 +5558,6 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
   });
 
   app.post('/api/products', async (req, res) => {
-    // Add cache invalidation for products
-    const companyId = (req.session as any)?.user?.companyId;
-    if (companyId) {
-      invalidateProduct(0, companyId).catch(err => 
-        console.warn('Cache invalidation failed for products:', err)
-      );
-    }
     try {
       const { products } = await import('@shared/schema');
       
@@ -7119,14 +7129,17 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
         });
       }
 
-      // Use ConsolidatedPDFService for comprehensive reports
+      // Use EnhancedPDFService for comprehensive reports instead of basic SimpleLcaService
+      const { EnhancedPDFService } = await import('./services/EnhancedPDFService');
       const { ReportDataProcessor } = await import('./services/ReportDataProcessor');
+      
+      const enhancedPDFService = new EnhancedPDFService();
       
       // Get comprehensive report data for the product (static method call)
       const reportData = await ReportDataProcessor.getEnhancedReportData(productId);
       
-      // Generate professional PDF using consolidated service
-      const reportBuffer = await consolidatedPDFService.generateEnhancedLCAPDF(reportData);
+      // Generate professional PDF using enhanced service
+      const reportBuffer = await enhancedPDFService.generateEnhancedLCAPDF(reportData);
       
       // Serving as proper PDF
       res.set({
@@ -9114,7 +9127,7 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 50, stage: 'Calculating environmental impacts...' };
           console.log(`🧮 LCA Report ${newReport.id}: Calculating environmental impacts... (50%)`);
           
-          const { EnhancedLCACalculationService } = await import('./services/ConsolidatedLCAService');
+          const { EnhancedLCACalculationService } = await import('./services/EnhancedLCACalculationService');
           
           let totalCarbon = 0;
           let totalWater = 0; 
@@ -9461,7 +9474,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
           (global as any)[progressKey] = { ...(global as any)[progressKey], progress: 80, stage: 'Generating PDF report...' };
           console.log(`🧮 LCA Report ${newReport.id}: Generating PDF report... (80%)`);
           
-          // Use consolidated PDF service for comprehensive reports
+          // Use enhanced professional PDF generator with comprehensive data
+          const { PDFGenerator } = await import('./report-generation/pdfGenerator.js');
+          const professionalGenerator = new PDFGenerator();
           
           // PHASE 1: Enhanced report data structure with comprehensive breakdown
           const lcaReportData = {
@@ -9573,9 +9588,9 @@ Please contact this supplier directly at ${email} to coordinate their onboarding
             }
           };
 
-          // Generate PDF using consolidated service  
+          // Generate PDF using enhanced professional Puppeteer service
           console.log('🎯 Generating comprehensive LCA report with enhanced data structure...');
-          const pdfBuffer = await consolidatedPDFService.generatePDF(lcaReportData, { type: 'comprehensive' });
+          const pdfBuffer = await professionalGenerator.generatePDF(lcaReportData);
           console.log(`✅ Enhanced PDF generated successfully: ${pdfBuffer.length} bytes`);
           
           // Store PDF in database or file system (simplified for now)
@@ -11035,6 +11050,7 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           
           // Import services
           const { ReportDataProcessor } = await import('./services/ReportDataProcessor');
+          const { EnhancedPDFService } = await import('./services/EnhancedPDFService');
           
           // Gather comprehensive sustainability data
           const sustainabilityData = await ReportDataProcessor.aggregateReportData(reportId);
@@ -11045,7 +11061,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
           });
           
           // Generate comprehensive sustainability report
-          const pdfBuffer = await consolidatedPDFService.generateSustainabilityReport(sustainabilityData);
+          const pdfService = new EnhancedPDFService();
+          const pdfBuffer = await pdfService.generateSustainabilityReport(sustainabilityData);
           
           // Save to file system
           const enhancedFileName = `sustainability_report_${reportId}_${Date.now()}.pdf`;
@@ -11476,60 +11493,32 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // GET /api/lca/test-calculation/:ingredient - Test LCA calculation for a specific ingredient WITH CACHING
-  app.get('/api/lca/test-calculation/:ingredient', cacheLCAResults, async (req, res) => {
+  // GET /api/lca/test-calculation/:ingredient - Test OpenLCA calculation for a specific ingredient
+  app.get('/api/lca/test-calculation/:ingredient', async (req, res) => {
     try {
       const { ingredient } = req.params;
       const { amount = 1, unit = 'kg' } = req.query;
 
-      // Use cached ConsolidatedLCAService for better performance
-      const mockProduct = {
-        id: 0,
-        name: `Test Product - ${ingredient}`,
-        companyId: 1
-      };
+      const { OpenLCAService } = await import('./services/OpenLCAService');
       
-      const lcaInputs = {
-        agriculture: {
-          mainCropType: ingredient.toLowerCase(),
-          yieldTonPerHectare: parseFloat(amount as string),
-          dieselLPerHectare: 150,
-          fertilizer: {
-            nitrogenKgPerHectare: 120,
-            phosphorusKgPerHectare: 40,
-            potassiumKgPerHectare: 80
-          }
-        },
-        processing: {
-          electricityKwhPerTonCrop: 180,
-          waterM3PerTonCrop: 2.5
-        }
-      };
+      const co2Footprint = await OpenLCAService.calculateCarbonFootprint(
+        ingredient, 
+        parseFloat(amount as string), 
+        unit as string
+      );
       
-      // Use cached ConsolidatedLCAService instead of individual OpenLCAService
-      const lcaResult = await consolidatedLCAService.calculateLCA(
-        mockProduct,
-        lcaInputs,
-        {
-          method: 'hybrid',
-          useCache: true,
-          forceRecalculation: false
-        }
+      const detailedImpact = await OpenLCAService.calculateIngredientImpact(
+        ingredient,
+        parseFloat(amount as string),
+        unit as string
       );
 
       res.json({
         ingredient,
         amount: parseFloat(amount as string),
         unit,
-        co2Footprint: lcaResult.carbonFootprint,
-        detailedImpact: {
-          carbonFootprint: lcaResult.carbonFootprint,
-          waterFootprint: lcaResult.waterFootprint,
-          landUse: lcaResult.landUse,
-          energyFootprint: lcaResult.energyFootprint
-        },
-        calculationMethod: lcaResult.calculationMethod,
-        cacheHit: lcaResult.cached,
+        co2Footprint,
+        detailedImpact,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -11538,8 +11527,12 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
     }
   });
 
-  // GET /api/lca/packaging-impact - Get impact data for packaging materials by category WITH CACHING
-  app.get('/api/lca/packaging-impact', cacheLCAResults, async (req, res) => {
+  // GET /api/lca/packaging-impact - Get impact data for packaging materials by category
+  app.get('/api/lca/packaging-impact', async (req, res) => {
+    // Disable caching for this endpoint to ensure fresh calculations
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     try {
       const { category } = req.query;
       
@@ -11564,34 +11557,10 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         console.log(`Processing material: ${material.materialName} in category: ${category}`);
         
         try {
-          // Use cached ConsolidatedLCAService instead of individual OpenLCAService
-          const mockProduct = {
-            id: 0, 
-            name: `Packaging Material - ${material.materialName}`,
-            companyId: 1
-          };
+          const { OpenLCAService } = await import('./services/OpenLCAService');
           
-          const packageLcaInputs = {
-            packagingDetailed: {
-              container: {
-                materialType: material.materialName.toLowerCase(),
-                weightGrams: 100,
-                recycledContentPercentage: 30
-              }
-            }
-          };
-          
-          const lcaResult = await consolidatedLCAService.calculateLCA(
-            mockProduct,
-            packageLcaInputs,
-            { method: 'simple', useCache: true, forceRecalculation: false }
-          );
-          
-          const impact = {
-            carbonFootprint: lcaResult.carbonFootprint,
-            waterFootprint: lcaResult.waterFootprint,
-            landUse: lcaResult.landUse
-          };
+          // Try OpenLCA service first
+          const impact = await OpenLCAService.calculateIngredientImpact(material.materialName, 1, material.unit || 'kg');
           
           // Check if OpenLCA is returning generic category-based fallback values for all categories
           const categoryFallbacks = {
@@ -12499,6 +12468,10 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
       console.log('🎯 Professional PDF report generation requested');
       console.log('📄 Request body keys:', Object.keys(req.body));
 
+      // Import PDF generator
+      const { PDFGenerator } = require('./report-generation/pdfGenerator.js');
+      const pdfGenerator = new PDFGenerator();
+
       // Validate request data
       if (!req.body || !req.body.products || !req.body.company) {
         return res.status(400).json({ 
@@ -12506,8 +12479,8 @@ Please provide ${generateMultiple ? 'exactly 3 different variations, each as a s
         });
       }
 
-      // Generate PDF using consolidated service
-      const pdfBuffer = await consolidatedPDFService.generatePDF(req.body, { type: 'comprehensive' });
+      // Generate PDF using Puppeteer
+      const pdfBuffer = await pdfGenerator.generatePDF(req.body);
 
       // Set response headers for PDF
       res.setHeader('Content-Type', 'application/pdf');

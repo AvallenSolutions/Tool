@@ -4,11 +4,8 @@ import { users, companies, reports, verifiedSuppliers, supplierProducts, convers
 import { requireAdminRole, type AdminRequest } from '../middleware/adminAuth';
 import { eq, count, gte, desc, and, lt, ilike, or, sql } from 'drizzle-orm';
 import { logger } from '../config/logger';
-import { CacheInvalidationService } from '../services/CacheInvalidationService';
-import performanceMonitoringRouter from './performanceMonitoring';
 
 const router = Router();
-const cacheInvalidationService = CacheInvalidationService.getInstance();
 
 // Apply admin authentication to all routes
 router.use(requireAdminRole);
@@ -161,54 +158,73 @@ router.get('/analytics', async (req: AdminRequest, res: Response) => {
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-    // OPTIMIZED: Batch all analytics queries in parallel for better performance
-    const [
-      analyticsResults,
-      pendingCounts
-    ] = await Promise.all([
-      // Main analytics counts in a single batch
-      Promise.all([
-        db.select({ count: count() }).from(users),
-        db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
-        db.select({ count: count() }).from(users).where(and(gte(users.createdAt, sixtyDaysAgo), lt(users.createdAt, thirtyDaysAgo))),
-        db.select({ count: count() }).from(verifiedSuppliers),
-        db.select({ count: count() }).from(verifiedSuppliers).where(gte(verifiedSuppliers.createdAt, thirtyDaysAgo)),
-        db.select({ count: count() }).from(verifiedSuppliers).where(and(gte(verifiedSuppliers.createdAt, sixtyDaysAgo), lt(verifiedSuppliers.createdAt, thirtyDaysAgo))),
-        db.select({ count: count() }).from(companies),
-      ]),
-      // Pending/action items counts in parallel
-      Promise.all([
-        db.select({ count: count() }).from(verifiedSuppliers).where(eq(verifiedSuppliers.verificationStatus, 'pending_review')),
-        db.select({ count: count() }).from(supplierProducts).where(eq(supplierProducts.isVerified, false)),
-        db.select({ count: count() }).from(reports).where(eq(reports.status, 'pending_review')),
-      ])
-    ]);
+    // Get user metrics
+    const [totalUsers] = await db
+      .select({ count: count() })
+      .from(users);
 
-    // Extract results from batch queries
-    const [
-      [totalUsers],
-      [newUsersLast30Days],
-      [newUsersPrevious30Days],
-      [totalSuppliers],
-      [newSuppliersLast30Days],
-      [newSuppliersPrevious30Days],
-      [totalCompanies]
-    ] = analyticsResults;
+    const [newUsersLast30Days] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(gte(users.createdAt, thirtyDaysAgo));
 
-    const [
-      [pendingSuppliersCount],
-      [pendingProductsCount],
-      [pendingReviews]
-    ] = pendingCounts;
+    const [newUsersPrevious30Days] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(and(
+        gte(users.createdAt, sixtyDaysAgo),
+        lt(users.createdAt, thirtyDaysAgo)
+      ));
 
-    // Calculate growth percentages
+    // Calculate user growth percentage
     const userGrowthPercentage = newUsersPrevious30Days.count > 0 
       ? ((newUsersLast30Days.count - newUsersPrevious30Days.count) / newUsersPrevious30Days.count) * 100
       : newUsersLast30Days.count > 0 ? 100 : 0;
 
+    // Get supplier metrics
+    const [totalSuppliers] = await db
+      .select({ count: count() })
+      .from(verifiedSuppliers);
+
+    const [newSuppliersLast30Days] = await db
+      .select({ count: count() })
+      .from(verifiedSuppliers)
+      .where(gte(verifiedSuppliers.createdAt, thirtyDaysAgo));
+
+    const [newSuppliersPrevious30Days] = await db
+      .select({ count: count() })
+      .from(verifiedSuppliers)
+      .where(and(
+        gte(verifiedSuppliers.createdAt, sixtyDaysAgo),
+        lt(verifiedSuppliers.createdAt, thirtyDaysAgo)
+      ));
+
+    // Calculate supplier growth percentage
     const supplierGrowthPercentage = newSuppliersPrevious30Days.count > 0 
       ? ((newSuppliersLast30Days.count - newSuppliersPrevious30Days.count) / newSuppliersPrevious30Days.count) * 100
       : newSuppliersLast30Days.count > 0 ? 100 : 0;
+
+    // Get ACTUAL pending items for action items
+    const [pendingSuppliersCount] = await db
+      .select({ count: count() })
+      .from(verifiedSuppliers)
+      .where(eq(verifiedSuppliers.verificationStatus, 'pending_review'));
+
+    const [pendingProductsCount] = await db
+      .select({ count: count() })
+      .from(supplierProducts)
+      .where(eq(supplierProducts.isVerified, false));
+
+    // Get pending LCA reviews
+    const [pendingReviews] = await db
+      .select({ count: count() })
+      .from(reports)
+      .where(eq(reports.status, 'pending_review'));
+
+    // Get total companies
+    const [totalCompanies] = await db
+      .select({ count: count() })
+      .from(companies);
 
     const response = {
       totalUsers: totalUsers.count,
@@ -900,8 +916,7 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
       // First, try to get Internal Messages (new system)
       const { internalMessages } = await import('@shared/schema');
       
-      // OPTIMIZED: Get all messages with company and user details in a single JOIN query
-      const messagesWithDetails = await db
+      const internalMessagesData = await db
         .select({
           id: internalMessages.id,
           companyId: internalMessages.companyId,
@@ -913,49 +928,67 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
           priority: internalMessages.priority,
           isRead: internalMessages.isRead,
           createdAt: internalMessages.createdAt,
-          // Company details
-          companyName: companies.name,
-          companyOwnerId: companies.ownerId,
-          // User details
-          userFirstName: users.firstName,
-          userLastName: users.lastName,
-          userEmail: users.email,
-          userRole: users.role,
         })
         .from(internalMessages)
-        .leftJoin(companies, eq(internalMessages.companyId, companies.id))
-        .leftJoin(users, eq(internalMessages.fromUserId, users.id))
-        .where(eq(internalMessages.isRead, false))
+        .where(eq(internalMessages.isRead, false)) // Only show unread/active messages
         .orderBy(desc(internalMessages.createdAt))
         .limit(parseInt(limit as string))
         .offset(parseInt(offset as string));
 
-      // Transform messages (no async needed now - all data is already fetched)
-      const transformedMessages = messagesWithDetails.map((msg) => ({
-        id: parseInt(`${msg.id}`),
-        title: msg.subject || 'Internal Message',
-        type: 'direct_message' as const,
-        status: msg.isRead ? 'archived' : 'active' as const,
-        participants: [msg.fromUserId, msg.toUserId],
-        lastMessageAt: msg.createdAt.toISOString(),
-        createdAt: msg.createdAt.toISOString(),
-        participantDetails: msg.userFirstName ? [{
-          userId: msg.fromUserId,
-          firstName: msg.userFirstName,
-          lastName: msg.userLastName,
-          email: msg.userEmail,
-          role: msg.userRole,
-          profileImageUrl: '',
-          companyName: msg.companyName || 'Unknown Company',
-        }] : [],
-        unreadCount: msg.isRead ? 0 : 1,
-        messagePreview: msg.message,
-        priority: msg.priority,
-        companyId: msg.companyId,
-        companyName: msg.companyName || 'Unknown Company',
-      }));
+      console.log(`📨 Found ${internalMessagesData.length} internal messages for admin view`);
 
-      console.log(`📨 Optimized query fetched and transformed ${transformedMessages.length} internal messages for admin dashboard`);
+      // Transform internal messages to conversation format for frontend compatibility
+      const transformedMessages = await Promise.all(
+        internalMessagesData.map(async (msg) => {
+          // Get company details
+          const [companyDetails] = await db
+            .select({
+              id: companies.id,
+              name: companies.name,
+              ownerId: companies.ownerId,
+            })
+            .from(companies)
+            .where(eq(companies.id, msg.companyId));
+
+          // Get user details
+          const [fromUser] = await db
+            .select({
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
+              role: users.role,
+            })
+            .from(users)
+            .where(eq(users.id, msg.fromUserId));
+
+          return {
+            id: parseInt(`${msg.id}`), // Use the actual ID as a number
+            title: msg.subject || 'Internal Message',
+            type: 'direct_message' as const, // Use valid frontend type
+            status: msg.isRead ? 'archived' : 'active' as const, // Use valid frontend status
+            participants: [msg.fromUserId, msg.toUserId],
+            lastMessageAt: msg.createdAt.toISOString(),
+            createdAt: msg.createdAt.toISOString(),
+            participantDetails: fromUser ? [{
+              userId: fromUser.id,
+              firstName: fromUser.firstName,
+              lastName: fromUser.lastName,
+              email: fromUser.email,
+              role: fromUser.role,
+              profileImageUrl: '',
+              companyName: companyDetails?.name || 'Unknown Company',
+            }] : [],
+            unreadCount: msg.isRead ? 0 : 1,
+            messagePreview: msg.message,
+            priority: msg.priority,
+            companyId: msg.companyId,
+            companyName: companyDetails?.name || 'Unknown Company',
+          };
+        })
+      );
+
+      console.log(`📨 Transformed ${transformedMessages.length} internal messages for admin dashboard`);
 
       // Also get traditional conversations (if any)
       const conversationsData = await db
@@ -973,61 +1006,41 @@ router.get('/conversations', async (req: AdminRequest, res: Response) => {
         .orderBy(desc(conversations.lastMessageAt))
         .limit(10); // Limit traditional conversations since we're prioritizing internal messages
 
-      // OPTIMIZED: Get unread counts for all conversations in batch
-      const conversationIds = conversationsData.map(c => c.id);
-      const unreadCounts = conversationIds.length > 0 ? await db
-        .select({
-          conversationId: messages.conversationId,
-          count: count()
+      // Enrich traditional conversations
+      const enrichedConversations = await Promise.all(
+        conversationsData.map(async (conv) => {
+          const participantIds = Array.isArray(conv.participants) ? conv.participants : [];
+          const participantDetails = participantIds.length > 0 ? await db
+            .select({
+              userId: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
+              role: users.role,
+              profileImageUrl: users.profileImageUrl,
+              companyName: companies.name,
+            })
+            .from(users)
+            .leftJoin(companies, eq(users.id, companies.ownerId))
+            .where(or(...participantIds.map(id => eq(users.id, id))))
+          : [];
+
+          const [unreadCount] = await db
+            .select({ count: count() })
+            .from(messages)
+            .where(eq(messages.conversationId, conv.id));
+
+          return {
+            ...conv,
+            participantDetails,
+            unreadCount: unreadCount.count,
+            messagePreview: '',
+            priority: 'normal',
+            companyId: null,
+            companyName: '',
+          };
         })
-        .from(messages)
-        .where(or(...conversationIds.map(id => eq(messages.conversationId, id))))
-        .groupBy(messages.conversationId) : [];
-
-      const unreadCountMap = Object.fromEntries(
-        unreadCounts.map(uc => [uc.conversationId, uc.count])
       );
-
-      // OPTIMIZED: Get all unique participant IDs and fetch user details in batch
-      const allParticipantIds = conversationsData
-        .flatMap(conv => Array.isArray(conv.participants) ? conv.participants : [])
-        .filter((id, index, arr) => arr.indexOf(id) === index); // Remove duplicates
-
-      const participantDetails = allParticipantIds.length > 0 ? await db
-        .select({
-          userId: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email,
-          role: users.role,
-          profileImageUrl: users.profileImageUrl,
-          companyName: companies.name,
-        })
-        .from(users)
-        .leftJoin(companies, eq(users.id, companies.ownerId))
-        .where(or(...allParticipantIds.map(id => eq(users.id, id)))) : [];
-
-      const participantMap = Object.fromEntries(
-        participantDetails.map(p => [p.userId, p])
-      );
-
-      // Transform conversations without async operations
-      const enrichedConversations = conversationsData.map(conv => {
-        const participantIds = Array.isArray(conv.participants) ? conv.participants : [];
-        const convParticipantDetails = participantIds
-          .map(id => participantMap[id])
-          .filter(Boolean);
-
-        return {
-          ...conv,
-          participantDetails: convParticipantDetails,
-          unreadCount: unreadCountMap[conv.id] || 0,
-          messagePreview: '',
-          priority: 'normal',
-          companyId: null,
-          companyName: '',
-        };
-      });
 
       // Combine both types of conversations, prioritizing internal messages
       const allConversations = [...transformedMessages, ...enrichedConversations]
@@ -2164,8 +2177,5 @@ router.get('/conversations/stats', async (req: AdminRequest, res: Response) => {
     });
   }
 });
-
-// Mount performance monitoring routes under /performance
-router.use('/performance', performanceMonitoringRouter);
 
 export { router as adminRouter };

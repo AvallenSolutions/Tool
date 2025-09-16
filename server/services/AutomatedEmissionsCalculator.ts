@@ -43,8 +43,8 @@ export async function calculatePurchasedGoodsEmissions(companyId: number): Promi
         for (const ingredient of product.ingredients) {
           if (ingredient.name && ingredient.amount) {
             try {
-              // Use Consolidated LCA service for ecoinvent data (matches individual product calculation)
-              const { OpenLCAService } = await import('./ConsolidatedLCAService');
+              // Use OpenLCA service for ecoinvent data (matches individual product calculation)
+              const { OpenLCAService } = await import('./OpenLCAService');
               const impactData = await OpenLCAService.calculateIngredientImpact(ingredient.name, parseFloat(ingredient.amount), 'kg');
               
               if (impactData && impactData.carbonFootprint > 0) {

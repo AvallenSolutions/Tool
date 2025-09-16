@@ -28,82 +28,39 @@ const allowedOrigins = isDevelopment
   ? ["http://localhost:5000", "http://localhost:5173"]
   : ["'self'", "https:", process.env.FRONTEND_URL].filter(Boolean);
 
-// Development: Permissive CSP for Vite/React
-// Production: Strict nonce-based CSP  
-if (isDevelopment) {
-  // No nonce needed in development - allow inline scripts for Vite
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:", ...allowedOrigins],
-        connectSrc: ["'self'", "https:", "wss:", ...allowedOrigins],
-        objectSrc: ["'none'"],
-        baseSrc: ["'self'"],
-        frameAncestors: ["'self'"],
-      },
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:", ...allowedOrigins],
+      connectSrc: ["'self'", "https:", ...allowedOrigins],
     },
-  }));
-} else {
-  // Production: Generate nonce for CSP
-  app.use((req, res, next) => {
-    res.locals.nonce = Buffer.from(Math.random().toString()).toString('base64');
-    next();
-  });
+  },
+}));
 
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https:"],
-        objectSrc: ["'none'"],
-        baseSrc: ["'self'"],
-        frameAncestors: ["'self'"],
-      },
-    },
-  }));
-}
-
-// Enhanced rate limiting for API endpoints
+// Rate limiting for API endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Reduced from 1000 to 100 for better security
-  message: {
-    error: 'Too many API requests from this IP, please try again later.',
-    retryAfter: 15 * 60 // 15 minutes in seconds
-  },
+  max: 1000, // Increased for development - limit each IP to 1000 requests per windowMs
+  message: 'Too many API requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for health checks
-    return req.path === '/health';
-  }
 });
 
 app.use('/api/', apiLimiter);
 
-// Secure CORS configuration - no wildcard fallback
+// Environment-aware CORS configuration
 app.use((req, res, next) => {
   const isDevelopment = process.env.NODE_ENV !== 'production';
-  const allowedOrigins = isDevelopment 
-    ? ['http://localhost:5173', 'http://localhost:5000']
-    : [process.env.FRONTEND_URL, 'https://' + (process.env.REPL_SLUG || 'app') + '.replit.app'].filter(Boolean);
-  
-  const origin = req.get('origin');
-  const allowedOrigin = allowedOrigins.find(allowed => allowed === origin) || (isDevelopment ? 'http://localhost:5173' : null);
-  
-  if (allowedOrigin) {
-    res.header('Access-Control-Allow-Origin', allowedOrigin);
-  }
-  
+  const allowedOrigin = isDevelopment 
+    ? 'http://localhost:5173' 
+    : process.env.FRONTEND_URL || req.get('origin') || '*';
+    
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ConsolidatedPDFService, consolidatedPDFService } from '../../server/services/ConsolidatedPDFService';
-import type { ReportData, LCAReportData, PDFGenerationOptions } from '../../server/services/ConsolidatedPDFService';
+import { UnifiedPDFService, unifiedPDFService } from '../../server/services/UnifiedPDFService';
+import type { ReportData, LCAReportData, PDFGenerationOptions } from '../../server/services/UnifiedPDFService';
 
 // Mock external dependencies
 vi.mock('puppeteer', () => ({
@@ -34,8 +34,8 @@ vi.mock('../../server/config/logger', () => ({
   },
 }));
 
-describe('ConsolidatedPDFService', () => {
-  let service: ConsolidatedPDFService;
+describe('UnifiedPDFService', () => {
+  let service: UnifiedPDFService;
   
   const mockReportData: ReportData = {
     id: 'test-report-1',
@@ -75,7 +75,7 @@ describe('ConsolidatedPDFService', () => {
   };
 
   beforeEach(() => {
-    service = ConsolidatedPDFService.getInstance();
+    service = UnifiedPDFService.getInstance();
     vi.clearAllMocks();
   });
 
@@ -85,14 +85,14 @@ describe('ConsolidatedPDFService', () => {
 
   describe('Singleton Pattern', () => {
     it('should return the same instance', () => {
-      const instance1 = ConsolidatedPDFService.getInstance();
-      const instance2 = ConsolidatedPDFService.getInstance();
+      const instance1 = UnifiedPDFService.getInstance();
+      const instance2 = UnifiedPDFService.getInstance();
       expect(instance1).toBe(instance2);
     });
 
     it('should return the same instance as the exported singleton', () => {
-      const instance = ConsolidatedPDFService.getInstance();
-      expect(instance).toBe(consolidatedPDFService);
+      const instance = UnifiedPDFService.getInstance();
+      expect(instance).toBe(unifiedPDFService);
     });
   });
 
@@ -252,20 +252,23 @@ describe('ConsolidatedPDFService', () => {
 
   describe('Static PDFService Compatibility', () => {
     it('should support static generateLCAPDF method', async () => {
-      const { PDFService } = await import('../../server/services/ConsolidatedPDFService');
+      const { PDFService } = await import('../../server/services/UnifiedPDFService');
       const result = await PDFService.generateLCAPDF(mockLCAData);
       expect(result).toBeInstanceOf(Buffer);
     });
 
     it('should support static generateSustainabilityReport method', async () => {
-      const { PDFService } = await import('../../server/services/ConsolidatedPDFService');
+      const { PDFService } = await import('../../server/services/UnifiedPDFService');
       const result = await PDFService.generateSustainabilityReport(mockReportData, mockReportData.company);
       expect(result).toBeInstanceOf(Buffer);
     });
 
     it('should support instance generateFromHTML method', async () => {
-      const { PDFService } = await import('../../server/services/ConsolidatedPDFService');
-      const result = await consolidatedPDFService.generateFromHTML('<html><body><h1>Test Report</h1></body></html>', { title: 'Test' });
+      const { PDFService } = await import('../../server/services/UnifiedPDFService');
+      const pdfService = new PDFService();
+      
+      const htmlContent = '<html><body><h1>Test Report</h1></body></html>';
+      const result = await pdfService.generateFromHTML(htmlContent, { title: 'Test' });
       
       expect(result).toBeInstanceOf(Buffer);
     });

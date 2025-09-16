@@ -1,7 +1,7 @@
 import { logger } from '../config/logger';
 import { browserPoolService } from './BrowserPoolService';
 import { jobQueueService } from './UnifiedJobQueueService';
-import { consolidatedLCAService } from './ConsolidatedLCAService';
+import { redisLCACacheService } from './RedisLCACacheService';
 import { shutdownTelemetry } from '../monitoring/telemetry';
 
 /**

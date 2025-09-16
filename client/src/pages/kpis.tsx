@@ -876,7 +876,7 @@ export function KPIsPage() {
                                               <YAxis />
                                               <Tooltip 
                                                 formatter={(value, name) => [
-                                                  name === 'progress' ? `${Number(value || 0).toFixed(1)}%` : `${Number(value || 0).toFixed(1)} ${goal.unit || ''}`,
+                                                  name === 'progress' ? `${Number(value).toFixed(1)}%` : `${Number(value).toFixed(1)} ${goal.unit}`,
                                                   name === 'progress' ? 'Progress' : name === 'value' ? 'Current Value' : 'Target'
                                                 ]}
                                               />
@@ -1209,7 +1209,7 @@ export function KPIsPage() {
                                     <div className="flex-1 min-w-0">
                                       <h4 className={`font-semibold text-base ${textColor} mb-3`}>{rec.title}</h4>
                                       <div className={`text-sm leading-relaxed ${textColor.replace('900', '600')} mb-4`}>
-                                        {(rec.description || '').toString().split('.').filter(sentence => sentence.trim().length > 0).map((sentence, sentenceIndex) => {
+                                        {rec.description.split('.').filter(sentence => sentence.trim().length > 0).map((sentence, sentenceIndex) => {
                                           const trimmedSentence = sentence.trim();
                                           if (trimmedSentence.length === 0) return null;
                                           
@@ -1478,7 +1478,7 @@ export function KPIsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {(selectedInsight.description || '').toString().split('.').filter(sentence => sentence.trim().length > 0).map((sentence, index) => (
+                    {selectedInsight.description?.split('.').filter(sentence => sentence.trim().length > 0).map((sentence, index) => (
                       <div key={index} className="flex items-start space-x-3">
                         <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                           selectedInsight.type === 'optimization' ? 'bg-blue-500' :
